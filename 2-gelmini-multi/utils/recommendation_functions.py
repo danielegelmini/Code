@@ -1,10 +1,18 @@
-import dice_ml
-from dice_ml import Dice
+
 import tqdm
 import pandas as pd
-from typing import Dict, Tuple, Any, List
+from typing import Dict, Tuple, Any, List, Optional
 import numpy as np
-import random
+from paretoset import paretoset
+
+from pymoo.core.problem import Problem
+from pymoo.algorithms.moo.nsga2 import NSGA2
+from pymoo.operators.sampling.rnd import IntegerRandomSampling
+from pymoo.operators.crossover.sbx import SBX
+from pymoo.operators.mutation.pm import PM
+from pymoo.operators.repair.rounding import RoundingRepair
+from pymoo.termination import get_termination
+from pymoo.optimize import minimize
 
 from utils.pre_processing_functions import convert_dtypes_bpi12
 
@@ -15,6 +23,17 @@ start_date_name = "start:timestamp"
 resource_column_name = "org:resource"
 outcome_name = "outcome"
 
+NON_FEATURE_COLUMNS = {
+    case_id_name,
+    start_date_name,
+    end_date_name,
+    "total_time",
+    "remaining_time",
+    "label",
+    "sigmoid_mm",
+    "time_from_midnight",
+    outcome_name,
+}
 
 def build_query_instances(test_df, case_id_name):
     """
@@ -36,22 +55,6 @@ def build_query_instances(test_df, case_id_name):
         for _, row in test_df.iterrows()
     }
     return query_instances_by_case
-
-def create_DiCE_model(dataframe, continuous_features, categorical_features, outcome_name, dice_method, predictive_model, columns_to_remove):
-    """
-    Creating DiCE model
-    """
-    data_for_dice = dataframe.drop(columns_to_remove, axis = 1)
-    data_model = dice_ml.Data(dataframe=data_for_dice,
-                              continuous_features=continuous_features,
-                              categorical_features=categorical_features,
-                              outcome_name=outcome_name)
-    
-    ml_backend = dice_ml.Model(model=predictive_model, backend="sklearn", model_type='regressor')
-    method = dice_method  
-    explainer = Dice(data_model, ml_backend, method=method) 
-    return explainer
-
 
 def next_possible_activities(trace_history, transition_graph, WINDOW_SIZE):
     """
@@ -77,56 +80,6 @@ def next_possible_activities(trace_history, transition_graph, WINDOW_SIZE):
                 pos_acts = transition_graph[ts]
 
     return list(pos_acts)
- 
-
-def CFE_for_a_single_query(explainer, query_instance, y_predicted, reduced_percentage, total_CFs, cols_to_vary, next_possible_activity, act_with_res, dice_method):
-    """
-    Generates a list of Counterfactual examples (CFEs) for a query instance
-    If no recommendations has found returns -1
-    
-    Parameters:
-        explainer: DiCE explainer object already initialized in create_DiCE_model function.
-        query_instance: The input instance (running trace prefix).
-        y_predicted: Predicted outcome from the Predictive model.
-        reduced_percentage: Target reduction factor for outcome.
-        total_CFs: Number of CFEs to generate.
-        cols_to_vary: Features allowed to change (Next_activity and Next_resource).
-        next_possible_activity: Allowed next activities based on Transition system.
-        act_with_res: Activity–resource mapping (Resource Filter).
-        dice_method: 'genetic' or 'random' method.        
-    Returns:
-        List of Counterfactual examples or -1 if no valid counterfactual could be computed.
-    """
-    total_time_predicted = y_predicted
-    if y_predicted < 0:
-        total_time_upper_bound = 1
-    else:
-        total_time_upper_bound = total_time_predicted * reduced_percentage
-    
-    if dice_method == 'genetic':
-        try:
-            cfe = explainer.generate_counterfactuals(query_instance,
-                                            total_CFs = total_CFs,
-                                            features_to_vary = cols_to_vary,
-                                            desired_range = [0, total_time_upper_bound],
-                                            permitted_range = {"NEXT_ACTIVITY": next_possible_activity},
-                                            act_res = act_with_res,
-                                            proximity_weight=0.2,
-                                            sparsity_weight=0,
-                                            maxiterations=10, feature_weights = {"NEXT_ACTIVITY": 1.0, "NEXT_RESOURCE": 1.0})
-        except:
-            cfe = -1 # DiCE cannot generate recommendations
-
-    else:
-        try:
-            cfe = explainer.generate_counterfactuals(query_instance,
-                                            total_CFs = total_CFs,
-                                            features_to_vary = cols_to_vary,
-                                            desired_range = [0, total_time_upper_bound],
-                                            permitted_range = {"NEXT_ACTIVITY": next_possible_activity})
-        except:
-            cfe = -1 # DiCE cannot generate recommendations
-    return cfe
 
 def act_with_res_func(df, activity_column_name, resource_column_name):
     """
@@ -157,14 +110,6 @@ def act_with_res_func(df, activity_column_name, resource_column_name):
         for act, resources in grouped.items()
     }
 
-
-def get_best_pairs(cfe, outcome_name):
-    cfe_single_query_df = cfe.cf_examples_list[0].final_cfs_df
-    n_valid_cfes = len(cfe_single_query_df)
-    smallest_outcome = cfe_single_query_df[outcome_name].min()
-    best_act, best_res = cfe_single_query_df[cfe_single_query_df[outcome_name] == smallest_outcome][['NEXT_ACTIVITY', 'NEXT_RESOURCE']].values[0]
-    return n_valid_cfes, best_act, best_res
-
 def _to_row_df(x):
     if isinstance(x, pd.DataFrame):
         return x.iloc[[0]] if len(x) > 1 else x
@@ -174,105 +119,80 @@ def _to_row_df(x):
         return pd.DataFrame([x])
     raise TypeError(f"Unsupported query_instance type: {type(x)}")
 
-def genetic_recommendations(
-    case_study: str,
-    test_log: pd.DataFrame,
-    test_data: pd.DataFrame, # Contain most probable pairs
-    predictive_model: Any,
-    dice_method: str,
-    explainer,
-    transition_graph,
-    reduced_percentage: float,
-    TOTAL_CFS: int,
-    window_size: int,
-    cols_to_vary: List[str],
-    case_id_name: str,
-    activity_column_name: str,
-    outcome_name: str,
-    forbidden_map: Dict[str, List[str]],
-    act_with_res,
-    query_instances_by_case: Dict[Any, pd.DataFrame],
-    ) -> Dict[Any, Tuple[str, str]]:
-    
-    """
-    Generate DiCE recommendations as a dict {case_id: (next_activity, next_resource)}.
-    Uses pre-built query_instances_by_case instead of dropping columns inside loop.
-    """
+def align_query_instance_with_model(query_instance, model):
+    query_df = _to_row_df(query_instance).copy()
+    if not hasattr(model, "named_steps") or "transformation" not in model.named_steps:
+        return query_df
 
-    # --- Forbidden activities ---
-    forbidden = set(forbidden_map.get(case_study, []))
-
-    # --- Results dict ---
-    rec: Dict[Any, Tuple[str, str]] = {}
-
-    # --- Iterate cases ---
-    for cid in pd.unique(test_data[case_id_name]):
-        trace_df = test_log[test_log[case_id_name] == cid]
-        # Take query instance from pre-built dict
-        query_instance = _to_row_df(query_instances_by_case[cid])
-        # Candidate next activities
-        trace_history = trace_df[activity_column_name].tolist()
-        # possible next activities (filter forbidden)
-        poss = next_possible_activities(trace_history, transition_graph, window_size)
-        poss = [a for a in poss if a not in forbidden]
-        if not poss:
-            rec[cid] = [] # No recommendation!
-            continue
-
-        # Predict baseline with NEXT_* blank 
-        copy_qi = query_instance.copy()
-        for col in ("NEXT_ACTIVITY", "NEXT_RESOURCE"):
-            if col not in copy_qi.columns:
-                copy_qi[col] = ""
+    transformation = model.named_steps["transformation"]
+    numeric_cols = []
+    categorical_cols = []
+    for name, _, cols in transformation.transformers:
+        if name == "num":
+            if isinstance(cols, (list, tuple)):
+                numeric_cols.extend(cols)
             else:
-                copy_qi.loc[:, col] = ""
-        try:
-            pred = predictive_model.predict(copy_qi)
-            predicted_outcome = float(np.ravel(pred)[0])
-            if not np.isfinite(predicted_outcome):
-                predicted_outcome = 1.0
-        except Exception:
-            predicted_outcome = 1.0
-            
-        # Generate CFEs
-        try:
-            cfe_single_query = CFE_for_a_single_query(
-                    explainer=explainer,
-                    query_instance=query_instance,
-                    y_predicted=predicted_outcome,
-                    reduced_percentage=reduced_percentage,
-                    total_CFs=TOTAL_CFS,
-                    cols_to_vary=cols_to_vary,
-                    next_possible_activity=poss,
-                    act_with_res=act_with_res,
-                    dice_method=dice_method, 
-                )
-        except (Exception):
-            cfe_single_query = -1
+                numeric_cols.append(cols)
+        elif name == "cat":
+            if isinstance(cols, (list, tuple)):
+                categorical_cols.extend(cols)
+            else:
+                categorical_cols.append(cols)
 
-        # Decide recommendation
-        if cfe_single_query == -1:
-            rec[cid] = (query_instance['NEXT_ACTIVITY'].values[0], query_instance['NEXT_RESOURCE'].values[0]) # Getting Most Probable pair when No recommendation found!
-            continue
+    required_cols = list(dict.fromkeys(numeric_cols + categorical_cols))
+    missing_cols = [c for c in required_cols if c not in query_df.columns]
+    for col in missing_cols:
+        query_df[col] = 0 if col in numeric_cols else ""
 
-        if dice_method == "genetic":
-            try:
-                _, best_act, best_res = get_best_pairs(cfe_single_query, outcome_name)
-                rec[cid] = (best_act, best_res)
-            except Exception:
-                rec[cid] = []
-    return rec
+    return query_df
 
-def kpi_computation_exhaustive(pos_acts, query_instance, model, act_with_res):
-    result = {}
-    for next_act in pos_acts:
+def generate_pareto_set(
+    query_instance,
+    possible_actions,
+    predictive_outcome_model,
+    predictive_time_model,
+    act_with_res,
+):
+    """Build the exhaustive Pareto set for each candidate action/resource pair."""
+    pareto_set = []
+    rows = []
+    for next_act in possible_actions:
         for next_res in act_with_res.get(next_act, []):
             temp_query_instance = query_instance.copy()
             temp_query_instance['NEXT_ACTIVITY'] = next_act
             temp_query_instance['NEXT_RESOURCE'] = next_res
-            predicted_total_time = model.predict(temp_query_instance)
-            result[(next_act, next_res)] = predicted_total_time[0]
-    return  min(result.items(), key=lambda x: x[1]) # (act, remaining_time)
+            rows.append(_to_row_df(temp_query_instance).iloc[0].to_dict())
+
+    if not rows:
+        return pareto_set
+
+    temp_df = pd.DataFrame(rows)
+    temp_df["predicted_outcome"] = predictive_outcome_model.predict(temp_df)
+    temp_df["predicted_total_time"] = predictive_time_model.predict(temp_df)
+    for _, row in temp_df.iterrows():
+        pareto_set.append(
+            (
+                row['NEXT_ACTIVITY'],
+                row['NEXT_RESOURCE'],
+                float(row['predicted_outcome']),
+                float(row['predicted_total_time']),
+            )
+        )
+    return pareto_set
+
+def select_best_pareto_action(pareto_set):
+    """Select the best action/resource pair from the Pareto set."""
+    if not pareto_set:
+        return None
+
+    pareto_vals = np.array([[item[2], item[3]] for item in pareto_set], dtype=float)
+    is_pareto = paretoset(pareto_vals, sense=["max", "min"])
+    pareto_front = [item for item, keep in zip(pareto_set, is_pareto) if keep]
+    pareto_front_vals = np.array([[item[2], item[3]] for item in pareto_front], dtype=float)
+    distances = np.linalg.norm(pareto_front_vals - np.array([1.0, 0.0]), axis=1)
+    best_index = np.argmin(distances)
+    best_act, best_res = pareto_front[best_index][:2]
+    return (best_act, best_res)
     
 def exhaustive_recommendations(test_log, # History of traces
                                test_data,
@@ -282,10 +202,11 @@ def exhaustive_recommendations(test_log, # History of traces
                                transition_graph,
                                window_size,
                                forbidden_map,
-                               predictive_model,
+                               predictive_outcome_model,
+                               predictive_time_model,
                                act_with_res):
     """
-    This function generates the exhaustive recommendations by choosing the pair with smallest predicted outcome.
+    This function generates the exhaustive recommendations by choosing the pair with smallest predicted remaining time and highest predicted outcome using a Pareto front approach.
     """
     rec = {}
     
@@ -309,13 +230,198 @@ def exhaustive_recommendations(test_log, # History of traces
         trace_history = trace_df[activity_column_name].tolist()
         current_execution = test_data[test_data[case_id_name] == cid]
         
-        query_instance = current_execution.drop([case_id_name, start_date_name, end_date_name, "total_time", 'label', "remaining_time", outcome_name], axis=1)
+        query_instance = current_execution.drop(
+            columns=[c for c in NON_FEATURE_COLUMNS if c in current_execution.columns]
+        )
+        query_instance = align_query_instance_with_model(query_instance, predictive_time_model)
+
 
         # possible next activities (filter forbidden)
         poss = next_possible_activities(trace_history, transition_graph, window_size)
         poss = [a for a in poss if a not in forbidden]
-        
-        (best_act, best_res), best_time = kpi_computation_exhaustive(poss, query_instance, predictive_model, act_with_res)
-        rec[cid] = (best_act, best_res)
 
+        pareto_set = generate_pareto_set(
+            query_instance,
+            poss,
+            predictive_outcome_model,
+            predictive_time_model,
+            act_with_res,
+        )
+        best_pair = select_best_pareto_action(pareto_set)
+        rec[cid] = best_pair if best_pair is not None else (None, None)
+
+    return rec
+
+### Genetic part
+def _build_valid_pairs(possible_actions: List[str], act_with_res: Dict[str, List[str]]) -> List[Tuple[str, str]]:
+    """Enumera tutte le coppie (attivita', risorsa) valide per il caso corrente.
+    Questa lista diventa il dominio discreto su cui pymoo ottimizza tramite
+    un singolo indice intero: ogni indice in [0, N-1] e' per costruzione
+    una coppia valida, quindi non servono crossover/mutazioni custom."""
+    pairs: List[Tuple[str, str]] = []
+    for act in possible_actions:
+        for res in act_with_res.get(act, []):
+            pairs.append((act, res))
+    return pairs
+ 
+ 
+def _evaluate_candidates(
+    candidate_pairs: List[Tuple[str, str]],
+    query_instance,
+    predictive_outcome_model,
+    predictive_time_model,
+) -> np.ndarray:
+    """Valuta in batch una lista di candidati (stesso pattern di generate_pareto_set).
+ 
+    Returns
+    -------
+    np.ndarray shape (n_candidati, 2) colonne = [predicted_outcome, predicted_total_time]
+    """
+    rows = []
+    for next_act, next_res in candidate_pairs:
+        temp_query_instance = query_instance.copy()
+        temp_query_instance['NEXT_ACTIVITY'] = next_act
+        temp_query_instance['NEXT_RESOURCE'] = next_res
+        rows.append(_to_row_df(temp_query_instance).iloc[0].to_dict())
+ 
+    temp_df = pd.DataFrame(rows)
+    predicted_outcome = predictive_outcome_model.predict(temp_df)
+    predicted_total_time = predictive_time_model.predict(temp_df)
+    return np.column_stack([predicted_outcome, predicted_total_time])
+ 
+ 
+class _ActivityResourceProblem(Problem):
+    """Problema pymoo a variabile intera: x in {0, ..., len(valid_pairs)-1}.
+    f1 = -predicted_outcome (pymoo minimizza -> massimizza outcome)
+    f2 =  predicted_total_time (minimizza tempo)"""
+ 
+    def __init__(self, valid_pairs, query_instance, predictive_outcome_model, predictive_time_model):
+        super().__init__(n_var=1, n_obj=2, n_constr=0, xl=0, xu=max(len(valid_pairs) - 1, 0), vtype=int)
+        self.valid_pairs = valid_pairs
+        self.query_instance = query_instance
+        self.predictive_outcome_model = predictive_outcome_model
+        self.predictive_time_model = predictive_time_model
+ 
+    def _evaluate(self, X, out, *args, **kwargs):
+        idx = np.clip(np.round(X[:, 0]).astype(int), 0, len(self.valid_pairs) - 1)
+        candidates = [self.valid_pairs[i] for i in idx]
+        objs = _evaluate_candidates(candidates, self.query_instance, self.predictive_outcome_model, self.predictive_time_model)
+        out["F"] = np.column_stack([-objs[:, 0], objs[:, 1]])
+ 
+ 
+def nsga2_pareto_search(
+    query_instance,
+    possible_actions: List[str],
+    act_with_res: Dict[str, List[str]],
+    predictive_outcome_model,
+    predictive_time_model,
+    pop_size: int = 20,
+    n_generations: int = 15,
+    crossover_rate: float = 0.9,
+    mutation_rate: float = 0.3,
+    random_state: Optional[int] = None,
+) -> List[Tuple[str, str, float, float]]:
+    """
+    Esegue NSGA-II (pymoo) sullo spazio discreto (NEXT_ACTIVITY, NEXT_RESOURCE)
+    e restituisce il fronte di Pareto finale nello stesso formato prodotto da
+    `generate_pareto_set`, cosi' da poter riusare senza modifiche
+    `select_best_pareto_action`.
+    """
+    valid_pairs = _build_valid_pairs(possible_actions, act_with_res)
+    if not valid_pairs:
+        return []
+ 
+    if len(valid_pairs) == 1:
+        objs = _evaluate_candidates(valid_pairs, query_instance, predictive_outcome_model, predictive_time_model)
+        act, res = valid_pairs[0]
+        return [(act, res, float(objs[0, 0]), float(objs[0, 1]))]
+ 
+    problem = _ActivityResourceProblem(valid_pairs, query_instance, predictive_outcome_model, predictive_time_model)
+ 
+    algorithm = NSGA2(
+        pop_size=min(pop_size, len(valid_pairs)),
+        sampling=IntegerRandomSampling(),
+        crossover=SBX(prob=crossover_rate, eta=15, vtype=float, repair=RoundingRepair()),
+        mutation=PM(prob=mutation_rate, eta=20, vtype=float, repair=RoundingRepair()),
+        eliminate_duplicates=True,
+    )
+ 
+    res = minimize(problem, algorithm, get_termination("n_gen", n_generations), seed=random_state, verbose=False)
+    if res.X is None:
+        return []
+ 
+    X, F = np.atleast_2d(res.X), np.atleast_2d(res.F)
+    pareto_set, seen = [], set()
+    for i in range(X.shape[0]):
+        xi = int(np.clip(round(X[i, 0]), 0, len(valid_pairs) - 1))
+        if xi in seen:
+            continue
+        seen.add(xi)
+        act, resource = valid_pairs[xi]
+        pareto_set.append((act, resource, float(-F[i, 0]), float(F[i, 1])))
+    return pareto_set
+ 
+ 
+def nsga2_recommendations(
+    test_log: pd.DataFrame,
+    test_data: pd.DataFrame,
+    case_study: str,
+    case_id_name: str,
+    activity_column_name: str,
+    transition_graph,
+    window_size: int,
+    forbidden_map: Dict[str, List[str]],
+    predictive_outcome_model,
+    predictive_time_model,
+    act_with_res: Dict[str, List[str]],
+    query_instances_by_case: Dict[Any, Any],
+    pop_size: int = 20,
+    n_generations: int = 15,
+    crossover_rate: float = 0.9,
+    mutation_rate: float = 0.3,
+    random_state: Optional[int] = None,
+) -> Dict[Any, Tuple[Optional[str], Optional[str]]]:
+    """
+    Sostituisce `genetic_recommendations` (DiCE): stessa struttura di
+    `exhaustive_recommendations`, ma il fronte di Pareto per ogni caso viene
+    generato con NSGA-II (pymoo) invece dell'enumerazione esaustiva. La
+    scelta finale usa la STESSA regola gia' presente nel progetto
+    (`select_best_pareto_action`).
+    """
+    forbidden = set(forbidden_map.get(case_study, []))
+    rec: Dict[Any, Tuple[Optional[str], Optional[str]]] = {}
+ 
+    for cid in tqdm.tqdm(pd.unique(test_data[case_id_name])):
+        trace_df = test_log[test_log[case_id_name] == cid]
+        trace_history = trace_df[activity_column_name].tolist()
+ 
+        query_instance = _to_row_df(query_instances_by_case[cid])
+        query_instance = align_query_instance_with_model(query_instance, predictive_time_model)
+ 
+        poss = next_possible_activities(trace_history, transition_graph, window_size)
+        poss = [a for a in poss if a not in forbidden]
+        if not poss:
+            rec[cid] = (None, None)
+            continue
+ 
+        pareto_front = nsga2_pareto_search(
+            query_instance=query_instance,
+            possible_actions=poss,
+            act_with_res=act_with_res,
+            predictive_outcome_model=predictive_outcome_model,
+            predictive_time_model=predictive_time_model,
+            pop_size=pop_size,
+            n_generations=n_generations,
+            crossover_rate=crossover_rate,
+            mutation_rate=mutation_rate,
+            random_state=random_state,
+        )
+ 
+        if not pareto_front:
+            rec[cid] = (None, None)
+            continue
+ 
+        best_pair = select_best_pareto_action(pareto_front)
+        rec[cid] = best_pair if best_pair is not None else (None, None)
+ 
     return rec

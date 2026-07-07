@@ -11,10 +11,11 @@ def load_case_study(case_study):
 
 def get_case_study_features(case_study):
     # Loading predictive model
-    predictive_model = joblib.load(f'./case_studies/{case_study}/model/catboost_model.joblib') 
+    predictive_outcome_model = joblib.load(f'./case_studies/{case_study}/model/catboost_model_label.joblib')
+    predictive_time_model = joblib.load(f'./case_studies/{case_study}/model/catboost_model_sigmoid_mm.joblib')
     # Loading features
     case_id_name, activity_column_name, resource_column_name, continuous_features, categorical_features, columns_to_remove = get_features(case_study)
-    return predictive_model, case_id_name, activity_column_name, resource_column_name, continuous_features, categorical_features, columns_to_remove
+    return predictive_outcome_model, predictive_time_model, case_id_name, activity_column_name, resource_column_name, continuous_features, categorical_features, columns_to_remove
 
 def get_features(case_study: str) -> Tuple[str, str, str, List[str], List[str], List[str]]:
     """

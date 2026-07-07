@@ -6,7 +6,7 @@ import pickle
 import os
 import sys
 import time
-from typing import Dict, Any
+from typing import Dict, Any, Tuple, List, Optional
 
 # Local imports
 from utils.pre_processing_functions import convert_dtypes_bpi12
@@ -121,7 +121,8 @@ def run_experiment(
     # -------------------------
     print("Getting features...")
     (
-        predictive_model,
+        predictive_outcome_model,
+        predictive_time_model,
         case_id_name_local,
         activity_column_name_local,
         resource_column_name_local,
@@ -212,7 +213,8 @@ def run_experiment(
             transition_graph,
             window_size,
             forbidden_map,
-            predictive_model,
+            predictive_outcome_model,
+            predictive_time_model,
             act_with_res
         )
 
@@ -283,4 +285,4 @@ if __name__ == "__main__":
     )
 
 # FOR RUNNING EXPERIMENT:
-# python run_experiment.py --case_study "bpi12" --method "genetic" --num_cfes 5 --window_size 5 --reduced_threshold 0.05
+# python run_experiment.py --case_study "BPI12" --method "genetic" --num_cfes 5 --window_size 5 --reduced_threshold 0.05
