@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 import sys
 
@@ -137,6 +138,7 @@ def train_ml_model(train_data, test_data, case_id_name, outcome_name, columns_to
             "early_stopping_rounds": 5,
             "logging_level": "Silent",
             "l2_leaf_reg": 30,
+            "allow_writing_files": False,
         }
         
         if y_train.name == "label":
@@ -236,3 +238,6 @@ def train_ml_model(train_data, test_data, case_id_name, outcome_name, columns_to
         output_dir.mkdir(parents=True, exist_ok=True)
         model_path = output_dir / f"catboost_model_{y_train.name}.joblib"
         joblib.dump(best_pipeline, model_path)
+        hyperparams_path = output_dir / f"best_hyperparams_{y_train.name}.json"
+        with open(hyperparams_path, 'w') as f:
+            json.dump(best_hyper_params, f)
