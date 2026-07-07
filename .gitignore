@@ -1,0 +1,37 @@
+# VS Code
+.vscode/
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+venv.bak/
+env.bak/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Archives
+*.zip
+*.tar
+*.gz
+*.rar
+
+# macOS / Windows junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local config / logs
+.env
+*.log
+
+# macOS extra folders
+__MACOSX/
