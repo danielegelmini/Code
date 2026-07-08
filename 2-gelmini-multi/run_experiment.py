@@ -302,4 +302,10 @@ if __name__ == "__main__":
     )
 
 # FOR RUNNING EXPERIMENT:
+# case_study: "BAC", "BPI12", "bpi17_before", "bpi17_after"
+
+# example method: "genetic"
 # python run_experiment.py --case_study "BPI12" --method "nsga2" --window_size 5 --reduced_threshold 0.05 --pop_size 20 --n_generations 15
+
+# example method: "exhaustive"
+# python run_experiment.py --case_study "BPI12" --method "exhaustive" --window_size 5 --reduced_threshold 0.05
