@@ -329,19 +329,17 @@ def nsga2_pareto_search(
     problem = _ActivityResourceProblem(valid_pairs, query_instance, predictive_outcome_model, predictive_time_model)
 
     algorithm = NSGA2(
-        pop_size=pop_size, #initialize population
+        pop_size=min(pop_size, len(valid_pairs)),
         sampling=IntegerRandomSampling(),
         crossover=SBX(prob=crossover_rate, eta=15, vtype=float, repair=RoundingRepair()),
         mutation=PM(prob=mutation_rate, eta=20, vtype=float, repair=RoundingRepair()),
         eliminate_duplicates=True,
     )
 
-    # Running the generations
     res = minimize(problem, algorithm, get_termination("n_gen", n_generations), seed=random_state, verbose=False)
-
     if res.X is None:
         return []
-    # Winner extraction: convert the continuous solution to discrete indices and retrieve the corresponding (activity, resource) pairs
+
     X, F = np.atleast_2d(res.X), np.atleast_2d(res.F)
     pareto_set, seen = [], set()
     for i in range(X.shape[0]):
@@ -361,14 +359,11 @@ def select_best_pareto_action(pareto_set):
     if not pareto_set:
         return None
 
-    ideal_point = np.array([1.0, 0.0])  # Ideal point for max outcome and min time
-
     pareto_vals = np.array([[item[2], item[3]] for item in pareto_set], dtype=float)
     is_pareto = paretoset(pareto_vals, sense=["max", "min"])
     pareto_front = [item for item, keep in zip(pareto_set, is_pareto) if keep]
     pareto_front_vals = np.array([[item[2], item[3]] for item in pareto_front], dtype=float)
-
-    distances = np.linalg.norm(pareto_front_vals - ideal_point, axis=1)
+    distances = np.linalg.norm(pareto_front_vals - np.array([1.0, 0.0]), axis=1)
     best_index = np.argmin(distances)
     best_act, best_res = pareto_front[best_index][:2]
     return (best_act, best_res)
