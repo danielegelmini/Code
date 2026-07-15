@@ -31,17 +31,13 @@ def get_features(case_study: str) -> Tuple[str, str, str, List[str], List[str], 
     columns_to_remove = [
         case_id_name, start_date_name, end_date_name, "total_time",  "label", "sigmoid_mm", "remaining_time"
     ]
-    # Some case labels are aliases of the same schema
-    aliases = {
-        "bpi17_before": "bpi17",
-        "bpi17_after": "bpi17",
-    }
-    key = aliases.get(case_study, case_study)
+    # Use the case_study directly so before/after can have distinct configs
+    key = case_study
 
 
     CONFIG = {
-        # --- BPI 2017 (before/after share the same features) ---
-        "bpi17": {
+        # --- BPI 2017 (before variant: unprefixed columns) ---
+        "bpi17_before": {
             "continuous": [
                 "RequestedAmount",
                 "# ACTIVITY=A_Cancelled", "# ACTIVITY=O_Returned",
@@ -63,6 +59,32 @@ def get_features(case_study: str) -> Tuple[str, str, str, List[str], List[str], 
                 activity_column_name, resource_column_name, "NEXT_ACTIVITY",
                 "NEXT_RESOURCE", "weekday", "Action", "EventOrigin",
                 "LoanGoal", "ApplicationType",
+            ],
+        },
+
+        # --- BPI 2017 (after variant: prefixed columns) ---
+        "bpi17_after": {
+            "continuous": [
+                "case:RequestedAmount",
+                "# ACTIVITY=A_Cancelled", "# ACTIVITY=O_Returned",
+                "# ACTIVITY=A_Denied", "# ACTIVITY=A_Submitted",
+                "# ACTIVITY=O_Cancelled", "# ACTIVITY=O_Refused",
+                "# ACTIVITY=W_Validate application",
+                "# ACTIVITY=W_Assess potential fraud",
+                "# ACTIVITY=W_Complete application", "# ACTIVITY=A_Complete",
+                "# ACTIVITY=W_Call after offers", "# ACTIVITY=O_Sent (online only)",
+                "# ACTIVITY=O_Created", "# ACTIVITY=O_Sent (mail and online)",
+                "# ACTIVITY=A_Validating", "# ACTIVITY=O_Accepted",
+                "# ACTIVITY=W_Call incomplete files", "# ACTIVITY=A_Accepted",
+                "# ACTIVITY=A_Create Application", "# ACTIVITY=A_Concept",
+                "# ACTIVITY=W_Handle leads", "# ACTIVITY=A_Pending",
+                "# ACTIVITY=A_Incomplete", "# ACTIVITY=O_Create Offer",
+                "time_from_start", "time_from_previous_event(start)", "event_duration",
+            ],
+            "categorical": [
+                activity_column_name, resource_column_name, "NEXT_ACTIVITY",
+                "NEXT_RESOURCE", "weekday", "Action", "EventOrigin",
+                "case:LoanGoal", "case:ApplicationType",
             ],
         },
         

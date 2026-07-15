@@ -1,0 +1,8 @@
+{
+    "learning_rate": 0.09749805282717817,
+    "depth": 5,
+    "l2_leaf_reg": 38.364496306610796,
+    "colsample_bylevel": 0.996055992239733,
+    "bootstrap_type": "MVS",
+    "subsample": 0.9145352337567972
+}

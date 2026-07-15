@@ -100,3 +100,58 @@ def train_test_split(df, case_study, t_split, case_id_name):
     print(f"Number of traces in test: {len(test_data['case:concept:name'].unique())} ({len(test_data['case:concept:name'].unique())/len(df['case:concept:name'].unique())*100:.2f}%)")
 
     return train_data, test_data
+
+def extract_internal_running_validation(X_trans, y_train, train_data, case_id_name, train_ratio=0.85):
+    """
+    Simula lo split temporale del predecessore all'interno di Optuna.
+    Prende le tracce di train originarie, trova un t_split interno basato sulla 
+    proporzione fornita (es. 85%) e isola le tracce in corso (running) da usare come validazione.
+    """
+    import pandas as pd
+    import numpy as np
+    
+    # Ricostruiamo la mappatura dei Case ID e dei relativi Timestamp
+    df_mini = pd.DataFrame({
+        'case_id': train_data.loc[y_train.index, case_id_name],
+        'timestamp': train_data.loc[y_train.index, 'time:timestamp']
+    })
+    
+    # Ordiniamo le tracce in base al loro istante di completamento
+    trace_ends = df_mini.groupby('case_id')['timestamp'].max().sort_values()
+    
+    # Identifichiamo il punto di split interno (es. all'85%)
+    target_train_count = int(len(trace_ends) * train_ratio)
+    if target_train_count == 0 or target_train_count >= len(trace_ends):
+        # Fallback di sicurezza se il dataset è troppo piccolo per essere campionato cronologicamente
+        split_pos = int(len(X_trans) * train_ratio)
+        return X_trans[:split_pos], X_trans[split_pos:], y_train.iloc[:split_pos], y_train.iloc[split_pos:]
+        
+    t_split_internal = trace_ends.iloc[target_train_count]
+    
+    # ID delle tracce assegnate al sotto-addestramento (completate prima del t_split)
+    sub_train_ids = trace_ends.iloc[:target_train_count].index.values
+    
+    # Le tracce di validazione sono quelle "in corso": iniziate prima o a t_split, ma non ancora completate
+    trace_starts = df_mini.groupby('case_id')['timestamp'].min()
+    started_before_split = trace_starts[trace_starts <= t_split_internal].index
+    
+    sub_val_ids = df_mini[
+        (df_mini['case_id'].isin(started_before_split)) & 
+        (~df_mini['case_id'].isin(sub_train_ids))
+    ]['case_id'].unique()
+    
+    # Estraiamo gli indici di riga del dataframe originale
+    tr_indices = df_mini[df_mini['case_id'].isin(sub_train_ids)].index
+    val_indices = df_mini[df_mini['case_id'].isin(sub_val_ids)].index
+    
+    # Fallback nel caso in cui non ci siano tracce attive in quel preciso istante
+    if len(val_indices) == 0 or len(tr_indices) == 0:
+        split_pos = int(len(X_trans) * train_ratio)
+        return X_trans[:split_pos], X_trans[split_pos:], y_train.iloc[:split_pos], y_train.iloc[split_pos:]
+        
+    # Mappiamo gli indici originali sulle posizioni correnti all'interno delle matrici
+    pos_map = {idx: pos for pos, idx in enumerate(y_train.index)}
+    tr_pos = [pos_map[i] for i in tr_indices if i in pos_map]
+    val_pos = [pos_map[i] for i in val_indices if i in pos_map]
+    
+    return X_trans[tr_pos], X_trans[val_pos], y_train.iloc[tr_pos], y_train.iloc[val_pos]

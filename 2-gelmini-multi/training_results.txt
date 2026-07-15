@@ -1,0 +1,85 @@
+===================================================================
+RIEPILOGO IPERPARAMETRI E METRICHE PER OGNI DATASET (CATBOOST)
+===================================================================
+1. DATASET BAC
+-------------------------------------------------------------------
+* Configurazione Spazio di Ricerca utilizzato (Optuna):
+  - learning_rate: [0.01, 0.30]
+  - depth: [4, 8]
+  - l2_leaf_reg: [1.0, 30.0]
+  - bootstrap_type: ["Bayesian", "Bernoulli", "MVS"]
+
+* Metriche Modello 1 (label - Classificatore):
+  - Validation Score (Miglior Trial Optuna): 0.90699 (Trial 41)
+  - Parametri Ottimi: depth: 8, l2_leaf_reg: 8.79, learning_rate: 0.170, bootstrap_type: MVS
+  - Convergenza Early Stopping: Interrotta a 180 iterazioni (bestTest = 0.9097)
+  - Accuracy score of training set: 0.9298 (92.98%)
+  - Accuracy score of test set: 0.9116 (91.16%)
+
+* Metriche Modello 2 (sigmoid_mm - Regressore):
+  - Validation Score (Miglior Trial Optuna): 0.38846 (Trial 22)
+  - Parametri Ottimi: depth: 7, l2_leaf_reg: 1.94, learning_rate: 0.098, bootstrap_type: Bayesian
+  - Convergenza Early Stopping: Interrotta a 940 iterazioni (bestTest = 0.3684)
+  - R2 score of training set: 0.3877
+  - R2 score of test set: 0.4010
+
+2. DATASET BPI12
+-------------------------------------------------------------------
+* Configurazione Spazio di Ricerca (Optuna Aggressivo):
+  - learning_rate: [0.01, 0.3]
+  - depth: [4, 8]
+  - l2_leaf_reg: [1.0, 30.0]
+  - bootstrap_type: ["Bayesian", "Bernoulli", "MVS"]
+
+* Metriche Modello Regressore (sigmoid_mm) - Prima del Logaritmo:
+  - Validation Score (Miglior Trial Optuna): ~0.60
+  - Train R2: 0.52 (raggiunto a 283 iterazioni)
+  - Test Set R2: 0.342
+
+* Metriche Modello Regressore (sigmoid_mm) - Con Trasformazione Logaritmica [1 + log(y)]:
+  - Validation Score (Miglior Trial Optuna): 0.489
+  - Train R2: 0.50 (raggiunto in sole 160 iterazioni)
+  - Test Set R2: 0.338
+
+3. DATASET BPI17_AFTER (Con restrizioni / Iperparametri Corretti)
+-------------------------------------------------------------------
+* Configurazione Spazio di Ricerca utilizzato (Optuna Regolarizzato):
+  - learning_rate: [0.01, 0.15]
+  - depth: [3, 6]
+  - l2_leaf_reg: [15.0, 60.0]
+
+* Metriche Modello 1 (label - Classificatore):
+  - Validation Score (Miglior Trial Optuna): 0.78107 (Trial 53)
+  - Parametri Ottimi: depth: 6, l2_leaf_reg: 19.31, learning_rate: 0.122, bootstrap_type: MVS, subsample: 0.93
+  - Convergenza Early Stopping: Interrotta a 91 iterazioni (bestTest = 0.8255)
+  - Accuracy score of training set: 0.7639 (76.39%)
+  - Accuracy score of test set: 0.7051 (70.51%)
+
+* Metriche Modello 2 (sigmoid_mm - Regressore):
+  - Validation Score (Miglior Trial Optuna): 0.45023 (Trial 45)
+  - Parametri Ottimi: depth: 6, l2_leaf_reg: 46.68, learning_rate: 0.106, bootstrap_type: Bayesian, bagging_temperature: 7.02
+  - Convergenza Early Stopping: Interrotta a 534 iterazioni (bestTest = 0.4004)
+  - R2 score of training set: 0.5028
+  - R2 score of test set: 0.2898 (Incremento straordinario, overfitting controllato)
+  
+4. DATASET BPI17_BEFORE (Con restrizioni / Iperparametri Corretti)
+-------------------------------------------------------------------
+* Configurazione Spazio di Ricerca (Range Ristretti e Regolarizzati):
+  - learning_rate: [0.01, 0.15] (massimo dimezzato)
+  - depth: [3, 6] (massimo abbassato da 8 a 6)
+  - l2_leaf_reg: [15.0, 60.0] (minimo alzato drasticamente da 5 a 15)
+
+* Metriche Modello 1 (label - Classificatore):
+  - Validation Score (Miglior Trial Optuna): 0.74617 (Trial 60)
+  - Parametri Ottimi: depth: 6, l2_leaf_reg: 28.54, learning_rate: 0.121, bootstrap_type: MVS, subsample: 0.63
+  - Convergenza Early Stopping: Interrotta a 42 iterazioni (bestTest = 0.8335)
+  - Accuracy score of training set: 0.7413 (74.13%)
+  - Accuracy score of test set: 0.7149 (71.49%)
+
+* Metriche Modello 2 (sigmoid_mm - Regressore):
+  - Validation Score (Miglior Trial Optuna): 0.48206 (Trial 15)
+  - Parametri Ottimi: depth: 5, l2_leaf_reg: 38.36, learning_rate: 0.097, bootstrap_type: MVS, subsample: 0.91
+  - Convergenza Early Stopping: Interrotta a 335 iterazioni (bestTest = 0.3741)
+  - R2 score of training set: 0.4414
+  - R2 score of test set: 0.2779 (Incremento netto rispetto allo scenario senza feature)
+===================================================================

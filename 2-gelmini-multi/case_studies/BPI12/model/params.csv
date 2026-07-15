@@ -1,2 +1,2 @@
-timestamp,case_study,learning_rate,depth,n_iterations
-2026-07-07 11:18:27,BPI12,0.1,9,2000
+timestamp,case_study,optuna_trials,early_stopping_rounds,search_learning_rate,search_depth,search_l2_leaf_reg,search_colsample_bylevel,search_bootstrap_type
+2026-07-13 13:39:38,BPI12,80,50,"{'type': 'float', 'min': 0.01, 'max': 0.3, 'log': True}","{'type': 'int', 'min': 4, 'max': 8}","{'type': 'float', 'min': 5.0, 'max': 40.0}","{'type': 'float', 'min': 0.5, 'max': 1.0}","{'type': 'categorical', 'choices': ['Bayesian', 'Bernoulli', 'MVS']}"
