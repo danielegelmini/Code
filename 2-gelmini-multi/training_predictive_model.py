@@ -66,7 +66,6 @@ def main():
         train_data=train_data, 
         test_data=test_data, 
         case_id_name=case_id_name, 
-        outcome_name='outcome', 
         columns_to_remove=columns_to_remove, 
         continuous_features=continuous_features, 
         categorical_features=categorical_features, 

@@ -79,7 +79,7 @@ def main():
     print(" >>> FILTERING AND GENERATING TEST LOGS <<< ")
     print("="*50)
     
-# 1. Convert the timestamp column to datetime FIRST
+    # 1. Convert the timestamp column to datetime FIRST
     test_data['time:timestamp'] = pd.to_datetime(test_data['time:timestamp'], format='mixed')
     
     # 2. Convert the string split_time to a datetime object

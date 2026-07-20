@@ -18,14 +18,17 @@ from optuna.integration import CatBoostPruningCallback
 
 from utils.train_test_split import extract_internal_running_validation
 
-def prepare_df_for_ml(df, case_id_name, outcome_name, columns_to_remove=None):
+def prepare_df_for_ml(df, case_id_name, columns_to_remove=None):
     df = df.drop(columns=[case_id_name], errors='ignore')
-    y1, y2 = df.label, df.sigmoid_mm
+    
+    y1 = df.label
+    y2 = df.sigmoid_mm
 
     if columns_to_remove is not None:
         df = df.drop(columns=columns_to_remove, axis="columns", errors='ignore')
 
-    X = df.drop([outcome_name], axis=1)
+    X = df.drop(columns=["label", "sigmoid_mm"], errors='ignore')
+    
     return X, y1, y2
 
 def filter_features(features, dataset_columns, feature_type):
@@ -35,7 +38,7 @@ def filter_features(features, dataset_columns, feature_type):
         print(f"Warning: the following {feature_type} features are not in training data and will be skipped: {missing}")
     return present
 
-def train_ml_model(train_data, test_data, case_id_name, outcome_name, columns_to_remove,
+def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
                    continuous_features, categorical_features, case_study=None, params=None):
 
     if params is None:
@@ -45,8 +48,9 @@ def train_ml_model(train_data, test_data, case_id_name, outcome_name, columns_to
     early_stopping_rounds = params.get("early_stopping_rounds", 50)
     search_spaces_config = params.get("search_spaces", {})
 
-    X_train_raw, y_train1, y_train2 = prepare_df_for_ml(train_data, case_id_name, outcome_name, columns_to_remove)
-    X_test_raw, y_test1, y_test2 = prepare_df_for_ml(test_data, case_id_name, outcome_name, columns_to_remove)
+    X_train_raw, y_train1, y_train2 = prepare_df_for_ml(train_data, case_id_name,  columns_to_remove)
+    X_test_raw,  y_test1,  y_test2 = prepare_df_for_ml(test_data, 
+    case_id_name,  columns_to_remove)
 
     continuous_features = filter_features(continuous_features, X_train_raw.columns, "continuous")
     categorical_features = filter_features(categorical_features, X_train_raw.columns, "categorical")
