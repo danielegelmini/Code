@@ -291,8 +291,8 @@ def nsga2_pareto_search(
     act_with_res: Dict[str, List[str]],
     predictive_outcome_model,
     predictive_time_model,
-    pop_size: int = 20,
-    n_generations: int = 15,
+    pop_size: int = 50,
+    n_generations: int = 10,
     crossover_rate: float = 0.9,
     mutation_rate: float = 0.3,
     random_state: Optional[int] = None,
@@ -307,8 +307,8 @@ def nsga2_pareto_search(
         act_with_res (Dict[str, List[str]]): Mapping of valid resources for each activity.
         predictive_outcome_model: The predictive model for the primary outcome.
         predictive_time_model: The predictive model for total/remaining time.
-        pop_size (int, optional): The population size for the genetic algorithm. Defaults to 20.
-        n_generations (int, optional): The number of generations to evolve. Defaults to 15.
+        pop_size (int, optional): The population size for the genetic algorithm. Defaults to 50.
+        n_generations (int, optional): The number of generations to evolve. Defaults to 10.
         crossover_rate (float, optional): The probability of crossover. Defaults to 0.9.
         mutation_rate (float, optional): The probability of mutation. Defaults to 0.3.
         random_state (int, optional): Seed for reproducibility. Defaults to None.

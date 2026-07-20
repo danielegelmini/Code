@@ -1,0 +1,645 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<pnml>
+  <net id="" type="http://www.pnml.org/version-2009/grammar/pnmlcoremodel">
+    <name>
+      <text></text>
+    </name>
+    <page id="n0">
+      <place id="ent_or_28">
+        <name>
+          <text>ent_or_28</text>
+        </name>
+      </place>
+      <place id="exi_xor_12">
+        <name>
+          <text>exi_xor_12</text>
+        </name>
+      </place>
+      <place id="ent_O_SENT">
+        <name>
+          <text>ent_O_SENT</text>
+        </name>
+      </place>
+      <place id="exi_W_Completeren aanvraag__loop_split">
+        <name>
+          <text>exi_W_Completeren aanvraag__loop_split</text>
+        </name>
+      </place>
+      <place id="exi_W_Afhandelen leads__loop_split">
+        <name>
+          <text>exi_W_Afhandelen leads__loop_split</text>
+        </name>
+      </place>
+      <place id="ent_xor_33">
+        <name>
+          <text>ent_xor_33</text>
+        </name>
+      </place>
+      <place id="exi_xor_2">
+        <name>
+          <text>exi_xor_2</text>
+        </name>
+      </place>
+      <place id="exi_xor_9">
+        <name>
+          <text>exi_xor_9</text>
+        </name>
+      </place>
+      <place id="ent_W_Afhandelen leads__loop_join">
+        <name>
+          <text>ent_W_Afhandelen leads__loop_join</text>
+        </name>
+      </place>
+      <place id="1d821401-bf4c-4e06-80cf-24b5606f40fa">
+        <name>
+          <text>1d821401-bf4c-4e06-80cf-24b5606f40fa</text>
+        </name>
+      </place>
+      <place id="ent_W_Completeren aanvraag__loop_join">
+        <name>
+          <text>ent_W_Completeren aanvraag__loop_join</text>
+        </name>
+      </place>
+      <place id="ent_A_CANCELLED">
+        <name>
+          <text>ent_A_CANCELLED</text>
+        </name>
+      </place>
+      <place id="ent_W_Valideren aanvraag__loop_join">
+        <name>
+          <text>ent_W_Valideren aanvraag__loop_join</text>
+        </name>
+      </place>
+      <place id="ent_O_CANCELLED">
+        <name>
+          <text>ent_O_CANCELLED</text>
+        </name>
+      </place>
+      <place id="ent_A_APPROVED">
+        <name>
+          <text>ent_A_APPROVED</text>
+        </name>
+      </place>
+      <place id="sink">
+        <name>
+          <text>sink</text>
+        </name>
+      </place>
+      <place id="ent_xor_22">
+        <name>
+          <text>ent_xor_22</text>
+        </name>
+      </place>
+      <place id="exi_W_Nabellen offertes__loop_split">
+        <name>
+          <text>exi_W_Nabellen offertes__loop_split</text>
+        </name>
+      </place>
+      <place id="ent_xor_34">
+        <name>
+          <text>ent_xor_34</text>
+        </name>
+      </place>
+      <place id="exi_W_Valideren aanvraag__loop_split">
+        <name>
+          <text>exi_W_Valideren aanvraag__loop_split</text>
+        </name>
+      </place>
+      <place id="ent_xor_16">
+        <name>
+          <text>ent_xor_16</text>
+        </name>
+      </place>
+      <place id="ent_or_25">
+        <name>
+          <text>ent_or_25</text>
+        </name>
+      </place>
+      <place id="ent_or_27">
+        <name>
+          <text>ent_or_27</text>
+        </name>
+      </place>
+      <place id="exi_xor_11">
+        <name>
+          <text>exi_xor_11</text>
+        </name>
+      </place>
+      <place id="exi_W_Nabellen incomplete dossiers__loop_split">
+        <name>
+          <text>exi_W_Nabellen incomplete dossiers__loop_split</text>
+        </name>
+      </place>
+      <place id="exi_xor_14">
+        <name>
+          <text>exi_xor_14</text>
+        </name>
+      </place>
+      <place id="ent_W_Beoordelen fraude__loop_join">
+        <name>
+          <text>ent_W_Beoordelen fraude__loop_join</text>
+        </name>
+      </place>
+      <place id="ent_xor_32">
+        <name>
+          <text>ent_xor_32</text>
+        </name>
+      </place>
+      <place id="ent_A_PARTLYSUBMITTED">
+        <name>
+          <text>ent_A_PARTLYSUBMITTED</text>
+        </name>
+      </place>
+      <place id="ent_A_DECLINED">
+        <name>
+          <text>ent_A_DECLINED</text>
+        </name>
+      </place>
+      <place id="9b22d2d0-f1b5-4643-86ec-3bfa32364af2">
+        <name>
+          <text>9b22d2d0-f1b5-4643-86ec-3bfa32364af2</text>
+        </name>
+      </place>
+      <place id="ent_W_Nabellen incomplete dossiers__loop_join">
+        <name>
+          <text>ent_W_Nabellen incomplete dossiers__loop_join</text>
+        </name>
+      </place>
+      <place id="exi_W_Beoordelen fraude__loop_split">
+        <name>
+          <text>exi_W_Beoordelen fraude__loop_split</text>
+        </name>
+      </place>
+      <place id="ent_W_Nabellen offertes__loop_join">
+        <name>
+          <text>ent_W_Nabellen offertes__loop_join</text>
+        </name>
+      </place>
+      <place id="exi_xor_4">
+        <name>
+          <text>exi_xor_4</text>
+        </name>
+      </place>
+      <place id="exi_xor_1">
+        <name>
+          <text>exi_xor_1</text>
+        </name>
+      </place>
+      <place id="ent_or_26">
+        <name>
+          <text>ent_or_26</text>
+        </name>
+      </place>
+      <place id="ent_A_REGISTERED">
+        <name>
+          <text>ent_A_REGISTERED</text>
+        </name>
+      </place>
+      <place id="source">
+        <name>
+          <text>source</text>
+        </name>
+        <initialMarking>
+          <text>1</text>
+        </initialMarking>
+      </place>
+      <transition id="sfl_2fccc1d0-29ff-452c-b3ec-30104e2ff62d">
+        <name>
+          <text>sfl_2fccc1d0-29ff-452c-b3ec-30104e2ff62d</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="4ddb3125-f527-4ba9-b84a-083b8b372a82"/>
+      </transition>
+      <transition id="O_DECLINED">
+        <name>
+          <text>O_DECLINED</text>
+        </name>
+      </transition>
+      <transition id="A_PREACCEPTED">
+        <name>
+          <text>A_PREACCEPTED</text>
+        </name>
+      </transition>
+      <transition id="532ad49f-f5e7-4c43-a61e-9e7c660217a9">
+        <name>
+          <text>532ad49f-f5e7-4c43-a61e-9e7c660217a9</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="53a292e2-e6ff-41e0-8163-299aea38a0aa"/>
+      </transition>
+      <transition id="A_FINALIZED">
+        <name>
+          <text>A_FINALIZED</text>
+        </name>
+      </transition>
+      <transition id="sfl_b53cfcbf-d15b-439e-8fa3-82cb7fc53e94">
+        <name>
+          <text>sfl_b53cfcbf-d15b-439e-8fa3-82cb7fc53e94</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="a9ed8e6d-00f9-4a27-8b7d-f624b9dbc125"/>
+      </transition>
+      <transition id="A_ACCEPTED">
+        <name>
+          <text>A_ACCEPTED</text>
+        </name>
+      </transition>
+      <transition id="sfl_c1326c19-d470-4743-8348-c33060a3e6c2">
+        <name>
+          <text>sfl_c1326c19-d470-4743-8348-c33060a3e6c2</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="3b434e58-ed91-47f5-8c04-1183e57c6783"/>
+      </transition>
+      <transition id="sfl_7b4ce3db-6001-4df4-9200-24d0886ab71a">
+        <name>
+          <text>sfl_7b4ce3db-6001-4df4-9200-24d0886ab71a</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="83029076-fe6d-410f-9e88-c5485b046e92"/>
+      </transition>
+      <transition id="sfl_a4191d8a-8f50-471b-85fe-3405cf3b86cf">
+        <name>
+          <text>sfl_a4191d8a-8f50-471b-85fe-3405cf3b86cf</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="36a03542-e9b7-4e70-bf73-225282547125"/>
+      </transition>
+      <transition id="O_CREATED">
+        <name>
+          <text>O_CREATED</text>
+        </name>
+      </transition>
+      <transition id="W_Nabellen offertes">
+        <name>
+          <text>W_Nabellen offertes</text>
+        </name>
+      </transition>
+      <transition id="sfl_a6d10b61-75dc-4b07-9b7e-9073fd4d07af">
+        <name>
+          <text>sfl_a6d10b61-75dc-4b07-9b7e-9073fd4d07af</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="33dfc2b5-478f-4198-afad-bb8b629a6b88"/>
+      </transition>
+      <transition id="A_APPROVED">
+        <name>
+          <text>A_APPROVED</text>
+        </name>
+      </transition>
+      <transition id="sfl_9d38f2f7-7df6-43da-84a8-9b37197cc8c3">
+        <name>
+          <text>sfl_9d38f2f7-7df6-43da-84a8-9b37197cc8c3</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="d401062c-4a66-47f4-b107-2c03be5a6e7e"/>
+      </transition>
+      <transition id="W_Nabellen incomplete dossiers">
+        <name>
+          <text>W_Nabellen incomplete dossiers</text>
+        </name>
+      </transition>
+      <transition id="sfl_d3c2ea0e-e9e6-4e75-b902-497633b656cd">
+        <name>
+          <text>sfl_d3c2ea0e-e9e6-4e75-b902-497633b656cd</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="44776cb7-e4ff-4901-b071-39d939b4c7b6"/>
+      </transition>
+      <transition id="sfl_abfa206d-4969-4919-b932-180a84f78aea">
+        <name>
+          <text>sfl_abfa206d-4969-4919-b932-180a84f78aea</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="a1051c10-6a82-486b-92d5-c2ad970f52c9"/>
+      </transition>
+      <transition id="O_CANCELLED">
+        <name>
+          <text>O_CANCELLED</text>
+        </name>
+      </transition>
+      <transition id="W_Beoordelen fraude">
+        <name>
+          <text>W_Beoordelen fraude</text>
+        </name>
+      </transition>
+      <transition id="sfl_aa28ca29-fdf0-4c7f-b7d7-fa2c5f241b3e">
+        <name>
+          <text>sfl_aa28ca29-fdf0-4c7f-b7d7-fa2c5f241b3e</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="fc0e7718-8356-4686-a1b0-f459a7778740"/>
+      </transition>
+      <transition id="1b83865a-e569-4d7a-b462-4ddb00152895">
+        <name>
+          <text>1b83865a-e569-4d7a-b462-4ddb00152895</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="21016a4a-5d82-46ed-ae5a-e2d57e94d582"/>
+      </transition>
+      <transition id="A_REGISTERED">
+        <name>
+          <text>A_REGISTERED</text>
+        </name>
+      </transition>
+      <transition id="A_CANCELLED">
+        <name>
+          <text>A_CANCELLED</text>
+        </name>
+      </transition>
+      <transition id="A_DECLINED">
+        <name>
+          <text>A_DECLINED</text>
+        </name>
+      </transition>
+      <transition id="A_ACTIVATED">
+        <name>
+          <text>A_ACTIVATED</text>
+        </name>
+      </transition>
+      <transition id="O_SENT">
+        <name>
+          <text>O_SENT</text>
+        </name>
+      </transition>
+      <transition id="sfl_9ca8e7b5-27ab-468d-8316-bd1459fd5d34">
+        <name>
+          <text>sfl_9ca8e7b5-27ab-468d-8316-bd1459fd5d34</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="83b288e0-73e8-4cf3-92c0-39ed4d9a4aea"/>
+      </transition>
+      <transition id="O_SENT_BACK">
+        <name>
+          <text>O_SENT_BACK</text>
+        </name>
+      </transition>
+      <transition id="W_Valideren aanvraag">
+        <name>
+          <text>W_Valideren aanvraag</text>
+        </name>
+      </transition>
+      <transition id="sfl_73b9b704-82f2-4e01-bef0-ae5d64038261">
+        <name>
+          <text>sfl_73b9b704-82f2-4e01-bef0-ae5d64038261</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="8f2a7304-ab91-47a0-874c-8778853c0bb9"/>
+      </transition>
+      <transition id="sfl_7d87fd1f-6019-45ec-8dbc-077871491dc9">
+        <name>
+          <text>sfl_7d87fd1f-6019-45ec-8dbc-077871491dc9</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="7d6f360c-e2b4-4db1-992d-cdab8f24254a"/>
+      </transition>
+      <transition id="sfl_a3dd15cf-adf9-4002-88e6-b590e8e86c7d">
+        <name>
+          <text>sfl_a3dd15cf-adf9-4002-88e6-b590e8e86c7d</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="f2edd7c1-e954-454b-9238-c8bc155dd94d"/>
+      </transition>
+      <transition id="sfl_4e1df20e-afd2-40b8-aab5-9734005bce87">
+        <name>
+          <text>sfl_4e1df20e-afd2-40b8-aab5-9734005bce87</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="bd85996c-e38c-43f7-88ca-795d55e7dd90"/>
+      </transition>
+      <transition id="W_Afhandelen leads">
+        <name>
+          <text>W_Afhandelen leads</text>
+        </name>
+      </transition>
+      <transition id="sfl_85924a3d-f35d-47fb-84a1-789d3c75ba92">
+        <name>
+          <text>sfl_85924a3d-f35d-47fb-84a1-789d3c75ba92</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="4f288903-3c21-4053-9488-069ccda7b5dc"/>
+      </transition>
+      <transition id="sfl_b0e5a68b-41da-4df6-a322-54bf9c52eb46">
+        <name>
+          <text>sfl_b0e5a68b-41da-4df6-a322-54bf9c52eb46</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="5b55cea0-22c6-4c7f-8686-3d4f6ac1033c"/>
+      </transition>
+      <transition id="sfl_bc4b06e0-79e6-4e80-98f7-0bae66d06421">
+        <name>
+          <text>sfl_bc4b06e0-79e6-4e80-98f7-0bae66d06421</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="8de0ec02-889c-46ae-9cce-1f78e8ed85e9"/>
+      </transition>
+      <transition id="sfl_13f939ff-1ba0-438c-ad69-b5de9c6b73cf">
+        <name>
+          <text>sfl_13f939ff-1ba0-438c-ad69-b5de9c6b73cf</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="2b388ad3-310d-4a72-9375-1cb81143c08b"/>
+      </transition>
+      <transition id="W_Completeren aanvraag">
+        <name>
+          <text>W_Completeren aanvraag</text>
+        </name>
+      </transition>
+      <transition id="O_SELECTED">
+        <name>
+          <text>O_SELECTED</text>
+        </name>
+      </transition>
+      <transition id="sfl_b26e3e6a-05eb-4842-97fb-b6fb022bf14b">
+        <name>
+          <text>sfl_b26e3e6a-05eb-4842-97fb-b6fb022bf14b</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="ac7b1e0c-5d5c-4f9c-95ca-2f3b240db419"/>
+      </transition>
+      <transition id="sfl_cc7eae98-5888-4e0f-aad4-71e4bac51e91">
+        <name>
+          <text>sfl_cc7eae98-5888-4e0f-aad4-71e4bac51e91</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="1e592396-c912-4aae-a85a-e53f1c031e00"/>
+      </transition>
+      <transition id="sfl_4d027f13-4560-4d28-988a-147ad7b5200f">
+        <name>
+          <text>sfl_4d027f13-4560-4d28-988a-147ad7b5200f</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="fccfafcb-4e3f-49a5-9827-f4b0a20da8d6"/>
+      </transition>
+      <transition id="sfl_e9fd4ae0-9db4-4440-8a07-c7b0c40a3e5b">
+        <name>
+          <text>sfl_e9fd4ae0-9db4-4440-8a07-c7b0c40a3e5b</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="43218b68-efb4-4391-b97e-372a30ddb5ad"/>
+      </transition>
+      <transition id="sfl_b04d35ce-2da5-4a00-8602-52250c711c9a">
+        <name>
+          <text>sfl_b04d35ce-2da5-4a00-8602-52250c711c9a</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="452601ea-e18b-467a-bda0-4d4ba52c9092"/>
+      </transition>
+      <transition id="sfl_08751ad2-4dd2-4ce5-ab7f-fd3b1d736780">
+        <name>
+          <text>sfl_08751ad2-4dd2-4ce5-ab7f-fd3b1d736780</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="8465bf4b-a55b-4336-9518-58dc558ecf9a"/>
+      </transition>
+      <transition id="A_PARTLYSUBMITTED">
+        <name>
+          <text>A_PARTLYSUBMITTED</text>
+        </name>
+      </transition>
+      <transition id="sfl_b03eda63-279f-4202-95a6-f62fb4051706">
+        <name>
+          <text>sfl_b03eda63-279f-4202-95a6-f62fb4051706</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="17bea4b9-0a51-4c86-a851-5b97ac2edbf2"/>
+      </transition>
+      <transition id="sfl_c2d6dde9-21ff-45e8-9a9c-b0d81a1b8a86">
+        <name>
+          <text>sfl_c2d6dde9-21ff-45e8-9a9c-b0d81a1b8a86</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="4012dc49-81e3-4a56-a772-33ad78253ed3"/>
+      </transition>
+      <transition id="A_SUBMITTED">
+        <name>
+          <text>A_SUBMITTED</text>
+        </name>
+      </transition>
+      <transition id="O_ACCEPTED">
+        <name>
+          <text>O_ACCEPTED</text>
+        </name>
+      </transition>
+      <transition id="sfl_3919fc07-9bdc-412f-9552-de2e7591bef8">
+        <name>
+          <text>sfl_3919fc07-9bdc-412f-9552-de2e7591bef8</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="9df41b78-bd30-414a-b2bf-b69a1fe3903d"/>
+      </transition>
+      <transition id="sfl_2bbcee19-cd0f-4e05-9923-eb6c7ee3cc7f">
+        <name>
+          <text>sfl_2bbcee19-cd0f-4e05-9923-eb6c7ee3cc7f</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="d488ba01-5f84-4773-b453-128ffcf894d0"/>
+      </transition>
+      <transition id="sfl_1e1201c0-168d-44b2-8ae1-5c9aadcdbe9e">
+        <name>
+          <text>sfl_1e1201c0-168d-44b2-8ae1-5c9aadcdbe9e</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="9ea9b60a-84d7-457a-9602-b2d3fe6c6f68"/>
+      </transition>
+      <arc id="2414628048912" source="sfl_c1326c19-d470-4743-8348-c33060a3e6c2" target="ent_W_Afhandelen leads__loop_join"/>
+      <arc id="2414628050976" source="ent_xor_32" target="1b83865a-e569-4d7a-b462-4ddb00152895"/>
+      <arc id="2414628171808" source="sfl_a6d10b61-75dc-4b07-9b7e-9073fd4d07af" target="ent_W_Afhandelen leads__loop_join"/>
+      <arc id="2414628698160" source="exi_xor_9" target="sfl_c2d6dde9-21ff-45e8-9a9c-b0d81a1b8a86"/>
+      <arc id="2414628169792" source="exi_xor_11" target="sfl_9d38f2f7-7df6-43da-84a8-9b37197cc8c3"/>
+      <arc id="2414628059232" source="sfl_b26e3e6a-05eb-4842-97fb-b6fb022bf14b" target="ent_xor_34"/>
+      <arc id="2414650189936" source="exi_xor_12" target="sfl_cc7eae98-5888-4e0f-aad4-71e4bac51e91"/>
+      <arc id="2414628624512" source="exi_W_Nabellen offertes__loop_split" target="sfl_b04d35ce-2da5-4a00-8602-52250c711c9a"/>
+      <arc id="2414628044928" source="sfl_a3dd15cf-adf9-4002-88e6-b590e8e86c7d" target="ent_or_25"/>
+      <arc id="2414628632720" source="exi_xor_2" target="sfl_bc4b06e0-79e6-4e80-98f7-0bae66d06421"/>
+      <arc id="2414628049056" source="sfl_d3c2ea0e-e9e6-4e75-b902-497633b656cd" target="ent_W_Nabellen incomplete dossiers__loop_join"/>
+      <arc id="2414628620480" source="exi_W_Completeren aanvraag__loop_split" target="sfl_2bbcee19-cd0f-4e05-9923-eb6c7ee3cc7f"/>
+      <arc id="2414628047040" source="O_SENT" target="exi_xor_14"/>
+      <arc id="2414650183888" source="ent_A_CANCELLED" target="A_CANCELLED"/>
+      <arc id="2414628622544" source="exi_xor_12" target="sfl_a4191d8a-8f50-471b-85fe-3405cf3b86cf"/>
+      <arc id="2414628163792" source="sfl_9ca8e7b5-27ab-468d-8316-bd1459fd5d34" target="ent_W_Nabellen offertes__loop_join"/>
+      <arc id="2414628165856" source="exi_W_Completeren aanvraag__loop_split" target="sfl_9ca8e7b5-27ab-468d-8316-bd1459fd5d34"/>
+      <arc id="2414628692256" source="9b22d2d0-f1b5-4643-86ec-3bfa32364af2" target="532ad49f-f5e7-4c43-a61e-9e7c660217a9"/>
+      <arc id="2414628167968" source="sfl_3919fc07-9bdc-412f-9552-de2e7591bef8" target="ent_W_Completeren aanvraag__loop_join"/>
+      <arc id="2414628051264" source="ent_W_Nabellen offertes__loop_join" target="W_Nabellen offertes"/>
+      <arc id="2414628163936" source="O_DECLINED" target="ent_W_Valideren aanvraag__loop_join"/>
+      <arc id="2414628690288" source="exi_xor_14" target="sfl_4d027f13-4560-4d28-988a-147ad7b5200f"/>
+      <arc id="2414628045168" source="sfl_1e1201c0-168d-44b2-8ae1-5c9aadcdbe9e" target="ent_W_Completeren aanvraag__loop_join"/>
+      <arc id="2414650184080" source="ent_A_DECLINED" target="A_DECLINED"/>
+      <arc id="2414628159904" source="A_REGISTERED" target="9b22d2d0-f1b5-4643-86ec-3bfa32364af2"/>
+      <arc id="2414628170176" source="O_CREATED" target="ent_O_SENT"/>
+      <arc id="2414628690384" source="exi_xor_14" target="sfl_3919fc07-9bdc-412f-9552-de2e7591bef8"/>
+      <arc id="2414628053472" source="sfl_7b4ce3db-6001-4df4-9200-24d0886ab71a" target="ent_xor_33"/>
+      <arc id="2414628628976" source="exi_xor_1" target="sfl_b26e3e6a-05eb-4842-97fb-b6fb022bf14b"/>
+      <arc id="2414628696576" source="1d821401-bf4c-4e06-80cf-24b5606f40fa" target="532ad49f-f5e7-4c43-a61e-9e7c660217a9"/>
+      <arc id="2414628045312" source="sfl_08751ad2-4dd2-4ce5-ab7f-fd3b1d736780" target="ent_xor_32"/>
+      <arc id="2414628053520" source="W_Beoordelen fraude" target="exi_W_Beoordelen fraude__loop_split"/>
+      <arc id="2414628045360" source="sfl_73b9b704-82f2-4e01-bef0-ae5d64038261" target="ent_O_CANCELLED"/>
+      <arc id="2414628047424" source="sfl_a4191d8a-8f50-471b-85fe-3405cf3b86cf" target="ent_A_REGISTERED"/>
+      <arc id="2414628049488" source="sfl_b0e5a68b-41da-4df6-a322-54bf9c52eb46" target="ent_or_26"/>
+      <arc id="2414628684384" source="exi_xor_2" target="sfl_c1326c19-d470-4743-8348-c33060a3e6c2"/>
+      <arc id="2414628160096" source="O_ACCEPTED" target="exi_xor_12"/>
+      <arc id="2414671526512" source="ent_A_REGISTERED" target="A_REGISTERED"/>
+      <arc id="2414628047472" source="ent_xor_34" target="1b83865a-e569-4d7a-b462-4ddb00152895"/>
+      <arc id="2414628059760" source="sfl_a4191d8a-8f50-471b-85fe-3405cf3b86cf" target="ent_A_APPROVED"/>
+      <arc id="2414628160144" source="sfl_7d87fd1f-6019-45ec-8dbc-077871491dc9" target="ent_xor_32"/>
+      <arc id="2414628051600" source="ent_or_28" target="A_ACCEPTED"/>
+      <arc id="2414628059808" source="A_PARTLYSUBMITTED" target="exi_xor_1"/>
+      <arc id="2414628686544" source="exi_W_Nabellen incomplete dossiers__loop_split" target="sfl_abfa206d-4969-4919-b932-180a84f78aea"/>
+      <arc id="2414628627152" source="exi_W_Valideren aanvraag__loop_split" target="sfl_b03eda63-279f-4202-95a6-f62fb4051706"/>
+      <arc id="2414628621056" source="exi_xor_9" target="sfl_08751ad2-4dd2-4ce5-ab7f-fd3b1d736780"/>
+      <arc id="2414628170512" source="sfl_85924a3d-f35d-47fb-84a1-789d3c75ba92" target="ent_or_25"/>
+      <arc id="2414628625184" source="exi_W_Nabellen offertes__loop_split" target="sfl_a3dd15cf-adf9-4002-88e6-b590e8e86c7d"/>
+      <arc id="2414628049728" source="sfl_08751ad2-4dd2-4ce5-ab7f-fd3b1d736780" target="ent_xor_34"/>
+      <arc id="2414628055872" source="sfl_b03eda63-279f-4202-95a6-f62fb4051706" target="ent_W_Valideren aanvraag__loop_join"/>
+      <arc id="2414628049776" source="W_Afhandelen leads" target="exi_W_Afhandelen leads__loop_split"/>
+      <arc id="2414628164464" source="exi_W_Valideren aanvraag__loop_split" target="sfl_d3c2ea0e-e9e6-4e75-b902-497633b656cd"/>
+      <arc id="2414628051840" source="ent_or_27" target="A_FINALIZED"/>
+      <arc id="2414628621200" source="exi_W_Beoordelen fraude__loop_split" target="sfl_13f939ff-1ba0-438c-ad69-b5de9c6b73cf"/>
+      <arc id="2414628045744" source="sfl_c2d6dde9-21ff-45e8-9a9c-b0d81a1b8a86" target="ent_W_Valideren aanvraag__loop_join"/>
+      <arc id="2414628166576" source="A_APPROVED" target="1d821401-bf4c-4e06-80cf-24b5606f40fa"/>
+      <arc id="2414628166624" source="sfl_bc4b06e0-79e6-4e80-98f7-0bae66d06421" target="ent_or_28"/>
+      <arc id="2414628695040" source="exi_W_Valideren aanvraag__loop_split" target="sfl_7d87fd1f-6019-45ec-8dbc-077871491dc9"/>
+      <arc id="2414628166672" source="exi_xor_2" target="sfl_aa28ca29-fdf0-4c7f-b7d7-fa2c5f241b3e"/>
+      <arc id="2414628058128" source="sfl_b26e3e6a-05eb-4842-97fb-b6fb022bf14b" target="ent_xor_33"/>
+      <arc id="2414650184752" source="ent_A_PARTLYSUBMITTED" target="A_PARTLYSUBMITTED"/>
+      <arc id="2414628049968" source="ent_xor_22" target="A_ACTIVATED"/>
+      <arc id="2414628629552" source="exi_W_Valideren aanvraag__loop_split" target="sfl_2fccc1d0-29ff-452c-b3ec-30104e2ff62d"/>
+      <arc id="2414628684864" source="exi_W_Afhandelen leads__loop_split" target="sfl_1e1201c0-168d-44b2-8ae1-5c9aadcdbe9e"/>
+      <arc id="2414628172864" source="sfl_4e1df20e-afd2-40b8-aab5-9734005bce87" target="ent_W_Nabellen incomplete dossiers__loop_join"/>
+      <arc id="2414628054096" source="A_PREACCEPTED" target="exi_xor_2"/>
+      <arc id="2414628047952" source="sfl_cc7eae98-5888-4e0f-aad4-71e4bac51e91" target="ent_xor_22"/>
+      <arc id="2414628166768" source="O_CANCELLED" target="ent_or_26"/>
+      <arc id="2414628164752" source="sfl_2fccc1d0-29ff-452c-b3ec-30104e2ff62d" target="ent_xor_16"/>
+      <arc id="2414628172960" source="sfl_e9fd4ae0-9db4-4440-8a07-c7b0c40a3e5b" target="ent_or_28"/>
+      <arc id="2414628633776" source="exi_xor_11" target="sfl_b0e5a68b-41da-4df6-a322-54bf9c52eb46"/>
+      <arc id="2414628060336" source="sfl_7b4ce3db-6001-4df4-9200-24d0886ab71a" target="exi_xor_9"/>
+      <arc id="2414628162736" source="sfl_b04d35ce-2da5-4a00-8602-52250c711c9a" target="ent_W_Nabellen offertes__loop_join"/>
+      <arc id="2414628695232" source="exi_W_Completeren aanvraag__loop_split" target="sfl_e9fd4ae0-9db4-4440-8a07-c7b0c40a3e5b"/>
+      <arc id="2414628050112" source="W_Valideren aanvraag" target="exi_W_Valideren aanvraag__loop_split"/>
+      <arc id="2414628052176" source="sfl_a3dd15cf-adf9-4002-88e6-b590e8e86c7d" target="ent_A_DECLINED"/>
+      <arc id="2414628052224" source="1b83865a-e569-4d7a-b462-4ddb00152895" target="sink"/>
+      <arc id="2414628060432" source="sfl_a3dd15cf-adf9-4002-88e6-b590e8e86c7d" target="ent_xor_34"/>
+      <arc id="2414628687120" source="exi_W_Nabellen offertes__loop_split" target="sfl_73b9b704-82f2-4e01-bef0-ae5d64038261"/>
+      <arc id="2414628054288" source="sfl_aa28ca29-fdf0-4c7f-b7d7-fa2c5f241b3e" target="ent_W_Completeren aanvraag__loop_join"/>
+      <arc id="2414628050208" source="exi_xor_4" target="O_SELECTED"/>
+      <arc id="2414628691248" source="exi_W_Nabellen offertes__loop_split" target="sfl_7b4ce3db-6001-4df4-9200-24d0886ab71a"/>
+      <arc id="2414628175168" source="sfl_9d38f2f7-7df6-43da-84a8-9b37197cc8c3" target="ent_or_27"/>
+      <arc id="2414628054336" source="ent_W_Beoordelen fraude__loop_join" target="W_Beoordelen fraude"/>
+      <arc id="2414628048192" source="W_Nabellen offertes" target="exi_W_Nabellen offertes__loop_split"/>
+      <arc id="2414628164944" source="W_Nabellen incomplete dossiers" target="exi_W_Nabellen incomplete dossiers__loop_split"/>
+      <arc id="2414628046176" source="sfl_b26e3e6a-05eb-4842-97fb-b6fb022bf14b" target="ent_W_Beoordelen fraude__loop_join"/>
+      <arc id="2414628056448" source="O_SELECTED" target="exi_xor_11"/>
+      <arc id="2414628173200" source="W_Completeren aanvraag" target="exi_W_Completeren aanvraag__loop_split"/>
+      <arc id="2414628060576" source="exi_xor_1" target="A_PREACCEPTED"/>
+      <arc id="2414628056496" source="ent_W_Nabellen incomplete dossiers__loop_join" target="W_Nabellen incomplete dossiers"/>
+      <arc id="2414628050352" source="A_CANCELLED" target="ent_xor_33"/>
+      <arc id="2414628060624" source="ent_W_Valideren aanvraag__loop_join" target="W_Valideren aanvraag"/>
+      <arc id="2414628054480" source="sfl_4d027f13-4560-4d28-988a-147ad7b5200f" target="ent_W_Nabellen offertes__loop_join"/>
+      <arc id="2414628052464" source="ent_xor_33" target="1b83865a-e569-4d7a-b462-4ddb00152895"/>
+      <arc id="2414628173296" source="sfl_abfa206d-4969-4919-b932-180a84f78aea" target="ent_xor_16"/>
+      <arc id="2414628054528" source="A_ACCEPTED" target="exi_xor_4"/>
+      <arc id="2414628050496" source="ent_xor_16" target="O_ACCEPTED"/>
+      <arc id="2414628632144" source="exi_xor_4" target="sfl_b53cfcbf-d15b-439e-8fa3-82cb7fc53e94"/>
+      <arc id="2414628628064" source="exi_W_Beoordelen fraude__loop_split" target="sfl_85924a3d-f35d-47fb-84a1-789d3c75ba92"/>
+      <arc id="2414628046464" source="ent_W_Afhandelen leads__loop_join" target="W_Afhandelen leads"/>
+      <arc id="2414628050592" source="source" target="A_SUBMITTED"/>
+      <arc id="2414628056736" source="A_DECLINED" target="ent_W_Valideren aanvraag__loop_join"/>
+      <arc id="2414628685488" source="exi_W_Afhandelen leads__loop_split" target="sfl_a6d10b61-75dc-4b07-9b7e-9073fd4d07af"/>
+      <arc id="2414628052656" source="ent_or_26" target="O_CREATED"/>
+      <arc id="2414628048576" source="sfl_a3dd15cf-adf9-4002-88e6-b590e8e86c7d" target="ent_xor_33"/>
+      <arc id="2414628048624" source="sfl_c2d6dde9-21ff-45e8-9a9c-b0d81a1b8a86" target="ent_xor_34"/>
+      <arc id="2414628630272" source="exi_W_Nabellen incomplete dossiers__loop_split" target="sfl_4e1df20e-afd2-40b8-aab5-9734005bce87"/>
+      <arc id="2414628050688" source="A_ACTIVATED" target="ent_W_Valideren aanvraag__loop_join"/>
+      <arc id="2414671513360" source="ent_A_APPROVED" target="A_APPROVED"/>
+      <arc id="2414628052752" source="A_FINALIZED" target="ent_or_26"/>
+      <arc id="2414628046608" source="sfl_13f939ff-1ba0-438c-ad69-b5de9c6b73cf" target="ent_W_Beoordelen fraude__loop_join"/>
+      <arc id="2414628054816" source="ent_W_Completeren aanvraag__loop_join" target="W_Completeren aanvraag"/>
+      <arc id="2414628163360" source="O_SENT_BACK" target="ent_W_Nabellen offertes__loop_join"/>
+      <arc id="2414803363664" source="ent_O_SENT" target="O_SENT"/>
+      <arc id="2414628056928" source="532ad49f-f5e7-4c43-a61e-9e7c660217a9" target="ent_xor_22"/>
+      <arc id="2414628050784" source="ent_or_25" target="O_DECLINED"/>
+      <arc id="2414650181488" source="ent_O_CANCELLED" target="O_CANCELLED"/>
+      <arc id="2414628061056" source="sfl_73b9b704-82f2-4e01-bef0-ae5d64038261" target="ent_A_CANCELLED"/>
+      <arc id="2414628054960" source="exi_W_Completeren aanvraag__loop_split" target="O_SENT_BACK"/>
+      <arc id="2414628061104" source="sfl_2bbcee19-cd0f-4e05-9923-eb6c7ee3cc7f" target="ent_W_Completeren aanvraag__loop_join"/>
+      <arc id="2414628046800" source="A_SUBMITTED" target="ent_A_PARTLYSUBMITTED"/>
+      <arc id="2414628165616" source="sfl_b53cfcbf-d15b-439e-8fa3-82cb7fc53e94" target="ent_or_27"/>
+    </page>
+    <finalmarkings>
+      <marking>
+        <place idref="sink">
+          <text>1</text>
+        </place>
+      </marking>
+    </finalmarkings>
+  </net>
+</pnml>
