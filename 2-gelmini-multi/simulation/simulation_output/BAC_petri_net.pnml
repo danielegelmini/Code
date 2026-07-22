@@ -5,11 +5,6 @@
       <text></text>
     </name>
     <page id="n0">
-      <place id="sink">
-        <name>
-          <text>sink</text>
-        </name>
-      </place>
       <place id="source">
         <name>
           <text>source</text>
@@ -18,9 +13,9 @@
           <text>1</text>
         </initialMarking>
       </place>
-      <place id="ent_Pending Request for Reservation Closure__loop_join">
+      <place id="ent_Pending Liquidation Request__loop_join">
         <name>
-          <text>ent_Pending Request for Reservation Closure__loop_join</text>
+          <text>ent_Pending Liquidation Request__loop_join</text>
         </name>
       </place>
       <place id="exi_Pending Liquidation Request__loop_split">
@@ -28,24 +23,9 @@
           <text>exi_Pending Liquidation Request__loop_split</text>
         </name>
       </place>
-      <place id="ent_xor_8">
+      <place id="exi_xor_2">
         <name>
-          <text>ent_xor_8</text>
-        </name>
-      </place>
-      <place id="exi_xor_1">
-        <name>
-          <text>exi_xor_1</text>
-        </name>
-      </place>
-      <place id="ent_Pending Liquidation Request__loop_join">
-        <name>
-          <text>ent_Pending Liquidation Request__loop_join</text>
-        </name>
-      </place>
-      <place id="exi_Pending Request for Reservation Closure__loop_split">
-        <name>
-          <text>exi_Pending Request for Reservation Closure__loop_split</text>
+          <text>exi_xor_2</text>
         </name>
       </place>
       <place id="ent_xor_5">
@@ -53,14 +33,34 @@
           <text>ent_xor_5</text>
         </name>
       </place>
-      <place id="exi_xor_2">
-        <name>
-          <text>exi_xor_2</text>
-        </name>
-      </place>
       <place id="ent_xor_9">
         <name>
           <text>ent_xor_9</text>
+        </name>
+      </place>
+      <place id="exi_Pending Request for Reservation Closure__loop_split">
+        <name>
+          <text>exi_Pending Request for Reservation Closure__loop_split</text>
+        </name>
+      </place>
+      <place id="sink">
+        <name>
+          <text>sink</text>
+        </name>
+      </place>
+      <place id="exi_xor_1">
+        <name>
+          <text>exi_xor_1</text>
+        </name>
+      </place>
+      <place id="ent_Pending Request for Reservation Closure__loop_join">
+        <name>
+          <text>ent_Pending Request for Reservation Closure__loop_join</text>
+        </name>
+      </place>
+      <place id="ent_xor_8">
+        <name>
+          <text>ent_xor_8</text>
         </name>
       </place>
       <place id="exi_xor_3">
@@ -68,67 +68,9 @@
           <text>exi_xor_3</text>
         </name>
       </place>
-      <transition id="Pending Request for Reservation Closure">
-        <name>
-          <text>Pending Request for Reservation Closure</text>
-        </name>
-      </transition>
-      <transition id="Request created">
-        <name>
-          <text>Request created</text>
-        </name>
-      </transition>
-      <transition id="Evaluating Request (WITH registered letter)">
-        <name>
-          <text>Evaluating Request (WITH registered letter)</text>
-        </name>
-      </transition>
-      <transition id="Service closure Request with network responsibility">
-        <name>
-          <text>Service closure Request with network responsibility</text>
-        </name>
-      </transition>
-      <transition id="Back-Office Adjustment Requested">
-        <name>
-          <text>Back-Office Adjustment Requested</text>
-        </name>
-      </transition>
       <transition id="Service closure Request with BO responsibility">
         <name>
           <text>Service closure Request with BO responsibility</text>
-        </name>
-      </transition>
-      <transition id="sfl_1f979b25-26b7-4d96-b4c4-05ee45b0e0a2">
-        <name>
-          <text>sfl_1f979b25-26b7-4d96-b4c4-05ee45b0e0a2</text>
-        </name>
-        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="1bb97c70-8cd9-46fd-9941-25f435a893a8"/>
-      </transition>
-      <transition id="Authorization Requested">
-        <name>
-          <text>Authorization Requested</text>
-        </name>
-      </transition>
-      <transition id="sfl_21d31c46-aa09-4162-b61e-521c0f4481d3">
-        <name>
-          <text>sfl_21d31c46-aa09-4162-b61e-521c0f4481d3</text>
-        </name>
-        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="cac6c7eb-007c-4c90-b24d-139e9db8a980"/>
-      </transition>
-      <transition id="sfl_6c6a4dfb-a168-449f-946f-3f10d300e110">
-        <name>
-          <text>sfl_6c6a4dfb-a168-449f-946f-3f10d300e110</text>
-        </name>
-        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="431b95e5-60f1-4b20-9dab-7e2313d649b5"/>
-      </transition>
-      <transition id="Pending Request for acquittance of heirs">
-        <name>
-          <text>Pending Request for acquittance of heirs</text>
-        </name>
-      </transition>
-      <transition id="Request completed with account closure">
-        <name>
-          <text>Request completed with account closure</text>
         </name>
       </transition>
       <transition id="Network Adjustment Requested">
@@ -136,32 +78,15 @@
           <text>Network Adjustment Requested</text>
         </name>
       </transition>
-      <transition id="sfl_967c3c16-70ed-4cd7-8f2e-8ca08025cb81">
+      <transition id="sfl_e3742fce-8b0b-438f-97f9-878df1622498">
         <name>
-          <text>sfl_967c3c16-70ed-4cd7-8f2e-8ca08025cb81</text>
+          <text>sfl_e3742fce-8b0b-438f-97f9-878df1622498</text>
         </name>
-        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="2b6270de-2f61-4da8-a93b-caa410bc48a8"/>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="334aad13-02c0-43d3-b5fc-27f5735341df"/>
       </transition>
-      <transition id="Pending Liquidation Request">
+      <transition id="Back-Office Adjustment Requested">
         <name>
-          <text>Pending Liquidation Request</text>
-        </name>
-      </transition>
-      <transition id="sfl_4d199014-439d-4b95-a1cf-868a15d18197">
-        <name>
-          <text>sfl_4d199014-439d-4b95-a1cf-868a15d18197</text>
-        </name>
-        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="025b6ff8-5851-4d0d-a1e3-21e30db8180c"/>
-      </transition>
-      <transition id="sfl_370115ae-37ac-4966-8202-bcdea46530f5">
-        <name>
-          <text>sfl_370115ae-37ac-4966-8202-bcdea46530f5</text>
-        </name>
-        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="a9ba5f6a-6ff1-4f75-9ecc-7c0c552547bc"/>
-      </transition>
-      <transition id="Pending Request for Network Information">
-        <name>
-          <text>Pending Request for Network Information</text>
+          <text>Back-Office Adjustment Requested</text>
         </name>
       </transition>
       <transition id="Evaluating Request (NO registered letter)">
@@ -169,52 +94,127 @@
           <text>Evaluating Request (NO registered letter)</text>
         </name>
       </transition>
-      <transition id="sfl_33c9a8b3-412b-49d9-bb07-eca511bde74e">
+      <transition id="Request completed with account closure">
         <name>
-          <text>sfl_33c9a8b3-412b-49d9-bb07-eca511bde74e</text>
+          <text>Request completed with account closure</text>
         </name>
-        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="6c2515c5-1f59-4705-b650-22009ff24138"/>
       </transition>
-      <arc id="2414803380240" source="exi_xor_3" target="sfl_21d31c46-aa09-4162-b61e-521c0f4481d3"/>
-      <arc id="2414741131280" source="Pending Liquidation Request" target="exi_Pending Liquidation Request__loop_split"/>
-      <arc id="2414803379232" source="exi_xor_2" target="sfl_4d199014-439d-4b95-a1cf-868a15d18197"/>
-      <arc id="2414741141024" source="Network Adjustment Requested" target="ent_xor_9"/>
-      <arc id="2414803380288" source="exi_xor_1" target="sfl_33c9a8b3-412b-49d9-bb07-eca511bde74e"/>
-      <arc id="2414741128256" source="exi_Pending Liquidation Request__loop_split" target="Pending Request for acquittance of heirs"/>
-      <arc id="2414741136464" source="source" target="Request created"/>
-      <arc id="2414741129312" source="sfl_370115ae-37ac-4966-8202-bcdea46530f5" target="ent_xor_8"/>
-      <arc id="2414741128304" source="exi_Pending Liquidation Request__loop_split" target="Back-Office Adjustment Requested"/>
-      <arc id="2414741134448" source="Request completed with account closure" target="sink"/>
-      <arc id="2414741136512" source="Evaluating Request (NO registered letter)" target="ent_xor_5"/>
-      <arc id="2414741137040" source="sfl_1f979b25-26b7-4d96-b4c4-05ee45b0e0a2" target="ent_Pending Request for Reservation Closure__loop_join"/>
-      <arc id="2414741129888" source="sfl_33c9a8b3-412b-49d9-bb07-eca511bde74e" target="ent_xor_5"/>
-      <arc id="2414741134496" source="Service closure Request with network responsibility" target="exi_xor_2"/>
-      <arc id="2414741133488" source="Pending Request for acquittance of heirs" target="ent_xor_8"/>
-      <arc id="2414741127872" source="sfl_4d199014-439d-4b95-a1cf-868a15d18197" target="ent_xor_9"/>
-      <arc id="2414741134016" source="exi_xor_3" target="Network Adjustment Requested"/>
-      <arc id="2414741128400" source="Authorization Requested" target="ent_xor_9"/>
-      <arc id="2414741139680" source="ent_xor_9" target="Service closure Request with BO responsibility"/>
-      <arc id="2414741134064" source="ent_xor_5" target="Service closure Request with network responsibility"/>
-      <arc id="2414741138672" source="Service closure Request with BO responsibility" target="exi_xor_3"/>
-      <arc id="2414741140208" source="sfl_6c6a4dfb-a168-449f-946f-3f10d300e110" target="ent_Pending Liquidation Request__loop_join"/>
-      <arc id="2414741139200" source="Pending Request for Reservation Closure" target="exi_Pending Request for Reservation Closure__loop_split"/>
-      <arc id="2414741131520" source="Request created" target="exi_xor_1"/>
-      <arc id="2414741127968" source="ent_Pending Request for Reservation Closure__loop_join" target="Pending Request for Reservation Closure"/>
-      <arc id="2414741136176" source="Evaluating Request (WITH registered letter)" target="ent_xor_5"/>
-      <arc id="2414741139248" source="sfl_967c3c16-70ed-4cd7-8f2e-8ca08025cb81" target="ent_Pending Liquidation Request__loop_join"/>
-      <arc id="2414741140304" source="ent_Pending Liquidation Request__loop_join" target="Pending Liquidation Request"/>
-      <arc id="2414741141840" source="exi_xor_1" target="Pending Request for Network Information"/>
-      <arc id="2414741134688" source="sfl_21d31c46-aa09-4162-b61e-521c0f4481d3" target="ent_Pending Request for Reservation Closure__loop_join"/>
-      <arc id="2414741133680" source="Pending Request for Network Information" target="ent_Pending Request for Reservation Closure__loop_join"/>
-      <arc id="2414803373952" source="exi_Pending Request for Reservation Closure__loop_split" target="sfl_967c3c16-70ed-4cd7-8f2e-8ca08025cb81"/>
-      <arc id="2414803380624" source="exi_Pending Liquidation Request__loop_split" target="sfl_6c6a4dfb-a168-449f-946f-3f10d300e110"/>
-      <arc id="2414741139344" source="exi_xor_1" target="Evaluating Request (NO registered letter)"/>
-      <arc id="2414741130128" source="exi_xor_1" target="Evaluating Request (WITH registered letter)"/>
-      <arc id="2414741133728" source="Back-Office Adjustment Requested" target="ent_xor_8"/>
-      <arc id="2414741140400" source="exi_xor_2" target="Authorization Requested"/>
-      <arc id="2414803377600" source="exi_Pending Liquidation Request__loop_split" target="sfl_370115ae-37ac-4966-8202-bcdea46530f5"/>
-      <arc id="2414741141456" source="ent_xor_8" target="Request completed with account closure"/>
-      <arc id="2414803386336" source="exi_Pending Request for Reservation Closure__loop_split" target="sfl_1f979b25-26b7-4d96-b4c4-05ee45b0e0a2"/>
+      <transition id="sfl_408bf374-25f7-4823-9950-0aa01bbff52c">
+        <name>
+          <text>sfl_408bf374-25f7-4823-9950-0aa01bbff52c</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="e4004eb4-fa1e-4458-8b73-99154ee7b062"/>
+      </transition>
+      <transition id="sfl_b0facceb-04a7-4115-a1c5-e8ab8a4d15a8">
+        <name>
+          <text>sfl_b0facceb-04a7-4115-a1c5-e8ab8a4d15a8</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="8df9b6c4-0005-4963-8eae-caf5a3113147"/>
+      </transition>
+      <transition id="sfl_ce7eec97-356a-4ade-be38-a75958f8ebde">
+        <name>
+          <text>sfl_ce7eec97-356a-4ade-be38-a75958f8ebde</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="110e6728-6cd8-4c86-8e35-6c7603d3233a"/>
+      </transition>
+      <transition id="Request created">
+        <name>
+          <text>Request created</text>
+        </name>
+      </transition>
+      <transition id="Pending Request for Network Information">
+        <name>
+          <text>Pending Request for Network Information</text>
+        </name>
+      </transition>
+      <transition id="Pending Request for acquittance of heirs">
+        <name>
+          <text>Pending Request for acquittance of heirs</text>
+        </name>
+      </transition>
+      <transition id="Authorization Requested">
+        <name>
+          <text>Authorization Requested</text>
+        </name>
+      </transition>
+      <transition id="Service closure Request with network responsibility">
+        <name>
+          <text>Service closure Request with network responsibility</text>
+        </name>
+      </transition>
+      <transition id="Evaluating Request (WITH registered letter)">
+        <name>
+          <text>Evaluating Request (WITH registered letter)</text>
+        </name>
+      </transition>
+      <transition id="sfl_8dd66524-4bec-4817-9983-b61d8d9ffece">
+        <name>
+          <text>sfl_8dd66524-4bec-4817-9983-b61d8d9ffece</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="7ef0d11e-bc13-41bc-bce3-dbbf83b5d6e0"/>
+      </transition>
+      <transition id="sfl_8af81222-133f-4bb8-8967-3f9ee3b3a522">
+        <name>
+          <text>sfl_8af81222-133f-4bb8-8967-3f9ee3b3a522</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="2838821a-6a64-4ccf-9e06-544672742fa9"/>
+      </transition>
+      <transition id="Pending Request for Reservation Closure">
+        <name>
+          <text>Pending Request for Reservation Closure</text>
+        </name>
+      </transition>
+      <transition id="sfl_523d5f74-0075-43d7-9e38-32d0b7418572">
+        <name>
+          <text>sfl_523d5f74-0075-43d7-9e38-32d0b7418572</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="3a5b337f-fd98-4c50-82a1-869c8d18793e"/>
+      </transition>
+      <transition id="Pending Liquidation Request">
+        <name>
+          <text>Pending Liquidation Request</text>
+        </name>
+      </transition>
+      <arc id="2585030016512" source="exi_Pending Request for Reservation Closure__loop_split" target="sfl_8af81222-133f-4bb8-8967-3f9ee3b3a522"/>
+      <arc id="2585332993824" source="exi_xor_3" target="sfl_b0facceb-04a7-4115-a1c5-e8ab8a4d15a8"/>
+      <arc id="2585130997312" source="Pending Liquidation Request" target="exi_Pending Liquidation Request__loop_split"/>
+      <arc id="2585332992576" source="exi_xor_2" target="sfl_8dd66524-4bec-4817-9983-b61d8d9ffece"/>
+      <arc id="2585130994768" source="Pending Request for Network Information" target="ent_Pending Request for Reservation Closure__loop_join"/>
+      <arc id="2585130996832" source="ent_xor_9" target="Service closure Request with BO responsibility"/>
+      <arc id="2585131006048" source="exi_xor_1" target="Pending Request for Network Information"/>
+      <arc id="2585130998896" source="ent_xor_8" target="Request completed with account closure"/>
+      <arc id="2585131001968" source="exi_xor_1" target="Evaluating Request (WITH registered letter)"/>
+      <arc id="2585130998416" source="Request created" target="exi_xor_1"/>
+      <arc id="2585131004080" source="Pending Request for Reservation Closure" target="exi_Pending Request for Reservation Closure__loop_split"/>
+      <arc id="2585131005616" source="sfl_8dd66524-4bec-4817-9983-b61d8d9ffece" target="ent_xor_9"/>
+      <arc id="2585131007152" source="Authorization Requested" target="ent_xor_9"/>
+      <arc id="2585131000000" source="sfl_8af81222-133f-4bb8-8967-3f9ee3b3a522" target="ent_Pending Request for Reservation Closure__loop_join"/>
+      <arc id="2585131001056" source="exi_xor_1" target="Evaluating Request (NO registered letter)"/>
+      <arc id="2585131007728" source="sfl_523d5f74-0075-43d7-9e38-32d0b7418572" target="ent_xor_5"/>
+      <arc id="2585130997504" source="sfl_b0facceb-04a7-4115-a1c5-e8ab8a4d15a8" target="ent_Pending Request for Reservation Closure__loop_join"/>
+      <arc id="2585130991888" source="Evaluating Request (WITH registered letter)" target="ent_xor_5"/>
+      <arc id="2585130993424" source="Service closure Request with network responsibility" target="exi_xor_2"/>
+      <arc id="2584709081392" source="exi_Pending Liquidation Request__loop_split" target="sfl_ce7eec97-356a-4ade-be38-a75958f8ebde"/>
+      <arc id="2585130999088" source="sfl_ce7eec97-356a-4ade-be38-a75958f8ebde" target="ent_xor_8"/>
+      <arc id="2585130998080" source="Back-Office Adjustment Requested" target="ent_xor_8"/>
+      <arc id="2585131006288" source="ent_xor_5" target="Service closure Request with network responsibility"/>
+      <arc id="2585131005808" source="sfl_408bf374-25f7-4823-9950-0aa01bbff52c" target="ent_Pending Liquidation Request__loop_join"/>
+      <arc id="2585130991984" source="Evaluating Request (NO registered letter)" target="ent_xor_5"/>
+      <arc id="2585130999664" source="exi_xor_3" target="Network Adjustment Requested"/>
+      <arc id="2585130993040" source="exi_xor_2" target="Authorization Requested"/>
+      <arc id="2584709078944" source="exi_Pending Request for Reservation Closure__loop_split" target="sfl_408bf374-25f7-4823-9950-0aa01bbff52c"/>
+      <arc id="2585030010272" source="exi_Pending Liquidation Request__loop_split" target="sfl_e3742fce-8b0b-438f-97f9-878df1622498"/>
+      <arc id="2585130993568" source="Pending Request for acquittance of heirs" target="ent_xor_8"/>
+      <arc id="2585130994096" source="Network Adjustment Requested" target="ent_xor_9"/>
+      <arc id="2585131006384" source="Request completed with account closure" target="sink"/>
+      <arc id="2585131000240" source="ent_Pending Liquidation Request__loop_join" target="Pending Liquidation Request"/>
+      <arc id="2585131001776" source="sfl_e3742fce-8b0b-438f-97f9-878df1622498" target="ent_Pending Liquidation Request__loop_join"/>
+      <arc id="2585131005904" source="ent_Pending Request for Reservation Closure__loop_join" target="Pending Request for Reservation Closure"/>
+      <arc id="2584709078992" source="exi_xor_1" target="sfl_523d5f74-0075-43d7-9e38-32d0b7418572"/>
+      <arc id="2585131002832" source="Service closure Request with BO responsibility" target="exi_xor_3"/>
+      <arc id="2585130998224" source="exi_Pending Liquidation Request__loop_split" target="Pending Request for acquittance of heirs"/>
+      <arc id="2585130999760" source="source" target="Request created"/>
+      <arc id="2585131003360" source="exi_Pending Liquidation Request__loop_split" target="Back-Office Adjustment Requested"/>
     </page>
     <finalmarkings>
       <marking>
