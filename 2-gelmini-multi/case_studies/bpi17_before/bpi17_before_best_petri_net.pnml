@@ -1,0 +1,601 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<pnml>
+  <net id="" type="http://www.pnml.org/version-2009/grammar/pnmlcoremodel">
+    <name>
+      <text></text>
+    </name>
+    <page id="n0">
+      <place id="ent_O_Sent (online only)__loop_join">
+        <name>
+          <text>ent_O_Sent (online only)__loop_join</text>
+        </name>
+      </place>
+      <place id="ent_xor_19">
+        <name>
+          <text>ent_xor_19</text>
+        </name>
+      </place>
+      <place id="ent_O_Sent (mail and online)__loop_join">
+        <name>
+          <text>ent_O_Sent (mail and online)__loop_join</text>
+        </name>
+      </place>
+      <place id="exi_O_Refused__loop_split">
+        <name>
+          <text>exi_O_Refused__loop_split</text>
+        </name>
+      </place>
+      <place id="ent_or_21">
+        <name>
+          <text>ent_or_21</text>
+        </name>
+      </place>
+      <place id="ent_O_Cancelled__loop_join">
+        <name>
+          <text>ent_O_Cancelled__loop_join</text>
+        </name>
+      </place>
+      <place id="exi_W_Assess potential fraud__loop_split">
+        <name>
+          <text>exi_W_Assess potential fraud__loop_split</text>
+        </name>
+      </place>
+      <place id="exi_O_Cancelled__loop_split">
+        <name>
+          <text>exi_O_Cancelled__loop_split</text>
+        </name>
+      </place>
+      <place id="sink">
+        <name>
+          <text>sink</text>
+        </name>
+      </place>
+      <place id="ent_or_22">
+        <name>
+          <text>ent_or_22</text>
+        </name>
+      </place>
+      <place id="ent_A_Pending">
+        <name>
+          <text>ent_A_Pending</text>
+        </name>
+      </place>
+      <place id="ent_O_Returned__loop_join">
+        <name>
+          <text>ent_O_Returned__loop_join</text>
+        </name>
+      </place>
+      <place id="ent_A_Accepted">
+        <name>
+          <text>ent_A_Accepted</text>
+        </name>
+      </place>
+      <place id="ent_O_Refused__loop_join">
+        <name>
+          <text>ent_O_Refused__loop_join</text>
+        </name>
+      </place>
+      <place id="ent_xor_13">
+        <name>
+          <text>ent_xor_13</text>
+        </name>
+      </place>
+      <place id="ent_W_Assess potential fraud__loop_join">
+        <name>
+          <text>ent_W_Assess potential fraud__loop_join</text>
+        </name>
+      </place>
+      <place id="exi_xor_2">
+        <name>
+          <text>exi_xor_2</text>
+        </name>
+      </place>
+      <place id="exi_O_Sent (mail and online)__loop_split">
+        <name>
+          <text>exi_O_Sent (mail and online)__loop_split</text>
+        </name>
+      </place>
+      <place id="exi_xor_5">
+        <name>
+          <text>exi_xor_5</text>
+        </name>
+      </place>
+      <place id="ent_or_23">
+        <name>
+          <text>ent_or_23</text>
+        </name>
+      </place>
+      <place id="exi_O_Sent (online only)__loop_split">
+        <name>
+          <text>exi_O_Sent (online only)__loop_split</text>
+        </name>
+      </place>
+      <place id="exi_O_Returned__loop_split">
+        <name>
+          <text>exi_O_Returned__loop_split</text>
+        </name>
+      </place>
+      <place id="ent_xor_25">
+        <name>
+          <text>ent_xor_25</text>
+        </name>
+      </place>
+      <place id="source">
+        <name>
+          <text>source</text>
+        </name>
+        <initialMarking>
+          <text>1</text>
+        </initialMarking>
+      </place>
+      <place id="exi_xor_10">
+        <name>
+          <text>exi_xor_10</text>
+        </name>
+      </place>
+      <place id="exi_xor_1">
+        <name>
+          <text>exi_xor_1</text>
+        </name>
+      </place>
+      <place id="ent_or_24">
+        <name>
+          <text>ent_or_24</text>
+        </name>
+      </place>
+      <place id="exi_xor_3">
+        <name>
+          <text>exi_xor_3</text>
+        </name>
+      </place>
+      <place id="exi_xor_7">
+        <name>
+          <text>exi_xor_7</text>
+        </name>
+      </place>
+      <place id="ent_xor_16">
+        <name>
+          <text>ent_xor_16</text>
+        </name>
+      </place>
+      <place id="exi_xor_6">
+        <name>
+          <text>exi_xor_6</text>
+        </name>
+      </place>
+      <place id="ent_O_Created">
+        <name>
+          <text>ent_O_Created</text>
+        </name>
+      </place>
+      <place id="exi_xor_9">
+        <name>
+          <text>exi_xor_9</text>
+        </name>
+      </place>
+      <transition id="sfl_15e658a5-3817-4826-9200-aa46b317f80b">
+        <name>
+          <text>sfl_15e658a5-3817-4826-9200-aa46b317f80b</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="d13210d4-5277-4fe7-9271-209efe37565b"/>
+      </transition>
+      <transition id="A_Cancelled">
+        <name>
+          <text>A_Cancelled</text>
+        </name>
+      </transition>
+      <transition id="O_Sent (online only)">
+        <name>
+          <text>O_Sent (online only)</text>
+        </name>
+      </transition>
+      <transition id="sfl_4fe47c77-029f-4ea0-8145-c24409c1bcd5">
+        <name>
+          <text>sfl_4fe47c77-029f-4ea0-8145-c24409c1bcd5</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="4d186977-04b8-4f55-b5d6-0daf9872813c"/>
+      </transition>
+      <transition id="sfl_02e16d15-4bce-4050-89a0-a72b63379b08">
+        <name>
+          <text>sfl_02e16d15-4bce-4050-89a0-a72b63379b08</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="b95ce185-f097-4d6a-8a14-5e52364623de"/>
+      </transition>
+      <transition id="sfl_8f2abee9-0c07-4664-ac1f-17c4477f5fd5">
+        <name>
+          <text>sfl_8f2abee9-0c07-4664-ac1f-17c4477f5fd5</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="df9c7d68-0af4-4757-8b48-8ccf990b3167"/>
+      </transition>
+      <transition id="W_Complete application">
+        <name>
+          <text>W_Complete application</text>
+        </name>
+      </transition>
+      <transition id="W_Assess potential fraud">
+        <name>
+          <text>W_Assess potential fraud</text>
+        </name>
+      </transition>
+      <transition id="sfl_6fbe3b91-e993-4b9c-a2ee-60aa3bdbc630">
+        <name>
+          <text>sfl_6fbe3b91-e993-4b9c-a2ee-60aa3bdbc630</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="295fbcf4-b708-4b0b-b413-8f811ca74853"/>
+      </transition>
+      <transition id="or_21">
+        <name>
+          <text>or_21</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="6e6256b5-3c16-4113-b783-987d6e9ce9dc"/>
+      </transition>
+      <transition id="sfl_b16adfe9-f11d-4b47-bf1e-da3e06c0079b">
+        <name>
+          <text>sfl_b16adfe9-f11d-4b47-bf1e-da3e06c0079b</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="89ccc544-9a78-4154-a6c7-234b8a8caf81"/>
+      </transition>
+      <transition id="A_Validating">
+        <name>
+          <text>A_Validating</text>
+        </name>
+      </transition>
+      <transition id="sfl_ca7fce69-c6b3-47ad-bfc0-8036943bfcc2">
+        <name>
+          <text>sfl_ca7fce69-c6b3-47ad-bfc0-8036943bfcc2</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="ba423127-58b6-4cdf-9daf-09dda871fffb"/>
+      </transition>
+      <transition id="O_Accepted">
+        <name>
+          <text>O_Accepted</text>
+        </name>
+      </transition>
+      <transition id="sfl_883cd1b3-0cb7-4a76-a8d7-de1838885e76">
+        <name>
+          <text>sfl_883cd1b3-0cb7-4a76-a8d7-de1838885e76</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="471fcf66-8091-4f05-994f-f5b4917b8880"/>
+      </transition>
+      <transition id="sfl_ca25e751-215d-4064-8685-1b14752c8d14">
+        <name>
+          <text>sfl_ca25e751-215d-4064-8685-1b14752c8d14</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="811b01ca-48d0-421f-b996-9714dfd7a33a"/>
+      </transition>
+      <transition id="sfl_4351a17b-c36f-4c86-9560-2534e70a5e6c">
+        <name>
+          <text>sfl_4351a17b-c36f-4c86-9560-2534e70a5e6c</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="83c78655-b884-4b13-9e32-36b997e3568a"/>
+      </transition>
+      <transition id="sfl_52d6b021-5374-4c1a-8755-8877129b5723">
+        <name>
+          <text>sfl_52d6b021-5374-4c1a-8755-8877129b5723</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="e6a41afd-472d-4e92-b9c3-471a96521907"/>
+      </transition>
+      <transition id="sfl_12a3c5d8-7d0d-4ffb-b1cb-57f1bc096ffc">
+        <name>
+          <text>sfl_12a3c5d8-7d0d-4ffb-b1cb-57f1bc096ffc</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="b2a9f046-edea-4306-b9f8-5ee5b215b3d1"/>
+      </transition>
+      <transition id="sfl_04f56179-1061-4559-8664-2150f84c22cc">
+        <name>
+          <text>sfl_04f56179-1061-4559-8664-2150f84c22cc</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="51088aa7-916f-4213-b562-a99b66ebe7aa"/>
+      </transition>
+      <transition id="A_Pending">
+        <name>
+          <text>A_Pending</text>
+        </name>
+      </transition>
+      <transition id="W_Call incomplete files">
+        <name>
+          <text>W_Call incomplete files</text>
+        </name>
+      </transition>
+      <transition id="A_Concept">
+        <name>
+          <text>A_Concept</text>
+        </name>
+      </transition>
+      <transition id="A_Create Application">
+        <name>
+          <text>A_Create Application</text>
+        </name>
+      </transition>
+      <transition id="O_Returned">
+        <name>
+          <text>O_Returned</text>
+        </name>
+      </transition>
+      <transition id="W_Validate application">
+        <name>
+          <text>W_Validate application</text>
+        </name>
+      </transition>
+      <transition id="sfl_27035d0e-e881-485a-aefb-016c44c47e85">
+        <name>
+          <text>sfl_27035d0e-e881-485a-aefb-016c44c47e85</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="6a903723-5014-4dfd-90d8-b6fa25f648e6"/>
+      </transition>
+      <transition id="W_Call after offers">
+        <name>
+          <text>W_Call after offers</text>
+        </name>
+      </transition>
+      <transition id="sfl_39669dc3-a154-4a4c-8d6d-db5a0c879455">
+        <name>
+          <text>sfl_39669dc3-a154-4a4c-8d6d-db5a0c879455</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="3b7759bd-bb80-4444-9a46-2c6d10d25293"/>
+      </transition>
+      <transition id="sfl_a0aeb199-54a9-446b-965a-81a7e86e7fa7">
+        <name>
+          <text>sfl_a0aeb199-54a9-446b-965a-81a7e86e7fa7</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="2348fb7d-58da-489a-a04d-cc4807f07e6d"/>
+      </transition>
+      <transition id="sfl_aa327919-1526-46d2-bfe4-d556992cc8fb">
+        <name>
+          <text>sfl_aa327919-1526-46d2-bfe4-d556992cc8fb</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="2d10f06a-316e-4315-9d43-1d3e2fa61145"/>
+      </transition>
+      <transition id="O_Sent (mail and online)">
+        <name>
+          <text>O_Sent (mail and online)</text>
+        </name>
+      </transition>
+      <transition id="A_Accepted">
+        <name>
+          <text>A_Accepted</text>
+        </name>
+      </transition>
+      <transition id="sfl_f4de23e3-9e16-4df8-a3d3-743a22e7a10a">
+        <name>
+          <text>sfl_f4de23e3-9e16-4df8-a3d3-743a22e7a10a</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="b420323a-b6cc-4a20-aa1e-43aac4b4fa8f"/>
+      </transition>
+      <transition id="sfl_beae6dff-e480-4d7c-863e-f939d616fc6b">
+        <name>
+          <text>sfl_beae6dff-e480-4d7c-863e-f939d616fc6b</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="2564c0e5-460f-4dae-bdeb-478735a70c77"/>
+      </transition>
+      <transition id="sfl_57f13734-2d3e-4c8a-a340-f82f7c924480">
+        <name>
+          <text>sfl_57f13734-2d3e-4c8a-a340-f82f7c924480</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="e58cffb4-4887-49d2-8d4b-2d18a171465e"/>
+      </transition>
+      <transition id="O_Created">
+        <name>
+          <text>O_Created</text>
+        </name>
+      </transition>
+      <transition id="sfl_797db48e-96f5-4e84-ace9-7c11235ea09d">
+        <name>
+          <text>sfl_797db48e-96f5-4e84-ace9-7c11235ea09d</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="f8574b4e-1cdb-485a-9eda-46385de16610"/>
+      </transition>
+      <transition id="O_Create Offer">
+        <name>
+          <text>O_Create Offer</text>
+        </name>
+      </transition>
+      <transition id="A_Complete">
+        <name>
+          <text>A_Complete</text>
+        </name>
+      </transition>
+      <transition id="sfl_5c417c85-5147-40a1-98ca-767781ceaf18">
+        <name>
+          <text>sfl_5c417c85-5147-40a1-98ca-767781ceaf18</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="f4b6a752-476f-47f9-9ae7-cdd0ad331571"/>
+      </transition>
+      <transition id="A_Incomplete">
+        <name>
+          <text>A_Incomplete</text>
+        </name>
+      </transition>
+      <transition id="W_Handle leads">
+        <name>
+          <text>W_Handle leads</text>
+        </name>
+      </transition>
+      <transition id="sfl_150eedf0-e531-4736-849a-9fd126d1c7a1">
+        <name>
+          <text>sfl_150eedf0-e531-4736-849a-9fd126d1c7a1</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="5b9f464e-bad3-4d50-98e1-ffa659577d56"/>
+      </transition>
+      <transition id="O_Cancelled">
+        <name>
+          <text>O_Cancelled</text>
+        </name>
+      </transition>
+      <transition id="sfl_85a79340-d60a-4dc4-bbb5-158533bb8c43">
+        <name>
+          <text>sfl_85a79340-d60a-4dc4-bbb5-158533bb8c43</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="6226aad3-3db4-4ff7-a6e8-376f82c51592"/>
+      </transition>
+      <transition id="O_Refused">
+        <name>
+          <text>O_Refused</text>
+        </name>
+      </transition>
+      <transition id="sfl_c092b095-76fa-4a70-b070-316806430b60">
+        <name>
+          <text>sfl_c092b095-76fa-4a70-b070-316806430b60</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="92f303a6-2ceb-4016-aaf1-755639fbc986"/>
+      </transition>
+      <transition id="A_Submitted">
+        <name>
+          <text>A_Submitted</text>
+        </name>
+      </transition>
+      <transition id="sfl_541f0499-0744-474a-840f-d8216646d54a">
+        <name>
+          <text>sfl_541f0499-0744-474a-840f-d8216646d54a</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="773c51c0-454d-4e0e-86b9-564ca5348c11"/>
+      </transition>
+      <transition id="A_Denied">
+        <name>
+          <text>A_Denied</text>
+        </name>
+      </transition>
+      <transition id="sfl_4168ffb9-0664-4505-a8a4-7724ab4b8fcf">
+        <name>
+          <text>sfl_4168ffb9-0664-4505-a8a4-7724ab4b8fcf</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="48216d23-d05a-4953-b89b-abee9b83dae4"/>
+      </transition>
+      <transition id="sfl_6b9ab781-f587-4775-81db-9a8b5513de1a">
+        <name>
+          <text>sfl_6b9ab781-f587-4775-81db-9a8b5513de1a</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="3f84c54b-7cdb-4119-9015-24c5ad7bbbd0"/>
+      </transition>
+      <transition id="sfl_b4498274-0980-4c79-93f7-f02c10daf763">
+        <name>
+          <text>sfl_b4498274-0980-4c79-93f7-f02c10daf763</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="c95be031-c048-4edb-8387-97c847d12f81"/>
+      </transition>
+      <transition id="sfl_f98ff455-3cf8-4f20-a91a-16c3478d942a">
+        <name>
+          <text>sfl_f98ff455-3cf8-4f20-a91a-16c3478d942a</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="b7e55d4a-af63-452a-9fe7-39151912e12a"/>
+      </transition>
+      <arc id="2650213545984" source="sfl_4351a17b-c36f-4c86-9560-2534e70a5e6c" target="ent_xor_16"/>
+      <arc id="2650213535760" source="exi_xor_7" target="sfl_aa327919-1526-46d2-bfe4-d556992cc8fb"/>
+      <arc id="2650213543968" source="A_Complete" target="exi_xor_6"/>
+      <arc id="2649884172336" source="exi_xor_6" target="sfl_b4498274-0980-4c79-93f7-f02c10daf763"/>
+      <arc id="2652214440016" source="exi_O_Returned__loop_split" target="sfl_04f56179-1061-4559-8664-2150f84c22cc"/>
+      <arc id="2652255268944" source="ent_xor_19" target="A_Concept"/>
+      <arc id="2650213537872" source="sfl_883cd1b3-0cb7-4a76-a8d7-de1838885e76" target="ent_xor_13"/>
+      <arc id="2650213546080" source="sfl_797db48e-96f5-4e84-ace9-7c11235ea09d" target="ent_or_24"/>
+      <arc id="2652255271008" source="ent_or_22" target="W_Validate application"/>
+      <arc id="2652255262848" source="ent_or_24" target="A_Incomplete"/>
+      <arc id="2652255271056" source="sfl_6b9ab781-f587-4775-81db-9a8b5513de1a" target="ent_O_Sent (online only)__loop_join"/>
+      <arc id="2650213546128" source="W_Handle leads" target="ent_xor_19"/>
+      <arc id="2650213531824" source="sfl_a0aeb199-54a9-446b-965a-81a7e86e7fa7" target="ent_or_23"/>
+      <arc id="2652255258816" source="exi_xor_6" target="W_Call after offers"/>
+      <arc id="2650108252368" source="ent_or_21" target="or_21"/>
+      <arc id="2649884170464" source="exi_xor_7" target="sfl_c092b095-76fa-4a70-b070-316806430b60"/>
+      <arc id="2652255256800" source="exi_xor_1" target="A_Submitted"/>
+      <arc id="2650213546224" source="sfl_4168ffb9-0664-4505-a8a4-7724ab4b8fcf" target="ent_or_21"/>
+      <arc id="2652255265008" source="sfl_aa327919-1526-46d2-bfe4-d556992cc8fb" target="ent_or_21"/>
+      <arc id="2649884174592" source="exi_O_Sent (mail and online)__loop_split" target="sfl_883cd1b3-0cb7-4a76-a8d7-de1838885e76"/>
+      <arc id="2650213542144" source="O_Created" target="exi_xor_3"/>
+      <arc id="2652255258960" source="A_Accepted" target="ent_xor_16"/>
+      <arc id="2652255265104" source="ent_O_Cancelled__loop_join" target="O_Cancelled"/>
+      <arc id="2652255261024" source="O_Returned" target="exi_O_Returned__loop_split"/>
+      <arc id="2650213538160" source="O_Create Offer" target="ent_O_Created"/>
+      <arc id="2652255269280" source="exi_xor_2" target="W_Handle leads"/>
+      <arc id="2652214436272" source="exi_xor_5" target="sfl_f4de23e3-9e16-4df8-a3d3-743a22e7a10a"/>
+      <arc id="2650213534128" source="exi_O_Cancelled__loop_split" target="sfl_12a3c5d8-7d0d-4ffb-b1cb-57f1bc096ffc"/>
+      <arc id="2652255267264" source="O_Refused" target="exi_O_Refused__loop_split"/>
+      <arc id="2650213542336" source="sfl_f4de23e3-9e16-4df8-a3d3-743a22e7a10a" target="ent_O_Returned__loop_join"/>
+      <arc id="2652255267312" source="sfl_4fe47c77-029f-4ea0-8145-c24409c1bcd5" target="ent_or_22"/>
+      <arc id="2652255267360" source="sfl_b16adfe9-f11d-4b47-bf1e-da3e06c0079b" target="ent_xor_16"/>
+      <arc id="2652255267408" source="sfl_15e658a5-3817-4826-9200-aa46b317f80b" target="ent_or_21"/>
+      <arc id="2652214432336" source="exi_O_Returned__loop_split" target="sfl_8f2abee9-0c07-4664-ac1f-17c4477f5fd5"/>
+      <arc id="2650213536336" source="sfl_b4498274-0980-4c79-93f7-f02c10daf763" target="ent_xor_25"/>
+      <arc id="2650213540464" source="exi_xor_3" target="sfl_6b9ab781-f587-4775-81db-9a8b5513de1a"/>
+      <arc id="2652255265392" source="ent_O_Sent (mail and online)__loop_join" target="O_Sent (mail and online)"/>
+      <arc id="2649884172960" source="exi_xor_10" target="sfl_150eedf0-e531-4736-849a-9fd126d1c7a1"/>
+      <arc id="2652255265488" source="or_21" target="sink"/>
+      <arc id="2650213534416" source="sfl_8f2abee9-0c07-4664-ac1f-17c4477f5fd5" target="ent_O_Returned__loop_join"/>
+      <arc id="2652255271632" source="exi_xor_9" target="W_Call incomplete files"/>
+      <arc id="2649147669248" source="ent_O_Created" target="O_Created"/>
+      <arc id="2652255271680" source="ent_xor_16" target="O_Create Offer"/>
+      <arc id="2652255265536" source="exi_O_Sent (mail and online)__loop_split" target="W_Complete application"/>
+      <arc id="2649884168976" source="exi_O_Returned__loop_split" target="sfl_541f0499-0744-474a-840f-d8216646d54a"/>
+      <arc id="2650213536528" source="sfl_5c417c85-5147-40a1-98ca-767781ceaf18" target="ent_or_22"/>
+      <arc id="2652255257376" source="ent_or_23" target="O_Accepted"/>
+      <arc id="2652255259440" source="A_Create Application" target="exi_xor_1"/>
+      <arc id="2650213536624" source="sfl_150eedf0-e531-4736-849a-9fd126d1c7a1" target="ent_or_22"/>
+      <arc id="2649884171136" source="exi_xor_10" target="sfl_4168ffb9-0664-4505-a8a4-7724ab4b8fcf"/>
+      <arc id="2650213546896" source="sfl_02e16d15-4bce-4050-89a0-a72b63379b08" target="ent_xor_19"/>
+      <arc id="2652255259584" source="source" target="A_Create Application"/>
+      <arc id="2652255261648" source="exi_O_Returned__loop_split" target="A_Denied"/>
+      <arc id="2652214432720" source="exi_xor_5" target="sfl_5c417c85-5147-40a1-98ca-767781ceaf18"/>
+      <arc id="2650213536720" source="sfl_ca7fce69-c6b3-47ad-bfc0-8036943bfcc2" target="ent_O_Sent (mail and online)__loop_join"/>
+      <arc id="2650213538784" source="exi_O_Sent (online only)__loop_split" target="sfl_f98ff455-3cf8-4f20-a91a-16c3478d942a"/>
+      <arc id="2650213546992" source="exi_xor_5" target="sfl_a0aeb199-54a9-446b-965a-81a7e86e7fa7"/>
+      <arc id="2652255261696" source="A_Pending" target="exi_xor_10"/>
+      <arc id="2650213536768" source="W_Call after offers" target="ent_xor_25"/>
+      <arc id="2652255271968" source="W_Call incomplete files" target="ent_xor_25"/>
+      <arc id="2650213536816" source="sfl_27035d0e-e881-485a-aefb-016c44c47e85" target="ent_or_21"/>
+      <arc id="2649884171328" source="exi_W_Assess potential fraud__loop_split" target="sfl_ca25e751-215d-4064-8685-1b14752c8d14"/>
+      <arc id="2650213540944" source="A_Validating" target="exi_xor_5"/>
+      <arc id="2650108259424" source="ent_A_Accepted" target="A_Accepted"/>
+      <arc id="2650213543008" source="A_Submitted" target="exi_xor_2"/>
+      <arc id="2649884177520" source="exi_O_Refused__loop_split" target="sfl_39669dc3-a154-4a4c-8d6d-db5a0c879455"/>
+      <arc id="2652214436992" source="exi_xor_9" target="sfl_52d6b021-5374-4c1a-8755-8877129b5723"/>
+      <arc id="2652255259776" source="ent_xor_13" target="A_Complete"/>
+      <arc id="2652214439056" source="exi_O_Refused__loop_split" target="sfl_57f13734-2d3e-4c8a-a340-f82f7c924480"/>
+      <arc id="2652214434976" source="exi_xor_6" target="sfl_b16adfe9-f11d-4b47-bf1e-da3e06c0079b"/>
+      <arc id="2649884167344" source="exi_O_Sent (online only)__loop_split" target="sfl_beae6dff-e480-4d7c-863e-f939d616fc6b"/>
+      <arc id="2652255265968" source="ent_W_Assess potential fraud__loop_join" target="W_Assess potential fraud"/>
+      <arc id="2652255261888" source="O_Sent (mail and online)" target="exi_O_Sent (mail and online)__loop_split"/>
+      <arc id="2652255263952" source="W_Validate application" target="exi_xor_7"/>
+      <arc id="2650213539024" source="W_Complete application" target="ent_xor_13"/>
+      <arc id="2652255272160" source="exi_xor_6" target="A_Cancelled"/>
+      <arc id="2652214443280" source="exi_xor_1" target="sfl_02e16d15-4bce-4050-89a0-a72b63379b08"/>
+      <arc id="2650213547280" source="sfl_f98ff455-3cf8-4f20-a91a-16c3478d942a" target="ent_xor_25"/>
+      <arc id="2649884167488" source="exi_O_Sent (mail and online)__loop_split" target="sfl_ca7fce69-c6b3-47ad-bfc0-8036943bfcc2"/>
+      <arc id="2652255272304" source="ent_O_Refused__loop_join" target="O_Refused"/>
+      <arc id="2652214441360" source="exi_xor_7" target="sfl_797db48e-96f5-4e84-ace9-7c11235ea09d"/>
+      <arc id="2652214435216" source="exi_O_Cancelled__loop_split" target="sfl_27035d0e-e881-485a-aefb-016c44c47e85"/>
+      <arc id="2652255270288" source="ent_O_Returned__loop_join" target="O_Returned"/>
+      <arc id="2652255258000" source="ent_xor_25" target="A_Validating"/>
+      <arc id="2650213547424" source="sfl_52d6b021-5374-4c1a-8755-8877129b5723" target="ent_xor_25"/>
+      <arc id="2652255262176" source="A_Concept" target="ent_A_Accepted"/>
+      <arc id="2650213537296" source="sfl_541f0499-0744-474a-840f-d8216646d54a" target="ent_or_24"/>
+      <arc id="2650213539360" source="sfl_ca25e751-215d-4064-8685-1b14752c8d14" target="ent_W_Assess potential fraud__loop_join"/>
+      <arc id="2652255270432" source="ent_O_Sent (online only)__loop_join" target="O_Sent (online only)"/>
+      <arc id="2652255262320" source="A_Cancelled" target="ent_O_Cancelled__loop_join"/>
+      <arc id="2650213533312" source="O_Sent (online only)" target="exi_O_Sent (online only)__loop_split"/>
+      <arc id="2652255264384" source="sfl_6fbe3b91-e993-4b9c-a2ee-60aa3bdbc630" target="ent_xor_19"/>
+      <arc id="2649884173968" source="exi_xor_3" target="sfl_4351a17b-c36f-4c86-9560-2534e70a5e6c"/>
+      <arc id="2650213537440" source="O_Accepted" target="ent_A_Pending"/>
+      <arc id="2652214441648" source="exi_O_Returned__loop_split" target="sfl_4fe47c77-029f-4ea0-8145-c24409c1bcd5"/>
+      <arc id="2649884165808" source="exi_W_Assess potential fraud__loop_split" target="sfl_15e658a5-3817-4826-9200-aa46b317f80b"/>
+      <arc id="2650213545648" source="A_Denied" target="ent_O_Refused__loop_join"/>
+      <arc id="2650108260048" source="ent_A_Pending" target="A_Pending"/>
+      <arc id="2652255262416" source="sfl_85a79340-d60a-4dc4-bbb5-158533bb8c43" target="ent_O_Sent (mail and online)__loop_join"/>
+      <arc id="2652255264480" source="O_Cancelled" target="exi_O_Cancelled__loop_split"/>
+      <arc id="2650213535520" source="sfl_04f56179-1061-4559-8664-2150f84c22cc" target="ent_or_23"/>
+      <arc id="2650213533504" source="sfl_beae6dff-e480-4d7c-863e-f939d616fc6b" target="ent_O_Sent (online only)__loop_join"/>
+      <arc id="2652255268704" source="sfl_c092b095-76fa-4a70-b070-316806430b60" target="ent_W_Assess potential fraud__loop_join"/>
+      <arc id="2650213533552" source="A_Incomplete" target="exi_xor_9"/>
+      <arc id="2652255260544" source="sfl_12a3c5d8-7d0d-4ffb-b1cb-57f1bc096ffc" target="ent_O_Cancelled__loop_join"/>
+      <arc id="2650213535616" source="W_Assess potential fraud" target="exi_W_Assess potential fraud__loop_split"/>
+      <arc id="2650213543824" source="sfl_39669dc3-a154-4a4c-8d6d-db5a0c879455" target="ent_O_Refused__loop_join"/>
+      <arc id="2649884168112" source="exi_xor_2" target="sfl_6fbe3b91-e993-4b9c-a2ee-60aa3bdbc630"/>
+      <arc id="2650213537728" source="sfl_57f13734-2d3e-4c8a-a340-f82f7c924480" target="ent_or_22"/>
+      <arc id="2649884176368" source="exi_xor_3" target="sfl_85a79340-d60a-4dc4-bbb5-158533bb8c43"/>
+    </page>
+    <finalmarkings>
+      <marking>
+        <place idref="sink">
+          <text>1</text>
+        </place>
+      </marking>
+    </finalmarkings>
+  </net>
+</pnml>
