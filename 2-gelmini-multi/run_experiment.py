@@ -32,8 +32,6 @@ start_date_name = "start:timestamp"
 resource_column_name = "org:resource"
 outcome_name = "outcome"
 
-# Metodi accettati come sinonimi dell'approccio NSGA-II (retro-compatibilita'
-# con script/comandi gia' scritti che usano --method genetic)
 NSGA2_METHOD_ALIASES = {"genetic", "nsga2"}
 
 

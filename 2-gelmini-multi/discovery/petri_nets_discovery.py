@@ -302,8 +302,9 @@ def process_log_file(csv_path: str, n_trials: int, dataset_name: str = None):
     print("  [...] Generating final Petri net with the best hyperparameters...")
     net, initial_marking, final_marking = discover_petri_net(log, best_eps, best_eta)
 
-    pnml_path = output_dir / f"{dataset_name}_best_petri_net.pnml"
-    jpg_path = output_dir / f"{dataset_name}_best_petri_net.jpg"
+    # Decide where to save the discovered Petri net (PNML) and its rendered image (JPG).
+    pnml_path = output_dir / "simulation" / f"{dataset_name}_best_petri_net.pnml"
+    jpg_path = output_dir / "simulation" / f"{dataset_name}_best_petri_net.jpg"
 
     pm4py.write_pnml(net, initial_marking, final_marking, str(pnml_path))
     save_petri_net_image(net, initial_marking, final_marking, jpg_path)

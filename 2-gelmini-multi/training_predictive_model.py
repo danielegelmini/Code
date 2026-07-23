@@ -13,13 +13,13 @@ end_date_name = 'time:timestamp'
 start_date_name = 'start:timestamp'
 
 params = {
-    "case_study": "bpi17_after",
+    "case_study": "BAC",
     "optuna_trials": 80,  
     "early_stopping_rounds": 50, 
     "search_spaces": {
-        "learning_rate": {"type": "float", "min": 0.01, "max": 0.15, "log": True}, #0.01-0.3 for bpi12 and bac, 0.01-0.15 for bpic2017 
-        "depth": {"type": "int", "min": 3, "max": 6}, #4-8 for bpi12 and bac, 3-6 for bpic2017                            
-        "l2_leaf_reg": {"type": "float", "min": 15.0, "max": 60.0}, #1-30 for bpi12 and bac, 15-60 for bpic2017               
+        "learning_rate": {"type": "float", "min": 0.005, "max": 0.3, "log": True}, 
+        "depth": {"type": "int", "min": 3, "max": 8},                            
+        "l2_leaf_reg": {"type": "float", "min": 1.0, "max": 30.0},
         "colsample_bylevel": {"type": "float", "min": 0.6, "max": 1.0},
         "bootstrap_type": {"type": "categorical", "choices": ["Bayesian", "Bernoulli", "MVS"]}
     }
@@ -37,7 +37,6 @@ def main():
     data_dir = Path(f"./case_studies/{case_study}")
     case_id_name, activity_column_name, resource_column_name, continuous_features, categorical_features, columns_to_remove = get_features(case_study)
 
-    
     train_data = pd.read_csv(data_dir / "train_data.csv", parse_dates=[end_date_name, start_date_name])
     test_data = pd.read_csv(data_dir / "test_data.csv", parse_dates=[end_date_name, start_date_name])
 

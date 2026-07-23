@@ -13,66 +13,19 @@ def getting_traces_status(dataframe, case_id_name):
         last_event_idx = indexes[-1]
         for i in indexes:
             if i == last_event_idx: # Indicating last activity
-                df.loc[i, 'trace_status'] = 'completed'
+                df['trace_status'][i] = 'completed'
             elif i == start_event_idx:
-                df.loc[i, 'trace_status'] = 'start'
+                 df['trace_status'][i] = 'start'
             else:
-                df.loc[i, 'trace_status'] = 'active'
-    return df
-
-# def extract_data_after_tsplit(df, data_with_trace_status, t_split, case_id_name):
-#     # Normalize split timestamp for safe datetime comparisons with tz-aware columns
-#     t_split = pd.to_datetime(t_split)
-#     if pd.api.types.is_datetime64tz_dtype(data_with_trace_status['time:timestamp'].dtype) and t_split.tzinfo is None:
-#         t_split = t_split.tz_localize(data_with_trace_status['time:timestamp'].dt.tz)
-#     if pd.api.types.is_datetime64tz_dtype(data_with_trace_status['start:timestamp'].dtype) and t_split.tzinfo is None:
-#         t_split = t_split.tz_localize(data_with_trace_status['start:timestamp'].dt.tz)
-
-#     start_traces_df = data_with_trace_status[(data_with_trace_status['trace_status'] == 'start')]
-#     completed_traces_df = data_with_trace_status[data_with_trace_status['trace_status'] == 'completed']
-#     train_id = completed_traces_df[completed_traces_df["time:timestamp"] <= t_split][case_id_name].unique() # Traces that ended at or before split time go to train set
-#     future_id = start_traces_df[start_traces_df["start:timestamp"] >= t_split][case_id_name].unique() # Traces that started after split time (Remove these traces from the test set - only consider traces are running at split time)
-#     train_data = df.loc[df[case_id_name].isin(train_id)].reset_index(drop=True)
-#     return train_data, train_id, future_id
+                df['trace_status'][i] = 'active'
+    return df    
 
 def extract_data_after_tsplit(df, data_with_trace_status, t_split, case_id_name):
-    # Normalize split timestamp for safe datetime comparisons with tz-aware columns
-    t_split = pd.to_datetime(t_split)
-    if pd.api.types.is_datetime64tz_dtype(data_with_trace_status['time:timestamp'].dtype) and t_split.tzinfo is None:
-        t_split = t_split.tz_localize(data_with_trace_status['time:timestamp'].dt.tz)
-        
-    # Get completed traces
-    completed_traces = data_with_trace_status[data_with_trace_status['trace_status'] == 'completed']
-    train_id = completed_traces[completed_traces["time:timestamp"] <= t_split][case_id_name].unique()
-    
-    # ==========================================
-    # NEW CODE: FORCE EXACTLY 80% LIMIT
-    # ==========================================
-    total_traces = df[case_id_name].nunique()
-    target_train_count = round(total_traces * 0.80)
-    
-    sliced_off_ids = []
-    if len(train_id) > target_train_count:
-        # Sort the training cases by their exact end time to keep chronological order
-        trace_ends = df[df[case_id_name].isin(train_id)].groupby(case_id_name)['time:timestamp'].max().sort_values()
-        
-        # Keep exactly the number needed for 80%
-        train_id_limited = trace_ends.iloc[:target_train_count].index.values
-        
-        # Identify the traces we cut off due to tied timestamps
-        sliced_off_ids = list(set(train_id) - set(train_id_limited))
-        train_id = train_id_limited
-    # ==========================================
-
-    # Get future traces
-    future_traces = data_with_trace_status[data_with_trace_status['trace_status'] == 'start']
-    future_id = future_traces[future_traces["time:timestamp"] > t_split][case_id_name].unique()
-    
-    # Add the sliced-off IDs to future_id so they are excluded from the running test set
-    if sliced_off_ids:
-        future_id = np.concatenate([future_id, sliced_off_ids])
-        
-    train_data = df[df[case_id_name].isin(train_id)].reset_index(drop=True)
+    start_traces_df = data_with_trace_status[(data_with_trace_status['trace_status'] == 'start')]
+    completed_traces_df = data_with_trace_status[data_with_trace_status['trace_status'] == 'completed']
+    train_id = completed_traces_df[completed_traces_df["time:timestamp"] <= t_split][case_id_name].unique() # Traces that ended at or before split time go to train set
+    future_id = start_traces_df[start_traces_df["start:timestamp"] >= t_split][case_id_name].unique() # Traces that started after split time (Remove these traces from the test set - only consider traces are running at split time)
+    train_data = df.loc[df[case_id_name].isin(train_id)].reset_index(drop=True)
     return train_data, train_id, future_id
 
 def train_test_split(df, case_study, t_split, case_id_name):
@@ -101,57 +54,37 @@ def train_test_split(df, case_study, t_split, case_id_name):
 
     return train_data, test_data
 
-def extract_internal_running_validation(X_trans, y_train, train_data, case_id_name, train_ratio=0.85):
+def extract_internal_running_validation(X_trans, y_train, train_data, case_id_name, train_ratio=0.8):
     """
-    Simula lo split temporale del predecessore all'interno di Optuna.
-    Prende le tracce di train originarie, trova un t_split interno basato sulla 
-    proporzione fornita (es. 85%) e isola le tracce in corso (running) da usare come validazione.
+    Split temporale per la validazione interna usata da Optuna.
+
+    Le tracce di training vengono ordinate in base al loro istante di
+    completamento (timestamp massimo). Le prime `train_ratio` (es. 80%)
+    diventano il sotto-training set; TUTTE le restanti tracce (il restante
+    20%, indipendentemente da quando sono iniziate) diventano il set di
+    validazione. Nessuna traccia viene scartata.
     """
-    import pandas as pd
-    import numpy as np
-    
-    # Ricostruiamo la mappatura dei Case ID e dei relativi Timestamp
+
+    # Ricostruiamo la mappatura Case ID -> Timestamp per le righe correnti
     df_mini = pd.DataFrame({
         'case_id': train_data.loc[y_train.index, case_id_name],
         'timestamp': train_data.loc[y_train.index, 'time:timestamp']
     })
-    
+
     # Ordiniamo le tracce in base al loro istante di completamento
     trace_ends = df_mini.groupby('case_id')['timestamp'].max().sort_values()
-    
-    # Identifichiamo il punto di split interno (es. all'85%)
+
+    # Punto di split: le prime `target_train_count` tracce (per data di
+    # completamento) vanno in train, tutte le altre in validation
     target_train_count = int(len(trace_ends) * train_ratio)
-    if target_train_count == 0 or target_train_count >= len(trace_ends):
-        # Fallback di sicurezza se il dataset è troppo piccolo per essere campionato cronologicamente
-        split_pos = int(len(X_trans) * train_ratio)
-        return X_trans[:split_pos], X_trans[split_pos:], y_train.iloc[:split_pos], y_train.iloc[split_pos:]
-        
-    t_split_internal = trace_ends.iloc[target_train_count]
-    
-    # ID delle tracce assegnate al sotto-addestramento (completate prima del t_split)
+
     sub_train_ids = trace_ends.iloc[:target_train_count].index.values
-    
-    # Le tracce di validazione sono quelle "in corso": iniziate prima o a t_split, ma non ancora completate
-    trace_starts = df_mini.groupby('case_id')['timestamp'].min()
-    started_before_split = trace_starts[trace_starts <= t_split_internal].index
-    
-    sub_val_ids = df_mini[
-        (df_mini['case_id'].isin(started_before_split)) & 
-        (~df_mini['case_id'].isin(sub_train_ids))
-    ]['case_id'].unique()
-    
-    # Estraiamo gli indici di riga del dataframe originale
+    sub_val_ids = trace_ends.iloc[target_train_count:].index.values
     tr_indices = df_mini[df_mini['case_id'].isin(sub_train_ids)].index
     val_indices = df_mini[df_mini['case_id'].isin(sub_val_ids)].index
     
-    # Fallback nel caso in cui non ci siano tracce attive in quel preciso istante
-    if len(val_indices) == 0 or len(tr_indices) == 0:
-        split_pos = int(len(X_trans) * train_ratio)
-        return X_trans[:split_pos], X_trans[split_pos:], y_train.iloc[:split_pos], y_train.iloc[split_pos:]
-        
-    # Mappiamo gli indici originali sulle posizioni correnti all'interno delle matrici
     pos_map = {idx: pos for pos, idx in enumerate(y_train.index)}
     tr_pos = [pos_map[i] for i in tr_indices if i in pos_map]
     val_pos = [pos_map[i] for i in val_indices if i in pos_map]
-    
+
     return X_trans[tr_pos], X_trans[val_pos], y_train.iloc[tr_pos], y_train.iloc[val_pos]
