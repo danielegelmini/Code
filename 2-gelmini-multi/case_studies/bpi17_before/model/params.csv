@@ -1,2 +1,0 @@
-timestamp,case_study,optuna_trials,early_stopping_rounds,search_learning_rate,search_depth,search_l2_leaf_reg,search_colsample_bylevel,search_bootstrap_type
-2026-07-23 13:35:26,bpi17_before,80,50,"{'type': 'float', 'min': 0.005, 'max': 0.15, 'log': True}","{'type': 'int', 'min': 3, 'max': 8}","{'type': 'float', 'min': 3.0, 'max': 30.0}","{'type': 'float', 'min': 0.6, 'max': 1.0}","{'type': 'categorical', 'choices': ['Bayesian', 'Bernoulli', 'MVS']}"

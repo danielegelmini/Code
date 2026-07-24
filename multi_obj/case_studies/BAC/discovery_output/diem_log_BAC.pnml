@@ -1,0 +1,256 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<pnml>
+  <net id="" type="http://www.pnml.org/version-2009/grammar/pnmlcoremodel">
+    <name>
+      <text></text>
+    </name>
+    <page id="n0">
+      <place id="ent_node_0d718b3a-5653-40ae-a0a5-ac2d02c0d584">
+        <name>
+          <text>ent_node_0d718b3a-5653-40ae-a0a5-ac2d02c0d584</text>
+        </name>
+      </place>
+      <place id="ent_node_04a75554-fdd3-4733-bb7b-161024f13ed1">
+        <name>
+          <text>ent_node_04a75554-fdd3-4733-bb7b-161024f13ed1</text>
+        </name>
+      </place>
+      <place id="exi_node_7796adae-48a9-4820-b222-df11c1d6ea8b">
+        <name>
+          <text>exi_node_7796adae-48a9-4820-b222-df11c1d6ea8b</text>
+        </name>
+      </place>
+      <place id="ent_node_681a45fe-ca50-4207-b840-8cb4fe1c9725">
+        <name>
+          <text>ent_node_681a45fe-ca50-4207-b840-8cb4fe1c9725</text>
+        </name>
+      </place>
+      <place id="ent_node_9a802912-6c3f-4f61-9cd2-bd788dbaaf63">
+        <name>
+          <text>ent_node_9a802912-6c3f-4f61-9cd2-bd788dbaaf63</text>
+        </name>
+      </place>
+      <place id="ent_node_eec482e8-cf56-489e-b23a-5cbaeaff1c54">
+        <name>
+          <text>ent_node_eec482e8-cf56-489e-b23a-5cbaeaff1c54</text>
+        </name>
+      </place>
+      <place id="source">
+        <name>
+          <text>source</text>
+        </name>
+        <initialMarking>
+          <text>1</text>
+        </initialMarking>
+      </place>
+      <place id="exi_node_09e56c99-9278-4943-85d1-156d35e869aa">
+        <name>
+          <text>exi_node_09e56c99-9278-4943-85d1-156d35e869aa</text>
+        </name>
+      </place>
+      <place id="sink">
+        <name>
+          <text>sink</text>
+        </name>
+      </place>
+      <place id="ent_node_3987a664-0722-4ab0-9f9d-d4d78d94835d">
+        <name>
+          <text>ent_node_3987a664-0722-4ab0-9f9d-d4d78d94835d</text>
+        </name>
+      </place>
+      <place id="ent_node_6f6afc31-fb01-4d42-b7de-ec7774c366fc">
+        <name>
+          <text>ent_node_6f6afc31-fb01-4d42-b7de-ec7774c366fc</text>
+        </name>
+      </place>
+      <place id="exi_node_dc97b5c5-e4ce-4e4d-98a7-152575835475">
+        <name>
+          <text>exi_node_dc97b5c5-e4ce-4e4d-98a7-152575835475</text>
+        </name>
+      </place>
+      <place id="ent_node_bd5f92c8-fdfb-4a82-8a08-a9774a659140">
+        <name>
+          <text>ent_node_bd5f92c8-fdfb-4a82-8a08-a9774a659140</text>
+        </name>
+      </place>
+      <place id="ent_node_397b98d2-ab10-4258-ad34-f726a12296ee">
+        <name>
+          <text>ent_node_397b98d2-ab10-4258-ad34-f726a12296ee</text>
+        </name>
+      </place>
+      <place id="exi_node_c59f74b6-ff8b-4a22-aedd-b9e2e7e1f06a">
+        <name>
+          <text>exi_node_c59f74b6-ff8b-4a22-aedd-b9e2e7e1f06a</text>
+        </name>
+      </place>
+      <transition id="node_bd5f92c8-fdfb-4a82-8a08-a9774a659140">
+        <name>
+          <text>Authorization Requested</text>
+        </name>
+      </transition>
+      <transition id="node_ca0da442-56be-4062-85fa-445ab313143a">
+        <name>
+          <text>Evaluating Request (WITH registered letter)</text>
+        </name>
+      </transition>
+      <transition id="sfl_node_e6054143-34ad-4c11-90cc-539623746db6">
+        <name>
+          <text>sfl_node_e6054143-34ad-4c11-90cc-539623746db6</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="e3837717-277b-4d5d-8c9b-719b756447c4"/>
+      </transition>
+      <transition id="node_87758911-fcc7-41b8-b926-f56ca67ae826">
+        <name>
+          <text>Evaluating Request (NO registered letter)</text>
+        </name>
+      </transition>
+      <transition id="node_c508ec96-02cf-48d6-93ac-fff573aad079">
+        <name>
+          <text>Service closure Request with BO responsibility</text>
+        </name>
+      </transition>
+      <transition id="sfl_node_b85edd99-fb6a-4123-8af1-8d922d15315e">
+        <name>
+          <text>sfl_node_b85edd99-fb6a-4123-8af1-8d922d15315e</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="b3d1b936-af98-4abb-9e2e-d1fefe5dd921"/>
+      </transition>
+      <transition id="node_54dac5fb-836d-4055-b5bc-f9d7edb380d8">
+        <name>
+          <text>Service closure Request with network responsibility</text>
+        </name>
+      </transition>
+      <transition id="sfl_node_fcfcb485-95c5-47b2-9ec5-328f7d35a845">
+        <name>
+          <text>sfl_node_fcfcb485-95c5-47b2-9ec5-328f7d35a845</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="d7615546-00c2-4492-89c8-7537df139975"/>
+      </transition>
+      <transition id="node_1120da97-0548-4aee-a56f-2218a4e54758">
+        <name>
+          <text>Network Adjustment Requested</text>
+        </name>
+      </transition>
+      <transition id="node_41be4050-78ad-4714-8392-011be3c2ce18">
+        <name>
+          <text>Request completed with customer recovery</text>
+        </name>
+      </transition>
+      <transition id="node_32d0f3a5-db03-4f9e-aef2-5c032edbf3c9">
+        <name>
+          <text>Request deleted</text>
+        </name>
+      </transition>
+      <transition id="node_6adf62ca-0c37-4748-a222-0eef5475046c">
+        <name>
+          <text>Pending Request for Network Information</text>
+        </name>
+      </transition>
+      <transition id="sfl_node_9fea8825-a23c-402a-9ed2-29345b768784">
+        <name>
+          <text>sfl_node_9fea8825-a23c-402a-9ed2-29345b768784</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="83c7033e-fdb4-47f5-8aaf-c5b65859464c"/>
+      </transition>
+      <transition id="node_6127ff20-4ff8-4414-99d7-2ddd55d5dc4b">
+        <name>
+          <text>Request completed with account closure</text>
+        </name>
+      </transition>
+      <transition id="node_cae4caa3-d7d6-447a-9583-383abcdb1f9e">
+        <name>
+          <text>Back-Office Adjustment Requested</text>
+        </name>
+      </transition>
+      <transition id="node_b9683672-ef40-48fd-bbc6-9b1524473b61">
+        <name>
+          <text>Request created</text>
+        </name>
+      </transition>
+      <transition id="node_4cf279e9-7d78-4423-8245-1016113ff7fe">
+        <name>
+          <text>Pending Request for Reservation Closure</text>
+        </name>
+      </transition>
+      <transition id="node_668118ed-74c4-40de-8eb2-543befac4be6">
+        <name>
+          <text>Pending Request for acquittance of heirs</text>
+        </name>
+      </transition>
+      <transition id="node_04a75554-fdd3-4733-bb7b-161024f13ed1">
+        <name>
+          <text>Pending Liquidation Request</text>
+        </name>
+      </transition>
+      <transition id="node_eec482e8-cf56-489e-b23a-5cbaeaff1c54">
+        <name>
+          <text>node_eec482e8-cf56-489e-b23a-5cbaeaff1c54</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="dfab98e7-962c-4e5f-bf00-39013087b83b"/>
+      </transition>
+      <transition id="node_3987a664-0722-4ab0-9f9d-d4d78d94835d">
+        <name>
+          <text>node_3987a664-0722-4ab0-9f9d-d4d78d94835d</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="b7d69797-f950-45c0-845e-f534e703bae1"/>
+      </transition>
+      <transition id="node_6f6afc31-fb01-4d42-b7de-ec7774c366fc">
+        <name>
+          <text>node_6f6afc31-fb01-4d42-b7de-ec7774c366fc</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="a69d1d37-a7f2-41bc-a921-56eb6ef6e027"/>
+      </transition>
+      <arc id="1791028099072" source="ent_node_6f6afc31-fb01-4d42-b7de-ec7774c366fc" target="node_6f6afc31-fb01-4d42-b7de-ec7774c366fc"/>
+      <arc id="1793099633328" source="exi_node_dc97b5c5-e4ce-4e4d-98a7-152575835475" target="node_668118ed-74c4-40de-8eb2-543befac4be6"/>
+      <arc id="1793099634192" source="ent_node_397b98d2-ab10-4258-ad34-f726a12296ee" target="node_4cf279e9-7d78-4423-8245-1016113ff7fe"/>
+      <arc id="1793099633184" source="exi_node_09e56c99-9278-4943-85d1-156d35e869aa" target="node_ca0da442-56be-4062-85fa-445ab313143a"/>
+      <arc id="1793099643936" source="node_6adf62ca-0c37-4748-a222-0eef5475046c" target="ent_node_397b98d2-ab10-4258-ad34-f726a12296ee"/>
+      <arc id="1791304303152" source="ent_node_eec482e8-cf56-489e-b23a-5cbaeaff1c54" target="node_eec482e8-cf56-489e-b23a-5cbaeaff1c54"/>
+      <arc id="1793099641392" source="exi_node_09e56c99-9278-4943-85d1-156d35e869aa" target="node_87758911-fcc7-41b8-b926-f56ca67ae826"/>
+      <arc id="1793099635248" source="node_6127ff20-4ff8-4414-99d7-2ddd55d5dc4b" target="ent_node_eec482e8-cf56-489e-b23a-5cbaeaff1c54"/>
+      <arc id="1791028093024" source="exi_node_dc97b5c5-e4ce-4e4d-98a7-152575835475" target="sfl_node_9fea8825-a23c-402a-9ed2-29345b768784"/>
+      <arc id="1793099637360" source="exi_node_09e56c99-9278-4943-85d1-156d35e869aa" target="node_32d0f3a5-db03-4f9e-aef2-5c032edbf3c9"/>
+      <arc id="1793099631216" source="exi_node_09e56c99-9278-4943-85d1-156d35e869aa" target="node_6adf62ca-0c37-4748-a222-0eef5475046c"/>
+      <arc id="1791019533424" source="sfl_node_b85edd99-fb6a-4123-8af1-8d922d15315e" target="ent_node_0d718b3a-5653-40ae-a0a5-ac2d02c0d584"/>
+      <arc id="1793099644032" source="node_668118ed-74c4-40de-8eb2-543befac4be6" target="ent_node_9a802912-6c3f-4f61-9cd2-bd788dbaaf63"/>
+      <arc id="1791304304784" source="ent_node_bd5f92c8-fdfb-4a82-8a08-a9774a659140" target="node_bd5f92c8-fdfb-4a82-8a08-a9774a659140"/>
+      <arc id="1793099630736" source="node_41be4050-78ad-4714-8392-011be3c2ce18" target="ent_node_eec482e8-cf56-489e-b23a-5cbaeaff1c54"/>
+      <arc id="1793099629200" source="node_b9683672-ef40-48fd-bbc6-9b1524473b61" target="exi_node_09e56c99-9278-4943-85d1-156d35e869aa"/>
+      <arc id="1793099644560" source="node_87758911-fcc7-41b8-b926-f56ca67ae826" target="exi_node_7796adae-48a9-4820-b222-df11c1d6ea8b"/>
+      <arc id="1791028095664" source="exi_node_09e56c99-9278-4943-85d1-156d35e869aa" target="sfl_node_e6054143-34ad-4c11-90cc-539623746db6"/>
+      <arc id="1793099637936" source="node_c508ec96-02cf-48d6-93ac-fff573aad079" target="exi_node_c59f74b6-ff8b-4a22-aedd-b9e2e7e1f06a"/>
+      <arc id="1793099629248" source="node_04a75554-fdd3-4733-bb7b-161024f13ed1" target="exi_node_dc97b5c5-e4ce-4e4d-98a7-152575835475"/>
+      <arc id="1793099634384" source="sfl_node_e6054143-34ad-4c11-90cc-539623746db6" target="ent_node_3987a664-0722-4ab0-9f9d-d4d78d94835d"/>
+      <arc id="1793099637456" source="node_32d0f3a5-db03-4f9e-aef2-5c032edbf3c9" target="ent_node_6f6afc31-fb01-4d42-b7de-ec7774c366fc"/>
+      <arc id="1793099633376" source="node_ca0da442-56be-4062-85fa-445ab313143a" target="ent_node_3987a664-0722-4ab0-9f9d-d4d78d94835d"/>
+      <arc id="1793099639376" source="ent_node_0d718b3a-5653-40ae-a0a5-ac2d02c0d584" target="node_54dac5fb-836d-4055-b5bc-f9d7edb380d8"/>
+      <arc id="1791019536112" source="node_1120da97-0548-4aee-a56f-2218a4e54758" target="ent_node_681a45fe-ca50-4207-b840-8cb4fe1c9725"/>
+      <arc id="1791069253808" source="exi_node_7796adae-48a9-4820-b222-df11c1d6ea8b" target="sfl_node_b85edd99-fb6a-4123-8af1-8d922d15315e"/>
+      <arc id="1793099641584" source="source" target="node_b9683672-ef40-48fd-bbc6-9b1524473b61"/>
+      <arc id="1793099641008" source="node_bd5f92c8-fdfb-4a82-8a08-a9774a659140" target="ent_node_681a45fe-ca50-4207-b840-8cb4fe1c9725"/>
+      <arc id="1793099643648" source="node_4cf279e9-7d78-4423-8245-1016113ff7fe" target="ent_node_04a75554-fdd3-4733-bb7b-161024f13ed1"/>
+      <arc id="1793099642640" source="node_3987a664-0722-4ab0-9f9d-d4d78d94835d" target="ent_node_0d718b3a-5653-40ae-a0a5-ac2d02c0d584"/>
+      <arc id="1793099635488" source="ent_node_9a802912-6c3f-4f61-9cd2-bd788dbaaf63" target="node_6127ff20-4ff8-4414-99d7-2ddd55d5dc4b"/>
+      <arc id="1793099631408" source="node_6f6afc31-fb01-4d42-b7de-ec7774c366fc" target="sink"/>
+      <arc id="1792581937984" source="exi_node_c59f74b6-ff8b-4a22-aedd-b9e2e7e1f06a" target="sfl_node_fcfcb485-95c5-47b2-9ec5-328f7d35a845"/>
+      <arc id="1793099632992" source="ent_node_681a45fe-ca50-4207-b840-8cb4fe1c9725" target="node_c508ec96-02cf-48d6-93ac-fff573aad079"/>
+      <arc id="1791304306032" source="ent_node_04a75554-fdd3-4733-bb7b-161024f13ed1" target="node_04a75554-fdd3-4733-bb7b-161024f13ed1"/>
+      <arc id="1793099643264" source="exi_node_dc97b5c5-e4ce-4e4d-98a7-152575835475" target="node_cae4caa3-d7d6-447a-9583-383abcdb1f9e"/>
+      <arc id="1793099634576" source="exi_node_7796adae-48a9-4820-b222-df11c1d6ea8b" target="node_41be4050-78ad-4714-8392-011be3c2ce18"/>
+      <arc id="1793099632032" source="node_cae4caa3-d7d6-447a-9583-383abcdb1f9e" target="ent_node_9a802912-6c3f-4f61-9cd2-bd788dbaaf63"/>
+      <arc id="1791304317360" source="ent_node_3987a664-0722-4ab0-9f9d-d4d78d94835d" target="node_3987a664-0722-4ab0-9f9d-d4d78d94835d"/>
+      <arc id="1793099644848" source="node_eec482e8-cf56-489e-b23a-5cbaeaff1c54" target="ent_node_6f6afc31-fb01-4d42-b7de-ec7774c366fc"/>
+      <arc id="1793099630160" source="sfl_node_9fea8825-a23c-402a-9ed2-29345b768784" target="ent_node_9a802912-6c3f-4f61-9cd2-bd788dbaaf63"/>
+      <arc id="1793099636688" source="node_54dac5fb-836d-4055-b5bc-f9d7edb380d8" target="ent_node_bd5f92c8-fdfb-4a82-8a08-a9774a659140"/>
+      <arc id="1793099644896" source="exi_node_c59f74b6-ff8b-4a22-aedd-b9e2e7e1f06a" target="node_1120da97-0548-4aee-a56f-2218a4e54758"/>
+      <arc id="1791019546096" source="sfl_node_fcfcb485-95c5-47b2-9ec5-328f7d35a845" target="ent_node_397b98d2-ab10-4258-ad34-f726a12296ee"/>
+    </page>
+    <finalmarkings>
+      <marking>
+        <place idref="sink">
+          <text>1</text>
+        </place>
+      </marking>
+    </finalmarkings>
+  </net>
+</pnml>

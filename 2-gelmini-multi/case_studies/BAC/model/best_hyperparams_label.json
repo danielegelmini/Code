@@ -1,9 +1,0 @@
-{
-    "learning_rate": 0.28218352698371274,
-    "depth": 8,
-    "l2_leaf_reg": 12.943177807681199,
-    "colsample_bylevel": 0.8855313286239086,
-    "bootstrap_type": "Bernoulli",
-    "subsample": 0.9940664020310308,
-    "scale_pos_weight": 0.3539080825648194
-}
