@@ -20,24 +20,19 @@ from utils.train_test_split import extract_internal_running_validation
 
 class ExpM1Regressor:
     """
-    Wrapper minimale attorno a un modello gia' addestrato (es. CatBoostRegressor)
-    che e' stato allenato a predire log1p(target). Applica np.expm1() in modo
-    trasparente in predict(), cosi' che l'output della pipeline sia sempre nella
-    scala originale del target, senza dover ricordare di farlo a mano ogni volta
-    che si usa il modello in produzione.
+    Minimal wrapper around a pre-trained model to handle log1p-transformed targets.
+
+    This class transparently applies np.expm1() during predictions so that the pipeline's 
+    output is always in the original scale of the target. This avoids the need to manually 
+    apply the inverse transformation every time the model is used in production.
     """
     def __init__(self, fitted_model):
         self.fitted_model = fitted_model
 
     def fit(self, X, y=None):
-        # No-op: fitted_model e' gia' stato addestrato a monte.
-        # Il metodo e' necessario perche' scikit-learn (>=1.6 circa)
-        # richiede che ogni step di una Pipeline esponga 'fit' per
-        # essere riconosciuto come estimator valido da check_is_fitted().
         return self
 
     def __sklearn_is_fitted__(self):
-        # Consideriamo l'oggetto "fitted" se il modello interno lo e'.
         return self.fitted_model is not None
 
     def predict(self, X):
@@ -53,6 +48,23 @@ class ExpM1Regressor:
         return self
 
 def prepare_df_for_ml(df, case_id_name, columns_to_remove=None):
+    """
+    Prepares the dataframe for machine learning by separating features and targets.
+
+    This function extracts the targets 'label' and 'sigmoid_mm', drops the specified case ID column, 
+    and optionally removes other specified columns.
+
+    Args:
+        df (pandas.DataFrame): The input dataframe to process.
+        case_id_name (str): The name of the column containing the case identifier to drop.
+        columns_to_remove (list of str, optional): A list of additional column names to drop. Defaults to None.
+
+    Returns:
+        tuple: A tuple containing:
+            - pandas.DataFrame: The feature matrix (X).
+            - pandas.Series: The 'label' target variable (y1).
+            - pandas.Series: The 'sigmoid_mm' target variable (y2).
+    """
     df = df.drop(columns=[case_id_name], errors='ignore')
     
     y1 = df.label
@@ -66,6 +78,19 @@ def prepare_df_for_ml(df, case_id_name, columns_to_remove=None):
     return X, y1, y2
 
 def filter_features(features, dataset_columns, feature_type):
+    """
+    Filters a list of features to keep only those present in the dataset columns.
+
+    It also prints a warning for any features that are missing from the dataset.
+
+    Args:
+        features (list of str): The list of feature names to check.
+        dataset_columns (list or pandas.Index): The available columns in the dataset.
+        feature_type (str): A descriptive string of the feature type (e.g., 'continuous', 'categorical') used for the warning message.
+
+    Returns:
+        list of str: A list of feature names that are present in the dataset columns.
+    """
     present = [f for f in features if f in dataset_columns]
     missing = [f for f in features if f not in dataset_columns]
     if missing:
@@ -74,7 +99,27 @@ def filter_features(features, dataset_columns, feature_type):
 
 def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
                    continuous_features, categorical_features, case_study=None, params=None):
+    """
+    Trains and optimizes machine learning models using CatBoost and Optuna.
 
+    This function processes the data, sets up a scikit-learn ColumnTransformer pipeline for continuous 
+    and categorical features, and runs hyperparameter optimization via Optuna for both classification 
+    ('label') and regression ('sigmoid_mm') targets. It then trains final models, evaluates their 
+    performance, and serializes the resulting pipelines and best parameters to disk.
+
+    Args:
+        train_data (pandas.DataFrame): The training dataset.
+        test_data (pandas.DataFrame): The test dataset.
+        case_id_name (str): The name of the case ID column to drop.
+        columns_to_remove (list of str): Columns to explicitly remove from the feature set.
+        continuous_features (list of str): A list of continuous feature names.
+        categorical_features (list of str): A list of categorical feature names.
+        case_study (str, optional): The name of the case study, used to define the output directory path. Defaults to None.
+        params (dict, optional): A dictionary of configuration parameters including 'optuna_trials', 'early_stopping_rounds', and 'search_spaces'. Defaults to None.
+
+    Returns:
+        None
+    """
     if params is None:
         params = {}
 
@@ -130,6 +175,18 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
             const_params.update({"loss_function": "MAE", "eval_metric": "R2"})
 
         def objective(trial):
+            """
+            Objective function for Optuna hyperparameter optimization.
+            This function samples hyperparameters from the defined search spaces, configures and 
+            trains a CatBoost model (Classifier or Regressor depending on the target), and evaluates 
+            its performance on an internal validation set. 
+
+            Args:
+                trial (optuna.trial.Trial): An Optuna trial object used to sample hyperparameters.
+
+            Returns:
+                float: The evaluation metric score (Accuracy for classification, R2 for regression) achieved by the model, which Optuna will attempt to maximize.
+            """
             trial_params = const_params.copy()
 
             for param_name, config in search_spaces_config.items():

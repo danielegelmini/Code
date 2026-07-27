@@ -27,22 +27,16 @@ outcome_name = "outcome"
 # ---------------------------------------------------------------------------
 def act_with_res_func(df, activity_column_name, resource_column_name):
     """
-    Generates a dictionary mapping each unique activity to a list of unique resources associated with it,
-    excluding 'missing' and 'NotDef'.
+    Generates a dictionary mapping each unique activity to a list of its associated unique resources.
+    This mapping excludes 'missing' and 'NotDef' resources.
 
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        The DataFrame containing the data.
-    activity_column_name : str
-        The name of the column containing activity names.
-    resource_column_name : str
-        The name of the column containing resource names.
+    Args:
+        df (pandas.DataFrame): The DataFrame containing the event log data.
+        activity_column_name (str): The name of the column containing activity names.
+        resource_column_name (str): The name of the column containing resource names.
 
-    Returns
-    -------
-    dict
-        {activity: [unique resources]} mapping
+    Returns:
+        dict: A dictionary in the format {activity: [unique resources]}.
     """
     grouped = df.groupby(activity_column_name)[resource_column_name].unique()
     forbidden = {"missing", "NotDef"}
@@ -53,16 +47,16 @@ def act_with_res_func(df, activity_column_name, resource_column_name):
 
 def build_query_instances(test_df, case_id_name):
     """
-    Create a dictionary with case_id: query_instance in dictionary
+    Creates a dictionary mapping case IDs to their respective query instances.
+    A query instance represents the last event before a prescription, excluding 
+    specific columns like case ID, timestamps, labels, and outcome.
 
-    Parameters:
-        test_data (df): Dataframe contains only query instance (Last event before prescription)
-        case_id_name (str): The name of the column to be removed that contains case IDs.
+    Args:
+        test_df (pandas.DataFrame): Dataframe containing only the query instances.
+        case_id_name (str): The name of the column containing case IDs to be removed.
 
     Returns:
-        dict: A dictionary containing two elements:
-            - case_id (str): Case IDs.
-            - attribute (dict): {"feature_name": "value",..}
+        dict: A dictionary where the keys are case IDs (str) and the values are dictionaries representing the instance features ({"feature_name": "value", ...}).
     """
     drop_cols = {case_id_name, start_date_name, end_date_name, "total_time", "remaining_time", "label", "sigmoid_mm", 'time_from_midnight', outcome_name}
     feature_columns = [c for c in test_df.columns if c not in drop_cols]
@@ -78,7 +72,18 @@ def build_query_instances(test_df, case_id_name):
 
 def next_possible_activities(trace_history, transition_graph, WINDOW_SIZE):
     """
-    Returns the list of possible next activities based on the transition graph and the trace history.
+    Determines the list of possible next activities based on a transition graph and trace history.
+
+    It compares either the full trace history or a recent window (defined by WINDOW_SIZE) 
+    against the transition graph to find valid subsequent activities.
+
+    Args:
+        trace_history (list of str): The history of activities for a given case.
+        transition_graph (dict): A dictionary mapping trace sequences (as strings) to possible next activities.
+        WINDOW_SIZE (int): The maximum number of recent activities to consider when matching.
+
+    Returns:
+        list of str: A list of activities that can logically follow the current trace history.
     """
     n = len(trace_history)
     pos_acts = []
@@ -105,11 +110,11 @@ def _to_row_df(x):
     """
     Converts the input query instance into a single-row pandas DataFrame.
     
-    Parameters:
-        x (pd.DataFrame, pd.Series, or dict): The query instance data to format.
+    Args:
+        x (pandas.DataFrame, pandas.Series, or dict): The query instance data to format.
         
     Returns:
-        pd.DataFrame: A DataFrame containing exactly one row representing the query instance.
+        pandas.DataFrame: A DataFrame containing exactly one row representing the query instance.
         
     Raises:
         TypeError: If the input is not a DataFrame, Series, or dictionary.
@@ -124,16 +129,15 @@ def _to_row_df(x):
 
 def align_query_instance_with_model(query_instance, model):
     """
-    Ensures the query instance has all the necessary columns expected by the predictive 
-    model's transformation steps. Fills missing numerical columns with 0 and 
-    categorical columns with an empty string.
+    Ensures the query instance has all necessary columns expected by the predictive model's transformation steps. 
+    Fills missing numerical columns with 0 and categorical columns with an empty string.
 
-    Parameters:
-        query_instance (pd.DataFrame, pd.Series, or dict): The raw feature data for a specific case.
-        model: The trained predictive pipeline, expected to have a "transformation" step.
+    Args:
+        query_instance (pandas.DataFrame, pandas.Series, or dict): The raw feature data for a specific case.
+        model (sklearn.pipeline.Pipeline): The trained predictive pipeline, expected to have a "transformation" step.
 
     Returns:
-        pd.DataFrame: A single-row DataFrame perfectly aligned with the model's required input schema.
+        pandas.DataFrame: A single-row DataFrame perfectly aligned with the model's required input schema.
     """
     query_df = _to_row_df(query_instance).copy()
     if not hasattr(model, "named_steps") or "transformation" not in model.named_steps:
@@ -168,7 +172,7 @@ def _build_valid_pairs(possible_actions: List[str], act_with_res: Dict[str, List
     """
     Generates all valid combinations of next activities and their corresponding allowed resources.
 
-    Parameters:
+    Args:
         possible_actions (List[str]): A list of activities that can logically occur next.
         act_with_res (Dict[str, List[str]]): A mapping of activities to their allowed resources.
 
@@ -192,7 +196,7 @@ def _evaluate_candidates(
     Evaluates a list of candidate (activity, resource) pairs by passing them through 
     the predictive models to estimate both the outcome and the required time.
 
-    Parameters:
+    Args:
         candidate_pairs (List[Tuple[str, str]]): The combinations of (activity, resource) to evaluate.
         query_instance (pd.DataFrame, pd.Series, or dict): The current state features of the case.
         predictive_outcome_model: The trained model used to predict the target outcome.
@@ -235,16 +239,16 @@ def exhaustive_pareto_search(
     Computes predictions for all valid combinations of possible next activities and resources 
     to build the complete search space for evaluation.
 
-    Parameters:
-        query_instance: The current state features of the case.
-        possible_actions (List[str]): Allowed next activities based on the transition graph.
-        predictive_outcome_model: The predictive model for the primary outcome.
-        predictive_time_model: The predictive model for total/remaining time.
-        act_with_res (Dict[str, List[str]]): Mapping of valid resources for each activity.
+    Args:
+        query_instance (pandas.DataFrame, pandas.Series, or dict): The current state features of the case.
+        possible_actions (list of str): Allowed next activities based on the transition graph.
+        predictive_outcome_model (estimator): The predictive model for the primary outcome.
+        predictive_time_model (estimator): The predictive model for total/remaining time.
+        act_with_res (dict of str to list of str): Mapping of valid resources for each activity.
 
     Returns:
-        List[Tuple[str, str, float, float]]: A list of tuples containing 
-        (activity, resource, predicted_outcome, predicted_time) for all evaluated valid pairs.
+        list of tuple: A list of tuples containing (activity, resource, predicted_outcome, predicted_time) 
+        for all evaluated valid pairs.
     """
     valid_pairs = _build_valid_pairs(possible_actions, act_with_res)
     if not valid_pairs:
@@ -261,17 +265,23 @@ def exhaustive_pareto_search(
 # NSGA-II (pymoo)
 # ---------------------------------------------------------------------------
 class _ActivityResourceProblem(Problem):
-    """Problema pymoo a variabile intera: x in {0, ..., len(valid_pairs)-1}.
-    f1 = -predicted_outcome (pymoo minimizza -> massimizza outcome)
-    f2 =  predicted_total_time (minimizza tempo)
-
-    Questa classe e' richiesta dall'API di pymoo (NSGA2 si aspetta una
-    sottoclasse di Problem con un metodo _evaluate) — non e' un'incoerenza
-    stilistica rispetto al metodo esaustivo: e' un thin wrapper attorno alla
-    STESSA `_evaluate_candidates` usata da `generate_exhaustive_pareto_set`.
     """
+    Integer-variable pymoo Problem subclass for evaluating activity and resource pairs.
 
+    It maps an integer decision variable to a candidate pair in order to minimize the negated 
+    predicted outcome (thereby maximizing it) and minimize the predicted total time.
+    This acts as a wrapper around the `_evaluate_candidates` function to satisfy the pymoo API.
+    """
     def __init__(self, valid_pairs, query_instance, predictive_outcome_model, predictive_time_model):
+        """
+        Initializes the pymoo problem definition for the NSGA-II algorithm.
+        
+        Args:
+            valid_pairs (list of tuple): All valid (activity, resource) combinations.
+            query_instance (pandas.DataFrame, pandas.Series, or dict): The current state features.
+            predictive_outcome_model (estimator): Model to predict the target outcome.
+            predictive_time_model (estimator): Model to predict the required time.
+        """
         super().__init__(n_var=1, n_obj=2, n_constr=0, xl=0, xu=max(len(valid_pairs) - 1, 0), vtype=int)
         self.valid_pairs = valid_pairs
         self.query_instance = query_instance
@@ -279,6 +289,15 @@ class _ActivityResourceProblem(Problem):
         self.predictive_time_model = predictive_time_model
 
     def _evaluate(self, X, out, *args, **kwargs):
+        """
+        Evaluates the given population of candidate indices.
+
+        Args:
+            X (numpy.ndarray): The population of decision variables (indices).
+            out (dict): The output dictionary where objective values ("F") are stored.
+            *args: Additional positional arguments.
+            **kwargs: Additional keyword arguments.
+        """
         idx = np.clip(np.round(X[:, 0]).astype(int), 0, len(self.valid_pairs) - 1)
         candidates = [self.valid_pairs[i] for i in idx]
         objs = _evaluate_candidates(candidates, self.query_instance, self.predictive_outcome_model, self.predictive_time_model)
@@ -298,15 +317,15 @@ def nsga2_pareto_search(
     random_state: Optional[int] = None,
 ) -> List[Tuple[str, str, float, float]]:
     """
-    Approximates the Pareto front of best (activity, resource) pairs using the NSGA-II 
-    genetic algorithm. It attempts to simultaneously maximize outcome and minimize time.
+    Finds the Pareto front of best (activity, resource) pairs using the NSGA-II genetic algorithm.
+    It attempts to simultaneously maximize the predicted outcome and minimize the predicted time.
 
-    Parameters:
-        query_instance: The current state features of the case.
-        possible_actions (List[str]): Allowed next activities based on the transition graph.
-        act_with_res (Dict[str, List[str]]): Mapping of valid resources for each activity.
-        predictive_outcome_model: The predictive model for the primary outcome.
-        predictive_time_model: The predictive model for total/remaining time.
+    Args:
+        query_instance (pandas.DataFrame, pandas.Series, or dict): The current state features of the case.
+        possible_actions (list of str): Allowed next activities based on the transition graph.
+        act_with_res (dict of str to list of str): Mapping of valid resources for each activity.
+        predictive_outcome_model (estimator): The predictive model for the primary outcome.
+        predictive_time_model (estimator): The predictive model for total/remaining time.
         pop_size (int, optional): The population size for the genetic algorithm. Defaults to 50.
         n_generations (int, optional): The number of generations to evolve. Defaults to 10.
         crossover_rate (float, optional): The probability of crossover. Defaults to 0.9.
@@ -314,7 +333,7 @@ def nsga2_pareto_search(
         random_state (int, optional): Seed for reproducibility. Defaults to None.
 
     Returns:
-        List[Tuple[str, str, float, float]]: A list of tuples containing the Pareto-optimal 
+        list of tuple: A list of tuples containing the Pareto-optimal 
         (activity, resource, predicted_outcome, predicted_time) pairs discovered by the algorithm.
     """
     valid_pairs = _build_valid_pairs(possible_actions, act_with_res)
@@ -357,7 +376,17 @@ def nsga2_pareto_search(
 # Selection rules for the best action/resource pair from the Pareto set
 # ---------------------------------------------------------------------------
 def select_best_pareto_action(pareto_set):
-    """Select the best action/resource pair from the Pareto set."""
+    """
+    Selects the single best (activity, resource) pair from a computed Pareto set.
+    It calculates the true Pareto front and selects the point with the minimum Euclidean 
+    distance to the ideal point [1.0, 0.0] (maximum outcome, minimum time).
+
+    Args:
+        pareto_set (list of tuple): A list of evaluated candidate tuples (activity, resource, outcome, time).
+
+    Returns:
+        tuple: The optimal (activity, resource) pair. Returns None if the set is empty.
+    """
     if not pareto_set:
         return None
 
@@ -397,8 +426,32 @@ def compute_recommendations(
     random_state: Optional[int] = None,
 ) -> Dict[Any, Tuple[Optional[str], Optional[str]]]:
     """
-    Unified recommendation function that supports both 'exhaustive' and
-    'nsga2'/'genetic' methods. 
+    Generates next-step recommendations (activity and resource) for all cases in a test dataset.
+    This unified function supports both 'exhaustive' search and 'nsga2' (genetic algorithm) 
+    methods to find the optimal actions that maximize outcome and minimize time.
+
+    Args:
+        test_log (pandas.DataFrame): The full event log for the test cases.
+        test_data (pandas.DataFrame): The dataset containing the latest state (query instances) for the test cases.
+        case_study (str): The specific case study identifier, used to look up forbidden activities.
+        case_id_name (str): The name of the column containing case IDs.
+        activity_column_name (str): The name of the column containing activity names.
+        transition_graph (dict): A mapping defining the valid next activities.
+        window_size (int): The window size used to match the trace history against the transition graph.
+        forbidden_map (dict): A dictionary mapping case studies to lists of forbidden activities.
+        predictive_outcome_model (estimator): The predictive model for the primary outcome.
+        predictive_time_model (estimator): The predictive model for required time.
+        act_with_res (dict of str to list of str): Mapping of activities to their allowed resources.
+        query_instances_by_case (dict): Precomputed query instances keyed by case ID.
+        method (str, optional): The search method to use ("exhaustive", "nsga2", or "genetic"). Defaults to "exhaustive".
+        pop_size (int, optional): The population size (if using NSGA-II). Defaults to 50.
+        n_generations (int, optional): The number of generations (if using NSGA-II). Defaults to 10.
+        crossover_rate (float, optional): The crossover probability (if using NSGA-II). Defaults to 0.9.
+        mutation_rate (float, optional): The mutation probability (if using NSGA-II). Defaults to 0.3.
+        random_state (int, optional): Seed for reproducibility. Defaults to None.
+
+    Returns:
+        dict: A dictionary mapping each case ID to its recommended (activity, resource) tuple.
     """
     method = method.lower()
     forbidden = set(forbidden_map.get(case_study, []))

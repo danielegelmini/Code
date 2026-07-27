@@ -27,14 +27,14 @@ def to_be_named(case_study, method, n_sim, folder_path, encoded_activity=None):
 
     for i in range(n_sim):
         sim = pd.read_csv(sim_path + "sim_{}.csv".format(i+1))
-        if case_study in {"bpi12", "bpi12_time", "bpi12_status", "bpi12_025", "bpi12_075", "consulta", "bpi12_039"}:
+        if case_study in {"BPI12", "bpi12_time", "bpi12_status", "bpi12_025", "bpi12_075", "consulta", "bpi12_039"}:
             sim = convert_dtypes_bpi12(sim, 'simulation')
         sim = sim[[case_id_name, start_date_name, end_date_name, activity_column_name, resource_column_name]] 
         sim = getting_remaining_time(sim, "case:concept:name", "time:timestamp")
         sim = status_encoding(sim, case_study, encoded_activity)
 
         for j in range(len(sim)):
-            sim[case_id_name][j] = str(sim[case_id_name][j]) + "_" + str(i+1)
+            sim.loc[j, case_id_name] = str(sim[case_id_name][j]) + "_" + str(i+1)
                 
         dataframes.append(sim)
 
@@ -64,7 +64,7 @@ def preparing_data_for_simulation(result_df, test_log, case_id_name, end_date_na
     # Generating dataframe with repl_id, act_1, res_1, starting_time
     simu_df = pd.DataFrame(columns=["case:concept:name", "repl_id", "act_1", "res_1", "starting_time"])
     
-    if case_study in {"bpi12", "bpi12_time", "bpi12_status", "bpi12_025", "bpi12_075", "consulta", "bpi12_0", "bpi12_039"}:
+    if case_study in {"BPI12", "bpi12_time", "bpi12_status", "bpi12_025", "bpi12_075", "consulta", "bpi12_0", "bpi12_039"}:
         result_df = convert_dtypes_bpi12(result_df, 'simulation_prep')
         test_log = convert_dtypes_bpi12(test_log, 'experiment')
         simu_df = convert_dtypes_bpi12(simu_df, 'simulation_')
@@ -76,10 +76,10 @@ def preparing_data_for_simulation(result_df, test_log, case_id_name, end_date_na
         trace_df = test_log[test_log[case_id_name] == idx]
 
         trace_ids = trace_df[case_id_name].tolist() # List of prefix history
-        simu_df['repl_id'][i] = len(trace_ids) - 1
-        simu_df["act_1"][i] = result_df["Next_activity"][i]
-        simu_df["res_1"][i] = result_df["Next_resource"][i]
-        simu_df["starting_time"][i] = trace_df[-1:][end_date_name].values[0]
+        simu_df.loc[i, 'repl_id'] = len(trace_ids) - 1
+        simu_df.loc[i, "act_1"] = result_df["Next_activity"][i]
+        simu_df.loc[i, "res_1"] = result_df["Next_resource"][i]
+        simu_df.loc[i, "starting_time"] = trace_df[-1:][end_date_name].values[0]
     
     simu_df = simu_df.sort_values(by=['starting_time']).reset_index(drop=True)
 
@@ -90,7 +90,7 @@ def convert_time(time_to_convert):
     return dt
 
 def getting_remaining_time(dataframe, case_id_name, end_date_name):
-    dataframe["remaining_time"] = ""
+    dataframe["remaining_time"] = np.nan
     dataframe['time:timestamp'] = dataframe['time:timestamp'].apply(convert_time)
     dataframe['start:timestamp'] = dataframe['start:timestamp'].apply(convert_time)
 
@@ -104,9 +104,9 @@ def getting_remaining_time(dataframe, case_id_name, end_date_name):
         last_event_idx = indices[-1]
 
         for idx in indices:
-            dataframe['remaining_time'][idx] = (sub_trace_df_sorted[end_date_name][last_event_idx] - sub_trace_df_sorted[end_date_name][idx]).total_seconds()
+            dataframe.loc[idx, 'remaining_time'] = (sub_trace_df_sorted[end_date_name][last_event_idx] - sub_trace_df_sorted[end_date_name][idx]).total_seconds()
 
-    dataframe = dataframe.sort_values(by=[end_date_name]).reset_index(drop=True)  
+    dataframe = dataframe.sort_values(by=[case_id_name, end_date_name]).reset_index(drop=True)  
     return dataframe
 
 def status_encoding(df: pd.DataFrame, case_study: str, encoded_activity: str | None = None) -> pd.DataFrame:
@@ -140,7 +140,7 @@ def compute_res_and_status(case_study, rec_df, test_simu, n_sim):
       so it averaged identical values. This version preserves that behavior.
     - If you truly have per-simulation rows, see the comment at the bottom.
     # """
-    if case_study in {"bpi12", "bpi12_time", "bpi12_status", "bpi12_025", "bpi12_075", "consulta", "bpi12_0", "bpi12_039"}:
+    if case_study in {"BPI12", "BPI12_time", "BPI12_status", "BPI12_025", "BPI12_075", "consulta", "BPI12_0", "BPI12_039"}:
         test_simu = convert_dtypes_bpi12(test_simu, 'simulation')
         rec_df = convert_dtypes_bpi12(rec_df, 'simulation_')
     res = {}
@@ -156,10 +156,12 @@ def compute_res_and_status(case_study, rec_df, test_simu, n_sim):
             trace_df = test_simu[test_simu[case_id_name] == idx_sim]
             if not trace_df.empty:
                 start_index = trace_df.index.values.tolist()[0]
-                if start_index + rec_index + 1 >= start_index + len(trace_df):
+                #change 1
+                if start_index + rec_index  >= start_index + len(trace_df):
                     remaining_time = 0
                 else:
-                    remaining_time = trace_df.loc[start_index + rec_index + 1]['remaining_time'] 
+                    #chage 2
+                    remaining_time = trace_df.loc[start_index + rec_index]['remaining_time'] 
                 status = trace_df['status'].unique()[0]
                 if remaining_time < 0:
                     print(idx_sim)
