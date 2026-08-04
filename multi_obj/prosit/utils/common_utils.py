@@ -91,7 +91,14 @@ def return_enabled_transitions(net: PetriNet, tkns: Marking) -> set:
     enabled_t = set()
     list_transitions = list(net.transitions)
     for t in list_transitions:
-        if {a.source for a in t.in_arcs}.issubset(tkns):
+        can_fire = True
+        for a in t.in_arcs:
+            required_tokens = getattr(a, "weight", 1) or 1
+            available_tokens = tkns.get(a.source, 0) if hasattr(tkns, "get") else 0
+            if available_tokens < required_tokens:
+                can_fire = False
+                break
+        if can_fire:
             enabled_t.add(t)
     
     return enabled_t
@@ -99,14 +106,29 @@ def return_enabled_transitions(net: PetriNet, tkns: Marking) -> set:
 
 def return_fired_transition(transition_weights: dict, enabled_transitions: list) -> PetriNet.Transition:
 
-    total_weight = sum(transition_weights[s] for s in enabled_transitions)
+    if not enabled_transitions:
+        return None
+
+    weights = []
+    for transition in enabled_transitions:
+        weight = transition_weights.get(transition, 1)
+        if weight is None:
+            weight = 1
+        weights.append(float(weight))
+
+    total_weight = sum(weights)
+    if total_weight <= 0:
+        return random.choice(list(enabled_transitions))
+
     random_value = random.uniform(0, total_weight)
-    
+
     cumulative_weight = 0
-    for s in enabled_transitions:
-        cumulative_weight += transition_weights[s]
+    for transition, weight in zip(enabled_transitions, weights):
+        cumulative_weight += weight
         if random_value <= cumulative_weight:
-            return s
+            return transition
+
+    return list(enabled_transitions)[-1]
         
 
 def compute_transition_weights_from_model(models_t: dict, dict_x: dict) -> dict:

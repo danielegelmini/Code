@@ -1,0 +1,63 @@
+================================================================================
+REPORT DI VALIDAZIONE: LOG REALE vs TEST SET vs SIMULAZIONE BASELINE
+================================================================================
+Confronto tra il comportamento reale dei processi (intero log storico e
+sottoinsieme di test) e il comportamento riprodotto dalla simulazione
+baseline (nessuna raccomandazione applicata), per i quattro case study.
+
+Metriche riportate:
+  - % positive  : percentuale di tracce con esito positivo (case outcome)
+  - durata media/mediana/std : durata delle tracce, in giorni
+
+Tutti i numeri qui sotto sono presi direttamente dagli output degli script
+gia' eseguiti (5_result_computation.py e 6_result_testing_2.py), nessun
+valore e' stato ricalcolato.
+
+
+================================================================================
+SEZIONE 1 - BASELINE vs INTERO LOG STORICO
+================================================================================
+Confronto tra la simulazione baseline e TUTTE le tracce presenti nel log
+originale (log_<case_study>.xes), incluse quelle usate per il training.
+ATTENZIONE: questo confronto mescola popolazioni diverse (tracce concluse
+prima dello split + tracce ancora in corso allo split), quindi va letto con
+cautela - vedi Sezione 2 per il confronto metodologicamente corretto.
+
+Case study       N (reale)  %positivi(reale)  durata media(reale)  N (baseline)  %positivi(baseline)  durata media(baseline)   gap %positivi   gap durata
+BAC                 32429            84.25%                15.46         18570                76.12%                   13.62          -8.1 pt       -1.84 gg
+BPI12                4685            47.88%                18.63          6330                75.67%                   18.07         +27.8 pt       -0.56 gg
+bpi17_after         14066            54.73%                21.87         19960                65.40%                   27.68         +10.7 pt       +5.81 gg
+bpi17_before        12121            56.45%                20.24         11960                67.27%                   27.17         +10.8 pt       +6.93 gg
+
+Nota: N(baseline) = N(reale) x n_sim (10), perche' ogni traccia viene
+simulata 10 volte; il confronto sulle percentuali resta comunque valido
+perche' calcolato come media sulle 10 ripetizioni.
+
+
+================================================================================
+SEZIONE 2 - BASELINE vs SOLO TRACCE DI TEST (confronto corretto)
+================================================================================
+Confronto tra la simulazione baseline e SOLO le tracce realmente usate come
+test set (le stesse tracce troncate in test_log.csv e poi continuate nella
+simulazione). Questo e' il confronto metodologicamente valido, perche' mette
+a confronto la stessa identica popolazione di casi.
+
+Case study       N (reale)  %positivi(reale)  durata media(reale)  N (baseline)  %positivi(baseline)  durata media(baseline)   gap %positivi   gap durata
+BAC                  1857            76.74%                20.56         18570                76.12%                   13.62          -0.6 pt       -6.94 gg
+BPI12                 633            38.23%                24.53          6330                75.67%                   18.07         +37.4 pt       -6.46 gg
+bpi17_after          1996            44.54%                28.90         19960                65.40%                   27.68         +20.9 pt       -1.22 gg
+bpi17_before         1196            42.64%                29.17         11960                67.27%                   27.17         +24.6 pt       -2.00 gg
+
+OSSERVAZIONE CHIAVE:
+  - BAC: il simulatore riproduce fedelmente l'esito reale (gap quasi nullo,
+    -0.6 punti percentuali). Il simulatore e' affidabile per questo caso
+    studio.
+  - BPI12, bpi17_after, bpi17_before: il simulatore SOVRASTIMA in modo
+    marcato il tasso di successo (fino a +37.4 punti percentuali per
+    BPI12). Per questi tre case study il simulatore non riproduce
+    correttamente l'esito reale dei casi -> possibile causa di risultati
+    anomali nei confronti successivi (raccomandazione vs baseline), NON
+    imputabile alla qualita' del metodo di raccomandazione.
+
+
+

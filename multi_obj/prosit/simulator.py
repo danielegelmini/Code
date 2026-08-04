@@ -34,6 +34,7 @@ from prosit.utils.distribution_utils import sampling_from_dist
 from prosit.utils.save_and_load_utils import decision_rules_to_dict, transition_to_name, convert_calendar_names, dict_to_decrules, name_to_transition, fromstr_to_scipy
 
 import json
+import os
 
 
 class SimulatorParameters:
@@ -73,6 +74,51 @@ class SimulatorParameters:
 
         self.rules_mode: bool = False
 
+    @staticmethod
+    def _sanitize_for_json(value):
+        if isinstance(value, dict):
+            return {
+                SimulatorParameters._serialize_key(k): SimulatorParameters._sanitize_for_json(v)
+                for k, v in value.items()
+            }
+        if isinstance(value, (list, tuple)):
+            return [SimulatorParameters._sanitize_for_json(v) for v in value]
+        if hasattr(value, "tolist"):
+            try:
+                return value.tolist()
+            except Exception:
+                return value
+        return value
+
+    @staticmethod
+    def _serialize_key(key):
+        if isinstance(key, tuple):
+            return f"__tuple__:{json.dumps(key)}"
+        if isinstance(key, (str, int, float, bool)) or key is None:
+            return key
+        return str(key)
+
+    @staticmethod
+    def _restore_from_json(value):
+        if isinstance(value, dict):
+            restored = {}
+            for k, v in value.items():
+                if isinstance(k, str) and k.startswith("__tuple__:"):
+                    restored[tuple(json.loads(k[len("__tuple__:"):]))] = SimulatorParameters._restore_from_json(v)
+                else:
+                    restored[k] = SimulatorParameters._restore_from_json(v)
+            return restored
+        if isinstance(value, list):
+            return [SimulatorParameters._restore_from_json(v) for v in value]
+        return value
+
+    @staticmethod
+    def _normalize_distribution_params(params):
+        if params is None:
+            return ()
+        if isinstance(params, (list, tuple)):
+            return tuple(params)
+        return (params,)
 
     def discover_from_eventlog(
             self, 
@@ -257,16 +303,20 @@ class SimulatorParameters:
 
         }
 
-        return dict_params
+        return self._sanitize_for_json(dict_params)
 
     def to_json(self, path: str = "simulator_params.json"):
 
         dict_params = self.to_dict()
-        with open(path, "w") as json_file:
+        temp_path = f"{path}.tmp"
+        with open(temp_path, "w", encoding="utf-8") as json_file:
             json.dump(dict_params, json_file, indent=4)
+        os.replace(temp_path, path)
 
 
     def from_dict(self, dict_params):
+
+        dict_params = self._restore_from_json(dict_params)
 
         self.rules_mode = "mean_value" not in dict_params["arrival_params"]["arrival_time_distributions"].keys()
         self.label_data_attributes, self.label_data_attributes_categorical = dict_params["data_attribute_params"]["label_data_attributes"], dict_params["data_attribute_params"]["label_data_attributes_categorical"]
@@ -287,14 +337,44 @@ class SimulatorParameters:
             self.arrival_time_distribution = dict_to_decrules(dict_params["arrival_params"]["arrival_time_distributions"])
         else:
             self.transition_weights = {name_to_transition(t_name, self.net): value for t_name, value in dict_params["transition_params"]["transition_weights"].items()}  
-            self.execution_time_distributions = {act: (fromstr_to_scipy(value["dist_name"]), tuple(value["params"]), value["min_value"], value["max_value"], value["mean_value"]) for act, value in dict_params["execution_time_params"]["execution_time_distributions"].items()}
-            self.waiting_time_distributions = {res: (fromstr_to_scipy(value["dist_name"]), tuple(value["params"]), value["min_value"], value["max_value"], value["mean_value"]) for res, value in dict_params["waiting_time_params"]["waiting_time_distributions"].items()}
-            self.arrival_time_distribution = (fromstr_to_scipy(dict_params["arrival_params"]["arrival_time_distributions"]["dist_name"]), tuple(dict_params["arrival_params"]["arrival_time_distributions"]["params"]), dict_params["arrival_params"]["arrival_time_distributions"]["min_value"], dict_params["arrival_params"]["arrival_time_distributions"]["max_value"], dict_params["arrival_params"]["arrival_time_distributions"]["mean_value"])
+            self.execution_time_distributions = {
+                act: (
+                    fromstr_to_scipy(value["dist_name"]),
+                    self._normalize_distribution_params(value.get("params")),
+                    value["min_value"],
+                    value["max_value"],
+                    value["mean_value"],
+                )
+                for act, value in dict_params["execution_time_params"]["execution_time_distributions"].items()
+            }
+            self.waiting_time_distributions = {
+                res: (
+                    fromstr_to_scipy(value["dist_name"]),
+                    self._normalize_distribution_params(value.get("params")),
+                    value["min_value"],
+                    value["max_value"],
+                    value["mean_value"],
+                )
+                for res, value in dict_params["waiting_time_params"]["waiting_time_distributions"].items()
+            }
+            arrival_dist = dict_params["arrival_params"]["arrival_time_distributions"]
+            self.arrival_time_distribution = (
+                fromstr_to_scipy(arrival_dist["dist_name"]),
+                self._normalize_distribution_params(arrival_dist.get("params")),
+                arrival_dist["min_value"],
+                arrival_dist["max_value"],
+                arrival_dist["mean_value"],
+            )
 
     def from_json(self, path: str = "simulator_params.json"):
-        
-        with open(path, "r") as file:
-            dict_params = json.load(file)
+        try:
+            with open(path, "r", encoding="utf-8") as file:
+                dict_params = json.load(file)
+        except json.JSONDecodeError as exc:
+            raise ValueError(
+                f"Simulator parameters cache is corrupted or invalid JSON: {path}. "
+                "Remove the file and rerun discovery."
+            ) from exc
         self.from_dict(dict_params)
 
 
@@ -311,6 +391,31 @@ class SimulatorEngine:
         self.final_marking = simulation_parameters.final_marking
         self.simulation_parameters = simulation_parameters
 
+    def _get_case_enabled_time(self, case) -> datetime:
+        if case["enabled"]:
+            return min(case["enabled"].values())
+        return case["arrival_time"]
+
+    def _resolve_recommended_transition(self, case, enabled_transitions):
+        if case["rec_act"] is None:
+            return None, None, None, False
+
+        pending_path = case.get("pending_invisible_path", [])
+        if pending_path:
+            chosen_transition = pending_path[0]
+            case["pending_invisible_path"] = pending_path[1:]
+            return chosen_transition, None, case["enabled"].get(chosen_transition, self._get_case_enabled_time(case)), True
+
+        enabled_transitions_labels = [t.label for t in enabled_transitions]
+        if case["rec_act"] in enabled_transitions_labels:
+            chosen_transition = enabled_transitions[enabled_transitions_labels.index(case["rec_act"])]
+            return chosen_transition, case["rec_act"], case["enabled"][chosen_transition], True
+
+        # Emit the recommendation as the next visible event immediately when it is not
+        # directly enabled. This keeps the first post-prefix activity deterministic and
+        # aligned with the recommendation instead of letting the simulator step through an
+        # invisible path first.
+        return None, case["rec_act"], self._get_case_enabled_time(case), True
 
     def apply(self, n_traces: int = 1, t_start: datetime = datetime.now(), deterministic_time: bool = False, prev_log: Optional[pd.DataFrame] = None) -> pd.DataFrame:
 
@@ -355,15 +460,17 @@ class SimulatorEngine:
         else:
             n_prefixes = 0
 
+        effective_n_traces = max(n_traces, 1)
+
         if not self.simulation_parameters.rules_mode:
             if deterministic_time:
                 sampled_arrivals = self.simulation_parameters.arrival_time_distribution[-1]
                 sampled_waiting_times = {res : self.simulation_parameters.waiting_time_distributions[res][-1] for res in self.simulation_parameters.resources}
                 sampled_execution_times = {act: self.simulation_parameters.execution_time_distributions[act][-1] for act in self.simulation_parameters.net_transition_labels}
             else:
-                sampled_arrivals = sampling_from_dist(*self.simulation_parameters.arrival_time_distribution, n_sample=n_traces)
-                sampled_waiting_times = {res : sampling_from_dist(*self.simulation_parameters.waiting_time_distributions[res], n_sample=n_traces) for res in self.simulation_parameters.resources}
-                sampled_execution_times = {act: sampling_from_dist(*self.simulation_parameters.execution_time_distributions[act], n_sample=n_traces) for act in self.simulation_parameters.net_transition_labels}
+                sampled_arrivals = sampling_from_dist(*self.simulation_parameters.arrival_time_distribution, n_sample=effective_n_traces)
+                sampled_waiting_times = {res : sampling_from_dist(*self.simulation_parameters.waiting_time_distributions[res], n_sample=effective_n_traces) for res in self.simulation_parameters.resources}
+                sampled_execution_times = {act: sampling_from_dist(*self.simulation_parameters.execution_time_distributions[act], n_sample=effective_n_traces) for act in self.simulation_parameters.net_transition_labels}
 
         if self.simulation_parameters.label_data_attributes:
             x_attr_list = random.choices(
@@ -421,7 +528,8 @@ class SimulatorEngine:
                         "history": history_c,
                         "attributes": trace_attributes_c,
                         "rec_act": rec_act_c,
-                        "rec_res": rec_res_c
+                        "rec_res": rec_res_c,
+                        "pending_invisible_path": []
                     }
 
                 for place in self.net.places:
@@ -478,7 +586,8 @@ class SimulatorEngine:
                 "history": {t: 0 for t in self.simulation_parameters.net_transition_labels},
                 "attributes": trace_attributes,
                 "rec_act": None,
-                "rec_res": None
+                "rec_res": None,
+                "pending_invisible_path": []
             }
             for place in self.net.places:
                 case["place_token_time"][place] = None
@@ -510,29 +619,9 @@ class SimulatorEngine:
 
             enabled_transitions = list(case["enabled"].keys())
             flag_rec = False
-            if case["rec_act"] is not None:
-                enabled_transitions_labels = [t.label for t in enabled_transitions]
-                if case["rec_act"] in enabled_transitions_labels:
-                    chosen_transition = enabled_transitions[enabled_transitions_labels.index(case["rec_act"])]
-                    activity = case["rec_act"]
-                    t_enabled = case["enabled"][chosen_transition]
-                    case["rec_act"] = None
-                    flag_rec = True
-                else:
-                    invisible_transitions_enabled = [t for t in enabled_transitions if t.label is None]     
-                    if invisible_transitions_enabled:
-                        invisible_path = explore_invisible_path_to_activity(
-                            self.net, 
-                            case["marking"], 
-                            case["rec_act"]
-                        )
-                        if invisible_path:
-                            chosen_transition = invisible_path[0]
-                            activity = None 
-                            t_enabled = case["enabled"][chosen_transition]
-                            flag_rec = True
+            chosen_transition, activity, t_enabled, flag_rec = self._resolve_recommended_transition(case, enabled_transitions)
 
-            if not flag_rec:        
+            if not flag_rec:
                 if not self.simulation_parameters.rules_mode:
                     transition_weights = self.simulation_parameters.transition_weights
                 else:
@@ -540,6 +629,8 @@ class SimulatorEngine:
                 chosen_transition = return_fired_transition(transition_weights, enabled_transitions)
                 activity = chosen_transition.label
                 t_enabled = case["enabled"][chosen_transition]
+            elif activity is not None:
+                case["rec_act"] = None
 
             if activity is not None:
                 if flag_rec and case["rec_res"] is not None:
@@ -577,7 +668,11 @@ class SimulatorEngine:
                             except:
                                 waiting_time = 0
                         else:
-                            waiting_time = random.choice(sampled_waiting_times[resource])
+                            candidate_waiting_times = list(sampled_waiting_times[resource])
+                            if candidate_waiting_times:
+                                waiting_time = random.choice(candidate_waiting_times)
+                            else:
+                                waiting_time = 0
                     else:
                         if deterministic_time:
                             waiting_time = self.simulation_parameters.waiting_time_distributions[resource].apply({'workload': r_workload} | case["history"] | case["attributes"])
@@ -600,7 +695,11 @@ class SimulatorEngine:
                         except:
                             ex_time = 0
                     else:
-                        ex_time = random.choice(sampled_execution_times[activity])
+                        candidate_execution_times = list(sampled_execution_times[activity])
+                        if candidate_execution_times:
+                            ex_time = random.choice(candidate_execution_times)
+                        else:
+                            ex_time = 0
                 else:    
                     if deterministic_time:
                         ex_time = self.simulation_parameters.execution_time_distributions[activity].apply({'resource = '+res: (res == resource)*1 for res in self.simulation_parameters.resources} | case["history"] | case["attributes"])
@@ -620,11 +719,30 @@ class SimulatorEngine:
             else:
                 t_end = t_enabled
 
+            if chosen_transition is None:
+                case["enabled"] = {}
+                enabled = return_enabled_transitions(self.net, case["marking"])
+                for t in enabled:
+                    input_places = [arc.source for arc in self.net.arcs if arc.target == t]
+                    enabled_time = max(case["place_token_time"][p] for p in input_places)
+                    case["enabled"][t] = enabled_time
+
+                if case["enabled"]:
+                    next_enabled_time = min(case["enabled"].values())
+                    heapq.heappush(enabled_heap, (next_enabled_time, case_id))
+                continue
+
             for arc in chosen_transition.out_arcs:
                 case["place_token_time"][arc.target] = t_end
 
             case["enabled"] = {}
-            case["marking"] = update_current_marking(case["marking"], chosen_transition)
+            can_fire = True
+            for arc in chosen_transition.in_arcs:
+                if case["marking"].get(arc.source, 0) < arc.weight:
+                    can_fire = False
+                    break
+            if can_fire:
+                case["marking"] = update_current_marking(case["marking"], chosen_transition)
             if case["marking"] == self.final_marking:
                 if case_id not in completed_cases:
                     pbar.update(1)

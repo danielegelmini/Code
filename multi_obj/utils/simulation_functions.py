@@ -48,16 +48,24 @@ def to_be_named(case_study, method, n_sim, folder_path, encoded_activity=None):
 
 def build_recommender_df(prev_log: pd.DataFrame, recommendations: dict) -> pd.DataFrame:
 
+    prev_log = prev_log.copy()
     prev_log["recommendation:act"] = None
-    prev_log["recommendation:res"] = None 
+    prev_log["recommendation:res"] = None
 
     for case_id, recs in recommendations.items():
         act = recs.get("act", None)
         res = recs.get("res", None)
-        last_index = prev_log[prev_log['case:concept:name'] == case_id].index[-1]
+        case_rows = prev_log[prev_log["case:concept:name"] == case_id]
+        if case_rows.empty:
+            continue
+
+        if "time:timestamp" in case_rows.columns:
+            case_rows = case_rows.sort_values("time:timestamp")
+
+        last_index = case_rows.index[-1]
         prev_log.at[last_index, "recommendation:act"] = act
         prev_log.at[last_index, "recommendation:res"] = res
-        
+
     return prev_log
 
 def preparing_data_for_simulation(result_df, test_log, case_id_name, end_date_name, case_study):

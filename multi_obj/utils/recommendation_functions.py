@@ -221,7 +221,7 @@ def _evaluate_candidates(
         t_row['NEXT_RESOURCE'] = next_res
         time_rows.append(t_row)
 
-    predicted_outcome = predictive_outcome_model.predict(pd.DataFrame(outcome_rows))
+    predicted_outcome = predictive_outcome_model.predict_proba(pd.DataFrame(outcome_rows))[:, 1]
     predicted_total_time = predictive_time_model.predict(pd.DataFrame(time_rows))
     return np.column_stack([predicted_outcome, predicted_total_time])
 

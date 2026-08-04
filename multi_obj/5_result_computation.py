@@ -20,7 +20,7 @@ from utils.pre_processing_functions import convert_dtypes_bpi12
 # ---------------------------------------------------------------------------
 # Fixed configuration (as given)
 # ---------------------------------------------------------------------------
-CASE_STUDIES = ["BPI12", "BAC", "bpi17_after", "bpi17_before"]
+CASE_STUDIES = ["BAC",  "BPI12",  "bpi17_after", "bpi17_before"]
 #CASE_STUDIES = ["BAC"]
 METHODS = ["exhaustive", "nsga2"]
 BASELINE_FOLDER_NAME = "baseline"
