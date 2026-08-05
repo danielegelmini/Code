@@ -68,6 +68,122 @@ def build_recommender_df(prev_log: pd.DataFrame, recommendations: dict) -> pd.Da
 
     return prev_log
 
+
+def _remove_prefix_rows(full_seq: pd.DataFrame, prefix_seq: pd.DataFrame) -> pd.DataFrame:
+    if full_seq.empty or prefix_seq.empty:
+        return full_seq.copy()
+
+    key_cols = [activity_column_name, resource_column_name, start_date_name, end_date_name]
+
+    full_keyed = full_seq.copy()
+    prefix_keyed = prefix_seq.copy()
+
+    full_keyed["__dup_idx"] = full_keyed.groupby(key_cols).cumcount()
+    prefix_keyed["__dup_idx"] = prefix_keyed.groupby(key_cols).cumcount()
+    prefix_keyed["__is_prefix"] = True
+
+    merged = full_keyed.merge(
+        prefix_keyed[key_cols + ["__dup_idx", "__is_prefix"]],
+        on=key_cols + ["__dup_idx"],
+        how="left",
+    )
+
+    out = merged[merged["__is_prefix"].isna()].drop(columns=["__dup_idx", "__is_prefix"]).copy()
+    return out.sort_values(by=[start_date_name, end_date_name]).reset_index(drop=True)
+
+
+def check_recommendation_following(
+    prefix_log: pd.DataFrame,
+    recommendations: dict,
+    simulation_logs: list[pd.DataFrame],
+) -> pd.DataFrame:
+    """Check recommendation adherence per case/simulation on the first post-prefix start-time batch.
+
+    Returns one row per (case_id, simulation_index) with:
+      - recommended activity/resource
+      - first post-prefix start-time batch
+      - whether recommended pair appears in that batch
+    """
+
+    prefix = prefix_log.copy()
+    prefix[case_id_name] = prefix[case_id_name].astype(str)
+    prefix[start_date_name] = pd.to_datetime(prefix[start_date_name], format="mixed", utc=True, errors="coerce")
+    prefix[end_date_name] = pd.to_datetime(prefix[end_date_name], format="mixed", utc=True, errors="coerce")
+
+    normalized_recs = {str(k): v for k, v in recommendations.items()}
+    rows = []
+
+    for sim_idx, sim_df in enumerate(simulation_logs, start=1):
+        sim = sim_df.copy()
+        sim[case_id_name] = sim[case_id_name].astype(str)
+        sim[start_date_name] = pd.to_datetime(sim[start_date_name], format="mixed", utc=True, errors="coerce")
+        sim[end_date_name] = pd.to_datetime(sim[end_date_name], format="mixed", utc=True, errors="coerce")
+
+        for cid, recs in normalized_recs.items():
+            rec_act = recs.get("act")
+            rec_res = recs.get("res")
+            if rec_act is None:
+                continue
+
+            prefix_seq = prefix[prefix[case_id_name] == cid].sort_values(by=[start_date_name, end_date_name]).reset_index(drop=True)
+            if prefix_seq.empty:
+                continue
+
+            sim_seq = sim[sim[case_id_name] == cid].sort_values(by=[start_date_name, end_date_name]).reset_index(drop=True)
+            if sim_seq.empty:
+                rows.append({
+                    case_id_name: cid,
+                    "simulation_index": sim_idx,
+                    "recommended_activity": rec_act,
+                    "recommended_resource": rec_res,
+                    "first_batch": "",
+                    "match_recommendation": False,
+                    "status": "missing_case",
+                })
+                continue
+
+            boundary = prefix_seq[end_date_name].max()
+            generated = _remove_prefix_rows(sim_seq, prefix_seq)
+            continuation = generated[generated[end_date_name] >= boundary].sort_values(by=[start_date_name, end_date_name]).reset_index(drop=True)
+
+            if continuation.empty:
+                rows.append({
+                    case_id_name: cid,
+                    "simulation_index": sim_idx,
+                    "recommended_activity": rec_act,
+                    "recommended_resource": rec_res,
+                    "first_batch": "",
+                    "match_recommendation": False,
+                    "status": "no_continuation",
+                })
+                continue
+
+            first_start = continuation[start_date_name].min()
+            first_batch = continuation[continuation[start_date_name] == first_start]
+
+            match = False
+            if pd.isna(rec_res) or rec_res is None:
+                match = (first_batch[activity_column_name] == rec_act).any()
+            else:
+                match = ((first_batch[activity_column_name] == rec_act) & (first_batch[resource_column_name] == rec_res)).any()
+
+            batch_str = " | ".join(
+                f"{r[activity_column_name]} / {r[resource_column_name]}"
+                for _, r in first_batch.iterrows()
+            )
+
+            rows.append({
+                case_id_name: cid,
+                "simulation_index": sim_idx,
+                "recommended_activity": rec_act,
+                "recommended_resource": rec_res,
+                "first_batch": batch_str,
+                "match_recommendation": bool(match),
+                "status": "ok",
+            })
+
+    return pd.DataFrame(rows)
+
 def preparing_data_for_simulation(result_df, test_log, case_id_name, end_date_name, case_study):
     # Generating dataframe with repl_id, act_1, res_1, starting_time
     simu_df = pd.DataFrame(columns=["case:concept:name", "repl_id", "act_1", "res_1", "starting_time"])

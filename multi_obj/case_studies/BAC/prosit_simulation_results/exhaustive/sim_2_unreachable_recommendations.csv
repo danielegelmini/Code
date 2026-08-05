@@ -1,0 +1,8 @@
+case:concept:name,recommendation:act,recommendation:res,reason
+20191006023,Pending Request for Reservation Closure,BOC,not_reachable_from_replayed_prefix_marking
+20191004251,Evaluating Request (WITH registered letter),00341,not_reachable_from_replayed_prefix_marking
+20191000535,Pending Request for Reservation Closure,BOC,not_reachable_from_replayed_prefix_marking
+20191007558,Pending Request for Reservation Closure,BOC,not_reachable_from_replayed_prefix_marking
+20191008443,Pending Request for Reservation Closure,BOC,not_reachable_from_replayed_prefix_marking
+20191012638,Pending Request for Reservation Closure,BOC,not_reachable_from_replayed_prefix_marking
+20191002534,Pending Request for Reservation Closure,BOC,not_reachable_from_replayed_prefix_marking

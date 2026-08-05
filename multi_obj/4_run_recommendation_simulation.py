@@ -274,6 +274,10 @@ def main():
 
         result_df = rec_df.set_index(CASE_ID_NAME)
         result_df = result_df.reset_index()
+
+        # Keep case-id dtype consistent across logs/recommendations/filters.
+        result_df[CASE_ID_NAME] = result_df[CASE_ID_NAME].astype(str)
+        current_prev_log[CASE_ID_NAME] = current_prev_log[CASE_ID_NAME].astype(str)
         
         result_df["Next_activity"] = result_df["Next_activity"].fillna(current_prev_log["NEXT_ACTIVITY"])
         result_df["Next_resource"] = result_df["Next_resource"].fillna(current_prev_log["NEXT_RESOURCE"])
@@ -296,7 +300,13 @@ def main():
         log_rec["time:timestamp"] = pd.to_datetime(log_rec["time:timestamp"], format="mixed")
 
         if case_ids:
+            case_ids = [str(c) for c in case_ids]
             log_rec = log_rec[log_rec["case:concept:name"].isin(case_ids)]
+            if log_rec.empty:
+                raise ValueError(
+                    "No matching rows after --case_ids filtering. "
+                    "Check case-id dtype/content and input file values."
+                )
 
         print(f"Running {args.n_sim} {method} simulation(s)...")
         for i in range(args.n_sim):
@@ -305,6 +315,17 @@ def main():
             out_path = sim_folder / f"sim_{i + 1}.csv"
             sim_log.to_csv(out_path, index=False)
             print(f"Saved {method} run {i + 1}/{args.n_sim} -> {out_path}")
+
+            unreachable = getattr(sim_engine, "last_unreachable_recommendations", [])
+            if unreachable:
+                print(
+                    f"WARNING: {len(unreachable)} recommendation(s) were unreachable "
+                    f"from replayed prefix marking in {method} run {i + 1}."
+                )
+                unreachable_df = pd.DataFrame(unreachable)
+                unreachable_out = sim_folder / f"sim_{i + 1}_unreachable_recommendations.csv"
+                unreachable_df.to_csv(unreachable_out, index=False)
+                print(f"Saved unreachable recommendations report -> {unreachable_out}")
         
         print(f"{method.capitalize()} simulation finished successfully!\n")
 

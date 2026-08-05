@@ -28,7 +28,6 @@ from prosit.utils.common_utils import (
     add_minutes_with_calendar,
     build_df_features,
     return_resource,
-    explore_invisible_path_to_activity
     )
 from prosit.utils.distribution_utils import sampling_from_dist
 from prosit.utils.save_and_load_utils import decision_rules_to_dict, transition_to_name, convert_calendar_names, dict_to_decrules, name_to_transition, fromstr_to_scipy
@@ -390,11 +389,93 @@ class SimulatorEngine:
         self.initial_marking = simulation_parameters.initial_marking
         self.final_marking = simulation_parameters.final_marking
         self.simulation_parameters = simulation_parameters
+        self._transition_rank = self._build_transition_rank()
+        self.raise_on_unreachable_recommendation = False
+        self.last_unreachable_recommendations = []
+
+    def _build_transition_rank(self) -> dict:
+        ordered = sorted(
+            list(self.net.transitions),
+            key=lambda t: (
+                str(t.label) if t.label is not None else "",
+                str(getattr(t, "name", "")),
+                tuple(sorted(str(a.source) for a in t.in_arcs)),
+                tuple(sorted(str(a.target) for a in t.out_arcs)),
+            ),
+        )
+        return {t: i for i, t in enumerate(ordered)}
+
+    def _sort_transitions(self, transitions) -> list:
+        return sorted(
+            list(transitions),
+            key=lambda t: (
+                self._transition_rank.get(t, math.inf),
+                str(t.label) if t.label is not None else "",
+                str(getattr(t, "name", "")),
+            ),
+        )
+
+    def _get_enabled_transitions_sorted(self, marking) -> list:
+        return self._sort_transitions(return_enabled_transitions(self.net, marking))
 
     def _get_case_enabled_time(self, case) -> datetime:
         if case["enabled"]:
             return min(case["enabled"].values())
         return case["arrival_time"]
+
+    def _find_invisible_path_to_activity(self, case, target_activity, max_depth=200):
+        from collections import deque
+
+        start_marking = case["marking"]
+        queue = deque([(start_marking, [])])
+        visited = {frozenset(start_marking.items())}
+
+        while queue:
+            marking, path = queue.popleft()
+            if len(path) >= max_depth:
+                continue
+
+            enabled = self._get_enabled_transitions_sorted(marking)
+            if any(t.label == target_activity for t in enabled):
+                return path
+
+            for t in enabled:
+                if t.label is not None:
+                    continue
+                next_marking = update_current_marking(marking, t)
+                key = frozenset(next_marking.items())
+                if key not in visited:
+                    visited.add(key)
+                    queue.append((next_marking, path + [t]))
+
+        return None
+
+    def _find_path_to_activity(self, case, target_activity, max_depth=200):
+        from collections import deque
+
+        start_marking = case["marking"]
+        queue = deque([(start_marking, [])])
+        visited = {frozenset(start_marking.items())}
+
+        while queue:
+            marking, path = queue.popleft()
+            if len(path) >= max_depth:
+                continue
+
+            enabled = self._get_enabled_transitions_sorted(marking)
+
+            # Stop as soon as target is directly enabled from this marking.
+            if any(t.label == target_activity for t in enabled):
+                return path
+
+            for t in enabled:
+                next_marking = update_current_marking(marking, t)
+                key = frozenset(next_marking.items())
+                if key not in visited:
+                    visited.add(key)
+                    queue.append((next_marking, path + [t]))
+
+        return None
 
     def _resolve_recommended_transition(self, case, enabled_transitions):
         if case["rec_act"] is None:
@@ -406,18 +487,62 @@ class SimulatorEngine:
             case["pending_invisible_path"] = pending_path[1:]
             return chosen_transition, None, case["enabled"].get(chosen_transition, self._get_case_enabled_time(case)), True
 
+        enabled_transitions = self._sort_transitions(enabled_transitions)
         enabled_transitions_labels = [t.label for t in enabled_transitions]
         if case["rec_act"] in enabled_transitions_labels:
             chosen_transition = enabled_transitions[enabled_transitions_labels.index(case["rec_act"])]
             return chosen_transition, case["rec_act"], case["enabled"][chosen_transition], True
 
-        # Emit the recommendation as the next visible event immediately when it is not
-        # directly enabled. This keeps the first post-prefix activity deterministic and
-        # aligned with the recommendation instead of letting the simulator step through an
-        # invisible path first.
-        return None, case["rec_act"], self._get_case_enabled_time(case), True
+        invisible_path = self._find_invisible_path_to_activity(case, case["rec_act"])
+        if invisible_path:
+            chosen_transition = invisible_path[0]
+            case["pending_invisible_path"] = invisible_path[1:]
+            return chosen_transition, None, case["enabled"].get(chosen_transition, self._get_case_enabled_time(case)), True
+
+        # If invisible-only path does not exist, walk the deterministic shortest
+        # path until recommendation becomes enabled while still emitting the
+        # recommendation as the first post-prefix visible activity.
+        reach_path = self._find_path_to_activity(case, case["rec_act"])
+        if reach_path:
+            chosen_transition = reach_path[0]
+            case["pending_invisible_path"] = reach_path[1:]
+            return chosen_transition, None, case["enabled"].get(chosen_transition, self._get_case_enabled_time(case)), True
+
+        # In strict mode, never consume other visible activities before recommendation.
+        if case.get("strict_recommendation", False):
+            case_external_id = case.get("case_external_id", case.get("case_id"))
+            rec_act = case.get("rec_act")
+            rec_res = case.get("rec_res")
+            self.last_unreachable_recommendations.append(
+                {
+                    "case:concept:name": str(case_external_id),
+                    "recommendation:act": rec_act,
+                    "recommendation:res": rec_res,
+                    "reason": "not_reachable_from_replayed_prefix_marking",
+                }
+            )
+            if self.raise_on_unreachable_recommendation:
+                raise RuntimeError(
+                    f"Strict recommendation failed for case {case_external_id}: "
+                    f"activity '{rec_act}' is not reachable from the replayed prefix marking."
+                )
+
+        case["rec_act"] = None
+        case["rec_res"] = None
+        return None, None, None, False
+
+    @staticmethod
+    def _apply_recommendation_lock(case, enabled_time, transition):
+        lock_until = case.get("recommendation_lock_until")
+        if lock_until is None:
+            return enabled_time
+        if transition.label is None:
+            return enabled_time
+        return max(enabled_time, lock_until)
 
     def apply(self, n_traces: int = 1, t_start: datetime = datetime.now(), deterministic_time: bool = False, prev_log: Optional[pd.DataFrame] = None) -> pd.DataFrame:
+
+        self.last_unreachable_recommendations = []
 
         event_log = []
         enabled_heap = []
@@ -425,12 +550,28 @@ class SimulatorEngine:
         cases = []
 
         if prev_log is not None:
+            if prev_log.empty:
+                raise ValueError(
+                    "prev_log is empty. Verify case-id filtering and input log content before simulation."
+                )
+
+            if "recommendation:act" not in prev_log.columns:
+                prev_log = prev_log.copy()
+                prev_log["recommendation:act"] = None
+            if "recommendation:res" not in prev_log.columns:
+                if "recommendation:act" not in prev_log.columns:
+                    prev_log = prev_log.copy()
+                prev_log["recommendation:res"] = None
 
             # computing the number of traces we want to simulate as the number of traces that started during the longest trace in the previous log
             trace_durations = prev_log.groupby("case:concept:name").agg(
                 trace_start=('start:timestamp', 'min'),
                 trace_end=('time:timestamp', 'max')
             )
+            if trace_durations.empty:
+                raise ValueError(
+                    "No cases found in prev_log after grouping by case:concept:name."
+                )
             trace_durations['duration'] = trace_durations['trace_end'] - trace_durations['trace_start']
             longest_trace = trace_durations.loc[trace_durations['duration'].idxmax()]
             longest_start = longest_trace['trace_start']
@@ -492,11 +633,13 @@ class SimulatorEngine:
                 case_id_c = cases_prefixes[c]
                 rename_case_id[f"case_{c+1}"] = case_id_c
                 prefix_log_c = prefixes_log[prefixes_log['case:concept:name'] == case_id_c]
-                rec_act_c = prefix_log_c['recommendation:act'].iloc[-1]
-                rec_res_c = prefix_log_c['recommendation:res'].iloc[-1]
+                prefix_log_c_sorted = prefix_log_c.sort_values('time:timestamp')
+                prefix_end_c = prefix_log_c_sorted['time:timestamp'].iloc[-1]
+                rec_act_c = prefix_log_c_sorted['recommendation:act'].iloc[-1]
+                rec_res_c = prefix_log_c_sorted['recommendation:res'].iloc[-1]
 
                 replayed = token_replay.apply(
-                                                prefix_log_c, 
+                                                prefix_log_c_sorted,
                                                 self.simulation_parameters.net, 
                                                 self.simulation_parameters.initial_marking, 
                                                 self.simulation_parameters.final_marking
@@ -520,8 +663,9 @@ class SimulatorEngine:
                             trace_attributes_c[a] = trace_attributes[a]
 
                 case = {
-                        "arrival_time": current_arr_ts,
+                    "arrival_time": prefix_end_c,
                         "case_id": c,
+                        "case_external_id": case_id_c,
                         "marking": current_marking_c,
                         "place_token_time": {},
                         "enabled": {},
@@ -529,7 +673,9 @@ class SimulatorEngine:
                         "attributes": trace_attributes_c,
                         "rec_act": rec_act_c,
                         "rec_res": rec_res_c,
-                        "pending_invisible_path": []
+                        "pending_invisible_path": [],
+                        "recommendation_lock_until": None,
+                        "strict_recommendation": pd.notna(rec_act_c),
                     }
 
                 for place in self.net.places:
@@ -537,11 +683,13 @@ class SimulatorEngine:
                 for place in current_marking_c.keys():
                     case["place_token_time"][place] = case["arrival_time"]
 
-                enabled = return_enabled_transitions(self.net, case["marking"])
+                enabled = self._get_enabled_transitions_sorted(case["marking"])
                 for t in enabled:
                     input_places = [arc.source for arc in self.net.arcs if arc.target == t]
                     enabled_time = max(case["place_token_time"][p] for p in input_places)
-                    case["enabled"][t] = prefix_log_c["time:timestamp"].iloc[-1]
+                    enabled_time = max(enabled_time, prefix_end_c)
+                    enabled_time = self._apply_recommendation_lock(case, enabled_time, t)
+                    case["enabled"][t] = enabled_time
 
                 if case["enabled"]:
                     enabled_time_case = min(case["enabled"].values())
@@ -579,6 +727,7 @@ class SimulatorEngine:
 
             case = {
                 "case_id": i + n_prefixes,
+                "case_external_id": f"case_{i + n_prefixes + 1}",
                 "marking": self.initial_marking,
                 "arrival_time": current_arr_ts,
                 "place_token_time": {},
@@ -587,21 +736,24 @@ class SimulatorEngine:
                 "attributes": trace_attributes,
                 "rec_act": None,
                 "rec_res": None,
-                "pending_invisible_path": []
+                "pending_invisible_path": [],
+                "recommendation_lock_until": None,
+                "strict_recommendation": False,
             }
             for place in self.net.places:
                 case["place_token_time"][place] = None
             case["place_token_time"][list(self.initial_marking.keys())[0]] = case["arrival_time"]
 
-            enabled = return_enabled_transitions(self.net, case["marking"])
+            enabled = self._get_enabled_transitions_sorted(case["marking"])
             for t in enabled:
                 input_places = [arc.source for arc in self.net.arcs if arc.target == t]
                 enabled_time = max(case["place_token_time"][p] for p in input_places)
+                enabled_time = self._apply_recommendation_lock(case, enabled_time, t)
                 case["enabled"][t] = enabled_time
 
             if case["enabled"]:
                 enabled_time_case = min(case["enabled"].values())
-                heapq.heappush(enabled_heap, (enabled_time_case, i))
+                heapq.heappush(enabled_heap, (enabled_time_case, i + n_prefixes))
 
             cases.append(case)
 
@@ -617,7 +769,7 @@ class SimulatorEngine:
             if not case["enabled"]:
                 continue
 
-            enabled_transitions = list(case["enabled"].keys())
+            enabled_transitions = self._sort_transitions(case["enabled"].keys())
             flag_rec = False
             chosen_transition, activity, t_enabled, flag_rec = self._resolve_recommended_transition(case, enabled_transitions)
 
@@ -716,15 +868,19 @@ class SimulatorEngine:
                 event_log.append((case_id, activity, resource, t_enabled, t_start_exec, t_end) + tuple(case['attributes'].values()))
                 resource_schedule[resource].append((t_start_exec, t_end))
                 case["history"][activity] += 1
+
+                if flag_rec and chosen_transition is not None and chosen_transition.label == activity:
+                    case["recommendation_lock_until"] = t_end
             else:
                 t_end = t_enabled
 
             if chosen_transition is None:
                 case["enabled"] = {}
-                enabled = return_enabled_transitions(self.net, case["marking"])
+                enabled = self._get_enabled_transitions_sorted(case["marking"])
                 for t in enabled:
                     input_places = [arc.source for arc in self.net.arcs if arc.target == t]
                     enabled_time = max(case["place_token_time"][p] for p in input_places)
+                    enabled_time = self._apply_recommendation_lock(case, enabled_time, t)
                     case["enabled"][t] = enabled_time
 
                 if case["enabled"]:
@@ -748,10 +904,11 @@ class SimulatorEngine:
                     pbar.update(1)
                     completed_cases.add(case_id)
                 continue
-            enabled = return_enabled_transitions(self.net, case["marking"])
+            enabled = self._get_enabled_transitions_sorted(case["marking"])
             for t in enabled:
                 input_places = [arc.source for arc in self.net.arcs if arc.target == t]
                 enabled_time = max(case["place_token_time"][p] for p in input_places)
+                enabled_time = self._apply_recommendation_lock(case, enabled_time, t)
                 case["enabled"][t] = enabled_time
 
             if case["enabled"]:
