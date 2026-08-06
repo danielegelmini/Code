@@ -23,6 +23,7 @@ import sys
 import uuid
 import warnings
 from pathlib import Path
+from datetime import datetime
 
 import pandas as pd
 import pm4py
@@ -73,6 +74,97 @@ def parse_args():
              "the event log, overwriting the cache.",
     )
     return parser.parse_args()
+
+
+def print_workload_estimate(
+    sim_input_log: pd.DataFrame,
+    run_label: str,
+    n_sim: int,
+    generate_new_cases_from_prev_log: bool,
+) -> None:
+    """Print an estimate of simulation scale to avoid mistaking long runs for hangs."""
+
+    if sim_input_log is None or sim_input_log.empty:
+        print(f"[{run_label}] Workload estimate unavailable: empty input log.")
+        return
+
+    log = sim_input_log.copy()
+    log[START_DATE_NAME] = pd.to_datetime(log[START_DATE_NAME], format="mixed", errors="coerce")
+    log[END_DATE_NAME] = pd.to_datetime(log[END_DATE_NAME], format="mixed", errors="coerce")
+    log = log.dropna(subset=[START_DATE_NAME, END_DATE_NAME])
+
+    if log.empty:
+        print(f"[{run_label}] Workload estimate unavailable: invalid timestamps after parsing.")
+        return
+
+    trace_durations = log.groupby(CASE_ID_NAME).agg(
+        trace_start=(START_DATE_NAME, "min"),
+        trace_end=(END_DATE_NAME, "max"),
+    )
+    trace_durations["duration"] = trace_durations["trace_end"] - trace_durations["trace_start"]
+
+    longest_case = trace_durations["duration"].idxmax()
+    longest_trace = trace_durations.loc[longest_case]
+    started_during_longest = trace_durations[
+        (trace_durations["trace_start"] >= longest_trace["trace_start"])
+        & (trace_durations["trace_start"] <= longest_trace["trace_end"])
+        & (trace_durations.index != longest_case)
+    ]
+    if generate_new_cases_from_prev_log:
+        n_traces = int(started_during_longest.shape[0])
+    else:
+        n_traces = 0
+
+    if "recommendation:act" in log.columns or "recommendation:res" in log.columns:
+        rec_act = log["recommendation:act"] if "recommendation:act" in log.columns else pd.Series([None] * len(log))
+        rec_res = log["recommendation:res"] if "recommendation:res" in log.columns else pd.Series([None] * len(log))
+        rec_cases = log[~rec_act.isna() | ~rec_res.isna()][CASE_ID_NAME].nunique()
+    else:
+        rec_cases = 0
+
+    est_cases_per_run = rec_cases + n_traces
+    print(
+        f"[{run_label}] Workload estimate: input_cases={trace_durations.shape[0]}, "
+        f"prefix_cases={rec_cases}, sampled_new_cases={n_traces}, "
+        f"~cases_processed_per_run={est_cases_per_run}, runs={n_sim}."
+    )
+    if est_cases_per_run >= 1000:
+        print(
+            f"[{run_label}] Note: high workload detected. Progress may look slow for long periods; "
+            "prefer waiting unless there is truly no CPU activity for a prolonged time."
+        )
+
+
+def _format_seconds_to_hms(total_seconds: float) -> str:
+    total_seconds = max(0, int(round(total_seconds)))
+    hours, rem = divmod(total_seconds, 3600)
+    minutes, seconds = divmod(rem, 60)
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+
+
+def print_run_timing(
+    run_label: str,
+    run_index: int,
+    n_runs: int,
+    run_start: datetime,
+    run_end: datetime,
+    durations_seconds: list[float],
+) -> None:
+    """Print timing for one run and ETA for remaining runs in the same batch."""
+
+    run_duration = max(0.0, (run_end - run_start).total_seconds())
+    durations_seconds.append(run_duration)
+    avg_duration = sum(durations_seconds) / len(durations_seconds)
+    runs_left = n_runs - run_index
+    eta_seconds = avg_duration * runs_left
+
+    print(
+        f"[{run_label}] Run {run_index}/{n_runs} timing: "
+        f"duration={_format_seconds_to_hms(run_duration)}, "
+        f"avg={_format_seconds_to_hms(avg_duration)}, "
+        f"remaining_runs={runs_left}, "
+        f"estimated_time_left={_format_seconds_to_hms(eta_seconds)}."
+    )
 
 
 def main():
@@ -203,33 +295,55 @@ def main():
     # builds the recommender dataframe, and runs the simulation engine 'n_sim' times.
     # The resulting simulated logs are sorted chronologically per case and exported as CSV files.
     # -----------------------------------------------------------------
-    # print("=== STARTING BASELINE SIMULATION ===")
-    # baseline_folder = case_dir / "prosit_simulation_results" / "baseline"
-    # baseline_folder.mkdir(parents=True, exist_ok=True)
+    print("=== STARTING BASELINE SIMULATION ===")
+    baseline_folder = case_dir / "prosit_simulation_results" / "baseline"
+    baseline_folder.mkdir(parents=True, exist_ok=True)
 
-    # log_baseline_raw = clean_prev_log.copy()
+    log_baseline_raw = clean_prev_log.copy()
     
-    # sentinel_act = f"__NO_RECOMMENDATION__{uuid.uuid4().hex}"
-    # baseline_recommendations = {
-    #     case_id: {"act": sentinel_act, "res": None}
-    #     for case_id in log_baseline_raw["case:concept:name"].unique()
-    # }
+    sentinel_act = f"__NO_RECOMMENDATION__{uuid.uuid4().hex}"
+    baseline_recommendations = {
+        case_id: {"act": sentinel_act, "res": None}
+        for case_id in log_baseline_raw["case:concept:name"].unique()
+    }
     
-    # log_baseline = build_recommender_df(log_baseline_raw, baseline_recommendations)
-    # log_baseline["start:timestamp"] = pd.to_datetime(log_baseline["start:timestamp"], format="mixed")
-    # log_baseline["time:timestamp"] = pd.to_datetime(log_baseline["time:timestamp"], format="mixed")
+    log_baseline = build_recommender_df(log_baseline_raw, baseline_recommendations)
+    log_baseline["start:timestamp"] = pd.to_datetime(log_baseline["start:timestamp"], format="mixed")
+    log_baseline["time:timestamp"] = pd.to_datetime(log_baseline["time:timestamp"], format="mixed")
 
-    # if case_ids:
-    #     log_baseline = log_baseline[log_baseline["case:concept:name"].isin(case_ids)]
+    if case_ids:
+        log_baseline = log_baseline[log_baseline["case:concept:name"].isin(case_ids)]
 
-    # print(f"Running {args.n_sim} baseline simulation(s)...")
-    # for i in range(args.n_sim):
-    #     sim_log = sim_engine.apply(prev_log=log_baseline)
-    #     sim_log = sim_log.sort_values(by=["case:concept:name", "time:timestamp"])
-    #     out_path = baseline_folder / f"sim_{i + 1}.csv"
-    #     sim_log.to_csv(out_path, index=False)
-    #     print(f"Saved baseline run {i + 1}/{args.n_sim} -> {out_path}")
-    # print("Baseline simulation finished successfully!\n")
+    print_workload_estimate(
+        log_baseline,
+        "BASELINE",
+        args.n_sim,
+        generate_new_cases_from_prev_log=False,
+    )
+
+    print(f"Running {args.n_sim} baseline simulation(s)...")
+    baseline_durations_seconds = []
+    for i in range(args.n_sim):
+        run_start = datetime.now()
+        print(f"[BASELINE] Starting run {i + 1}/{args.n_sim} at {run_start.strftime('%Y-%m-%d %H:%M:%S')}")
+        sim_log = sim_engine.apply(
+            prev_log=log_baseline,
+            generate_new_cases_from_prev_log=False,
+        )
+        sim_log = sim_log.sort_values(by=["case:concept:name", "time:timestamp"])
+        out_path = baseline_folder / f"sim_{i + 1}.csv"
+        sim_log.to_csv(out_path, index=False)
+        print(f"Saved baseline run {i + 1}/{args.n_sim} -> {out_path}")
+        run_end = datetime.now()
+        print_run_timing(
+            "BASELINE",
+            i + 1,
+            args.n_sim,
+            run_start,
+            run_end,
+            baseline_durations_seconds,
+        )
+    print("Baseline simulation finished successfully!\n")
 
     # -----------------------------------------------------------------
     # 4. EXHAUSTIVE AND NSGA2 SIMULATIONS
@@ -308,13 +422,35 @@ def main():
                     "Check case-id dtype/content and input file values."
                 )
 
+        print_workload_estimate(
+            log_rec,
+            method.upper(),
+            args.n_sim,
+            generate_new_cases_from_prev_log=False,
+        )
+
         print(f"Running {args.n_sim} {method} simulation(s)...")
+        method_durations_seconds = []
         for i in range(args.n_sim):
-            sim_log = sim_engine.apply(prev_log=log_rec)
+            run_start = datetime.now()
+            print(f"[{method.upper()}] Starting run {i + 1}/{args.n_sim} at {run_start.strftime('%Y-%m-%d %H:%M:%S')}")
+            sim_log = sim_engine.apply(
+                prev_log=log_rec,
+                generate_new_cases_from_prev_log=False,
+            )
             sim_log = sim_log.sort_values(by=["case:concept:name", "time:timestamp"])
             out_path = sim_folder / f"sim_{i + 1}.csv"
             sim_log.to_csv(out_path, index=False)
             print(f"Saved {method} run {i + 1}/{args.n_sim} -> {out_path}")
+            run_end = datetime.now()
+            print_run_timing(
+                method.upper(),
+                i + 1,
+                args.n_sim,
+                run_start,
+                run_end,
+                method_durations_seconds,
+            )
 
             unreachable = getattr(sim_engine, "last_unreachable_recommendations", [])
             if unreachable:

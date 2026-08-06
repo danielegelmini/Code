@@ -199,8 +199,25 @@ def count_false_hours(calendar: dict, start_ts: datetime, end_ts: datetime) -> i
     return false_hours_count
 
 
+def count_concurrent_events(schedule, t_enabled) -> int:
+    # A list comprehension evaluates in C-speed and correctly checks all 
+    # overlapping timeframes without failing on unsorted end-times.
+    return sum(1 for start, end in schedule if start <= t_enabled < end)
+
+
 def add_minutes_with_calendar(start_ts: datetime, minutes_to_add: int, calendar: dict) -> datetime:
-    remaining_minutes = minutes_to_add
+    # 1. Safety Check: Verify the resource actually has working hours configured
+    has_working_hours = any(
+        work_status 
+        for day_schedule in calendar.values() if isinstance(day_schedule, dict) 
+        for work_status in day_schedule.values()
+    )
+    
+    if not has_working_hours and minutes_to_add > 0:
+        # Fallback: If the calendar is entirely empty, add time linearly to prevent an infinite freeze
+        return start_ts + timedelta(minutes=minutes_to_add)
+        
+    remaining_minutes = float(minutes_to_add) 
     current_time = start_ts
 
     while remaining_minutes > 0:
@@ -209,11 +226,11 @@ def add_minutes_with_calendar(start_ts: datetime, minutes_to_add: int, calendar:
         
         if calendar.get(weekday, {}).get(hour, False):
             minutes_in_current_hour = min(remaining_minutes, 60 - current_time.minute)
-            
             current_time += timedelta(minutes=minutes_in_current_hour)
             remaining_minutes -= minutes_in_current_hour
         else:
-            current_time = (current_time + timedelta(hours=1)).replace(minute=0)
+            # Jump directly to the top of the next hour safely
+            current_time = (current_time + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
 
     return current_time
 

@@ -303,6 +303,6 @@ if __name__ == "__main__":
 # case_study: "BAC", "BPI12", "bpi17_before", "bpi17_after"
 
 # example method: "genetic"
-# python 3_run_experiment.py --case_study "BAC" --method "nsga2" --window_size 5 --reduced_threshold 0.05 --pop_size 50 --n_generations 10
+# python 3_run_experiment.py --case_study "BAC" --method "nsga2" --window_size 5 --reduced_threshold 0.05 --pop_size 50 --n_generations 5
 # example method: "exhaustive"
 # python 3_run_experiment.py --case_study "BPI12" --method "exhaustive" --window_size 5 --reduced_threshold 0.05
