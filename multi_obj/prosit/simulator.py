@@ -2,6 +2,9 @@ import random
 import pandas as pd
 import math
 import heapq
+import bisect
+import time
+from collections import deque
 from datetime import datetime
 from tqdm import tqdm
 
@@ -9,8 +12,8 @@ from typing import Union, List, Dict, Optional
 
 import pm4py
 from pm4py.objects.petri_net.obj import PetriNet, Marking
-from pm4py.objects.log.obj import EventLog
-from pm4py.algo.conformance.tokenreplay import algorithm as token_replay
+from pm4py.objects.log.obj import EventLog, Trace, Event
+from pm4py.algo.conformance.alignments.petri_net import algorithm as alignments
 
 from prosit.discovery.cf_discovery import discover_weight_transitions
 from prosit.discovery.time_discovery import discover_execution_time_distributions, discover_arrival_time, discover_waiting_time
@@ -20,11 +23,12 @@ from prosit.discovery.data_discovery import discover_attributes_distribution, re
 from prosit.discovery.online_discovery.cf_discovery import incremental_transition_weights_learning
 from prosit.discovery.online_discovery.time_discovery import incremental_execution_time_learning, incremental_model_arrival_learning, incremental_waiting_time_learning
 from prosit.utils.common_utils import (
-    return_enabled_transitions, 
-    update_current_marking, 
-    return_fired_transition, 
+    return_enabled_transitions,
+    update_current_marking,
+    return_fired_transition,
     count_concurrent_events,
-    compute_transition_weights_from_model, 
+    count_concurrent_events_fast,
+    compute_transition_weights_from_model,
     add_minutes_with_calendar,
     build_df_features,
     return_resource,
@@ -392,6 +396,34 @@ class SimulatorEngine:
         self._transition_rank = self._build_transition_rank()
         self.raise_on_unreachable_recommendation = False
         self.last_unreachable_recommendations = []
+        # Cases that were force-truncated because they exceeded max_events_per_case
+        # (safety valve against runaway/near-infinite loops -- see apply()).
+        self.last_runaway_cases = []
+        # Historical prefixes whose alignment-based replay required at least one "log move"
+        # (a logged activity the model could not explain at all -- a genuine deviation).
+        # Recorded here for visibility only; it does not affect the reconstructed marking's
+        # legality -- see _reconstruct_prefix_state.
+        self.last_non_fitting_prefixes = []
+        # Historical prefixes whose alignment-based replay needed to insert at least one
+        # visible activity that is NOT present in the historical log at all -- the model
+        # considers it a necessary step to get from one logged activity to the next, but it
+        # was never actually recorded. Never written to the output log (the saved prefix is
+        # always exactly the input log, unchanged); it does affect the case's activity-history
+        # counts used for probabilistic weighting of subsequent simulated events -- see
+        # _reconstruct_prefix_state.
+        self.last_model_inserted_activities = []
+        # Cache of _reconstruct_prefix_state results, keyed by (case id, prefix activity
+        # sequence). Alignment computation is not free, and the same historical prefix is
+        # replayed identically every time apply() is called with it -- e.g. across the N
+        # runs of a batch, or across baseline/exhaustive/nsga2 for the same underlying case
+        # (recommendation:act/res differ, but the prefix's own activity sequence does not).
+        # Keyed by content, not by object identity, so it stays correct even if the caller
+        # passes a freshly-rebuilt DataFrame each time.
+        self._prefix_state_cache = {}
+        # Node/time cap for _bfs_path_to_activity -- see apply()'s
+        # max_reachability_search_nodes / max_reachability_search_seconds.
+        self._reachability_search_max_nodes = 30000
+        self._reachability_search_max_seconds = 5.0
 
     def _build_transition_rank(self) -> dict:
         ordered = sorted(
@@ -423,24 +455,44 @@ class SimulatorEngine:
             return min(case["enabled"].values())
         return case["arrival_time"]
 
-    def _find_invisible_path_to_activity(self, case, target_activity, max_depth=200):
-        from collections import deque
+    def _bfs_path_to_activity(self, start_marking, target_activity, only_invisible, max_depth=200):
+        """
+        BFS for a firing sequence from start_marking after which target_activity becomes
+        enabled (the returned path does not include firing target_activity itself).
 
-        start_marking = case["marking"]
+        Bounded by max_depth (path length) AND by self._reachability_search_max_nodes /
+        self._reachability_search_max_seconds (distinct markings visited / wall clock).
+        The latter two exist because a case seeded from a non-fitting historical prefix
+        (see last_non_fitting_prefixes) can carry a marking whose reachable state space
+        explodes combinatorially when the net has several concurrent branches -- without
+        a bound this search can run for a very long time (observed: 70k+ markings visited,
+        10+ seconds, on BPI12) even though it is technically finite. When the cap is hit
+        the outcome is genuinely undetermined, which is reported distinctly from a search
+        that fully exhausted the reachable state space without finding the target (that
+        one really is unreachable).
+
+        Returns (path_or_None, status) with status in {"found", "exhausted", "capped"}.
+        """
         queue = deque([(start_marking, [])])
         visited = {frozenset(start_marking.items())}
+        t0 = time.monotonic()
+        max_nodes = getattr(self, "_reachability_search_max_nodes", 30000)
+        max_seconds = getattr(self, "_reachability_search_max_seconds", 5.0)
 
         while queue:
+            if len(visited) > max_nodes or (time.monotonic() - t0) > max_seconds:
+                return None, "capped"
+
             marking, path = queue.popleft()
             if len(path) >= max_depth:
                 continue
 
             enabled = self._get_enabled_transitions_sorted(marking)
             if any(t.label == target_activity for t in enabled):
-                return path
+                return path, "found"
 
             for t in enabled:
-                if t.label is not None:
+                if only_invisible and t.label is not None:
                     continue
                 next_marking = update_current_marking(marking, t)
                 key = frozenset(next_marking.items())
@@ -448,34 +500,108 @@ class SimulatorEngine:
                     visited.add(key)
                     queue.append((next_marking, path + [t]))
 
-        return None
+        return None, "exhausted"
 
-    def _find_path_to_activity(self, case, target_activity, max_depth=200):
-        from collections import deque
+    def _reconstruct_prefix_state(self, case_id_c, prefix_log_c_sorted):
+        """
+        Reconstructs the Petri net marking and per-activity firing counts after replaying a
+        case's historical prefix, using cost-based alignment instead of naive token-based
+        replay.
 
-        start_marking = case["marking"]
-        queue = deque([(start_marking, [])])
-        visited = {frozenset(start_marking.items())}
+        Why: token-based replay, when a trace does not perfectly fit the model, patches over
+        the mismatch by inserting "missing tokens" wherever a logged activity is not
+        structurally enabled. The resulting marking can then contain tokens that are not
+        actually reachable from the initial marking via any legal firing sequence -- observed
+        on BPI12: extra tokens stranded in a loop-join place, permanently disabling that
+        loop's only exit and turning what should be a normal rework loop into a genuine,
+        unrecoverable deadlock for that case (no amount of extra simulated events can ever
+        complete it). Since the net is a sound workflow net (the "option to complete"
+        property holds for every reachable marking), a marking reconstructed via alignment
+        -- which only ever takes legal model moves, never invents tokens -- is GUARANTEED to
+        be able to reach the final marking. Verified empirically on all 633 BPI12 prefixes:
+        0 cases where the final marking became unreachable after this change (was 1 case
+        hitting the max_events_per_case safety valve under token-based replay).
 
-        while queue:
-            marking, path = queue.popleft()
-            if len(path) >= max_depth:
-                continue
+        How: pm4py's alignment always targets the net's actual final marking, which for a
+        partial prefix means it also inserts "model moves" to force completion of the whole
+        remaining process -- not what we want here, we only want the state after the prefix.
+        So the alignment is truncated right after its last move that corresponds to a real
+        prefix event; everything after that (the forced-completion tail) is discarded. The
+        (truncated) sequence of required visible activities is then replayed one at a time:
+        if not already enabled, _bfs_path_to_activity (invisible-only) finds the legal path
+        to enable it -- the same mechanism already used for recommendation reachability.
 
+        Cached per (case id, exact prefix activity sequence) since alignment is not free and
+        the same historical prefix is replayed identically every time apply() is called with
+        it (e.g. across the N runs of a batch, or across baseline/exhaustive/nsga2 for the
+        same underlying case).
+
+        Returns a dict: {"marking", "history", "is_fit"}.
+        """
+        cache_key = (case_id_c, tuple(prefix_log_c_sorted["concept:name"]))
+        cached = self._prefix_state_cache.get(cache_key)
+        if cached is not None:
+            return cached
+
+        trace = Trace()
+        for act in prefix_log_c_sorted["concept:name"]:
+            trace.append(Event({"concept:name": act}))
+
+        align_result = alignments.apply_trace(
+            trace, self.net, self.initial_marking, self.final_marking,
+            parameters={alignments.Parameters.ACTIVITY_KEY: "concept:name"},
+        )
+
+        moves = align_result["alignment"]
+        log_move_indices = [i for i, (log_move, _) in enumerate(moves) if log_move != ">>"]
+        last_log_idx = max(log_move_indices) if log_move_indices else -1
+        relevant_moves = moves[:last_log_idx + 1]
+
+        is_fit = all(model_move != ">>" for log_move, model_move in relevant_moves if log_move != ">>")
+        required_visible_labels = [
+            model_move for _, model_move in relevant_moves if model_move not in (">>", None)
+        ]
+        # Visible activities the model needed to explain the prefix that are NOT present in
+        # the historical log at all (log_move == ">>"): the model considers them necessary to
+        # get from one logged activity to the next, but they were never actually recorded.
+        # These are fired against the net (they affect the marking and the history counts
+        # used for probabilistic weighting) but are NEVER written to the output log -- the
+        # saved prefix is always exactly what was in the input log, unchanged.
+        inserted_activities = [
+            model_move for log_move, model_move in relevant_moves
+            if log_move == ">>" and model_move not in (">>", None)
+        ]
+
+        marking = self.initial_marking
+        history = {t: 0 for t in self.simulation_parameters.net_transition_labels}
+        for label in required_visible_labels:
             enabled = self._get_enabled_transitions_sorted(marking)
+            labels = [t.label for t in enabled]
+            if label not in labels:
+                invisible_path, _ = self._bfs_path_to_activity(marking, label, only_invisible=True)
+                if invisible_path is None:
+                    # Should not happen if the alignment is valid and the net matches --
+                    # defensively stop here rather than raise, leaving a still-legal (if
+                    # earlier-than-expected) marking.
+                    break
+                for invisible_t in invisible_path:
+                    marking = update_current_marking(marking, invisible_t)
+                enabled = self._get_enabled_transitions_sorted(marking)
+                labels = [t.label for t in enabled]
+                if label not in labels:
+                    break
+            chosen = enabled[labels.index(label)]
+            marking = update_current_marking(marking, chosen)
+            history[label] += 1
 
-            # Stop as soon as target is directly enabled from this marking.
-            if any(t.label == target_activity for t in enabled):
-                return path
-
-            for t in enabled:
-                next_marking = update_current_marking(marking, t)
-                key = frozenset(next_marking.items())
-                if key not in visited:
-                    visited.add(key)
-                    queue.append((next_marking, path + [t]))
-
-        return None
+        result = {
+            "marking": marking,
+            "history": history,
+            "is_fit": is_fit,
+            "inserted_activities": inserted_activities,
+        }
+        self._prefix_state_cache[cache_key] = result
+        return result
 
     def _resolve_recommended_transition(self, case, enabled_transitions):
         if case["rec_act"] is None:
@@ -500,32 +626,47 @@ class SimulatorEngine:
             chosen_transition = enabled_transitions[enabled_transitions_labels.index(case["rec_act"])]
             return chosen_transition, case["rec_act"], case["enabled"][chosen_transition], True
 
-        invisible_path = self._find_invisible_path_to_activity(case, case["rec_act"])
-        if invisible_path:
+        invisible_path, invisible_status = self._bfs_path_to_activity(case["marking"], case["rec_act"], only_invisible=True)
+        if invisible_path is not None:
             chosen_transition = invisible_path[0]
             case["pending_invisible_path"] = invisible_path[1:]
             return chosen_transition, None, case["enabled"].get(chosen_transition, self._get_case_enabled_time(case)), True
 
         # If invisible-only path does not exist, walk the deterministic shortest
         # path until recommendation becomes enabled while still emitting the
-        # recommendation as the first post-prefix visible activity.
-        reach_path = self._find_path_to_activity(case, case["rec_act"])
-        if reach_path:
-            chosen_transition = reach_path[0]
-            case["pending_invisible_path"] = reach_path[1:]
-            return chosen_transition, None, case["enabled"].get(chosen_transition, self._get_case_enabled_time(case)), True
+        # recommendation as the first post-prefix visible activity. Skipped when
+        # the invisible-only search already hit the node/time cap: the full search
+        # (which allows strictly more transitions per step, so branches even wider)
+        # would almost certainly hit the same cap too, for no benefit.
+        reach_path, reach_status = (None, invisible_status)
+        if invisible_status != "capped":
+            reach_path, reach_status = self._bfs_path_to_activity(case["marking"], case["rec_act"], only_invisible=False)
+            if reach_path is not None:
+                chosen_transition = reach_path[0]
+                case["pending_invisible_path"] = reach_path[1:]
+                return chosen_transition, None, case["enabled"].get(chosen_transition, self._get_case_enabled_time(case)), True
 
         # In strict mode, never consume other visible activities before recommendation.
         if case.get("strict_recommendation", False):
             case_external_id = case.get("case_external_id", case.get("case_id"))
             rec_act = case.get("rec_act")
             rec_res = case.get("rec_res")
+            if "capped" in (invisible_status, reach_status):
+                reason = (
+                    "reachability_search_aborted: the search space explored while looking for a "
+                    "legal path to the recommended activity exceeded the node/time safety cap "
+                    "before finding it or exhausting the state space -- reachability is genuinely "
+                    "undetermined (not proven impossible), most likely caused by a non-fitting "
+                    "historical prefix (see last_non_fitting_prefixes) seeding a highly concurrent marking."
+                )
+            else:
+                reason = "not_reachable_from_replayed_prefix_marking"
             self.last_unreachable_recommendations.append(
                 {
                     "case:concept:name": str(case_external_id),
                     "recommendation:act": rec_act,
                     "recommendation:res": rec_res,
-                    "reason": "not_reachable_from_replayed_prefix_marking",
+                    "reason": reason,
                 }
             )
             if self.raise_on_unreachable_recommendation:
@@ -553,14 +694,48 @@ class SimulatorEngine:
         t_start: datetime = datetime.now(),
         deterministic_time: bool = False,
         prev_log: Optional[pd.DataFrame] = None,
-        generate_new_cases_from_prev_log: bool = True,
+        max_events_per_case: Optional[int] = 300,
+        max_reachability_search_nodes: int = 30000,
+        max_reachability_search_seconds: float = 5.0,
     ) -> pd.DataFrame:
+        """
+        max_events_per_case: safety valve against runaway/near-infinite loops. If a single
+            case fires more than this many NEW (simulated, non-historical) visible events,
+            it is force-truncated -- logged to self.last_runaway_cases -- instead of being
+            left to spin (possibly forever) and starve every other case in the batch. This
+            was observed to happen on BPI12: a case whose historical prefix does not perfectly
+            fit the model (see self.last_non_fitting_prefixes) can be seeded with a marking
+            that permanently disables the loop's only exit transition, turning a discovered
+            model loop into a 100%-probability infinite cycle for that case. Set to None to
+            disable the cap and restore the previous (uncapped) behaviour.
+
+        max_reachability_search_nodes / max_reachability_search_seconds: safety valve for
+            _bfs_path_to_activity, the search used to find a legal path to a recommended
+            activity. A case seeded from a non-fitting historical prefix can carry a marking
+            whose reachable state space explodes combinatorially (observed on BPI12: 70k+
+            distinct markings visited, 10+ seconds, for a single case) -- this caps the
+            search instead of letting it hang. When the cap is hit, the recommendation is
+            reported as unreachable with a reason that makes clear it is undetermined (search
+            aborted) rather than proven impossible -- see self.last_unreachable_recommendations.
+        """
 
         self.last_unreachable_recommendations = []
+        self.last_runaway_cases = []
+        self.last_non_fitting_prefixes = []
+        self.last_model_inserted_activities = []
+        self._reachability_search_max_nodes = max_reachability_search_nodes
+        self._reachability_search_max_seconds = max_reachability_search_seconds
 
         event_log = []
         enabled_heap = []
         resource_schedule = {r: [] for r in self.simulation_parameters.resources}
+        # Parallel sorted start/end timestamp lists per resource, kept in sync with
+        # resource_schedule via bisect.insort. These let count_concurrent_events_fast
+        # answer "how many intervals are open at time t" in O(log n) instead of the O(n)
+        # full rescan that count_concurrent_events needs -- this matters a lot here because
+        # it is recomputed for every resource on every single simulated event.
+        resource_starts = {r: [] for r in self.simulation_parameters.resources}
+        resource_ends = {r: [] for r in self.simulation_parameters.resources}
         cases = []
 
         if prev_log is not None:
@@ -577,7 +752,8 @@ class SimulatorEngine:
                     prev_log = prev_log.copy()
                 prev_log["recommendation:res"] = None
 
-            # computing the number of traces we want to simulate as the number of traces that started during the longest trace in the previous log
+            # Only the historical prefixes themselves are simulated -- no additional new
+            # cases are sampled to start alongside them.
             trace_durations = prev_log.groupby("case:concept:name").agg(
                 trace_start=('start:timestamp', 'min'),
                 trace_end=('time:timestamp', 'max')
@@ -586,29 +762,21 @@ class SimulatorEngine:
                 raise ValueError(
                     "No cases found in prev_log after grouping by case:concept:name."
                 )
-            trace_durations['duration'] = trace_durations['trace_end'] - trace_durations['trace_start']
-            longest_trace = trace_durations.loc[trace_durations['duration'].idxmax()]
-            longest_start = longest_trace['trace_start']
-            longest_end = longest_trace['trace_end']
-            longest_case = trace_durations['duration'].idxmax()
-            started_during_longest = trace_durations[
-                (trace_durations['trace_start'] >= longest_start) &
-                (trace_durations['trace_start'] <= longest_end) &
-                (trace_durations.index != longest_case)
-            ]
-            if generate_new_cases_from_prev_log:
-                n_traces = started_during_longest.shape[0]
-            else:
-                n_traces = 0
+            n_traces = 0
 
             # compute the t_start
             t_start = trace_durations["trace_start"].max()
 
             # update the resource_schedule with the previous log
             for _, row in prev_log.iterrows():
-                if row['org:resource'] not in resource_schedule:
-                    resource_schedule[row['org:resource']] = []
-                resource_schedule[row['org:resource']].append((row['start:timestamp'], row['time:timestamp']))
+                res = row['org:resource']
+                if res not in resource_schedule:
+                    resource_schedule[res] = []
+                    resource_starts[res] = []
+                    resource_ends[res] = []
+                resource_schedule[res].append((row['start:timestamp'], row['time:timestamp']))
+                bisect.insort(resource_starts[res], row['start:timestamp'])
+                bisect.insort(resource_ends[res], row['time:timestamp'])
 
             # filter only the prefixes
             cases_prefixes = list(prev_log[~prev_log['recommendation:act'].isna() | ~prev_log['recommendation:res'].isna()]["case:concept:name"].unique())
@@ -655,19 +823,31 @@ class SimulatorEngine:
                 rec_act_c = prefix_log_c_sorted['recommendation:act'].iloc[-1]
                 rec_res_c = prefix_log_c_sorted['recommendation:res'].iloc[-1]
 
-                replayed = token_replay.apply(
-                                                prefix_log_c_sorted,
-                                                self.simulation_parameters.net, 
-                                                self.simulation_parameters.initial_marking, 
-                                                self.simulation_parameters.final_marking
-                                            )
+                prefix_state = self._reconstruct_prefix_state(case_id_c, prefix_log_c_sorted)
+                current_marking_c = prefix_state["marking"]
+                history_c = prefix_state["history"]
 
-                current_marking_c = replayed[0]["reached_marking"]
+                if not prefix_state["is_fit"]:
+                    self.last_non_fitting_prefixes.append({
+                        "case:concept:name": str(case_id_c),
+                        "reason": ("alignment-based replay of the historical prefix needed at least one "
+                                   "'log move' -- a logged activity the model could not explain at all "
+                                   "(a genuine deviation). Informational only: unlike the old token-based "
+                                   "replay, the reconstructed marking is always legally reachable, so this "
+                                   "does not by itself put the case at risk of an unrecoverable loop."),
+                    })
 
-                history_c_list = [t_l.label for t_l in replayed[0]["activated_transitions"] if t_l.label]
-                history_c = {t: 0 for t in self.simulation_parameters.net_transition_labels}
-                for t in history_c_list:
-                    history_c[t] += 1
+                if prefix_state["inserted_activities"]:
+                    self.last_model_inserted_activities.append({
+                        "case:concept:name": str(case_id_c),
+                        "inserted_activities": ";".join(prefix_state["inserted_activities"]),
+                        "reason": ("alignment needed to insert visible activity(ies) not present in the "
+                                   "historical log to explain how the model reaches a state consistent "
+                                   "with the logged prefix. Never written to the output log -- the saved "
+                                   "prefix is always exactly the input log, unchanged -- but these ARE "
+                                   "counted in this case's activity-history used for probabilistic "
+                                   "weighting of subsequent simulated events."),
+                    })
 
                 trace_attributes = prefix_log_c[self.simulation_parameters.label_data_attributes].iloc[-1].to_dict()
                 trace_attributes_c = dict()
@@ -693,6 +873,7 @@ class SimulatorEngine:
                         "pending_invisible_path": [],
                         "recommendation_lock_until": None,
                         "strict_recommendation": pd.notna(rec_act_c),
+                        "sim_event_count": 0,
                     }
 
                 for place in self.net.places:
@@ -708,9 +889,33 @@ class SimulatorEngine:
                     enabled_time = self._apply_recommendation_lock(case, enabled_time, t)
                     case["enabled"][t] = enabled_time
 
+                is_sentinel_rec_act = isinstance(rec_act_c, str) and rec_act_c.startswith("__NO_RECOMMENDATION__")
                 if case["enabled"]:
                     enabled_time_case = min(case["enabled"].values())
                     heapq.heappush(enabled_heap, (enabled_time_case, c))
+                elif case["strict_recommendation"] and not is_sentinel_rec_act:
+                    # No transition is enabled at all right after replaying the historical
+                    # prefix, so this case would silently never be pushed onto the heap and
+                    # the recommendation would never be attempted or reported. Two known
+                    # causes: the replayed marking already equals the final marking (the
+                    # "prefix" was actually the full, already-completed case -- a recommendation
+                    # for it is trivially impossible), or the prefix replay left the case in a
+                    # genuine deadlock (no legal continuation at all). Either way this is a
+                    # "genuinely not possible" case per the strict-recommendation contract, so
+                    # it belongs in last_unreachable_recommendations like any other failure.
+                    reason = (
+                        "case_already_complete_after_replayed_prefix"
+                        if case["marking"] == self.final_marking
+                        else "no_enabled_transitions_after_replayed_prefix_deadlock"
+                    )
+                    self.last_unreachable_recommendations.append(
+                        {
+                            "case:concept:name": str(case_id_c),
+                            "recommendation:act": rec_act_c,
+                            "recommendation:res": rec_res_c,
+                            "reason": reason,
+                        }
+                    )
 
                 cases.append(case)
 
@@ -756,6 +961,7 @@ class SimulatorEngine:
                 "pending_invisible_path": [],
                 "recommendation_lock_until": None,
                 "strict_recommendation": False,
+                "sim_event_count": 0,
             }
             for place in self.net.places:
                 case["place_token_time"][place] = None
@@ -809,9 +1015,14 @@ class SimulatorEngine:
                 if flag_rec and case["rec_res"] is not None:
                     resource = case["rec_res"]
                     t_enabled_waited = t_enabled
-                    r_workload = count_concurrent_events(resource_schedule[resource], t_enabled)
+                    r_workload = count_concurrent_events_fast(
+                        resource_starts.get(resource, []), resource_ends.get(resource, []), t_enabled
+                    )
                 else:
-                    workloads = {r: count_concurrent_events(resource_schedule[r], t_enabled) for r in self.simulation_parameters.resources}
+                    workloads = {
+                        r: count_concurrent_events_fast(resource_starts[r], resource_ends[r], t_enabled)
+                        for r in self.simulation_parameters.resources
+                    }
                     enabled_resources_act = [r for r, v in self.simulation_parameters.act_resource_prob[activity].items() if v>0]
                     enabled_resources = []
                     for r in enabled_resources_act:
@@ -887,8 +1098,15 @@ class SimulatorEngine:
                 t_end = add_minutes_with_calendar(t_start_exec, int(ex_time), self.simulation_parameters.calendars[resource])
 
                 event_log.append((case_id, activity, resource, t_enabled, t_start_exec, t_end) + tuple(case['attributes'].values()))
+                if resource not in resource_schedule:
+                    resource_schedule[resource] = []
+                    resource_starts[resource] = []
+                    resource_ends[resource] = []
                 resource_schedule[resource].append((t_start_exec, t_end))
+                bisect.insort(resource_starts[resource], t_start_exec)
+                bisect.insort(resource_ends[resource], t_end)
                 case["history"][activity] += 1
+                case["sim_event_count"] = case.get("sim_event_count", 0) + 1
 
                 if flag_rec and chosen_transition is not None and chosen_transition.label == activity:
                     case["recommendation_lock_until"] = t_end
@@ -925,6 +1143,21 @@ class SimulatorEngine:
                     pbar.update(1)
                     completed_cases.add(case_id)
                 continue
+
+            if max_events_per_case is not None and case.get("sim_event_count", 0) >= max_events_per_case:
+                self.last_runaway_cases.append({
+                    "case:concept:name": str(case.get("case_external_id", case.get("case_id"))),
+                    "sim_events_generated": case.get("sim_event_count", 0),
+                    "reason": (f"case fired >= max_events_per_case={max_events_per_case} simulated events "
+                               "without reaching the final marking and was truncated to avoid a "
+                               "runaway/near-infinite loop; see last_non_fitting_prefixes for the most "
+                               "common root cause on prefix-continuation runs."),
+                })
+                if case_id not in completed_cases:
+                    pbar.update(1)
+                    completed_cases.add(case_id)
+                continue
+
             enabled = self._get_enabled_transitions_sorted(case["marking"])
             for t in enabled:
                 input_places = [arc.source for arc in self.net.arcs if arc.target == t]

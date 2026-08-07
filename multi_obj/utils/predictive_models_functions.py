@@ -5,7 +5,7 @@ import sys
 import pandas as pd
 import numpy as np
 import joblib
-from sklearn.metrics import r2_score
+from sklearn.metrics import r2_score, roc_auc_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
@@ -240,10 +240,11 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
             
             pruning_callback.check_pruned()
             
-            preds = model.predict(X_val)
             if y_train.name == "label":
-                return np.mean(preds == y_val)
+                preds_proba = model.predict_proba(X_val)[:, 1]
+                return roc_auc_score(y_val, preds_proba)
             else:
+                preds = model.predict(X_val)
                 preds_original_scale = np.expm1(preds)
                 return r2_score(y_val, preds_original_scale)
 
@@ -292,13 +293,15 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
             prediction_step = final_model
  
         print("\n[INFO] Training complete. Evaluating performance...")
-        y_train_predicted = prediction_step.predict(X_train_trans)
-        y_test_predicted = prediction_step.predict(X_test_trans)
- 
+
         if y_train.name == "label":
-            print("Accuracy score of training set:", np.mean(y_train == y_train_predicted))
-            print("Accuracy score of test set:", np.mean(y_test == y_test_predicted))
+            y_train_proba = prediction_step.predict_proba(X_train_trans)[:, 1]
+            y_test_proba = prediction_step.predict_proba(X_test_trans)[:, 1]
+            print("AUC score of training set:", roc_auc_score(y_train, y_train_proba))
+            print("AUC score of test set:", roc_auc_score(y_test, y_test_proba))
         else:
+            y_train_predicted = prediction_step.predict(X_train_trans)
+            y_test_predicted = prediction_step.predict(X_test_trans)
             print("R2 score of training set:", r2_score(y_train, y_train_predicted))
             print("R2 score of test set:", r2_score(y_test, y_test_predicted))
         print("--------------------------------------------------")

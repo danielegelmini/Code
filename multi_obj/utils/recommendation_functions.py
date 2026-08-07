@@ -378,8 +378,10 @@ def nsga2_pareto_search(
 def select_best_pareto_action(pareto_set):
     """
     Selects the single best (activity, resource) pair from a computed Pareto set.
-    It calculates the true Pareto front and selects the point with the minimum Euclidean 
-    distance to the ideal point [1.0, 0.0] (maximum outcome, minimum time).
+    Time is first transformed into (1 - time), so both objectives are maximized
+    and the ideal point becomes [1.0, 1.0]. The true Pareto front is then computed
+    on (outcome, 1 - time), and the selected point is the one on that front closest
+    to the diagonal y = x, i.e. the most balanced trade-off between outcome and time.
 
     Args:
         pareto_set (list of tuple): A list of evaluated candidate tuples (activity, resource, outcome, time).
@@ -390,17 +392,72 @@ def select_best_pareto_action(pareto_set):
     if not pareto_set:
         return None
 
-    ideal_point = np.array([1.0, 0.0])  # Ideal point for max outcome and min time
+    outcome_vals = np.array([item[2] for item in pareto_set], dtype=float)
+    inv_time_vals = 1.0 - np.array([item[3] for item in pareto_set], dtype=float)
 
-    pareto_vals = np.array([[item[2], item[3]] for item in pareto_set], dtype=float)
-    is_pareto = paretoset(pareto_vals, sense=["max", "min"])
+    pareto_vals = np.column_stack([outcome_vals, inv_time_vals])
+    is_pareto = paretoset(pareto_vals, sense=["max", "max"])
     pareto_front = [item for item, keep in zip(pareto_set, is_pareto) if keep]
-    pareto_front_vals = np.array([[item[2], item[3]] for item in pareto_front], dtype=float)
+    pareto_front_vals = pareto_vals[is_pareto]
 
-    distances = np.linalg.norm(pareto_front_vals - ideal_point, axis=1)
-    best_index = np.argmin(distances)
+    distances_to_diagonal = np.abs(pareto_front_vals[:, 0] - pareto_front_vals[:, 1])
+    best_index = np.argmin(distances_to_diagonal)
     best_act, best_res = pareto_front[best_index][:2]
     return (best_act, best_res)
+
+def select_top_k_pareto_actions(pareto_set, k=5):
+    """
+    Selects the k most representative (activity, resource) pairs from a computed
+    Pareto set using the max-min dispersion (p-dispersion) criterion: the subset
+    of k points is chosen greedily to maximize the minimum pairwise distance
+    among the selected points, so they are spread out as evenly as possible
+    across the front instead of clustering in one region.
+
+    Time is transformed into (1 - time) beforehand (consistent with
+    select_best_pareto_action), so both objectives are maximized in the same
+    [outcome, 1 - time] space before computing the true Pareto front and the
+    dispersion.
+
+    The exact p-dispersion problem is NP-hard, so this uses the standard
+    greedy farthest-point heuristic: start from the two front points that are
+    farthest apart, then repeatedly add the remaining point whose distance to
+    the nearest already-selected point is largest.
+
+    Args:
+        pareto_set (list of tuple): A list of evaluated candidate tuples (activity, resource, outcome, time).
+        k (int): Number of points to select. Defaults to 5.
+
+    Returns:
+        list of tuple: Up to k selected (activity, resource) pairs. Empty list if pareto_set is empty.
+    """
+    if not pareto_set:
+        return []
+
+    outcome_vals = np.array([item[2] for item in pareto_set], dtype=float)
+    inv_time_vals = 1.0 - np.array([item[3] for item in pareto_set], dtype=float)
+    pareto_vals = np.column_stack([outcome_vals, inv_time_vals])
+
+    is_pareto = paretoset(pareto_vals, sense=["max", "max"])
+    front = [item for item, keep in zip(pareto_set, is_pareto) if keep]
+    front_vals = pareto_vals[is_pareto]
+
+    n_front = len(front)
+    if n_front <= k:
+        return [(item[0], item[1]) for item in front]
+
+    diff = front_vals[:, None, :] - front_vals[None, :, :]
+    dist_matrix = np.linalg.norm(diff, axis=2)
+
+    i0, j0 = np.unravel_index(np.argmax(dist_matrix), dist_matrix.shape)
+    selected = [int(i0), int(j0)]
+
+    while len(selected) < k:
+        remaining = [i for i in range(n_front) if i not in selected]
+        min_dists_to_selected = dist_matrix[np.ix_(remaining, selected)].min(axis=1)
+        next_idx = remaining[int(np.argmax(min_dists_to_selected))]
+        selected.append(next_idx)
+
+    return [(front[i][0], front[i][1]) for i in selected]
 
 # ---------------------------------------------------------------------------
 # Recommendation function for 'exhaustive' and 'nsga2'/'genetic' methods

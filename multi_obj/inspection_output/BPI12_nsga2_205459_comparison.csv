@@ -1,0 +1,9 @@
+step_after_prefix,REAL,NSGA2_SIM_1,NSGA2_SIM_2,NSGA2_SIM_3,NSGA2_SIM_4,NSGA2_SIM_5,NSGA2_SIM_6,NSGA2_SIM_7,NSGA2_SIM_8,NSGA2_SIM_9,NSGA2_SIM_10
+1,W_Nabellen offertes / 11119,O_SENT_BACK / 10629,O_SENT_BACK / 10629,O_SENT_BACK / 10629,O_SENT_BACK / 10629,O_SENT_BACK / 10629,O_SENT_BACK / 10629,O_SENT_BACK / 10629,O_SENT_BACK / 10629,O_SENT_BACK / 10629,O_SENT_BACK / 10629
+2,W_Nabellen offertes / 11203,W_Nabellen offertes / 11180,W_Nabellen offertes / 11201,W_Nabellen offertes / 11049,W_Nabellen offertes / 0,W_Nabellen offertes / 10899,W_Nabellen offertes / 11121,W_Nabellen offertes / 11181,W_Nabellen offertes / 0,W_Nabellen offertes / 0,W_Nabellen offertes / 10899
+3,W_Nabellen offertes / 10881,W_Valideren aanvraag / 10972,W_Valideren aanvraag / 10972,W_Valideren aanvraag / 10138,O_SENT_BACK / 11259,W_Valideren aanvraag / 10609,W_Valideren aanvraag / 10138,O_SENT_BACK / 10789,W_Valideren aanvraag / 10809,W_Valideren aanvraag / 10629,W_Valideren aanvraag / 10138
+4,W_Nabellen offertes / 10933,O_ACCEPTED / 10138,W_Nabellen incomplete dossiers / 11180,W_Nabellen incomplete dossiers / 10929,W_Nabellen offertes / 11181,O_ACCEPTED / 10809,O_ACCEPTED / 10629,W_Nabellen offertes / 0,,O_ACCEPTED / 10138,W_Nabellen incomplete dossiers / 10881
+5,W_Nabellen offertes / 11201,A_APPROVED / 10972,W_Valideren aanvraag / 11289,W_Valideren aanvraag / 10609,W_Valideren aanvraag / 10972,A_APPROVED / 10138,A_REGISTERED / 10809,W_Valideren aanvraag / 10609,,A_APPROVED / 10629,W_Valideren aanvraag / 10138
+6,W_Nabellen offertes / 11009,A_ACTIVATED / 10629,,,,A_ACTIVATED / 10138,A_ACTIVATED / 10138,W_Nabellen incomplete dossiers / 10972,,A_ACTIVATED / 10629,
+7,W_Nabellen offertes / 11299,W_Valideren aanvraag / 11289,,,,W_Valideren aanvraag / 10629,W_Valideren aanvraag / 10972,W_Valideren aanvraag / 11289,,W_Valideren aanvraag / 10609,
+8,O_CANCELLED / 112,,,,,O_ACCEPTED / 10138,,,,W_Nabellen incomplete dossiers / 10913,

@@ -200,9 +200,30 @@ def count_false_hours(calendar: dict, start_ts: datetime, end_ts: datetime) -> i
 
 
 def count_concurrent_events(schedule, t_enabled) -> int:
-    # A list comprehension evaluates in C-speed and correctly checks all 
+    # A list comprehension evaluates in C-speed and correctly checks all
     # overlapping timeframes without failing on unsorted end-times.
     return sum(1 for start, end in schedule if start <= t_enabled < end)
+
+
+def count_concurrent_events_fast(starts_sorted: list, ends_sorted: list, t_enabled) -> int:
+    """
+    Equivalent to count_concurrent_events(list(zip(starts_sorted, ends_sorted)), t_enabled)
+    (i.e. counts intervals with start <= t_enabled < end), but runs in O(log n) instead of
+    O(n) by binary-searching two separately-maintained sorted lists of start/end timestamps,
+    instead of linearly rescanning the whole resource history on every call.
+
+    Because start <= end always holds for a valid (start, end) interval, "end <= t_enabled"
+    implies "start <= t_enabled", so the count of currently-open intervals at t_enabled is
+    simply (# intervals with start <= t_enabled) - (# intervals with end <= t_enabled).
+
+    starts_sorted / ends_sorted must be kept sorted (e.g. via bisect.insort on every insert);
+    they are unrelated to each other's ordering (an interval's start and end need not be at
+    the same index in the two lists).
+    """
+    import bisect
+    started = bisect.bisect_right(starts_sorted, t_enabled)
+    ended = bisect.bisect_right(ends_sorted, t_enabled)
+    return started - ended
 
 
 def add_minutes_with_calendar(start_ts: datetime, minutes_to_add: int, calendar: dict) -> datetime:

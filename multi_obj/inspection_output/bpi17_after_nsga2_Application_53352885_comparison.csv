@@ -1,6 +1,0 @@
-step_after_prefix,REAL,NSGA2_SIM_1,NSGA2_SIM_2,NSGA2_SIM_3,NSGA2_SIM_4,NSGA2_SIM_5,NSGA2_SIM_6,NSGA2_SIM_7,NSGA2_SIM_8,NSGA2_SIM_9,NSGA2_SIM_10
-1,A_Validating / User_107,O_Cancelled / User_84,O_Cancelled / User_84,O_Cancelled / User_84,O_Cancelled / User_84,O_Cancelled / User_84,O_Cancelled / User_84,O_Cancelled / User_84,O_Cancelled / User_84,O_Cancelled / User_84,O_Cancelled / User_84
-2,O_Returned / User_107,,,O_Cancelled / User_1,,O_Cancelled / User_128,,,,,
-3,O_Accepted / User_93,,,,,,,,,,
-4,A_Pending / User_93,,,,,,,,,,
-5,W_Validate application / User_93,,,,,,,,,,
