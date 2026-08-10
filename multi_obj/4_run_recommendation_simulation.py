@@ -8,13 +8,16 @@ Given a case study, this script:
      the .xes log parsing) entirely. Use --force_rediscover to bypass the
      cache and regenerate it.
   3. Simulates the baseline scenario.
-  4. Simulates the recommendations for 'exhaustive' and 'nsga2' methods.
+  4. Simulates the recommendations for 'exhaustive' and 'nsga2' methods, k
+     ranks per method (k=1 by default -- one recommendation per case).
   5. Saves the simulated log(s) as CSV files under
-     case_studies/<case_study>/prosit_simulation_results/<method>/
+     case_studies/<case_study>/prosit_simulation_results/<method>/ (k == 1)
+     or case_studies/<case_study>/prosit_simulation_results/<method>/<rank>/ (k > 1)
 
 Usage:
     python 4_run_recommendation_simulation.py --case_study bpi17_before --n_sim 10
     python 4_run_recommendation_simulation.py --case_study bpi17_before --n_sim 10 --force_rediscover
+    python 4_run_recommendation_simulation.py --case_study bpi17_before --n_sim 10 --k 5
 """
 
 import argparse
@@ -68,7 +71,14 @@ def parse_args():
     )
     parser.add_argument(
         "--n_sim", type=int, default=10,
-        help="Number of simulation runs to perform per method (default: 10)",
+        help="Number of simulation runs to perform per method/rank (default: 10)",
+    )
+    parser.add_argument(
+        "--k", type=int, default=1,
+        help="Number of diverse recommendation ranks to simulate per method (default: 1, "
+             "i.e. the original single-recommendation behaviour). With k > 1, expects "
+             "recommendations_{case_study}_{method}_top{rank}of{k}.csv files (rank 1..k) "
+             "and saves results under prosit_simulation_results/<method>/<rank>/.",
     )
     parser.add_argument(
         "--case_ids", type=str, default=None,
@@ -278,12 +288,115 @@ def run_baseline_simulation(sim_engine: SimulatorEngine, clean_prev_log: pd.Data
     print("Baseline simulation finished successfully!\n")
 
 
-def run_recommendation_simulations(
-    sim_engine: SimulatorEngine, case_dir: Path, case_study: str, clean_prev_log: pd.DataFrame, case_ids: Optional[List[str]], n_sim: int
+def _simulate_recommendation_file(
+    sim_engine: SimulatorEngine,
+    csv_path: Path,
+    sim_folder: Path,
+    case_study: str,
+    clean_prev_log: pd.DataFrame,
+    case_ids: Optional[List[str]],
+    n_sim: int,
+    method: str,
 ) -> None:
-    """Run the 'exhaustive' and 'nsga2' recommendation methods (whichever have a recommendations file available) n_sim times each, saving the results under case_dir/prosit_simulation_results/<method>/.
+    """Load one recommendations CSV, merge it with the test log, and run n_sim simulations, saving the results under sim_folder.
 
-    For each method: loads its recommendations pickle, merges it with the test log (applying BPI12-specific dtype conversions where needed, and filling any missing recommendation with the case's actual historical next activity/resource), then runs the simulation batch.
+    Cases with no recommendation (missing Next_activity/Next_resource) are NOT
+    filled in with what actually happened historically -- simulation exists
+    precisely so we don't need to know that. Instead, any missing
+    recommendation makes this function raise immediately, since the simulator
+    would otherwise silently drop that case from the simulated output rather
+    than erroring (it only simulates cases where recommendation:act/res are
+    not both null -- see prosit/simulator.py's `cases_prefixes` filtering in
+    SimulatorEngine.apply()).
+
+    Args:
+        sim_engine: the SimulatorEngine to run.
+        csv_path: path to the recommendations CSV (case:concept:name, Next_activity, Next_resource).
+        sim_folder: where to save sim_<i>.csv and its diagnostic CSVs.
+        case_study: name of the case study.
+        clean_prev_log: the case-specific-columns-only test log.
+        case_ids: optional case id filter.
+        n_sim: number of simulation runs to perform.
+        method: name of the method being simulated (only used for error messages).
+
+    Raises:
+        ValueError: if case_ids filtering leaves no matching rows,
+            or if any case has no recommendation (missing Next_activity/Next_resource).
+    """
+    print(f"Loading recommendations: {csv_path}")
+    rec_df = pd.read_csv(csv_path, dtype={CASE_ID_NAME: str})
+
+    missing_mask = rec_df["Next_activity"].isna() | rec_df["Next_resource"].isna()
+    if missing_mask.any():
+        missing_ids = rec_df.loc[missing_mask, CASE_ID_NAME].tolist()
+        raise ValueError(
+            f"{method}: {len(missing_ids)} case(s) have no recommendation "
+            f"(missing Next_activity/Next_resource) in {csv_path}. "
+            f"This means the recommender found no valid next action for "
+            f"them (empty possible-activities set or empty Pareto front) -- "
+            f"fix the recommendation generation for these cases before "
+            f"simulating, they will NOT be silently filled in with what "
+            f"actually happened historically. Affected case ids: "
+            f"{missing_ids[:20]}" + (" ..." if len(missing_ids) > 20 else "")
+        )
+
+    current_prev_log = clean_prev_log.copy()
+    if case_study.upper() == "BPI12":
+        print("Applying BPI12 specific data type conversions...")
+        rec_df = convert_dtypes_bpi12(rec_df, "simulation_prep")
+        current_prev_log = convert_dtypes_bpi12(current_prev_log, "simulation")
+
+    # Keep case-id dtype consistent across logs/recommendations/filters.
+    rec_df[CASE_ID_NAME] = rec_df[CASE_ID_NAME].astype(str)
+    current_prev_log[CASE_ID_NAME] = current_prev_log[CASE_ID_NAME].astype(str)
+
+    print("Building recommendations dataframe...")
+    recommendations = {
+        row[CASE_ID_NAME]: {"act": row["Next_activity"], "res": row["Next_resource"]}
+        for _, row in rec_df.iterrows()
+    }
+    log_rec = build_recommender_df(current_prev_log, recommendations)
+    log_rec["start:timestamp"] = pd.to_datetime(log_rec["start:timestamp"], format="mixed")
+    log_rec["time:timestamp"] = pd.to_datetime(log_rec["time:timestamp"], format="mixed")
+
+    if case_ids:
+        str_case_ids = [str(c) for c in case_ids]
+        log_rec = log_rec[log_rec[CASE_ID_NAME].isin(str_case_ids)]
+        if log_rec.empty:
+            raise ValueError(
+                "No matching rows after --case_ids filtering. "
+                "Check case-id dtype/content and input file values."
+            )
+
+    sim_folder.mkdir(parents=True, exist_ok=True)
+    run_simulation_batch(sim_engine, log_rec, sim_folder, n_sim)
+
+
+def run_recommendation_simulations(
+    sim_engine: SimulatorEngine,
+    case_dir: Path,
+    case_study: str,
+    clean_prev_log: pd.DataFrame,
+    case_ids: Optional[List[str]],
+    n_sim: int,
+    k: int = 1,
+) -> None:
+    """Run the 'exhaustive' and 'nsga2' recommendation methods (whichever have recommendation files available) n_sim times each per rank, saving the results under case_dir/prosit_simulation_results/<method>/(...).
+
+    k controls how many diverse recommendations per case are simulated (see
+    select_top_k_pareto_actions / compute_recommendations_top_k) and where
+    results land:
+      - k == 1 (default -- current/original behaviour): a single
+        recommendations file `recommendations_{case_study}_{method}.csv`,
+        results saved directly under prosit_simulation_results/<method>/.
+      - k > 1: one recommendations file per rank,
+        `recommendations_{case_study}_{method}_top{rank}of{k}.csv` (rank from
+        1 to k), results saved under
+        prosit_simulation_results/<method>/<rank>/ -- one subfolder per rank,
+        so runs don't overwrite each other.
+
+    Each (method, rank) combination is independent: a missing file for one
+    rank only skips that rank (with a warning), it doesn't stop the others.
 
     Args:
         sim_engine: the SimulatorEngine to run.
@@ -291,69 +404,40 @@ def run_recommendation_simulations(
         case_study: name of the case study.
         clean_prev_log: the case-specific-columns-only test log.
         case_ids: optional case id filter.
-        n_sim: number of simulation runs to perform per method.
+        n_sim: number of simulation runs to perform per method/rank.
+        k: number of recommendation ranks to simulate per method. Defaults to 1.
 
     Raises:
-        ValueError: if case_ids filtering leaves no matching rows for a method.
+        ValueError: if k < 1, if case_ids filtering leaves no matching rows
+            for a method/rank, or if any case in a loaded recommendations
+            file has no recommendation (missing Next_activity/Next_resource).
     """
+    if k < 1:
+        raise ValueError(f"k must be >= 1, got {k}.")
+
     for method in ["exhaustive", "nsga2"]:
         print(f"=== STARTING {method.upper()} SIMULATION ===")
 
-        res_path_base = case_dir / "recommendations" / f"recommendations_{case_study}_{method}"
-        pkl_path = Path(f"{res_path_base}.pkl")
-        if not pkl_path.exists():
-            print(f"WARNING: Recommendation file {pkl_path} not found. Skipping {method}.")
-            print("-" * 50)
-            continue
+        for rank in range(1, k + 1):
+            if k == 1:
+                csv_path = case_dir / "recommendations" / f"recommendations_{case_study}_{method}.csv"
+                sim_folder = case_dir / "prosit_simulation_results" / method
+                rank_label = ""
+            else:
+                csv_path = case_dir / "recommendations" / f"recommendations_{case_study}_{method}_top{rank}of{k}.csv"
+                sim_folder = case_dir / "prosit_simulation_results" / method / str(rank)
+                rank_label = f" (rank {rank}/{k})"
 
-        sim_folder = case_dir / "prosit_simulation_results" / method
-        sim_folder.mkdir(parents=True, exist_ok=True)
+            if not csv_path.exists():
+                print(f"WARNING: Recommendation file {csv_path} not found. Skipping {method}{rank_label}.")
+                print("-" * 50)
+                continue
 
-        print(f"Loading recommendations: {pkl_path}")
-        res = pd.read_pickle(pkl_path)
-        rec_df = pd.DataFrame.from_dict(
-            res, orient="index", columns=["Next_activity", "Next_resource"]
-        ).reset_index()
-        rec_df.rename(columns={"index": CASE_ID_NAME}, inplace=True)
-        rec_df.to_csv(f"{res_path_base}.csv", index=False)
+            _simulate_recommendation_file(
+                sim_engine, csv_path, sim_folder, case_study, clean_prev_log, case_ids, n_sim, method,
+            )
 
-        current_prev_log = clean_prev_log.copy()
-        if case_study.upper() == "BPI12":
-            print("Applying BPI12 specific data type conversions...")
-            rec_df = convert_dtypes_bpi12(rec_df, "recommendation")
-            current_prev_log = convert_dtypes_bpi12(current_prev_log, "simulation")
-
-        # Keep case-id dtype consistent across logs/recommendations/filters.
-        rec_df[CASE_ID_NAME] = rec_df[CASE_ID_NAME].astype(str)
-        current_prev_log[CASE_ID_NAME] = current_prev_log[CASE_ID_NAME].astype(str)
-        rec_df["Next_activity"] = rec_df["Next_activity"].fillna(current_prev_log["NEXT_ACTIVITY"])
-        rec_df["Next_resource"] = rec_df["Next_resource"].fillna(current_prev_log["NEXT_RESOURCE"])
-        rec_df.to_csv(f"{res_path_base}.csv", index=False)
-        if rec_df.isna().sum().sum() > 0:
-            print("Recommendations contain NaN values:")
-            print(rec_df.isna().sum())
-
-        print("Building recommendations dataframe...")
-        recommendations = {
-            row["case:concept:name"]: {"act": row["Next_activity"], "res": row["Next_resource"]}
-            for _, row in rec_df.iterrows()
-        }
-        log_rec = build_recommender_df(current_prev_log, recommendations)
-        log_rec["start:timestamp"] = pd.to_datetime(log_rec["start:timestamp"], format="mixed")
-        log_rec["time:timestamp"] = pd.to_datetime(log_rec["time:timestamp"], format="mixed")
-
-        if case_ids:
-            str_case_ids = [str(c) for c in case_ids]
-            log_rec = log_rec[log_rec["case:concept:name"].isin(str_case_ids)]
-            if log_rec.empty:
-                raise ValueError(
-                    "No matching rows after --case_ids filtering. "
-                    "Check case-id dtype/content and input file values."
-                )
-
-        run_simulation_batch(sim_engine, log_rec, sim_folder, n_sim)
-
-        print(f"{method.capitalize()} simulation finished successfully!\n")
+            print(f"{method.capitalize()}{rank_label} simulation finished successfully!\n")
 
 
 def main():
@@ -366,7 +450,7 @@ def main():
     clean_prev_log, case_ids = load_inputs(case_dir, args.case_study, args.case_ids)
 
     run_baseline_simulation(sim_engine, clean_prev_log, case_ids, case_dir, args.n_sim)
-    run_recommendation_simulations(sim_engine, case_dir, args.case_study, clean_prev_log, case_ids, args.n_sim)
+    run_recommendation_simulations(sim_engine, case_dir, args.case_study, clean_prev_log, case_ids, args.n_sim, args.k)
 
 
 if __name__ == "__main__":

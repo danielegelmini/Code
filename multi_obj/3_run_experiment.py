@@ -12,6 +12,7 @@ from typing import Dict, Any, Tuple, List, Optional
 from utils.pre_processing_functions import convert_dtypes_bpi12
 from utils.recommendation_functions import (
     compute_recommendations,
+    compute_recommendations_top_k,
     act_with_res_func,
     next_possible_activities,
     build_query_instances)
@@ -212,17 +213,181 @@ def run_experiment(
     os.makedirs(save_path, exist_ok=True)
     method_tag = "nsga2" if is_nsga2 else method
     filename = os.path.join(
-        save_path, f"recommendations_{case_study}_{method_tag}.pkl"
+        save_path, f"recommendations_{case_study}_{method_tag}.csv"
     )
 
-    with open(filename, "wb") as f:
-        pickle.dump(recommendations, f)
+    rec_df = pd.DataFrame.from_dict(
+        recommendations, orient="index", columns=["Next_activity", "Next_resource"]
+    ).reset_index().rename(columns={"index": "case:concept:name"})
+    rec_df.to_csv(filename, index=False)
 
     elapsed = time.time() - t0
     print(f"Saved results to {filename}")
     print(f"Done in {elapsed:.2f}s")
 
     return recommendations
+
+
+# ---------------------------------------------------------------------------
+# TEMPORARY: top-k variant of run_experiment (for testing only)
+# ---------------------------------------------------------------------------
+def run_experiment_top_k(
+    case_study: str,
+    method: str,
+    window_size: int = 5,
+    reduced_threshold: float = 0.05,
+    pop_size: int = 20,
+    n_generations: int = 15,
+    crossover_rate: float = 0.9,
+    mutation_rate: float = 0.3,
+    random_state: Optional[int] = 1234,
+    k: int = 5,
+) -> List[Dict[Any, Any]]:
+    """
+    Same as run_experiment, but instead of a single best (activity, resource)
+    recommendation per case, it selects up to k diverse Pareto-optimal pairs
+    per case (compute_recommendations_top_k, max-min / p-dispersion
+    selection) and saves k separate recommendation files instead of one.
+
+    Parameters
+    ----------
+    (same as run_experiment)
+
+    k : int
+        Number of diverse recommendations to select per case. Defaults to 5.
+
+    Returns
+    -------
+    list of dict
+        A list of length k; the j-th dict is the recommendations dictionary
+        {case_id: (next_activity, next_resource)} for the j-th selected pair.
+    """
+
+    np.random.seed(random_state if random_state is not None else 1234)
+    method = method.lower()
+    reduced_percentage = 1 - reduced_threshold
+
+    if method not in {"exhaustive", *NSGA2_METHOD_ALIASES}:
+        raise ValueError("method must be either 'genetic' (alias 'nsga2') or 'exhaustive'.")
+
+    is_nsga2 = method in NSGA2_METHOD_ALIASES
+
+    print(
+        f"Running top-{k} {'nsga2' if is_nsga2 else method} approach | "
+        f"case study: {case_study} | "
+        f"WINDOW_SIZE: {window_size} | "
+        f"Reduced threshold: {reduced_threshold}"
+        + (f" | pop_size: {pop_size} | n_generations: {n_generations}" if is_nsga2 else "")
+    )
+
+    t0 = time.time()
+
+    # -------------------------
+    # Load and preprocess data
+    # -------------------------
+    print("Loading data...")
+    train_data, test_data, test_log = load_case_study(case_study)
+
+    if case_study in {"BPI12"}:
+        train_data = convert_dtypes_bpi12(train_data, "experiment")
+        test_data  = convert_dtypes_bpi12(test_data, "experiment")
+        test_log  = convert_dtypes_bpi12(test_log, "experiment")
+
+    # -------------------------
+    # Features and models
+    # -------------------------
+    print("Getting features...")
+    (
+        predictive_outcome_model,
+        predictive_time_model,
+        case_id_name_local,
+        activity_column_name_local,
+        resource_column_name_local,
+        continuous_features,
+        categorical_features,
+        columns_to_remove,
+    ) = get_case_study_features(case_study)
+
+    # Keep local overrides in case they differ per case study
+    global case_id_name, activity_column_name, resource_column_name
+    case_id_name = case_id_name_local
+    activity_column_name = activity_column_name_local
+    resource_column_name = resource_column_name_local
+
+    # -------------------------
+    # Transition system
+    # -------------------------
+    print("Building transition system...")
+    transition_graph, ts_with_freq = transition_system(
+        train_data,
+        case_id_name=case_id_name,
+        activity_column_name=activity_column_name,
+        window_size=window_size)
+
+    # -------------------------
+    # Activity-resource map
+    # -------------------------
+    print("Building activity -> resources map...")
+    act_with_res = act_with_res_func(train_data, activity_column_name, resource_column_name)
+
+    # -------------------------
+    # Forbidden activities map
+    # -------------------------
+    forbidden_map = _default_forbidden_map()
+
+    # -------------------------
+    # Prepare query instances
+    # -------------------------
+    print("Preparing query instances...")
+    query_instances_by_case = build_query_instances(
+            test_data, case_id_name
+        )  # Using test data with last row only
+
+    # -------------------------
+    # Generate top-k recommendations
+    # -------------------------
+    print(f"Generating top-{k} recommendations...")
+    recommendations_list = compute_recommendations_top_k(
+        test_log=test_log,
+        test_data=test_data,
+        case_study=case_study,
+        case_id_name=case_id_name,
+        activity_column_name=activity_column_name,
+        transition_graph=transition_graph,
+        window_size=window_size,
+        forbidden_map=forbidden_map,
+        predictive_outcome_model=predictive_outcome_model,
+        predictive_time_model=predictive_time_model,
+        act_with_res=act_with_res,
+        query_instances_by_case=query_instances_by_case,
+        method=("nsga2" if is_nsga2 else "exhaustive"),
+        pop_size=pop_size,
+        n_generations=n_generations,
+        crossover_rate=crossover_rate,
+        mutation_rate=mutation_rate,
+        random_state=random_state,
+        k=k,
+    )
+
+    # -------------------------
+    # Save results (k files)
+    # -------------------------
+    save_path = f"./case_studies/{case_study}/recommendations"
+    os.makedirs(save_path, exist_ok=True)
+    method_tag = "nsga2" if is_nsga2 else method
+
+    for rank, recommendations in enumerate(recommendations_list, start=1):
+        filename = os.path.join(
+            save_path, f"recommendations_{case_study}_{method_tag}_top{rank}of{k}.csv"
+        )
+        with open(filename, "wb") as f:
+            pickle.dump(recommendations, f)
+        print(f"Saved rank {rank}/{k} results to {filename}")
+
+    elapsed = time.time() - t0
+    print(f"Done in {elapsed:.2f}s")
+
+    return recommendations_list
 
 
 if __name__ == "__main__":
@@ -239,8 +404,8 @@ if __name__ == "__main__":
         "--method",
         type=str,
         required=True,
-        choices=["genetic", "nsga2", "exhaustive"],
-        help="Specify the method: 'genetic'/'nsga2' (NSGA-II, pymoo) or 'exhaustive'.",
+        choices=["nsga2", "exhaustive"],
+        help="Specify the method: 'nsga2' (NSGA-II, pymoo) or 'exhaustive'.",
     )
     parser.add_argument(
         "--window_size",
@@ -258,25 +423,31 @@ if __name__ == "__main__":
         "--pop_size",
         type=int,
         default=20,
-        help="NSGA-II population size (only used for method='genetic'/'nsga2', default: 20).",
+        help="NSGA-II population size (only used for method='nsga2', default: 20).",
     )
     parser.add_argument(
         "--n_generations",
         type=int,
         default=15,
-        help="NSGA-II number of generations (only used for method='genetic'/'nsga2', default: 15).",
+        help="NSGA-II number of generations (only used for method='nsga2', default: 15).",
     )
     parser.add_argument(
         "--crossover_rate",
         type=float,
         default=0.9,
-        help="NSGA-II crossover probability (only used for method='genetic'/'nsga2', default: 0.9).",
+        help="NSGA-II crossover probability (only used for method='nsga2', default: 0.9).",
     )
     parser.add_argument(
         "--mutation_rate",
         type=float,
         default=0.3,
-        help="NSGA-II mutation probability (only used for method='genetic'/'nsga2', default: 0.3).",
+        help="NSGA-II mutation probability (only used for method='nsga2', default: 0.3).",
+    )
+    parser.add_argument(
+        "--k",
+        type=int,
+        default=5,
+        help="Number of top-k recommendations to select (only used for run_experiment_top_k, default: 5).",
     )
     parser.add_argument(
         "--random_state",
@@ -299,10 +470,24 @@ if __name__ == "__main__":
         random_state=args.random_state,
     )
 
+    # run_experiment_top_k(
+    #     case_study=args.case_study,
+    #     method=args.method,
+    #     window_size=args.window_size,
+    #     reduced_threshold=args.reduced_threshold,
+    #     pop_size=args.pop_size,
+    #     n_generations=args.n_generations,
+    #     crossover_rate=args.crossover_rate,
+    #     mutation_rate=args.mutation_rate,
+    #     random_state=args.random_state,
+    #     k=5,  # You can change this value to select a different number of top-k recommendations
+    # )
+
 # FOR RUNNING EXPERIMENT:
 # case_study: "BAC", "BPI12", "bpi17_before", "bpi17_after"
 
-# example method: "genetic"
+# example method: "nsga2"
 # python 3_run_experiment.py --case_study "BAC" --method "nsga2" --window_size 5 --reduced_threshold 0.05 --pop_size 50 --n_generations 5
+
 # example method: "exhaustive"
 # python 3_run_experiment.py --case_study "BPI12" --method "exhaustive" --window_size 5 --reduced_threshold 0.05

@@ -13,6 +13,9 @@ from pymoo.operators.repair.rounding import RoundingRepair
 from pymoo.termination import get_termination
 from pymoo.optimize import minimize
 
+import pulp
+from spopt.locate import PDispersion
+
 from utils.pre_processing_functions import convert_dtypes_bpi12
 
 case_id_name = "case:concept:name"
@@ -408,20 +411,16 @@ def select_best_pareto_action(pareto_set):
 def select_top_k_pareto_actions(pareto_set, k=5):
     """
     Selects the k most representative (activity, resource) pairs from a computed
-    Pareto set using the max-min dispersion (p-dispersion) criterion: the subset
-    of k points is chosen greedily to maximize the minimum pairwise distance
-    among the selected points, so they are spread out as evenly as possible
-    across the front instead of clustering in one region.
+    Pareto set by exactly solving the max-min dispersion (p-dispersion) problem:
+    the subset of k points is chosen so that the minimum pairwise distance among
+    the selected points is maximized, so they are spread out as evenly as
+    possible across the front instead of clustering in one region.
 
-    Time is transformed into (1 - time) beforehand (consistent with
-    select_best_pareto_action), so both objectives are maximized in the same
-    [outcome, 1 - time] space before computing the true Pareto front and the
-    dispersion.
-
-    The exact p-dispersion problem is NP-hard, so this uses the standard
-    greedy farthest-point heuristic: start from the two front points that are
-    farthest apart, then repeatedly add the remaining point whose distance to
-    the nearest already-selected point is largest.
+    The p-dispersion problem is solved exactly as a MILP using
+    spopt.locate.PDispersion (see
+    https://pysal.org/spopt/notebooks/p-dispersion.html), built from the
+    pairwise Euclidean distance matrix of the front points and solved with
+    the CBC solver bundled with pulp.
 
     Args:
         pareto_set (list of tuple): A list of evaluated candidate tuples (activity, resource, outcome, time).
@@ -446,21 +445,17 @@ def select_top_k_pareto_actions(pareto_set, k=5):
         return [(item[0], item[1]) for item in front]
 
     diff = front_vals[:, None, :] - front_vals[None, :, :]
-    dist_matrix = np.linalg.norm(diff, axis=2)
+    cost_matrix = np.linalg.norm(diff, axis=2)
 
-    i0, j0 = np.unravel_index(np.argmax(dist_matrix), dist_matrix.shape)
-    selected = [int(i0), int(j0)]
+    p_dispersion = PDispersion.from_cost_matrix(cost_matrix, k)
+    p_dispersion = p_dispersion.solve(pulp.PULP_CBC_CMD(msg=False))
 
-    while len(selected) < k:
-        remaining = [i for i in range(n_front) if i not in selected]
-        min_dists_to_selected = dist_matrix[np.ix_(remaining, selected)].min(axis=1)
-        next_idx = remaining[int(np.argmax(min_dists_to_selected))]
-        selected.append(next_idx)
+    selected = [i for i, dv in enumerate(p_dispersion.fac_vars) if dv.varValue]
 
     return [(front[i][0], front[i][1]) for i in selected]
 
 # ---------------------------------------------------------------------------
-# Recommendation function for 'exhaustive' and 'nsga2'/'genetic' methods
+# Recommendation function for 'exhaustive' and 'nsga2' methods
 # ---------------------------------------------------------------------------
 def compute_recommendations(
     test_log: pd.DataFrame,
@@ -500,7 +495,7 @@ def compute_recommendations(
         predictive_time_model (estimator): The predictive model for required time.
         act_with_res (dict of str to list of str): Mapping of activities to their allowed resources.
         query_instances_by_case (dict): Precomputed query instances keyed by case ID.
-        method (str, optional): The search method to use ("exhaustive", "nsga2", or "genetic"). Defaults to "exhaustive".
+        method (str, optional): The search method to use ("exhaustive" or "nsga2"). Defaults to "exhaustive".
         pop_size (int, optional): The population size (if using NSGA-II). Defaults to 50.
         n_generations (int, optional): The number of generations (if using NSGA-II). Defaults to 10.
         crossover_rate (float, optional): The crossover probability (if using NSGA-II). Defaults to 0.9.
@@ -526,7 +521,7 @@ def compute_recommendations(
             rec[cid] = (None, None)
             continue
 
-        if method in {"nsga2", "genetic"}:
+        if method in {"nsga2"}:
             pareto_front = nsga2_pareto_search(
                 query_instance=query_instance,
                 possible_actions=poss,
@@ -558,3 +553,98 @@ def compute_recommendations(
         rec[cid] = best_pair if best_pair is not None else (None, None)
 
     return rec
+
+# ---------------------------------------------------------------------------
+# TEMPORARY: top-k variant of compute_recommendations (for testing only)
+# ---------------------------------------------------------------------------
+def compute_recommendations_top_k(
+    test_log: pd.DataFrame,
+    test_data: pd.DataFrame,
+    case_study: str,
+    case_id_name: str,
+    activity_column_name: str,
+    transition_graph,
+    window_size: int,
+    forbidden_map: Dict[str, List[str]],
+    predictive_outcome_model,
+    predictive_time_model,
+    act_with_res: Dict[str, List[str]],
+    query_instances_by_case: Dict[Any, Any],
+    method: str = "exhaustive",
+    pop_size: int = 50,
+    n_generations: int = 10,
+    crossover_rate: float = 0.9,
+    mutation_rate: float = 0.3,
+    random_state: Optional[int] = None,
+    k: int = 5,
+) -> List[Dict[Any, Tuple[Optional[str], Optional[str]]]]:
+    """
+    Same as compute_recommendations, but instead of picking a single best
+    (activity, resource) pair per case, it selects up to k diverse
+    Pareto-optimal pairs per case via select_top_k_pareto_actions (max-min
+    dispersion / p-dispersion) and returns k separate recommendation
+    dictionaries (one per rank position) instead of a single one.
+
+    For a case whose Pareto front has fewer than k points, the missing
+    ranks are filled with (None, None), same convention used for cases with
+    no possible next activity / empty Pareto front.
+
+    Args:
+        (same as compute_recommendations)
+        k (int, optional): Number of diverse recommendations to select per case. Defaults to 5.
+
+    Returns:
+        list of dict: A list of length k; the j-th dict maps each case ID to
+        its j-th recommended (activity, resource) tuple.
+    """
+    method = method.lower()
+    forbidden = set(forbidden_map.get(case_study, []))
+    rec_list: List[Dict[Any, Tuple[Optional[str], Optional[str]]]] = [dict() for _ in range(k)]
+
+    for cid in tqdm.tqdm(pd.unique(test_data[case_id_name])):
+        trace_df = test_log[test_log[case_id_name] == cid]
+        trace_history = trace_df[activity_column_name].tolist()
+
+        query_instance = _to_row_df(query_instances_by_case[cid])
+
+        poss = next_possible_activities(trace_history, transition_graph, window_size)
+        poss = [a for a in poss if a not in forbidden]
+        if not poss:
+            for rec in rec_list:
+                rec[cid] = (None, None)
+            continue
+
+        if method in {"nsga2"}:
+            pareto_front = nsga2_pareto_search(
+                query_instance=query_instance,
+                possible_actions=poss,
+                act_with_res=act_with_res,
+                predictive_outcome_model=predictive_outcome_model,
+                predictive_time_model=predictive_time_model,
+                pop_size=pop_size,
+                n_generations=n_generations,
+                crossover_rate=crossover_rate,
+                mutation_rate=mutation_rate,
+                random_state=random_state,
+            )
+        elif method == "exhaustive":
+            pareto_front = exhaustive_pareto_search(
+                query_instance,
+                poss,
+                predictive_outcome_model,
+                predictive_time_model,
+                act_with_res,
+            )
+        else:
+            raise ValueError("Unknown method for recommendations: %s" % method)
+
+        if not pareto_front:
+            for rec in rec_list:
+                rec[cid] = (None, None)
+            continue
+
+        top_k_pairs = select_top_k_pareto_actions(pareto_front, k=k)
+        for j, rec in enumerate(rec_list):
+            rec[cid] = top_k_pairs[j] if j < len(top_k_pairs) else (None, None)
+
+    return rec_list

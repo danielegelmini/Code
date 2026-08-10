@@ -1,2 +1,0 @@
-case:concept:name,sim_events_generated,reason
-204712,300,case fired >= max_events_per_case=300 simulated events without reaching the final marking and was truncated to avoid a runaway/near-infinite loop; see last_non_fitting_prefixes for the most common root cause on prefix-continuation runs.
