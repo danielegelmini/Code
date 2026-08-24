@@ -1,34 +1,33 @@
 #!/usr/bin/env python3
 """
-discover_petri_nets.py
+petri_net_discovery.py
 =======================
 
 Standalone script that automatically discovers a Petri net for every event log
-found under the `case_studies/<dataset>/train_data.csv` folders (same layout
-used in the original notebook), using the Split Miner algorithm. Optuna
-(Bayesian optimization) is used to find the (epsilon, eta) combination that
-maximizes the F-score (harmonic mean of alignment-based fitness and precision).
+found under the `case_studies/<dataset>/log_<dataset>.xes` folders (same
+layout used in the original notebook, but using the full XES log instead of
+just the training split), using the Split Miner algorithm. Optuna (Bayesian
+optimization) is used to find the (epsilon, eta) combination that maximizes
+the F-score (harmonic mean of alignment-based fitness and precision).
 
-For every log found it saves, in the SAME directory as the input CSV file:
+For every log found it saves, in the same case study's `discovery_output/`
+directory (overwriting any previous Petri net there, since that is where
+4_run_recommendation_simulation.py loads it from):
     - <dataset>_best_petri_net.pnml   -> the discovered Petri net (PNML format)
     - <dataset>_best_petri_net.jpg    -> a rendered image of the Petri net
 
 Usage
 -----
-    python discover_petri_nets.py
-        -> automatically finds and processes every train_data.csv under
+    python petri_net_discovery.py
+        -> automatically finds and processes every log_<dataset>.xes under
            <base_dir>/case_studies/<dataset>/
 
-    python discover_petri_nets.py --n-trials 50
+    python petri_net_discovery.py --n-trials 50
         -> same, but with a custom number of Optuna trials per log
 
-    python discover_petri_nets.py log1.csv log2.csv ...
-        -> (optional) explicitly process only the given CSV files instead of
+    python petri_net_discovery.py log1.xes log2.xes ...
+        -> (optional) explicitly process only the given XES files instead of
            auto-discovering them
-
-Each CSV file must contain the PM4Py-compatible columns:
-    case:concept:name, concept:name, org:resource,
-    start:timestamp, time:timestamp
 """
 
 import argparse
@@ -40,7 +39,6 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import optuna
-import pandas as pd
 import pm4py
 import tqdm
 from pm4py.algo.discovery.split_miner import algorithm as split_miner
@@ -73,8 +71,9 @@ tqdm.tqdm.__init__ = _silent_tqdm_init
 # Case study auto-discovery (mirrors the logic used in the original notebook)
 # ---------------------------------------------------------------------------
 
-# Name of the CSV file expected inside each case-study folder.
-LOG_FILE_NAME = "train_data.csv"
+# Name pattern of the XES file expected inside each case-study folder, e.g.
+# "case_studies/BAC/log_BAC.xes".
+LOG_FILE_NAME_TEMPLATE = "log_{dataset}.xes"
 
 # Fallback project path used during development, in case the "case_studies"
 # folder is not found relative to the current working directory.
@@ -90,9 +89,9 @@ def resolve_base_dir() -> Path:
 
 
 def discover_case_study_logs(base_dir: Path):
-    """Find every `train_data.csv` under `<base_dir>/case_studies/<dataset>/`.
+    """Find every `log_<dataset>.xes` under `<base_dir>/case_studies/<dataset>/`.
 
-    Returns a list of (dataset_name, csv_path) tuples, sorted by dataset name.
+    Returns a list of (dataset_name, xes_path) tuples, sorted by dataset name.
     """
     case_studies_dir = base_dir / "case_studies"
     if not case_studies_dir.exists():
@@ -102,9 +101,9 @@ def discover_case_study_logs(base_dir: Path):
     for dataset_dir in sorted(case_studies_dir.iterdir()):
         if not dataset_dir.is_dir():
             continue
-        csv_path = dataset_dir / LOG_FILE_NAME
-        if csv_path.exists():
-            logs.append((dataset_dir.name, csv_path))
+        xes_path = dataset_dir / LOG_FILE_NAME_TEMPLATE.format(dataset=dataset_dir.name)
+        if xes_path.exists():
+            logs.append((dataset_dir.name, xes_path))
 
     return logs
 
@@ -114,22 +113,9 @@ def discover_case_study_logs(base_dir: Path):
 # ---------------------------------------------------------------------------
 
 
-def load_event_log(csv_path: str):
-    """Read a PM4Py-compatible CSV log and convert it into a PM4Py EventLog object."""
-    df = pd.read_csv(csv_path)
-
-    # format="ISO8601" correctly handles timestamps with mixed precision.
-    df["start:timestamp"] = pd.to_datetime(df["start:timestamp"], format="ISO8601", utc=True)
-    df["time:timestamp"] = pd.to_datetime(df["time:timestamp"], format="ISO8601", utc=True)
-
-    formatted_df = pm4py.format_dataframe(
-        df,
-        case_id="case:concept:name",
-        activity_key="concept:name",
-        start_timestamp_key="start:timestamp",
-        timestamp_key="time:timestamp",
-    )
-    return pm4py.convert_to_event_log(formatted_df)
+def load_event_log(xes_path: str):
+    """Read a PM4Py-compatible XES log and convert it into a PM4Py EventLog object."""
+    return pm4py.read_xes(str(xes_path))
 
 
 # ---------------------------------------------------------------------------
@@ -285,26 +271,29 @@ def optimize_hyperparameters(log, n_trials: int, dataset_name: str):
 # ---------------------------------------------------------------------------
 
 
-def process_log_file(csv_path: str, n_trials: int, dataset_name: str = None):
-    csv_path = Path(csv_path)
+def process_log_file(xes_path: str, n_trials: int, dataset_name: str = None):
+    xes_path = Path(xes_path)
     # For auto-discovered logs, use the parent folder name (e.g. "BAC") so
-    # that files aren't all named "train_data_best_petri_net.*". For
+    # that files aren't all named "log_<dataset>_best_petri_net.*". For
     # explicitly-passed files, fall back to the file stem.
     if dataset_name is None:
-        dataset_name = csv_path.stem
-    output_dir = csv_path.parent  # save results next to the input file
+        dataset_name = xes_path.stem
+    output_dir = xes_path.parent  # save results next to the input file
 
-    print(f"=== Processing '{dataset_name}' ({csv_path}) ===")
-    log = load_event_log(str(csv_path))
+    print(f"=== Processing '{dataset_name}' ({xes_path}) ===")
+    log = load_event_log(str(xes_path))
 
     best_eps, best_eta = optimize_hyperparameters(log, n_trials, dataset_name)
 
     print("  [...] Generating final Petri net with the best hyperparameters...")
     net, initial_marking, final_marking = discover_petri_net(log, best_eps, best_eta)
 
-    # Decide where to save the discovered Petri net (PNML) and its rendered image (JPG).
-    pnml_path = output_dir / "simulation" / f"{dataset_name}_best_petri_net.pnml"
-    jpg_path = output_dir / "simulation" / f"{dataset_name}_best_petri_net.jpg"
+    # Save into "discovery_output" -- the directory 4_run_recommendation_simulation.py
+    # actually loads the Petri net (and its cached simulator params) from.
+    discovery_output_dir = output_dir / "discovery_output"
+    discovery_output_dir.mkdir(parents=True, exist_ok=True)
+    pnml_path = discovery_output_dir / f"{dataset_name}_best_petri_net.pnml"
+    jpg_path = discovery_output_dir / f"{dataset_name}_best_petri_net.jpg"
 
     pm4py.write_pnml(net, initial_marking, final_marking, str(pnml_path))
     save_petri_net_image(net, initial_marking, final_marking, jpg_path)
@@ -317,14 +306,14 @@ def main():
     parser = argparse.ArgumentParser(
         description="Discover a Petri net (Split Miner) for each event log, "
                     "using Optuna to optimize epsilon/eta hyperparameters. "
-                    "By default, every 'train_data.csv' found under "
+                    "By default, every 'log_<dataset>.xes' found under "
                     "case_studies/<dataset>/ is processed automatically."
     )
     parser.add_argument(
         "logs",
         nargs="*",
-        help="(Optional) explicit CSV log file(s) to process instead of "
-             "auto-discovering the case_studies/<dataset>/train_data.csv files.",
+        help="(Optional) explicit XES log file(s) to process instead of "
+             "auto-discovering the case_studies/<dataset>/log_<dataset>.xes files.",
     )
     parser.add_argument(
         "--n-trials",
@@ -347,25 +336,25 @@ def main():
         found = discover_case_study_logs(base_dir)
 
         if not found:
-            print(f"No '{LOG_FILE_NAME}' files found under "
+            print(f"No 'log_<dataset>.xes' files found under "
                   f"'{base_dir / 'case_studies'}'.")
-            print("Pass explicit CSV paths as arguments instead, e.g.:\n"
-                  "    python discover_petri_nets.py path/to/train_data.csv")
+            print("Pass explicit XES paths as arguments instead, e.g.:\n"
+                  "    python discover_petri_nets.py path/to/log_dataset.xes")
             return
 
         print(f"Found {len(found)} case study log(s) under "
               f"'{base_dir / 'case_studies'}':")
-        for dataset_name, csv_path in found:
-            print(f"  - {dataset_name}: {csv_path}")
+        for dataset_name, xes_path in found:
+            print(f"  - {dataset_name}: {xes_path}")
         print()
 
         jobs = found
 
-    for dataset_name, csv_path in jobs:
-        if not csv_path.exists():
-            print(f"File not found, skipping: {csv_path}")
+    for dataset_name, xes_path in jobs:
+        if not xes_path.exists():
+            print(f"File not found, skipping: {xes_path}")
             continue
-        process_log_file(str(csv_path), args.n_trials, dataset_name=dataset_name)
+        process_log_file(str(xes_path), args.n_trials, dataset_name=dataset_name)
 
     print("Done.")
 

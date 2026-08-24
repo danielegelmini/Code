@@ -1,11 +1,48 @@
+#!/usr/bin/env python3
+"""
+Builds per-case evaluation tables from what 3_run_experiment.py /
+4_run_recommendation_simulation.py have already produced on disk for a case
+study: recommendations_{case_study}_{method}_top{rank}of{k}.csv files under
+case_studies/<case_study>/recommendations/, and their simulated logs under
+case_studies/<case_study>/prosit_simulation_results/<method>/<rank>/ (plus
+the rank-independent baseline/ folder).
+
+For every (method, rank) combination found on disk, builds one table with
+one row per case_id:
+  - case_study, method, rank, k_total
+  - case:concept:name, rec_activity, rec_resource
+  - sim_status_method_mean, sim_remaining_time_method_mean
+      (averaged over that rank's n_sim simulation runs)
+  - sim_status_baseline_mean, sim_remaining_time_baseline_mean
+      (averaged over the baseline's n_sim runs -- rank/method independent,
+      computed once per case study and reused)
+  - pred_status_with_rec, pred_remaining_time_with_rec
+      (predictive_outcome_model / predictive_time_model .joblib predictions
+      on the case's prefix with NEXT_ACTIVITY/NEXT_RESOURCE = the recommendation)
+  - pred_status_no_rec, pred_remaining_time_no_rec
+      (same models on the prefix with the actual historical NEXT_ACTIVITY/
+      NEXT_RESOURCE -- rank/method independent, computed once and reused)
+
+Saves both the per-(method, rank) tables and, stacked across all ranks, one
+final table per method, under case_studies/<case_study>/evaluation_tables/.
+
+No delta_CO / delta_RT computation here -- those are trivial to derive from
+these tables later (sim_status_method_mean - sim_status_baseline_mean, etc.)
+and weren't needed for this pass.
+
+Usage:
+    python 5_result_computation.py
+    python 5_result_computation.py --case_studies BAC,BPI12
+"""
 
 import argparse
+import re
 from pathlib import Path
- 
+
+import numpy as np
 import pandas as pd
- 
+
 from utils.simulation_functions import (
-    preparing_data_for_simulation,
     getting_remaining_time,
     status_encoding,
     compute_res_and_status,
@@ -16,16 +53,18 @@ from utils.simulation_functions import (
     resource_column_name,
 )
 from utils.pre_processing_functions import convert_dtypes_bpi12
- 
+from utils.recommendation_functions import build_query_instances, _evaluate_candidates
+from utils.get_features import load_case_study, get_case_study_features
+
 # ---------------------------------------------------------------------------
-# Fixed configuration (as given)
+# Fixed configuration
 # ---------------------------------------------------------------------------
-CASE_STUDIES = ["BAC",  "BPI12",  "bpi17_after", "bpi17_before"]
-#CASE_STUDIES = ["BAC"]
+CASE_STUDIES = ["BAC", "BPI12", "bpi17_after", "bpi17_before"]
 METHODS = ["exhaustive", "nsga2"]
 BASELINE_FOLDER_NAME = "baseline"
 SIM_SUBDIR = "prosit_simulation_results"
- 
+OUTPUT_SUBDIR = "evaluation_tables"
+
 # Activity marking a *positive* case outcome. Not needed for BAC, whose
 # outcome logic (forbidden-activity set) is already hardcoded inside
 # utils.simulation_functions.status_encoding.
@@ -34,29 +73,33 @@ ENCODED_ACTIVITY_BY_CASE_STUDY = {
     "bpi17_after": "O_Accepted",
     "bpi17_before": "O_Accepted",
 }
- 
-BPI12_DTYPE_CASE_STUDIES = {
-    "BPI12", 
-}
- 
- 
-def load_simulation_runs(sim_folder: Path, case_study: str, n_sim: int, encoded_activity):
-    """
-    Reads and prepares multiple simulation run files from a specified folder.
-    This function loads `sim_1.csv` through `sim_n.csv`, applies case-study-specific 
-    data type conversions (e.g., for BPI12), filters necessary columns, computes the 
-    remaining time, and encodes the status. It also appends a unique suffix to the 
-    case IDs for each simulation run to distinguish them before concatenating everything 
-    into a single DataFrame.
+
+BPI12_DTYPE_CASE_STUDIES = {"BPI12"}
+
+_SIM_FILE_RE = re.compile(r"^sim_(\d+)\.csv$")
+_RANK_FILE_RE_TEMPLATE = r"^recommendations_{case_study}_{method}_top(\d+)of(\d+)\.csv$"
+
+
+# ---------------------------------------------------------------------------
+# Simulation-side helpers (per case_id averages over n_sim runs)
+# ---------------------------------------------------------------------------
+def _detect_n_sim(sim_folder: Path) -> int:
+    """Count contiguous sim_<i>.csv files in sim_folder (ignores diagnostic CSVs like sim_1_unreachable_recommendations.csv)."""
+    indices = [int(m.group(1)) for f in sim_folder.glob("sim_*.csv") if (m := _SIM_FILE_RE.match(f.name))]
+    return max(indices) if indices else 0
+
+
+def load_simulation_runs(sim_folder: Path, case_study: str, n_sim: int, encoded_activity) -> pd.DataFrame:
+    """Load sim_1.csv..sim_n.csv, compute remaining_time/status per event, and suffix case ids with the run index so runs don't collide when concatenated.
 
     Args:
-        sim_folder (pathlib.Path): The directory containing the simulation CSV files.
-        case_study (str): The name of the case study (e.g., "BAC", "BPI12").
-        n_sim (int): The total number of simulation runs to load.
-        encoded_activity (str): The activity name that marks a positive case outcome.
+        sim_folder: directory containing sim_<i>.csv.
+        case_study: name of the case study (e.g., "BAC", "BPI12").
+        n_sim: number of simulation runs to load.
+        encoded_activity: activity name marking a positive case outcome (see status_encoding).
 
     Returns:
-        pandas.DataFrame: A single concatenated DataFrame containing all prepared simulation runs.
+        pandas.DataFrame: all n_sim runs concatenated, case ids suffixed "_<run_index>".
     """
     dataframes = []
     for i in range(n_sim):
@@ -64,194 +107,245 @@ def load_simulation_runs(sim_folder: Path, case_study: str, n_sim: int, encoded_
         sim = pd.read_csv(sim_path, dtype={case_id_name: str})
         if case_study in BPI12_DTYPE_CASE_STUDIES:
             sim = convert_dtypes_bpi12(sim, "simulation")
-        sim = sim[[case_id_name, start_date_name, end_date_name,
-                    activity_column_name, resource_column_name]]
+        sim = sim[[case_id_name, start_date_name, end_date_name, activity_column_name, resource_column_name]]
         sim = getting_remaining_time(sim, case_id_name, end_date_name)
         sim = status_encoding(sim, case_study, encoded_activity)
         sim[case_id_name] = sim[case_id_name].astype(str) + "_" + str(i + 1)
         dataframes.append(sim)
     return pd.concat(dataframes, ignore_index=True).reset_index(drop=True)
- 
- 
-def find_recommendations_csv(case_dir: Path, case_study: str, method: str) -> Path:
-    candidates = [
-        case_dir / "recommendations" / f"recommendations_{case_study}_{method}.csv",
-        case_dir / f"recommendations_{case_study}_{method}.csv",
-    ]
-    for c in candidates:
-        if c.exists():
-            return c
-    raise FileNotFoundError(
-        f"Recommendations CSV not found. Tried: " + ", ".join(str(c) for c in candidates)
-    )
- 
- 
-def compute_case_study_method(base_dir: Path, case_study: str, method: str, n_sim: int) -> dict:
-    """
-    Computes the performance metrics (delta_CO and delta_RT) for a specific recommendation method.
-    This function aligns the recommended simulations against the baseline simulations, 
-    calculating the changes in Case Outcome (delta_CO) and Remaining Time (delta_RT). 
-    It drops unmatchable traces, extracts the relevant features, and calculates both 
-    the relative deltas and the raw averages for diagnostics.
+
+
+def build_repl_id_map(test_log: pd.DataFrame) -> pd.Series:
+    """Prefix cut-point per case (number of historical events - 1), keyed by str(case_id). Only depends on test_log, not on method/rank/recommendation."""
+    repl_id_map = test_log.groupby(case_id_name).size() - 1
+    repl_id_map.index = repl_id_map.index.astype(str)
+    return repl_id_map
+
+
+def compute_sim_averages(
+    sim_folder: Path,
+    case_study: str,
+    encoded_activity,
+    repl_id_map: pd.Series,
+    case_ids: list[str],
+) -> tuple[dict, dict]:
+    """Mean remaining_time and status per case_id, averaged over every sim_<i>.csv found in sim_folder.
 
     Args:
-        base_dir (pathlib.Path): The root directory containing the 'case_studies' folder.
-        case_study (str): The name of the case study being evaluated.
-        method (str): The recommendation method being evaluated.
-        n_sim (int): The number of simulation runs to process.
+        sim_folder: directory containing sim_<i>.csv (a <method>/<rank>/ folder, or the baseline/ folder).
+        case_study: name of the case study.
+        encoded_activity: activity name marking a positive case outcome.
+        repl_id_map: case_id (str) -> prefix cut-point, from build_repl_id_map.
+        case_ids: case ids (str) to compute averages for.
 
     Returns:
-        dict: A dictionary containing the summary statistics:
-            - case_study (str): The name of the case study.
-            - method (str): The recommendation method.
-            - n_traces (int): The number of common traces evaluated.
-            - delta_co (float): The average change in case outcome.
-            - delta_rt (float): The average relative change in remaining time.
-            - mean_status_method (float): Raw average outcome status for the method.
-            - mean_status_baseline (float): Raw average outcome status for the baseline.
-            - mean_rt_method (float): Raw average remaining time for the method.
-            - mean_rt_baseline (float): Raw average remaining time for the baseline.
-            
-    Raises:
-        ValueError: If there are no common traces between the baseline and the method results.
+        (mean_remaining_time_by_case, mean_status_by_case): both {case_id: float}. Empty dicts if sim_folder has no sim_<i>.csv.
     """
-    case_dir = base_dir / "case_studies" / case_study
-    encoded_activity = ENCODED_ACTIVITY_BY_CASE_STUDY.get(case_study)
- 
-    result_csv = find_recommendations_csv(case_dir, case_study, method)
-    result_df = pd.read_csv(result_csv, dtype={case_id_name: str})
-    test_log = pd.read_csv(case_dir / "test_log.csv", dtype={case_id_name: str})
- 
-    rec_df = preparing_data_for_simulation(result_df, test_log, case_id_name, end_date_name, case_study)
- 
-    # Defensive check: repl_id is NaN when a case id in the recommendations
-    # file has no matching prefix in test_log.csv (or some other mismatch
-    # between the two files). Rather than crashing on this (KeyError: nan
-    # inside compute_res_and_status), drop those cases and report them, so
-    # the rest of the analysis can still run.
-    nan_repl_mask = rec_df["repl_id"].isna()
-    if nan_repl_mask.any():
-        bad_ids = rec_df.loc[nan_repl_mask, case_id_name].tolist()
-        preview = bad_ids[:10]
+    n_sim = _detect_n_sim(sim_folder)
+    if n_sim == 0:
+        return {}, {}
+
+    test_simu = load_simulation_runs(sim_folder, case_study, n_sim, encoded_activity)
+
+    repl_ids = [repl_id_map.get(cid, np.nan) for cid in case_ids]
+    # res_1 is unused by compute_res_and_status's own logic, but for BPI12-like
+    # case studies it unconditionally BPI12-converts rec_df expecting a res_1
+    # column (see convert_dtypes_bpi12's 'simulation_' mode) -- a placeholder
+    # avoids a KeyError there.
+    rec_df = pd.DataFrame({case_id_name: case_ids, "repl_id": repl_ids, "res_1": ""})
+    missing = rec_df["repl_id"].isna()
+    if missing.any():
+        bad_ids = rec_df.loc[missing, case_id_name].tolist()
         print(
-            f"  [WARNING] {case_study}/{method}: {len(bad_ids)} case id(s) have no "
-            f"matching prefix in test_log.csv (repl_id is NaN) and will be "
-            f"excluded from this comparison: {preview}"
+            f"    [WARNING] {len(bad_ids)} case id(s) have no matching prefix "
+            f"in test_log.csv and will be skipped for {sim_folder}: {bad_ids[:10]}"
             + (" ..." if len(bad_ids) > 10 else "")
         )
-        rec_df = rec_df.loc[~nan_repl_mask].reset_index(drop=True)
- 
-    # --- Method (recommendation) simulations ---
-    method_folder = case_dir / SIM_SUBDIR / method
-    method_sim = load_simulation_runs(method_folder, case_study, n_sim, encoded_activity)
-    rt_method, status_method = compute_res_and_status(case_study, rec_df, method_sim, n_sim)
- 
-    # --- Baseline (no-recommendation) simulations ---
-    baseline_folder = case_dir / SIM_SUBDIR / BASELINE_FOLDER_NAME
-    baseline_sim = load_simulation_runs(baseline_folder, case_study, n_sim, encoded_activity)
-    rt_baseline, status_baseline = compute_res_and_status(case_study, rec_df, baseline_sim, n_sim)
- 
-    # --- align on the traces present in both sets of results ---
-    common_ids = sorted(set(rt_method) & set(rt_baseline))
-    only_baseline = set(rt_baseline) - set(rt_method)
-    only_method = set(rt_method) - set(rt_baseline)
-    if only_baseline or only_method:
-        print(
-            f"  [WARNING] {case_study}/{method}: trace id mismatch between "
-            f"baseline and method results ({len(only_baseline)} only in "
-            f"baseline, {len(only_method)} only in method). Using the "
-            f"{len(common_ids)} traces common to both."
-        )
- 
-    if not common_ids:
-        raise ValueError(
-            f"No common traces between baseline and method results for "
-            f"{case_study}/{method} after alignment -- cannot compute deltas. "
-            f"({len(only_baseline)} only in baseline, {len(only_method)} only in method)"
-        )
- 
-    co_diffs = [status_method[t] - status_baseline[t] for t in common_ids]
-    rt_diffs = [rt_baseline[t] - rt_method[t] for t in common_ids]
-    rt_gt_values = [rt_baseline[t] for t in common_ids]
- 
-    delta_co = sum(co_diffs) / len(co_diffs)
-    mean_rt_diff = sum(rt_diffs) / len(rt_diffs)
-    mean_rt_gt = sum(rt_gt_values) / len(rt_gt_values)
-    delta_rt = mean_rt_diff / mean_rt_gt if mean_rt_gt != 0 else float("nan")
- 
-    # Raw diagnostics: average of each quantity BEFORE taking the delta, to
-    # help spot whether an unexpected result comes from the baseline side,
-    # the method side, or is genuinely a result of the recommendation.
-    mean_status_method = sum(status_method[t] for t in common_ids) / len(common_ids)
-    mean_status_baseline = sum(status_baseline[t] for t in common_ids) / len(common_ids)
-    mean_rt_method = sum(rt_method[t] for t in common_ids) / len(common_ids)
-    mean_rt_baseline = sum(rt_baseline[t] for t in common_ids) / len(common_ids)
- 
-    return {
-        "case_study": case_study,
-        "method": method,
-        "n_traces": len(common_ids),
-        "delta_co": delta_co,
-        "delta_rt": delta_rt,
-        "mean_status_method": mean_status_method,
-        "mean_status_baseline": mean_status_baseline,
-        "mean_rt_method": mean_rt_method,
-        "mean_rt_baseline": mean_rt_baseline,
-    }
- 
- 
-def main():
-    """
-    Main entry point for the script to compute delta_CO and delta_RT metrics.
+        rec_df = rec_df.loc[~missing].reset_index(drop=True)
 
-    Parses command-line arguments to determine the base directory, number of simulations, 
-    and output file. It iterates over the globally configured CASE_STUDIES and METHODS, 
-    computes the metrics for each valid combination, handles missing files or errors gracefully, 
-    and exports a final summary table to a CSV file.
-    """
+    return compute_res_and_status(case_study, rec_df, test_simu, n_sim)
+
+
+# ---------------------------------------------------------------------------
+# Predictive-model-side helper (single (act, res) pair, no simulation)
+# ---------------------------------------------------------------------------
+def predict_pair(query_instance, act, res, predictive_outcome_model, predictive_time_model) -> tuple[float, float]:
+    """Predicted (status, remaining_time) for one case's prefix with one candidate (act, res), via the trained .joblib models -- no simulation involved."""
+    evals = _evaluate_candidates([(act, res)], query_instance, predictive_outcome_model, predictive_time_model)
+    return float(evals[0, 0]), float(evals[0, 1])
+
+
+# ---------------------------------------------------------------------------
+# Per-case-study pipeline
+# ---------------------------------------------------------------------------
+def find_rank_recommendation_files(case_dir: Path, case_study: str, method: str) -> dict[int, tuple[int, Path]]:
+    """rank -> (k_total, path) for every recommendations_{case_study}_{method}_top{rank}of{k}.csv found under case_dir/recommendations/."""
+    rec_dir = case_dir / "recommendations"
+    if not rec_dir.exists():
+        return {}
+    pattern = re.compile(_RANK_FILE_RE_TEMPLATE.format(case_study=re.escape(case_study), method=re.escape(method)))
+    found: dict[int, tuple[int, Path]] = {}
+    for f in rec_dir.iterdir():
+        m = pattern.match(f.name)
+        if m:
+            found[int(m.group(1))] = (int(m.group(2)), f)
+    return dict(sorted(found.items()))
+
+
+def compute_case_study_tables(base_dir: Path, case_study: str, output_subdir: str) -> None:
+    """Build and save the per-rank and stacked evaluation tables for one case study (both methods)."""
+    case_dir = base_dir / "case_studies" / case_study
+    encoded_activity = ENCODED_ACTIVITY_BY_CASE_STUDY.get(case_study)
+
+    print(f"  Loading data and models for {case_study}...")
+    _, test_data, test_log = load_case_study(case_study)
+    if case_study in BPI12_DTYPE_CASE_STUDIES:
+        test_data = convert_dtypes_bpi12(test_data, "experiment")
+        test_log = convert_dtypes_bpi12(test_log, "experiment")
+
+    (
+        predictive_outcome_model,
+        predictive_time_model,
+        case_id_name_local,
+        _activity_column_name_local,
+        _resource_column_name_local,
+        _continuous_features,
+        _categorical_features,
+        _columns_to_remove,
+    ) = get_case_study_features(case_study)
+
+    query_instances_by_case = {
+        str(cid): qi for cid, qi in build_query_instances(test_data, case_id_name_local).items()
+    }
+    repl_id_map = build_repl_id_map(test_log)
+    all_case_ids = [str(c) for c in test_data[case_id_name_local].unique()]
+
+    # -------------------------------------------------------------------
+    # Case-study-level constants (rank/method independent) -- computed once.
+    # -------------------------------------------------------------------
+    print("  Computing baseline simulation averages (rank/method independent)...")
+    baseline_folder = case_dir / SIM_SUBDIR / BASELINE_FOLDER_NAME
+    baseline_rt, baseline_status = compute_sim_averages(
+        baseline_folder, case_study, encoded_activity, repl_id_map, all_case_ids
+    )
+    if not baseline_rt:
+        print(f"    [WARNING] No baseline simulation runs found at {baseline_folder}.")
+
+    print("  Computing 'no recommendation' .joblib predictions (rank/method independent)...")
+    pred_no_rec: dict[str, tuple[float, float]] = {}
+    for cid in all_case_ids:
+        qi = query_instances_by_case.get(cid)
+        if qi is None:
+            continue
+        pred_no_rec[cid] = predict_pair(
+            qi, qi["NEXT_ACTIVITY"], qi["NEXT_RESOURCE"], predictive_outcome_model, predictive_time_model
+        )
+
+    # -------------------------------------------------------------------
+    # Per-(method, rank) tables.
+    # -------------------------------------------------------------------
+    out_dir = case_dir / output_subdir
+    for method in METHODS:
+        rank_files = find_rank_recommendation_files(case_dir, case_study, method)
+        if not rank_files:
+            print(f"  [SKIPPED] {case_study}/{method}: no recommendations_{case_study}_{method}_top*of*.csv found.")
+            continue
+
+        rank_tables = []
+        for rank, (k_total, rec_path) in rank_files.items():
+            sim_folder = case_dir / SIM_SUBDIR / method / str(rank)
+            if not sim_folder.exists() or _detect_n_sim(sim_folder) == 0:
+                print(f"    [SKIPPED] {case_study}/{method} rank {rank}/{k_total}: no simulations at {sim_folder}.")
+                continue
+
+            print(f"    Processing {case_study}/{method} rank {rank}/{k_total}...")
+            rec_df = pd.read_csv(rec_path, dtype={case_id_name_local: str})
+            if case_study in BPI12_DTYPE_CASE_STUDIES:
+                rec_df = convert_dtypes_bpi12(rec_df, "simulation_prep")
+
+            missing = rec_df["Next_activity"].isna() | rec_df["Next_resource"].isna()
+            if missing.any():
+                bad_ids = rec_df.loc[missing, case_id_name_local].tolist()
+                print(
+                    f"      [WARNING] {len(bad_ids)} case id(s) have no recommendation "
+                    f"and will be skipped: {bad_ids[:10]}" + (" ..." if len(bad_ids) > 10 else "")
+                )
+                rec_df = rec_df.loc[~missing].reset_index(drop=True)
+
+            case_ids_rank = rec_df[case_id_name_local].tolist()
+            method_rt, method_status = compute_sim_averages(
+                sim_folder, case_study, encoded_activity, repl_id_map, case_ids_rank
+            )
+
+            rows = []
+            for _, r in rec_df.iterrows():
+                cid = r[case_id_name_local]
+                act, res = r["Next_activity"], r["Next_resource"]
+                qi = query_instances_by_case.get(cid)
+                if qi is None:
+                    print(f"      [WARNING] case id {cid} not found in query instances, skipping.")
+                    continue
+                pred_status_with, pred_rt_with = predict_pair(
+                    qi, act, res, predictive_outcome_model, predictive_time_model
+                )
+                pred_status_no, pred_rt_no = pred_no_rec.get(cid, (np.nan, np.nan))
+                rows.append({
+                    "case_study": case_study,
+                    "method": method,
+                    "rank": rank,
+                    "k_total": k_total,
+                    case_id_name_local: cid,
+                    "rec_activity": act,
+                    "rec_resource": res,
+                    "sim_status_method_mean": method_status.get(cid, np.nan),
+                    "sim_remaining_time_method_mean": method_rt.get(cid, np.nan),
+                    "sim_status_baseline_mean": baseline_status.get(cid, np.nan),
+                    "sim_remaining_time_baseline_mean": baseline_rt.get(cid, np.nan),
+                    "pred_status_with_rec": pred_status_with,
+                    "pred_remaining_time_with_rec": pred_rt_with,
+                    "pred_status_no_rec": pred_status_no,
+                    "pred_remaining_time_no_rec": pred_rt_no,
+                })
+
+            rank_df = pd.DataFrame(rows)
+            method_out_dir = out_dir / method
+            method_out_dir.mkdir(parents=True, exist_ok=True)
+            rank_path = method_out_dir / f"rank_{rank}_of_{k_total}.csv"
+            rank_df.to_csv(rank_path, index=False)
+            print(f"      Saved {len(rank_df)} rows to {rank_path}")
+            rank_tables.append(rank_df)
+
+        if rank_tables:
+            stacked = pd.concat(rank_tables, ignore_index=True)
+            out_dir.mkdir(parents=True, exist_ok=True)
+            stacked_path = out_dir / f"{method}_all_ranks.csv"
+            stacked.to_csv(stacked_path, index=False)
+            print(f"  [OK] {case_study}/{method}: saved {len(stacked)} rows ({len(rank_tables)} ranks) to {stacked_path}")
+
+
+def main():
+    """Build per-case evaluation tables (simulation averages + .joblib predictions, with/without recommendation) for every configured case study, from whatever recommendations/simulations already exist on disk."""
     parser = argparse.ArgumentParser(
-        description="Compute delta_CO / delta_RT (paper Eq. 6) for every "
-                     "case_study/method vs. its baseline."
+        description="Build per-case evaluation tables from existing recommendation/simulation files."
     )
     parser.add_argument("--base_dir", type=str, default=".",
                          help="Base directory containing case_studies/ (default: .)")
-    parser.add_argument("--n_sim", type=int, default=10,
-                         help="Number of simulation runs to average over (default: 10)")
-    parser.add_argument("--out_csv", type=str, default="delta_co_rt_results.csv",
-                         help="Where to save the summary table")
+    parser.add_argument("--case_studies", type=str, default=",".join(CASE_STUDIES),
+                         help=f"Comma-separated case studies to process (default: {','.join(CASE_STUDIES)})")
+    parser.add_argument("--output_subdir", type=str, default=OUTPUT_SUBDIR,
+                         help=f"Subfolder under each case study to save tables into (default: {OUTPUT_SUBDIR})")
     args = parser.parse_args()
- 
+
     base_dir = Path(args.base_dir)
-    results = []
-    for case_study in CASE_STUDIES:
-        for method in METHODS:
-            print(f"Processing {case_study}/{method}...")
-            try:
-                res = compute_case_study_method(base_dir, case_study, method, args.n_sim)
-                results.append(res)
-                print(
-                    f"  [OK] delta_CO={res['delta_co']:.4f}, "
-                    f"delta_RT={res['delta_rt']:.4f} ({res['n_traces']} traces)"
-                )
-                print(
-                    f"       raw: status_method={res['mean_status_method']:.4f}, "
-                    f"status_baseline={res['mean_status_baseline']:.4f}, "
-                    f"rt_method={res['mean_rt_method']:.1f}, "
-                    f"rt_baseline={res['mean_rt_baseline']:.1f}"
-                )
-            except (FileNotFoundError, ValueError) as e:
-                print(f"  [SKIPPED] {e}")
- 
-    if not results:
-        print("No results were computed -- check your paths.")
-        return
- 
-    df = pd.DataFrame(results)
-    df.to_csv(args.out_csv, index=False)
-    print(f"\nSaved summary table to {args.out_csv}")
-    print(df.to_string(index=False))
- 
- 
+    case_studies = [c.strip() for c in args.case_studies.split(",") if c.strip()]
+
+    for case_study in case_studies:
+        print(f"Processing {case_study}...")
+        try:
+            compute_case_study_tables(base_dir, case_study, args.output_subdir)
+        except (FileNotFoundError, ValueError) as e:
+            print(f"  [SKIPPED] {case_study}: {e}")
+
+
 if __name__ == "__main__":
     main()
- 

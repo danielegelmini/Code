@@ -9,17 +9,17 @@ Given a case study, this script:
      cache and regenerate it.
   3. Simulates the baseline scenario.
   4. Simulates the recommendations for 'exhaustive' and 'nsga2' methods, k
-     ranks per method (k=1 by default -- one recommendation per case).
+     ranks per method (k=1 by default -- one recommendation per case). Each
+     rank reads its own recommendations_{case_study}_{method}_top{rank}of{k}.csv
+     (see 3_run_experiment.py's run_experiment_top_k).
   5. Saves the simulated log(s) as CSV files under
-     case_studies/<case_study>/prosit_simulation_results/<method>/ (k == 1)
-     or case_studies/<case_study>/prosit_simulation_results/<method>/<rank>/ (k > 1)
+     case_studies/<case_study>/prosit_simulation_results/<method>/<rank>/
 
 Usage:
     python 4_run_recommendation_simulation.py --case_study bpi17_before --n_sim 10
     python 4_run_recommendation_simulation.py --case_study bpi17_before --n_sim 10 --force_rediscover
-    python 4_run_recommendation_simulation.py --case_study bpi17_before --n_sim 10 --k 5
+    python 4_run_recommendation_simulation.py --case_study bpi17_before --n_sim 10 --k 5 --force_rediscover
 """
-
 import argparse
 import sys
 import uuid
@@ -49,16 +49,7 @@ END_DATE_NAME = "time:timestamp"
 ACTIVITY_COLUMN_NAME = "concept:name"
 RESOURCE_COLUMN_NAME = "org:resource"
 
-# model_bpi12.pnml is missing O_SENT_BACK and O_CANCELLED as transitions entirely --
-# 578/633 (91%) of the exhaustive/nsga2 recommendations for BPI12 target one of these
-# two activities, so they were structurally unreachable no matter what (not a simulator
-# bug: the label simply doesn't exist in that net). Overriding to an alternative net
-# also requires a distinct params-cache filename, since cached simulator params are
-# keyed to specific Transition objects of the net they were discovered against --
-# reusing the default model's cache against a different net would silently mismatch.
-PNML_OVERRIDES = {
-    "BPI12": "diem_log_BPI12.pnml",
-}
+PNML_OVERRIDES = {}
 
 
 def parse_args():
@@ -75,10 +66,9 @@ def parse_args():
     )
     parser.add_argument(
         "--k", type=int, default=1,
-        help="Number of diverse recommendation ranks to simulate per method (default: 1, "
-             "i.e. the original single-recommendation behaviour). With k > 1, expects "
-             "recommendations_{case_study}_{method}_top{rank}of{k}.csv files (rank 1..k) "
-             "and saves results under prosit_simulation_results/<method>/<rank>/.",
+        help="Number of diverse recommendation ranks to simulate per method (default: 1). "
+             "Expects recommendations_{case_study}_{method}_top{rank}of{k}.csv files "
+             "(rank 1..k) and saves results under prosit_simulation_results/<method>/<rank>/.",
     )
     parser.add_argument(
         "--case_ids", type=str, default=None,
@@ -97,8 +87,38 @@ def parse_args():
     return parser.parse_args()
 
 
+def _find_xes_log(case_dir: Path, case_study: str) -> Path:
+    """Locate the historical .xes event log for this case study.
+
+    Tries the case-sensitive convention `log_<case_study>.xes` first, then
+    falls back to the single `log_*.xes` file in case_dir -- filename casing
+    isn't consistent across case studies (e.g. case_studies/BPI12/ actually
+    contains log_bpi12.xes, lowercase, not log_BPI12.xes).
+
+    Raises:
+        FileNotFoundError: if no .xes file can be found unambiguously.
+    """
+    exact = case_dir / f"log_{case_study}.xes"
+    if exact.exists():
+        return exact
+
+    candidates = sorted(case_dir.glob("log_*.xes"))
+    if len(candidates) == 1:
+        return candidates[0]
+    if not candidates:
+        raise FileNotFoundError(
+            f"No .xes event log found under {case_dir} (tried {exact.name} "
+            f"and log_*.xes). Discovery needs the historical log to learn "
+            f"simulation parameters from."
+        )
+    raise FileNotFoundError(
+        f"Ambiguous .xes event log under {case_dir}: found {[c.name for c in candidates]}, "
+        f"none named {exact.name}. Rename the intended one or pass a matching case_study."
+    )
+
+
 def setup_simulator(case_dir: Path, case_study: str, force_rediscover: bool) -> SimulatorEngine:
-    """Load the Petri net for this case study and build a SimulatorEngine for it, loading its simulation parameters from cache when possible.
+    """Load the Petri net for this case study and build a SimulatorEngine for it, loading its simulation parameters from cache when possible, discovering them from the .xes log otherwise.
 
     discover_from_eventlog is the expensive step (resource discovery, feature building/alignment, transition weights, calendars, execution/waiting/arrival time discovery -- typically 3-5 minutes). Since it depends only on the log (not on n_sim, case_ids, or the method being simulated), the discovered parameters are cached to disk the first time and reused on every subsequent run; when the cache hits, the .xes log isn't even parsed.
 
@@ -115,14 +135,15 @@ def setup_simulator(case_dir: Path, case_study: str, force_rediscover: bool) -> 
         pnml_path = case_dir / "discovery_output" / pnml_filename
         params_cache_path = case_dir / "discovery_output" / f"simulator_params_{case_study}_{Path(pnml_filename).stem}.json"
     else:
-        pnml_path = case_dir / "discovery_output" / f"model_{case_study}.pnml"
+        pnml_path = case_dir / "discovery_output" / f"{case_study}_best_petri_net.pnml"
         params_cache_path = case_dir / "discovery_output" / f"simulator_params_{case_study}.json"
 
     if not pnml_path.exists():
         raise FileNotFoundError(
-            f"No Petri net found at {pnml_path}. Discovery from scratch is "
-            f"disabled in this script (see commented-out block) -- generate "
-            f"the .pnml first."
+            f"No Petri net found at {pnml_path}. This script only discovers "
+            f"the *simulation parameters* (from the .xes log, cached to "
+            f"{params_cache_path.name}) -- it does not mine the Petri net "
+            f"structure itself. Generate the .pnml first (see discovery/)."
         )
     print(f"Loading Petri net: {pnml_path}")
     net, im, fm = pm4py.read_pnml(str(pnml_path))
@@ -141,8 +162,35 @@ def setup_simulator(case_dir: Path, case_study: str, force_rediscover: bool) -> 
             params_cache_path.unlink(missing_ok=True)
 
     if not cache_valid:
-        print("No valid cached simulation parameters found.")
+        log_path = _find_xes_log(case_dir, case_study)
+        print(f"Loading event log: {log_path}")
+        log = xes_importer.apply(str(log_path))
 
+        train_data_path = case_dir / "train_data.csv"
+        if not train_data_path.exists():
+            raise FileNotFoundError(
+                f"No train_data.csv found at {train_data_path} -- needed to "
+                f"restrict parameter discovery to training cases only (to "
+                f"avoid leaking test cases into the simulator's learned "
+                f"parameters, since {log_path.name} contains train+test+more)."
+            )
+        train_case_ids = set(
+            pd.read_csv(train_data_path, usecols=[CASE_ID_NAME])[CASE_ID_NAME].astype(str)
+        )
+        n_before = len(log)
+        # Trace-level case id attribute in a parsed EventLog is "concept:name"
+        # (not "case:concept:name" -- that "case:" prefix only appears after
+        # flattening to a DataFrame).
+        log = pm4py.filter_trace_attribute_values(
+            log, "concept:name", train_case_ids, retain=True, case_id_key="concept:name"
+        )
+        print(f"Restricted event log to {len(log)}/{n_before} training cases (from {train_data_path.name}).")
+
+        print("Discovering simulation parameters from event log (this can take a few minutes)...")
+        params.discover_from_eventlog(log, max_depth_tree=0)
+        params_cache_path.parent.mkdir(parents=True, exist_ok=True)
+        params.to_json(str(params_cache_path))
+        print(f"Cached simulation parameters to {params_cache_path}\n")
 
     return SimulatorEngine(params)
 
@@ -237,7 +285,7 @@ def save_engine_diagnostics(sim_engine, sim_folder: Path, run_index: int) -> Non
     print(f"Cases with model-inserted activities: {len(sim_engine.last_model_inserted_activities)}")
 
 
-def run_simulation_batch(sim_engine: SimulatorEngine, log_input: pd.DataFrame, out_folder: Path, n_sim: int) -> None:
+def run_simulation_batch(sim_engine: SimulatorEngine, log_input: pd.DataFrame, out_folder: Path, n_sim: int, label: str = "") -> None:
     """Run SimulatorEngine.apply() n_sim times against the same input log, saving each run's result and diagnostics. Shared by the baseline and the exhaustive/nsga2 methods.
 
     Args:
@@ -245,10 +293,14 @@ def run_simulation_batch(sim_engine: SimulatorEngine, log_input: pd.DataFrame, o
         log_input: the prev_log to pass to sim_engine.apply() on every run.
         out_folder: where to save sim_<i>.csv and its diagnostic CSVs.
         n_sim: number of simulation runs to perform.
+        label: short prefix identifying which scenario is running (e.g.
+            "BASELINE" or "EXHAUSTIVE rank 2/5"), printed with every run so
+            it's obvious which rank a given log line belongs to. Optional.
     """
+    prefix = f"[{label}] " if label else ""
     for i in range(n_sim):
         run_start = datetime.now()
-        print(f"Starting run {i + 1}/{n_sim} at {run_start.strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f"{prefix}Starting run {i + 1}/{n_sim} at {run_start.strftime('%Y-%m-%d %H:%M:%S')}")
         sim_log = sim_engine.apply(prev_log=log_input)
         sim_log = sim_log.sort_values(by=["case:concept:name", "time:timestamp"])
         out_path = out_folder / f"sim_{i + 1}.csv"
@@ -283,7 +335,7 @@ def run_baseline_simulation(sim_engine: SimulatorEngine, clean_prev_log: pd.Data
     if case_ids:
         log_baseline = log_baseline[log_baseline["case:concept:name"].isin(case_ids)]
 
-    run_simulation_batch(sim_engine, log_baseline, baseline_folder, n_sim)
+    run_simulation_batch(sim_engine, log_baseline, baseline_folder, n_sim, label="BASELINE")
 
     print("Baseline simulation finished successfully!\n")
 
@@ -296,18 +348,23 @@ def _simulate_recommendation_file(
     clean_prev_log: pd.DataFrame,
     case_ids: Optional[List[str]],
     n_sim: int,
-    method: str,
+    label: str = "",
 ) -> None:
     """Load one recommendations CSV, merge it with the test log, and run n_sim simulations, saving the results under sim_folder.
 
     Cases with no recommendation (missing Next_activity/Next_resource) are NOT
     filled in with what actually happened historically -- simulation exists
-    precisely so we don't need to know that. Instead, any missing
-    recommendation makes this function raise immediately, since the simulator
-    would otherwise silently drop that case from the simulated output rather
-    than erroring (it only simulates cases where recommendation:act/res are
-    not both null -- see prosit/simulator.py's `cases_prefixes` filtering in
-    SimulatorEngine.apply()).
+    precisely so we don't need to know that. Instead, they are excluded from
+    this simulation run (the simulator would otherwise silently drop them
+    from the output anyway -- it only simulates cases where
+    recommendation:act/res are not both null, see prosit/simulator.py's
+    `cases_prefixes` filtering in SimulatorEngine.apply()), and reported both
+    on stdout and as excluded_no_recommendation.csv under sim_folder, so the
+    exclusion is visible rather than silent. This means the recommender found
+    no valid next action for them at all (empty possible-activities set --
+    even after next_possible_activities' trace-suffix fallback -- or empty
+    Pareto front); it's a genuine cold-start gap in the training data, not
+    something simulating around it can fix.
 
     Args:
         sim_engine: the SimulatorEngine to run.
@@ -317,32 +374,35 @@ def _simulate_recommendation_file(
         clean_prev_log: the case-specific-columns-only test log.
         case_ids: optional case id filter.
         n_sim: number of simulation runs to perform.
-        method: name of the method being simulated (only used for error messages).
+        label: short prefix identifying which scenario is running (e.g.
+            "EXHAUSTIVE rank 2/5"), printed on every log line and passed
+            through to run_simulation_batch. Optional.
 
     Raises:
-        ValueError: if case_ids filtering leaves no matching rows,
-            or if any case has no recommendation (missing Next_activity/Next_resource).
+        ValueError: if case_ids filtering leaves no matching rows.
     """
-    print(f"Loading recommendations: {csv_path}")
+    prefix = f"[{label}] " if label else ""
+    print(f"{prefix}Loading recommendations: {csv_path}")
     rec_df = pd.read_csv(csv_path, dtype={CASE_ID_NAME: str})
 
     missing_mask = rec_df["Next_activity"].isna() | rec_df["Next_resource"].isna()
     if missing_mask.any():
-        missing_ids = rec_df.loc[missing_mask, CASE_ID_NAME].tolist()
-        raise ValueError(
-            f"{method}: {len(missing_ids)} case(s) have no recommendation "
-            f"(missing Next_activity/Next_resource) in {csv_path}. "
-            f"This means the recommender found no valid next action for "
-            f"them (empty possible-activities set or empty Pareto front) -- "
-            f"fix the recommendation generation for these cases before "
-            f"simulating, they will NOT be silently filled in with what "
-            f"actually happened historically. Affected case ids: "
-            f"{missing_ids[:20]}" + (" ..." if len(missing_ids) > 20 else "")
+        excluded_ids = rec_df.loc[missing_mask, CASE_ID_NAME].tolist()
+        print(
+            f"{prefix}WARNING: {len(excluded_ids)} case(s) have no recommendation "
+            f"(missing Next_activity/Next_resource) in {csv_path} -- excluding "
+            f"them from this simulation run instead of simulating them. "
+            f"Affected case ids: {excluded_ids[:20]}" + (" ..." if len(excluded_ids) > 20 else "")
         )
+        sim_folder.mkdir(parents=True, exist_ok=True)
+        excluded_path = sim_folder / "excluded_no_recommendation.csv"
+        pd.DataFrame({CASE_ID_NAME: excluded_ids}).to_csv(excluded_path, index=False)
+        print(f"{prefix}Saved excluded case ids to {excluded_path}")
+        rec_df = rec_df.loc[~missing_mask].reset_index(drop=True)
 
     current_prev_log = clean_prev_log.copy()
     if case_study.upper() == "BPI12":
-        print("Applying BPI12 specific data type conversions...")
+        print(f"{prefix}Applying BPI12 specific data type conversions...")
         rec_df = convert_dtypes_bpi12(rec_df, "simulation_prep")
         current_prev_log = convert_dtypes_bpi12(current_prev_log, "simulation")
 
@@ -350,7 +410,7 @@ def _simulate_recommendation_file(
     rec_df[CASE_ID_NAME] = rec_df[CASE_ID_NAME].astype(str)
     current_prev_log[CASE_ID_NAME] = current_prev_log[CASE_ID_NAME].astype(str)
 
-    print("Building recommendations dataframe...")
+    print(f"{prefix}Building recommendations dataframe...")
     recommendations = {
         row[CASE_ID_NAME]: {"act": row["Next_activity"], "res": row["Next_resource"]}
         for _, row in rec_df.iterrows()
@@ -369,7 +429,7 @@ def _simulate_recommendation_file(
             )
 
     sim_folder.mkdir(parents=True, exist_ok=True)
-    run_simulation_batch(sim_engine, log_rec, sim_folder, n_sim)
+    run_simulation_batch(sim_engine, log_rec, sim_folder, n_sim, label=label)
 
 
 def run_recommendation_simulations(
@@ -381,22 +441,20 @@ def run_recommendation_simulations(
     n_sim: int,
     k: int = 1,
 ) -> None:
-    """Run the 'exhaustive' and 'nsga2' recommendation methods (whichever have recommendation files available) n_sim times each per rank, saving the results under case_dir/prosit_simulation_results/<method>/(...).
+    """Run the 'exhaustive' and 'nsga2' recommendation methods (whichever have recommendation files available) n_sim times each per rank, saving the results under case_dir/prosit_simulation_results/<method>/<rank>/.
 
-    k controls how many diverse recommendations per case are simulated (see
-    select_top_k_pareto_actions / compute_recommendations_top_k) and where
-    results land:
-      - k == 1 (default -- current/original behaviour): a single
-        recommendations file `recommendations_{case_study}_{method}.csv`,
-        results saved directly under prosit_simulation_results/<method>/.
-      - k > 1: one recommendations file per rank,
-        `recommendations_{case_study}_{method}_top{rank}of{k}.csv` (rank from
-        1 to k), results saved under
-        prosit_simulation_results/<method>/<rank>/ -- one subfolder per rank,
-        so runs don't overwrite each other.
+    k is the number of diverse recommendations per case produced upstream
+    (see select_top_k_pareto_actions / compute_recommendations_top_k /
+    run_experiment_top_k). For each method and each rank in 1..k, this loads
+    `recommendations_{case_study}_{method}_top{rank}of{k}.csv` and saves
+    results under prosit_simulation_results/<method>/<rank>/ -- one
+    subfolder per rank, so runs don't overwrite each other.
 
     Each (method, rank) combination is independent: a missing file for one
     rank only skips that rank (with a warning), it doesn't stop the others.
+    Cases with no recommendation at all within a loaded file are excluded
+    from that simulation run (not filled in with historical fallback, not a
+    hard failure) -- see _simulate_recommendation_file.
 
     Args:
         sim_engine: the SimulatorEngine to run.
@@ -408,36 +466,33 @@ def run_recommendation_simulations(
         k: number of recommendation ranks to simulate per method. Defaults to 1.
 
     Raises:
-        ValueError: if k < 1, if case_ids filtering leaves no matching rows
-            for a method/rank, or if any case in a loaded recommendations
-            file has no recommendation (missing Next_activity/Next_resource).
+        ValueError: if k < 1, or if case_ids filtering leaves no matching
+            rows for a method/rank.
     """
     if k < 1:
         raise ValueError(f"k must be >= 1, got {k}.")
 
     for method in ["exhaustive", "nsga2"]:
-        print(f"=== STARTING {method.upper()} SIMULATION ===")
+        print(f"=== STARTING {method.upper()} SIMULATION (k={k}) ===")
 
         for rank in range(1, k + 1):
-            if k == 1:
-                csv_path = case_dir / "recommendations" / f"recommendations_{case_study}_{method}.csv"
-                sim_folder = case_dir / "prosit_simulation_results" / method
-                rank_label = ""
-            else:
-                csv_path = case_dir / "recommendations" / f"recommendations_{case_study}_{method}_top{rank}of{k}.csv"
-                sim_folder = case_dir / "prosit_simulation_results" / method / str(rank)
-                rank_label = f" (rank {rank}/{k})"
+            csv_path = case_dir / "recommendations" / f"recommendations_{case_study}_{method}_top{rank}of{k}.csv"
+            sim_folder = case_dir / "prosit_simulation_results" / method / str(rank)
+            rank_label = f"{method.upper()} rank {rank}/{k}"
+
+            print(f"--- {rank_label} ---")
 
             if not csv_path.exists():
-                print(f"WARNING: Recommendation file {csv_path} not found. Skipping {method}{rank_label}.")
+                print(f"WARNING: Recommendation file {csv_path} not found. Skipping {rank_label}.")
                 print("-" * 50)
                 continue
 
             _simulate_recommendation_file(
-                sim_engine, csv_path, sim_folder, case_study, clean_prev_log, case_ids, n_sim, method,
+                sim_engine, csv_path, sim_folder, case_study, clean_prev_log, case_ids, n_sim,
+                label=rank_label,
             )
 
-            print(f"{method.capitalize()}{rank_label} simulation finished successfully!\n")
+            print(f"{rank_label} simulation finished successfully!\n")
 
 
 def main():

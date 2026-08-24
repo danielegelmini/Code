@@ -19,7 +19,8 @@ from utils.recommendation_functions import (
     nsga2_pareto_search,
     exhaustive_pareto_search,
     _build_valid_pairs,
-    _evaluate_candidates
+    _evaluate_candidates,
+    select_top_k_pareto_actions,
 )
 
 import warnings
@@ -72,6 +73,7 @@ def run_and_plot_comparison(
     pop_size: int = 50,
     n_generations: int = 10,
     random_state: int = 1234,
+    k: int = 5,
     save_dir: str = "C:\\Users\\Utente\\Desktop\\tesi magistrale\\Code\\multi_obj\\pareto_front_images"
 ):
     np.random.seed(random_state)
@@ -241,20 +243,21 @@ def run_and_plot_comparison(
         front_x_sorted = front_x_sorted[sorted_indices]
         front_y_sorted = front_y_sorted[sorted_indices]
 
-        ideal_point = np.array([1.0, 1.0])
-        front_points = np.column_stack((front_x_sorted, front_y_sorted))
-        distances = np.linalg.norm(front_points - ideal_point, axis=1)
-        best_idx = np.argmin(distances)
-        best_x = front_x_sorted[best_idx]
-        best_y = front_y_sorted[best_idx]
+        # Punti selezionati da select_top_k_pareto_actions (max-min / p-dispersion
+        # su outcome e 1-time): un sottoinsieme del fronte, marcati a parte.
+        top_k_pairs = select_top_k_pareto_actions(pareto_set, k=k)
+        pair_to_xy = {(item[0], item[1]): (item[2], 1.0 - item[3]) for item in pareto_set}
+        top_k_x = np.array([pair_to_xy[p][0] for p in top_k_pairs], dtype=float)
+        top_k_y = np.array([pair_to_xy[p][1] for p in top_k_pairs], dtype=float)
 
         # Generazione Grafico
         plt.figure(figsize=(10, 7))
-        
+
         plt.scatter(all_x, all_y, color='black', label='Evaluated Pairs (All)', alpha=0.6)
         plt.scatter(front_x_sorted, front_y_sorted, color='blue', label='Pareto Front', zorder=5)
         plt.plot(front_x_sorted, front_y_sorted, color='blue', linestyle='--', alpha=0.5)
-        plt.scatter(best_x, best_y, color='red', marker='*', s=100, label='Selected Best Point', zorder=10)
+        plt.scatter(top_k_x, top_k_y, color='purple', marker='P', s=100, edgecolors='black',
+                    linewidths=0.6, label=f'Top-{k} Selected (p-dispersion)', zorder=8)
         plt.scatter(1.0, 1.0, color='green', marker='X', s=100, label='Ideal Point (1,1)', zorder=10)
         plt.scatter(baseline_x, baseline_y, color='orange', marker='D', s=100, label='No Recommendation (Baseline)', zorder=10)
 
@@ -268,7 +271,7 @@ def run_and_plot_comparison(
         plt.ylabel("1 - Predicted Time (Maximize)")
         plt.grid(True, linestyle=':', alpha=0.7)
         plt.legend(loc='lower left')
-        
+
         plot_x_min = min(np.min(all_x), baseline_x)
         plot_x_max = max(np.max(all_x), baseline_x)
         plot_y_min = min(np.min(all_y), baseline_y)
@@ -291,9 +294,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Plot Pareto comparison with execution times.')
     parser.add_argument('--case_study', type=str, required=True, help='Dataset name')
     parser.add_argument('--case_id', type=str, default=None, help='Specific case ID (optional)')
-    
+    parser.add_argument('--k', type=int, default=5, help='Number of top-k points to highlight (default: 5)')
+
     try:
         args = parser.parse_args()
-        run_and_plot_comparison(case_study=args.case_study, target_case_id=args.case_id)
+        run_and_plot_comparison(case_study=args.case_study, target_case_id=args.case_id, k=args.k)
     except Exception as e:
         print(f"Errore durante l'esecuzione: {e}")
+
+
+# example usage:
+# python 3_plot_pareto.py --case_study "BAC" --k 5

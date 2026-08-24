@@ -77,8 +77,17 @@ def next_possible_activities(trace_history, transition_graph, WINDOW_SIZE):
     """
     Determines the list of possible next activities based on a transition graph and trace history.
 
-    It compares either the full trace history or a recent window (defined by WINDOW_SIZE) 
-    against the transition graph to find valid subsequent activities.
+    Compares the trace history (or its last WINDOW_SIZE activities, whichever
+    is shorter) against the transition graph to find valid subsequent
+    activities. If that exact-length prefix was never observed in training,
+    falls back to progressively shorter suffixes of it (window-1, window-2,
+    ..., down to just the single last activity), returning the first
+    non-empty match. The empty prefix (transition_graph[""], i.e. "what
+    typically starts a trace") is deliberately never used as a fallback --
+    it answers a different question (how traces begin) than "what can follow
+    this case's history", so it wouldn't be a meaningful recommendation here.
+    A case only ends up with no possible next activity if not even its last
+    activity alone was ever seen as a training prefix.
 
     Args:
         trace_history (list of str): The history of activities for a given case.
@@ -88,26 +97,21 @@ def next_possible_activities(trace_history, transition_graph, WINDOW_SIZE):
     Returns:
         list of str: A list of activities that can logically follow the current trace history.
     """
-    n = len(trace_history)
-    pos_acts = []
-    if  n <= WINDOW_SIZE: # trace history is smaller than the window size
-        trace_to_compare = trace_history
-        trace_to_str =  "".join(trace_to_compare)
-        if trace_to_str in transition_graph.keys():
-            pos_acts = transition_graph[trace_to_str]
-        else:
-            for ts in transition_graph.keys():
-                ts_to_list = ts.split(", ")
-                if ts_to_list == trace_to_compare:
-                    pos_acts = transition_graph[ts]
-    else:
-        trace_to_compare = trace_history[-WINDOW_SIZE:] 
-        for ts in transition_graph.keys():
-            ts_to_list = ts.split(", ")
-            if ts_to_list == trace_to_compare:
-                pos_acts = transition_graph[ts]
+    window = trace_history if len(trace_history) <= WINDOW_SIZE else trace_history[-WINDOW_SIZE:]
+    if not window:
+        return []
 
-    return list(pos_acts)
+    parsed_keys = [(ts, ts.split(", ")) for ts in transition_graph.keys()]
+
+    for length in range(len(window), 0, -1):
+        suffix = window[-length:]
+        for ts, ts_to_list in parsed_keys:
+            if ts_to_list == suffix:
+                pos_acts = transition_graph[ts]
+                if pos_acts:
+                    return list(pos_acts)
+
+    return []
 
 def _to_row_df(x):
     """
@@ -457,7 +461,7 @@ def select_top_k_pareto_actions(pareto_set, k=5):
 # ---------------------------------------------------------------------------
 # Recommendation function for 'exhaustive' and 'nsga2' methods
 # ---------------------------------------------------------------------------
-def compute_recommendations(
+def compute_recommendations_top_k(
     test_log: pd.DataFrame,
     test_data: pd.DataFrame,
     case_study: str,
@@ -476,7 +480,8 @@ def compute_recommendations(
     crossover_rate: float = 0.9,
     mutation_rate: float = 0.3,
     random_state: Optional[int] = None,
-) -> Dict[Any, Tuple[Optional[str], Optional[str]]]:
+    k: int = 5,
+) -> List[Dict[Any, Tuple[Optional[str], Optional[str]]]]:
     """
     Generates next-step recommendations (activity and resource) for all cases in a test dataset.
     This unified function supports both 'exhaustive' search and 'nsga2' (genetic algorithm) 
@@ -501,102 +506,13 @@ def compute_recommendations(
         crossover_rate (float, optional): The crossover probability (if using NSGA-II). Defaults to 0.9.
         mutation_rate (float, optional): The mutation probability (if using NSGA-II). Defaults to 0.3.
         random_state (int, optional): Seed for reproducibility. Defaults to None.
+        k (int, optional): The number of top recommendations to return for each case. Defaults to 5.
 
     Returns:
-        dict: A dictionary mapping each case ID to its recommended (activity, resource) tuple.
+        list of dict: A list of length k; the j-th dict is the recommendations dictionary
+        {case_id: (next_activity, next_resource)} for the j-th selected pair.
     """
-    method = method.lower()
-    forbidden = set(forbidden_map.get(case_study, []))
-    rec: Dict[Any, Tuple[Optional[str], Optional[str]]] = {}
 
-    for cid in tqdm.tqdm(pd.unique(test_data[case_id_name])):
-        trace_df = test_log[test_log[case_id_name] == cid]
-        trace_history = trace_df[activity_column_name].tolist()
-
-        query_instance = _to_row_df(query_instances_by_case[cid])
-
-        poss = next_possible_activities(trace_history, transition_graph, window_size)
-        poss = [a for a in poss if a not in forbidden]
-        if not poss:
-            rec[cid] = (None, None)
-            continue
-
-        if method in {"nsga2"}:
-            pareto_front = nsga2_pareto_search(
-                query_instance=query_instance,
-                possible_actions=poss,
-                act_with_res=act_with_res,
-                predictive_outcome_model=predictive_outcome_model,
-                predictive_time_model=predictive_time_model,
-                pop_size=pop_size,
-                n_generations=n_generations,
-                crossover_rate=crossover_rate,
-                mutation_rate=mutation_rate,
-                random_state=random_state,
-            )
-        elif method == "exhaustive":
-            pareto_front = exhaustive_pareto_search(
-                query_instance,
-                poss,
-                predictive_outcome_model,
-                predictive_time_model,
-                act_with_res,
-            )
-        else:
-            raise ValueError("Unknown method for recommendations: %s" % method)
-
-        if not pareto_front:
-            rec[cid] = (None, None)
-            continue
-
-        best_pair = select_best_pareto_action(pareto_front)
-        rec[cid] = best_pair if best_pair is not None else (None, None)
-
-    return rec
-
-# ---------------------------------------------------------------------------
-# TEMPORARY: top-k variant of compute_recommendations (for testing only)
-# ---------------------------------------------------------------------------
-def compute_recommendations_top_k(
-    test_log: pd.DataFrame,
-    test_data: pd.DataFrame,
-    case_study: str,
-    case_id_name: str,
-    activity_column_name: str,
-    transition_graph,
-    window_size: int,
-    forbidden_map: Dict[str, List[str]],
-    predictive_outcome_model,
-    predictive_time_model,
-    act_with_res: Dict[str, List[str]],
-    query_instances_by_case: Dict[Any, Any],
-    method: str = "exhaustive",
-    pop_size: int = 50,
-    n_generations: int = 10,
-    crossover_rate: float = 0.9,
-    mutation_rate: float = 0.3,
-    random_state: Optional[int] = None,
-    k: int = 5,
-) -> List[Dict[Any, Tuple[Optional[str], Optional[str]]]]:
-    """
-    Same as compute_recommendations, but instead of picking a single best
-    (activity, resource) pair per case, it selects up to k diverse
-    Pareto-optimal pairs per case via select_top_k_pareto_actions (max-min
-    dispersion / p-dispersion) and returns k separate recommendation
-    dictionaries (one per rank position) instead of a single one.
-
-    For a case whose Pareto front has fewer than k points, the missing
-    ranks are filled with (None, None), same convention used for cases with
-    no possible next activity / empty Pareto front.
-
-    Args:
-        (same as compute_recommendations)
-        k (int, optional): Number of diverse recommendations to select per case. Defaults to 5.
-
-    Returns:
-        list of dict: A list of length k; the j-th dict maps each case ID to
-        its j-th recommended (activity, resource) tuple.
-    """
     method = method.lower()
     forbidden = set(forbidden_map.get(case_study, []))
     rec_list: List[Dict[Any, Tuple[Optional[str], Optional[str]]]] = [dict() for _ in range(k)]
@@ -614,7 +530,7 @@ def compute_recommendations_top_k(
                 rec[cid] = (None, None)
             continue
 
-        if method in {"nsga2"}:
+        if method == "nsga2":
             pareto_front = nsga2_pareto_search(
                 query_instance=query_instance,
                 possible_actions=poss,
