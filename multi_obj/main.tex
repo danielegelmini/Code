@@ -66,18 +66,6 @@
     \end{itemize}
 \end{frame}
 
-\begin{frame}{Predictive Modeling Strategy}
-    \begin{itemize}
-        \item The framework leverages independent Machine Learning models tailored to the specific nature of each KPI.
-        \item \textbf{Implementation Example:}
-        \begin{itemize}
-            \item \textbf{CatBoost Regressor:} Used to predict continuous KPIs (e.g., Remaining Execution Time).
-            \item \textbf{CatBoost Classifier:} Used to predict discrete or binary KPIs (e.g., Case Outcome probability via \texttt{predict\_proba}).
-        \end{itemize}
-        \item This decoupling provides higher accuracy and prevents conflicting objectives from diluting a single model's predictive performance.
-    \end{itemize}
-\end{frame}
-
 \begin{frame}{Model Architectures Comparison}
     \begin{columns}
         \begin{column}{0.5\textwidth}
@@ -99,15 +87,33 @@
     \end{columns}
 \end{frame}
 
+\section{Offline Phase}
+
+\begin{frame}{Predictive Modeling Strategy}
+    \begin{itemize}
+        \item The framework leverages independent Machine Learning models tailored to the specific nature of each KPI.
+        \item \textbf{Implementation Example:}
+        \begin{itemize}
+            \item \textbf{CatBoost Regressor:} Used to predict continuous KPIs (e.g., Remaining Execution Time).
+            \item \textbf{CatBoost Classifier:} Used to predict discrete or binary KPIs (e.g., Case Outcome probability via \texttt{predict\_proba}).
+        \end{itemize}
+        \item This decoupling provides higher accuracy and prevents conflicting objectives from diluting a single model's predictive performance.
+        \item Both models are trained once, offline, on the encoded prefix training set, and reused for every case and every candidate (activity, resource) pair during the online recommendation phase.
+    \end{itemize}
+\end{frame}
+
+\section{Online Phase}
+
 \begin{frame}{Recommendation Generation \& NSGA-II}
     \begin{itemize}
         \item While the exhaustive search method remains unchanged as a baseline, the heuristic exploration now employs \textbf{NSGA-II} (Non-dominated Sorting Genetic Algorithm II).
-        \item \textbf{Why NSGA-II?} It is explicitly designed for multi-objective optimization, overcoming the limitations of standard single-objective GAs.
-        \item \textbf{Core Mechanisms \& Assumptions:}
+        \item \textbf{Why NSGA-II?} It is explicitly designed for multi-objective optimization, searching for the whole Pareto front in a single run instead of collapsing objectives into one scalar score.
+        \item \textbf{Core Mechanisms:}
         \begin{itemize}
-            \item \textit{Non-dominated Sorting:} Solutions are ranked into fronts assuming strict Pareto dominance.
-            \item \textit{Crowding Distance:} Maintains population diversity by favoring solutions in less crowded regions.
+            \item \textit{Non-dominated Sorting:} Solutions are ranked into fronts according to Pareto dominance.
+            \item \textit{Crowding Distance:} Maintains population diversity by favoring solutions in less crowded regions of the front.
         \end{itemize}
+        \item \textbf{No Prior Assumptions:} NSGA-II requires \emph{no} assumption on the objective functions -- no convexity, continuity, differentiability, or \textit{a priori} weighting between outcome and time is needed, unlike scalarization-based approaches.
     \end{itemize}
 \end{frame}
 
