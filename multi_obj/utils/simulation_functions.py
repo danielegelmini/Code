@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
-from datetime import datetime
 
 from utils.pre_processing_functions import convert_dtypes_bpi12
 
@@ -209,49 +208,42 @@ def preparing_data_for_simulation(result_df, test_log, case_id_name, end_date_na
 
     return simu_df   
  
-def convert_time(time_to_convert):
-    dt = datetime.strptime(time_to_convert.split('+')[0].split('.')[0], '%Y-%m-%d %H:%M:%S')
-    return dt
+def _parse_timestamp_column(series):
+    """Truncate at the first '+' (timezone offset) and first '.' (fractional seconds) -- the
+    same truncation the old per-row datetime.strptime(..., '%Y-%m-%d %H:%M:%S') helper did --
+    then parse the whole column in one C-level pass instead of one Python call per row."""
+    truncated = series.astype(str).str.split('+').str[0].str.split('.').str[0]
+    return pd.to_datetime(truncated, format='%Y-%m-%d %H:%M:%S')
 
 def getting_remaining_time(dataframe, case_id_name, end_date_name):
-    dataframe["remaining_time"] = np.nan
-    dataframe['time:timestamp'] = dataframe['time:timestamp'].apply(convert_time)
-    dataframe['start:timestamp'] = dataframe['start:timestamp'].apply(convert_time)
+    dataframe['time:timestamp'] = _parse_timestamp_column(dataframe['time:timestamp'])
+    dataframe['start:timestamp'] = _parse_timestamp_column(dataframe['start:timestamp'])
 
-    list_trace_id = set(dataframe[case_id_name].unique()) # Getting list of trace ID
-    for trace_id in list_trace_id:
-        trace_df = dataframe[dataframe[case_id_name] == trace_id] # Getting sub df for each trace
-        
-        sub_trace_df_sorted = trace_df.sort_values(by=[end_date_name]) # Sorting by time
-            
-        indices = sub_trace_df_sorted.index.values.tolist()
-        last_event_idx = indices[-1]
+    # remaining_time for a row is (last event's end time in its trace) - (this row's end time).
+    # The original computed this with a per-trace filter + per-row .loc assignment (O(n_traces * n));
+    # groupby-transform('max') gets the same per-trace last-end-time in one vectorized pass.
+    last_end = dataframe.groupby(case_id_name)[end_date_name].transform('max')
+    dataframe['remaining_time'] = (last_end - dataframe[end_date_name]).dt.total_seconds()
 
-        for idx in indices:
-            dataframe.loc[idx, 'remaining_time'] = (sub_trace_df_sorted[end_date_name][last_event_idx] - sub_trace_df_sorted[end_date_name][idx]).total_seconds()
-
-    dataframe = dataframe.sort_values(by=[case_id_name, end_date_name]).reset_index(drop=True)  
-    return dataframe
+    return dataframe.sort_values(by=[case_id_name, end_date_name]).reset_index(drop=True)
 
 def status_encoding(df: pd.DataFrame, case_study: str, encoded_activity: str | None = None) -> pd.DataFrame:
-    
+
     if case_study in {"BAC", "BAC_synthetic", "BAC_time", "BAC_status", "BAC_025", "BAC_075", "BAC_0", "BAC_041"}:
         # Status=0 if any forbidden activity appears in the case, else 1
         forbidden = {"Back-Office Adjustment Requested", "Network Adjustment Requested"}
-        case_status = (
-            df.groupby("case:concept:name")["concept:name"]
-              .apply(lambda acts: 0 if any(a in forbidden for a in acts) else 1)
-        )
+        has_forbidden = df["concept:name"].isin(forbidden).groupby(df["case:concept:name"]).transform("any")
+        status_per_row = (~has_forbidden).astype(int)
     else:
         if not encoded_activity:
             raise ValueError("encoded_activity must be provided for non-BAC case studies")
-        case_status = (
-            df.groupby("case:concept:name")["concept:name"]
-              .apply(lambda acts: 1 if encoded_activity in acts.values else 0)
-        )
+        has_activity = (df["concept:name"] == encoded_activity).groupby(df["case:concept:name"]).transform("any")
+        status_per_row = has_activity.astype(int)
 
-    # Map back to df
-    df["status"] = df["case:concept:name"].map(case_status)
+    # transform('any') is a Cython-optimized groupby reduction, unlike the original's
+    # per-group Python lambda via groupby().apply() -- both give one status per case,
+    # broadcast back to every row of that case.
+    df["status"] = status_per_row
 
     return df.sort_values(by=["case:concept:name", "time:timestamp"]).reset_index(drop=True)
 
@@ -271,27 +263,37 @@ def compute_res_and_status(case_study, rec_df, test_simu, n_sim):
     res_status = {}
     trace_ids = rec_df[case_id_name].unique()
 
+    # repl_id per trace_id, first occurrence -- matches the original
+    # rec_df[rec_df[case_id_name] == trace_id]['repl_id'].values[0] lookup.
+    repl_id_by_trace = rec_df.groupby(case_id_name)['repl_id'].first()
+
+    # Split test_simu into one frame per "<trace_id>_<sim run>" group once, up front, instead of
+    # re-scanning the whole (potentially huge) concatenated-across-n_sim frame with a boolean mask
+    # on every (trace_id, sim run) pair -- that repeated full-frame filter was the bottleneck.
+    # Each such group's rows are already contiguous and chronologically ordered (getting_remaining_time
+    # / status_encoding sort by [case_id_name, time:timestamp] before the sim suffix is appended and
+    # the runs are concatenated), so .iloc[rec_index] on the group is exactly what the original's
+    # trace_df.loc[start_index + rec_index] positional lookup computed.
+    sim_groups = {key: group for key, group in test_simu.groupby(case_id_name)}
+
     for trace_id in trace_ids:
-        rec_index = rec_df[rec_df[case_id_name] == trace_id]['repl_id'].values[0] + 1
+        rec_index = int(repl_id_by_trace.loc[trace_id]) + 1
         list_remaning_time = []
         list_status = []
         for i in range(n_sim):
             idx_sim = str(trace_id) + "_" + str(i+1)
-            trace_df = test_simu[test_simu[case_id_name] == idx_sim]
-            if not trace_df.empty:
-                start_index = trace_df.index.values.tolist()[0]
-                #change 1
-                if start_index + rec_index  >= start_index + len(trace_df):
+            trace_df = sim_groups.get(idx_sim)
+            if trace_df is not None and not trace_df.empty:
+                if rec_index >= len(trace_df):
                     remaining_time = 0
                 else:
-                    #chage 2
-                    remaining_time = trace_df.loc[start_index + rec_index]['remaining_time'] 
-                status = trace_df['status'].unique()[0]
+                    remaining_time = trace_df['remaining_time'].iloc[rec_index]
+                status = trace_df['status'].iloc[0]
                 if remaining_time < 0:
                     print(idx_sim)
                 list_remaning_time.append(remaining_time)
                 list_status.append(status)
-        
+
         if len(list_remaning_time) > 0 and len(list_status) > 0:
             res[trace_id] = np.mean(list_remaning_time)
             res_status[trace_id] = np.mean(list_status)

@@ -147,7 +147,7 @@ def main():
     parser.add_argument("--n_sim", type=int, default=10)
     parser.add_argument("--case_study", type=str, default=None,
                          help="Run for a single case study only (default: all).")
-    parser.add_argument("--out_csv", type=str, default="baseline_vs_real_validation.csv")
+    parser.add_argument("--out_csv", type=str, default="6_baseline_vs_real_validation.csv")
     args = parser.parse_args()
 
     base_dir = Path(args.base_dir)

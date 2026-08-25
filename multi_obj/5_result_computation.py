@@ -42,6 +42,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from utils.data_normalization import fit_remaining_time_scalers, sigmoid_mm_to_remaining_time
 from utils.simulation_functions import (
     getting_remaining_time,
     status_encoding,
@@ -53,7 +54,7 @@ from utils.simulation_functions import (
     resource_column_name,
 )
 from utils.pre_processing_functions import convert_dtypes_bpi12
-from utils.recommendation_functions import build_query_instances, _evaluate_candidates
+from utils.recommendation_functions import build_query_instances, align_query_instance_with_model
 from utils.get_features import load_case_study, get_case_study_features
 
 # ---------------------------------------------------------------------------
@@ -169,10 +170,34 @@ def compute_sim_averages(
 # ---------------------------------------------------------------------------
 # Predictive-model-side helper (single (act, res) pair, no simulation)
 # ---------------------------------------------------------------------------
-def predict_pair(query_instance, act, res, predictive_outcome_model, predictive_time_model) -> tuple[float, float]:
-    """Predicted (status, remaining_time) for one case's prefix with one candidate (act, res), via the trained .joblib models -- no simulation involved."""
-    evals = _evaluate_candidates([(act, res)], query_instance, predictive_outcome_model, predictive_time_model)
-    return float(evals[0, 0]), float(evals[0, 1])
+def predict_batch(
+    query_instances: list,
+    acts: list,
+    resources: list,
+    predictive_outcome_model,
+    predictive_time_model,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Predicted (status, remaining_time) for many (query_instance, act, res) triples via two model
+    calls total -- one predict_proba and one predict over the whole batch -- instead of one pair of
+    calls per row. Each call into the sklearn/CatBoost pipelines pays a fixed overhead (ColumnTransformer
+    fit-time transform, CatBoost's own per-call setup) that's roughly constant regardless of batch size,
+    so batching hundreds of rows into one call is far cheaper than hundreds of single-row calls.
+    """
+    outcome_rows, time_rows = [], []
+    for qi, act, res in zip(query_instances, acts, resources):
+        o_row = align_query_instance_with_model(qi, predictive_outcome_model).iloc[0].to_dict()
+        o_row["NEXT_ACTIVITY"] = act
+        o_row["NEXT_RESOURCE"] = res
+        outcome_rows.append(o_row)
+
+        t_row = align_query_instance_with_model(qi, predictive_time_model).iloc[0].to_dict()
+        t_row["NEXT_ACTIVITY"] = act
+        t_row["NEXT_RESOURCE"] = res
+        time_rows.append(t_row)
+
+    predicted_status = predictive_outcome_model.predict_proba(pd.DataFrame(outcome_rows))[:, 1]
+    predicted_rt = predictive_time_model.predict(pd.DataFrame(time_rows))
+    return predicted_status, predicted_rt
 
 
 # ---------------------------------------------------------------------------
@@ -198,10 +223,16 @@ def compute_case_study_tables(base_dir: Path, case_study: str, output_subdir: st
     encoded_activity = ENCODED_ACTIVITY_BY_CASE_STUDY.get(case_study)
 
     print(f"  Loading data and models for {case_study}...")
-    _, test_data, test_log = load_case_study(case_study)
+    train_data, test_data, test_log = load_case_study(case_study)
     if case_study in BPI12_DTYPE_CASE_STUDIES:
         test_data = convert_dtypes_bpi12(test_data, "experiment")
         test_log = convert_dtypes_bpi12(test_log, "experiment")
+
+    # pred_remaining_time_* comes out of the .joblib time model in "sigmoid_mm" space (see
+    # get_case_study_features), a different scale than the simulation's raw-seconds remaining time.
+    # fit_remaining_time_scalers reconstructs the StandardScaler/MinMaxScaler pair that produced that
+    # space, so sigmoid_mm_to_remaining_time below can map predictions back to seconds.
+    rt_std_scaler, rt_mm_scaler = fit_remaining_time_scalers(train_data)
 
     (
         predictive_outcome_model,
@@ -232,14 +263,19 @@ def compute_case_study_tables(base_dir: Path, case_study: str, output_subdir: st
         print(f"    [WARNING] No baseline simulation runs found at {baseline_folder}.")
 
     print("  Computing 'no recommendation' .joblib predictions (rank/method independent)...")
+    no_rec_ids = [cid for cid in all_case_ids if query_instances_by_case.get(cid) is not None]
     pred_no_rec: dict[str, tuple[float, float]] = {}
-    for cid in all_case_ids:
-        qi = query_instances_by_case.get(cid)
-        if qi is None:
-            continue
-        pred_no_rec[cid] = predict_pair(
-            qi, qi["NEXT_ACTIVITY"], qi["NEXT_RESOURCE"], predictive_outcome_model, predictive_time_model
+    if no_rec_ids:
+        no_rec_qis = [query_instances_by_case[cid] for cid in no_rec_ids]
+        no_rec_acts = [qi["NEXT_ACTIVITY"] for qi in no_rec_qis]
+        no_rec_ress = [qi["NEXT_RESOURCE"] for qi in no_rec_qis]
+        pred_status_no_arr, pred_rt_no_arr = predict_batch(
+            no_rec_qis, no_rec_acts, no_rec_ress, predictive_outcome_model, predictive_time_model
         )
+        pred_rt_no_arr = sigmoid_mm_to_remaining_time(pred_rt_no_arr, rt_std_scaler, rt_mm_scaler)
+        pred_no_rec = {
+            cid: (float(status), float(rt)) for cid, status, rt in zip(no_rec_ids, pred_status_no_arr, pred_rt_no_arr)
+        }
 
     # -------------------------------------------------------------------
     # Per-(method, rank) tables.
@@ -277,35 +313,44 @@ def compute_case_study_tables(base_dir: Path, case_study: str, output_subdir: st
                 sim_folder, case_study, encoded_activity, repl_id_map, case_ids_rank
             )
 
-            rows = []
+            valid_rows = []
             for _, r in rec_df.iterrows():
                 cid = r[case_id_name_local]
-                act, res = r["Next_activity"], r["Next_resource"]
                 qi = query_instances_by_case.get(cid)
                 if qi is None:
                     print(f"      [WARNING] case id {cid} not found in query instances, skipping.")
                     continue
-                pred_status_with, pred_rt_with = predict_pair(
-                    qi, act, res, predictive_outcome_model, predictive_time_model
+                valid_rows.append((cid, r["Next_activity"], r["Next_resource"], qi))
+
+            rows = []
+            if valid_rows:
+                rec_cids, rec_acts, rec_resources, rec_qis = zip(*valid_rows)
+                pred_status_with_arr, pred_rt_with_arr = predict_batch(
+                    list(rec_qis), list(rec_acts), list(rec_resources), predictive_outcome_model, predictive_time_model
                 )
-                pred_status_no, pred_rt_no = pred_no_rec.get(cid, (np.nan, np.nan))
-                rows.append({
-                    "case_study": case_study,
-                    "method": method,
-                    "rank": rank,
-                    "k_total": k_total,
-                    case_id_name_local: cid,
-                    "rec_activity": act,
-                    "rec_resource": res,
-                    "sim_status_method_mean": method_status.get(cid, np.nan),
-                    "sim_remaining_time_method_mean": method_rt.get(cid, np.nan),
-                    "sim_status_baseline_mean": baseline_status.get(cid, np.nan),
-                    "sim_remaining_time_baseline_mean": baseline_rt.get(cid, np.nan),
-                    "pred_status_with_rec": pred_status_with,
-                    "pred_remaining_time_with_rec": pred_rt_with,
-                    "pred_status_no_rec": pred_status_no,
-                    "pred_remaining_time_no_rec": pred_rt_no,
-                })
+                pred_rt_with_arr = sigmoid_mm_to_remaining_time(pred_rt_with_arr, rt_std_scaler, rt_mm_scaler)
+
+                for cid, act, res, pred_status_with, pred_rt_with in zip(
+                    rec_cids, rec_acts, rec_resources, pred_status_with_arr, pred_rt_with_arr
+                ):
+                    pred_status_no, pred_rt_no = pred_no_rec.get(cid, (np.nan, np.nan))
+                    rows.append({
+                        "case_study": case_study,
+                        "method": method,
+                        "rank": rank,
+                        "k_total": k_total,
+                        case_id_name_local: cid,
+                        "rec_activity": act,
+                        "rec_resource": res,
+                        "sim_status_method_mean": method_status.get(cid, np.nan),
+                        "sim_remaining_time_method_mean": method_rt.get(cid, np.nan),
+                        "sim_status_baseline_mean": baseline_status.get(cid, np.nan),
+                        "sim_remaining_time_baseline_mean": baseline_rt.get(cid, np.nan),
+                        "pred_status_with_rec": float(pred_status_with),
+                        "pred_remaining_time_with_rec": float(pred_rt_with),
+                        "pred_status_no_rec": pred_status_no,
+                        "pred_remaining_time_no_rec": pred_rt_no,
+                    })
 
             rank_df = pd.DataFrame(rows)
             method_out_dir = out_dir / method

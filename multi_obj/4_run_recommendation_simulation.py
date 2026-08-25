@@ -383,7 +383,12 @@ def _simulate_recommendation_file(
     """
     prefix = f"[{label}] " if label else ""
     print(f"{prefix}Loading recommendations: {csv_path}")
-    rec_df = pd.read_csv(csv_path, dtype={CASE_ID_NAME: str})
+    # Next_activity/Next_resource forced to str at read time: with missing values present (some
+    # cases have no recommendation at this rank) and numeric-looking resource ids (e.g. BPI12's),
+    # pandas would otherwise infer that column as float64, silently mangling ids like "10629" into
+    # "10629.0" -- which then doesn't match any key in the simulator's sampled_waiting_times dict
+    # (built from the raw .xes log, where resource ids are plain strings) and crashes with a KeyError.
+    rec_df = pd.read_csv(csv_path, dtype={CASE_ID_NAME: str, "Next_activity": str, "Next_resource": str})
 
     missing_mask = rec_df["Next_activity"].isna() | rec_df["Next_resource"].isna()
     if missing_mask.any():
