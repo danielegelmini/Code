@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-6_result_testing_2.py  (rewritten)
+6_baseline_vs_real_validation.py  (rewritten)
 
 Validates the ProSiT simulator's BASELINE runs against the ENTIRE REAL log
 (not just the test set), mirroring the paper's own simulator-validation 
@@ -14,8 +14,8 @@ deltas come from the simulator itself or from something upstream
 (recommendation injection, indexing, alignment...).
 
 Usage:
-    python 6_result_testing_2.py --base_dir . --n_sim 10
-    python 6_result_testing_2.py --base_dir . --case_study BAC   # single case study
+    python 6_baseline_vs_real_validation.py --base_dir . --n_sim 10
+    python 6_baseline_vs_real_validation.py --base_dir . --case_study BAC   # single case study
 """
 
 import argparse
