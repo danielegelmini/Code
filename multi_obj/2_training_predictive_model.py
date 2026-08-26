@@ -18,7 +18,7 @@ params = {
     "early_stopping_rounds": 50, 
     "search_spaces": {
         "learning_rate": {"type": "float", "min": 0.005, "max": 0.3, "log": True}, 
-        "depth": {"type": "int", "min": 3, "max": 8},                            
+        "depth": {"type": "int", "min": 3, "max": 10},
         "l2_leaf_reg": {"type": "float", "min": 1.0, "max": 30.0},
         "colsample_bylevel": {"type": "float", "min": 0.6, "max": 1.0},
         "bootstrap_type": {"type": "categorical", "choices": ["Bayesian", "Bernoulli", "MVS"]}

@@ -5,7 +5,7 @@ import sys
 import pandas as pd
 import numpy as np
 import joblib
-from sklearn.metrics import r2_score, roc_auc_score
+from sklearn.metrics import log_loss, mean_absolute_error
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
@@ -173,7 +173,7 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
             const_params.update({"loss_function": "Logloss", "eval_metric": "Logloss"})
         else:
             const_params.update({"loss_function": "MAE", "eval_metric": "MAE"})
-        # allineare loss funtion e eval_metric logloss e mae 
+        
         def objective(trial):
             """
             Objective function for Optuna hyperparameter optimization.
@@ -185,7 +185,7 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
                 trial (optuna.trial.Trial): An Optuna trial object used to sample hyperparameters.
 
             Returns:
-                float: The evaluation metric score (Accuracy for classification, R2 for regression) achieved by the model, which Optuna will attempt to maximize.
+                float: The eval_metric score (Logloss for classification, MAE for regression, in log1p scale) at the best iteration, which Optuna will attempt to minimize.
             """
             trial_params = const_params.copy()
 
@@ -239,34 +239,37 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
             )
             
             pruning_callback.check_pruned()
-            
-            if y_train.name == "label":
-                preds_proba = model.predict_proba(X_val)[:, 1]
-                return roc_auc_score(y_val, preds_proba)
-            else:
-                preds = model.predict(X_val)
-                preds_original_scale = np.expm1(preds)
-                return r2_score(y_val, preds_original_scale)
+
+            # Save the number of trees early stopping picked for this trial,
+            # so the winning trial's tree count can be reused for the final
+            # refit on 100% of the training data (see below).
+            trial.set_user_attr("best_iteration", int(model.get_best_iteration()))
+
+            # Same metric as loss_function/eval_metric (Logloss or MAE), read
+            # directly from CatBoost's best validation score -- keeps early
+            # stopping, pruning and trial selection aligned on one metric.
+            return model.get_best_score()["validation"][const_params["eval_metric"]]
 
         # Training the model with Optuna hyperparameter optimization
         study = optuna.create_study(
-            pruner=optuna.pruners.MedianPruner(n_warmup_steps=20), 
-            direction="maximize"
+            pruner=optuna.pruners.MedianPruner(n_warmup_steps=20),
+            direction="minimize"
         )
         study.optimize(objective, n_trials=optuna_trials, timeout=600)
         print(f"Best trial found for {y_train.name} with score {study.best_value:.5f}")
-        
-        # Final training of the model with the best hyperparameters found by Optuna
-        X_tr_f, X_val_f, y_tr_f, y_val_f = extract_internal_running_validation(
-            X_trans=X_train_trans, 
-            y_train=y_train, 
-            train_data=train_data, 
-            case_id_name=case_id_name, 
-            train_ratio=0.80
-        )
+
+        # Final refit with the best hyperparameters, on 100% of the training
+        # data: the internal train/validation split was only needed to pick
+        # hyperparameters and the number of trees (early stopping). Both are
+        # now fixed, so holding back part of the training data for this fit
+        # would only throw away signal for no benefit -- the untouched test
+        # set below still gives an honest generalization estimate.
+        best_iteration = study.best_trial.user_attrs["best_iteration"]
 
         final_params = const_params.copy()
         final_params.update(study.best_params)
+        final_params["iterations"] = best_iteration + 1
+        final_params.pop("early_stopping_rounds", None)
         final_params["logging_level"] = "Verbose"
 
         if y_train.name == "label":
@@ -275,17 +278,11 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
             final_model = CatBoostRegressor(**final_params)
 
         if is_regression_target:
-            y_tr_f_fit = np.log1p(y_tr_f)
-            y_val_f_eval = np.log1p(y_val_f)
+            y_train_fit = np.log1p(y_train)
         else:
-            y_tr_f_fit = y_tr_f
-            y_val_f_eval = y_val_f
+            y_train_fit = y_train
 
-        final_model.fit(
-            X_tr_f, y_tr_f_fit,
-            eval_set=[(X_val_f, y_val_f_eval)],
-            verbose=500
-        )
+        final_model.fit(X_train_trans, y_train_fit, verbose=500)
 
         if is_regression_target:
             prediction_step = ExpM1Regressor(final_model)
@@ -297,13 +294,14 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
         if y_train.name == "label":
             y_train_proba = prediction_step.predict_proba(X_train_trans)[:, 1]
             y_test_proba = prediction_step.predict_proba(X_test_trans)[:, 1]
-            print("AUC score of training set:", roc_auc_score(y_train, y_train_proba))
-            print("AUC score of test set:", roc_auc_score(y_test, y_test_proba))
+            print("Logloss score of training set:", log_loss(y_train, y_train_proba))
+            print("Logloss score of test set:", log_loss(y_test, y_test_proba))
         else:
-            y_train_predicted = prediction_step.predict(X_train_trans)
-            y_test_predicted = prediction_step.predict(X_test_trans)
-            print("R2 score of training set:", r2_score(y_train, y_train_predicted))
-            print("R2 score of test set:", r2_score(y_test, y_test_predicted))
+            # Same log1p scale used for loss_function/eval_metric during training.
+            y_train_predicted_log = final_model.predict(X_train_trans)
+            y_test_predicted_log = final_model.predict(X_test_trans)
+            print("MAE score of training set:", mean_absolute_error(np.log1p(y_train), y_train_predicted_log))
+            print("MAE score of test set:", mean_absolute_error(np.log1p(y_test), y_test_predicted_log))
         print("--------------------------------------------------")
 
         best_pipeline = Pipeline(steps=[
