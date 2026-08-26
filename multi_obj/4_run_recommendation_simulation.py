@@ -16,7 +16,7 @@ Given a case study, this script:
      case_studies/<case_study>/prosit_simulation_results/<method>/<rank>/
 
 Usage:
-    python 4_run_recommendation_simulation.py --case_study bpi17_before --n_sim 10
+    python 4_run_recommendation_simulation.py --case_study bpi17_before --n_sim 10 --k 5
     python 4_run_recommendation_simulation.py --case_study bpi17_before --n_sim 10 --force_rediscover
     python 4_run_recommendation_simulation.py --case_study bpi17_before --n_sim 10 --k 5 --force_rediscover
 """
@@ -57,16 +57,16 @@ def parse_args():
         description="Run the full simulation pipeline (Baseline, Exhaustive, NSGA2) for a given case study."
     )
     parser.add_argument(
-        "--case_study", type=str, default="bpi12",
-        help="Name of the case study folder under case_studies/ (default: bpi12)",
+        "--case_study", type=str, default="BAC",
+        help="Name of the case study folder under case_studies/ (default: BAC)",
     )
     parser.add_argument(
         "--n_sim", type=int, default=10,
         help="Number of simulation runs to perform per method/rank (default: 10)",
     )
     parser.add_argument(
-        "--k", type=int, default=1,
-        help="Number of diverse recommendation ranks to simulate per method (default: 1). "
+        "--k", type=int, default=5,
+        help="Number of diverse recommendation ranks to simulate per method (default: 5). "
              "Expects recommendations_{case_study}_{method}_top{rank}of{k}.csv files "
              "(rank 1..k) and saves results under prosit_simulation_results/<method>/<rank>/.",
     )

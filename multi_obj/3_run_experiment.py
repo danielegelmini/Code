@@ -39,7 +39,7 @@ def _default_forbidden_map() -> Dict[str, list[str]]:
     return {
         "bpi17_before": bpi17_forbidden,
         "bpi17_after": bpi17_forbidden,
-        "bpi12": ["O_ACCEPTED"],
+        "BPI12": ["O_ACCEPTED"],
         "BAC": bac_forbidden,
     }
 
@@ -253,14 +253,14 @@ if __name__ == "__main__":
     parser.add_argument(
         "--pop_size",
         type=int,
-        default=20,
-        help="NSGA-II population size (only used for method='nsga2', default: 20).",
+        default=50,
+        help="NSGA-II population size (only used for method='nsga2', default: 50).",
     )
     parser.add_argument(
         "--n_generations",
         type=int,
-        default=15,
-        help="NSGA-II number of generations (only used for method='nsga2', default: 15).",
+        default=10,
+        help="NSGA-II number of generations (only used for method='nsga2', default: 10).",
     )
     parser.add_argument(
         "--crossover_rate",

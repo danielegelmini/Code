@@ -170,10 +170,10 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
         }
         
         if y_train.name == "label":
-            const_params.update({"loss_function": "Logloss", "eval_metric": "AUC"})
+            const_params.update({"loss_function": "Logloss", "eval_metric": "Logloss"})
         else:
-            const_params.update({"loss_function": "MAE", "eval_metric": "R2"})
-
+            const_params.update({"loss_function": "MAE", "eval_metric": "MAE"})
+        # allineare loss funtion e eval_metric logloss e mae 
         def objective(trial):
             """
             Objective function for Optuna hyperparameter optimization.

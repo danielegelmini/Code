@@ -32,7 +32,7 @@ and weren't needed for this pass.
 
 Usage:
     python 5_result_computation.py
-    python 5_result_computation.py --case_studies BAC,BPI12
+    python 5_result_computation.py --case_studies BPI12
 """
 
 import argparse
