@@ -118,7 +118,12 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
         params (dict, optional): A dictionary of configuration parameters including 'optuna_trials', 'early_stopping_rounds', and 'search_spaces'. Defaults to None.
 
     Returns:
-        None
+        dict: {"label": {...}, "sigmoid_mm": {...}}, one entry per target with
+        the metric name used (Logloss/MAE), the winning Optuna trial number
+        and validation score, the best hyperparameters, the number of trees
+        used for the final refit, and the train/test scores of the final
+        model -- everything needed to write a training report without having
+        to re-parse any file.
     """
     if params is None:
         params = {}
@@ -148,6 +153,8 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
     print("Pre-processing features...")
     X_train_trans = transformations.fit_transform(X_train_raw)
     X_test_trans = transformations.transform(X_test_raw)
+
+    results = {}
 
     for y_train, y_test in [(y_train1, y_test1), (y_train2, y_test2)]:
         print(f"\n--- Optuna Hyperparameter Optimization for: {y_train.name} ---")
@@ -292,16 +299,22 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
         print("\n[INFO] Training complete. Evaluating performance...")
 
         if y_train.name == "label":
+            metric_name = "Logloss"
             y_train_proba = prediction_step.predict_proba(X_train_trans)[:, 1]
             y_test_proba = prediction_step.predict_proba(X_test_trans)[:, 1]
-            print("Logloss score of training set:", log_loss(y_train, y_train_proba))
-            print("Logloss score of test set:", log_loss(y_test, y_test_proba))
+            train_score = log_loss(y_train, y_train_proba)
+            test_score = log_loss(y_test, y_test_proba)
+            print("Logloss score of training set:", train_score)
+            print("Logloss score of test set:", test_score)
         else:
             # Same log1p scale used for loss_function/eval_metric during training.
+            metric_name = "MAE"
             y_train_predicted_log = final_model.predict(X_train_trans)
             y_test_predicted_log = final_model.predict(X_test_trans)
-            print("MAE score of training set:", mean_absolute_error(np.log1p(y_train), y_train_predicted_log))
-            print("MAE score of test set:", mean_absolute_error(np.log1p(y_test), y_test_predicted_log))
+            train_score = mean_absolute_error(np.log1p(y_train), y_train_predicted_log)
+            test_score = mean_absolute_error(np.log1p(y_test), y_test_predicted_log)
+            print("MAE score of training set:", train_score)
+            print("MAE score of test set:", test_score)
         print("--------------------------------------------------")
 
         best_pipeline = Pipeline(steps=[
@@ -311,6 +324,18 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
 
         output_dir = Path(f"./case_studies/{case_study}/model")
         joblib.dump(best_pipeline, output_dir / f"catboost_model_{y_train.name}.joblib")
-        
+
         with open(output_dir / f"best_hyperparams_{y_train.name}.json", 'w') as f:
             json.dump(study.best_params, f, indent=4)
+
+        results[y_train.name] = {
+            "metric_name": metric_name,
+            "best_trial_number": study.best_trial.number,
+            "best_validation_score": study.best_value,
+            "best_params": study.best_params,
+            "n_trees_final_model": final_params["iterations"],
+            "train_score": float(train_score),
+            "test_score": float(test_score),
+        }
+
+    return results

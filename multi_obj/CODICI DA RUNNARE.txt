@@ -1,0 +1,37 @@
+CODICI DA RUNNARE
+
+python 2_training_predictive_model.py
+
+python 3_run_experiment.py --case_study "BAC" --window_size 5 --reduced_threshold 0.05 --pop_size 50 --n_generations 10 --k 5
+python 3_run_experiment.py --case_study "BPI12" --window_size 5 --reduced_threshold 0.05 --pop_size 50 --n_generations 10 --k 5
+python 3_run_experiment.py --case_study "bpi17_before" --window_size 5 --reduced_threshold 0.05 --pop_size 50 --n_generations 10 --k 5
+python 3_run_experiment.py --case_study "bpi17_after" --window_size 5 --reduced_threshold 0.05 --pop_size 50 --n_generations 10 --k 5
+
+python 4_run_recommendation_simulation.py --case_study BAC --n_sim 10 --k 5
+python 4_run_recommendation_simulation.py --case_study BPI12 --n_sim 10 --k 5
+python 4_run_recommendation_simulation.py --case_study bpi17_before --n_sim 10 --k 5
+python 4_run_recommendation_simulation.py --case_study bpi17_after --n_sim 10 --k 5
+
+python 5_result_computation.py
+
+python 3_plot_pareto.py --case_study "BAC" --k 5
+python 3_plot_pareto.py --case_study "BPI12" --k 5
+python 3_plot_pareto.py --case_study "bpi17_before" --k 5
+python 3_plot_pareto.py --case_study "bpi17_after" --k 5
+
+python 8_plot_case_comparison.py --case_study BAC --case_id 201812002630
+python 8_plot_case_comparison.py --case_study BAC --case_id 201812007727
+python 8_plot_case_comparison.py --case_study BAC --case_id 201812006707
+
+python 8_plot_case_comparison.py --case_study BPI12 --case_id 208049
+python 8_plot_case_comparison.py --case_study BPI12 --case_id 201373
+python 8_plot_case_comparison.py --case_study BPI12 --case_id 198232
+
+python 8_plot_case_comparison.py --case_study bpi17_before --case_id Application_1005586643
+python 8_plot_case_comparison.py --case_study bpi17_before --case_id Application_1072363196
+python 8_plot_case_comparison.py --case_study bpi17_before --case_id Application_1359726788
+
+python 8_plot_case_comparison.py --case_study bpi17_after --case_id Application_1028665365
+python 8_plot_case_comparison.py --case_study bpi17_after --case_id Application_1013192848
+python 8_plot_case_comparison.py --case_study bpi17_after --case_id Application_1867093856
+

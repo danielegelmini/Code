@@ -1,8 +1,8 @@
 {
-    "learning_rate": 0.05996601592710078,
-    "depth": 8,
-    "l2_leaf_reg": 11.895133467213842,
-    "colsample_bylevel": 0.8243411531972018,
-    "bootstrap_type": "MVS",
-    "subsample": 0.9872672599261315
+    "learning_rate": 0.05253500915441508,
+    "depth": 10,
+    "l2_leaf_reg": 15.58433435626973,
+    "colsample_bylevel": 0.7388770142922484,
+    "bootstrap_type": "Bayesian",
+    "bagging_temperature": 0.6116640644429854
 }
