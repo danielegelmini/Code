@@ -331,4 +331,4 @@ if __name__ == "__main__":
     )
 
 # Example usage:
-# python 3_tune_nsga2_params.py --case_study "BAC" --n_cases 30 --pop_sizes "10,20,30,50" --n_generations "3,5,7,10"
+# python 3_tune_nsga2_params.py --case_study "BAC" --n_cases 30 --pop_sizes "70,85,100" --n_generations "1,2,3,4,5"
