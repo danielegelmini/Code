@@ -180,7 +180,7 @@ def run_experiment_top_k(
             + (f" | pop_size: {pop_size} | n_generations: {n_generations}" if current_method == "nsga2" else "")
         )
         print(f"Generating top-{k} recommendations...")
-        recommendations_list = compute_recommendations_top_k(
+        recommendations_list, objectives_list = compute_recommendations_top_k(
             test_log=test_log,
             test_data=test_data,
             case_study=case_study,
@@ -202,7 +202,9 @@ def run_experiment_top_k(
             k=k,
         )
 
-        for rank, recommendations in enumerate(recommendations_list, start=1):
+        for rank, (recommendations, objectives) in enumerate(
+            zip(recommendations_list, objectives_list), start=1
+        ):
             filename = os.path.join(
                 save_path, f"recommendations_{case_study}_{current_method}_top{rank}of{k}.csv"
             )
@@ -210,6 +212,25 @@ def run_experiment_top_k(
                 recommendations, orient="index", columns=["Next_activity", "Next_resource"]
             ).reset_index().rename(columns={"index": "case:concept:name"})
             rec_df.to_csv(filename, index=False)
+
+            # Diagnostic sidecar: the predicted objective values (incl. the
+            # confidence / uncertainty KPI) behind each chosen pair. The
+            # simulation only ever reads the file above -- this one is for
+            # Pareto-front analysis and is deliberately kept separate so it is
+            # never picked up by 4_run_recommendation_simulation.py /
+            # 5_result_computation.py (their filename patterns require the name
+            # to end in `top{rank}of{k}.csv`).
+            obj_filename = os.path.join(
+                save_path,
+                f"recommendations_{case_study}_{current_method}_top{rank}of{k}_objectives.csv",
+            )
+            pd.DataFrame.from_dict(
+                objectives,
+                orient="index",
+                columns=["pred_outcome", "pred_sigmoid_mm_time", "pred_uncertainty"],
+            ).reset_index().rename(columns={"index": "case:concept:name"}).to_csv(
+                obj_filename, index=False
+            )
             print(f"Saved rank {rank}/{k} results to {filename}")
 
         results_by_method[current_method] = recommendations_list

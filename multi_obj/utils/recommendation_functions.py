@@ -25,6 +25,69 @@ start_date_name = "start:timestamp"
 resource_column_name = "org:resource"
 outcome_name = "outcome"
 
+# Which component of the time regressor's predictive uncertainty is used as the
+# THIRD Pareto objective (minimised, i.e. "prefer confident predictions"):
+#   "total"     -> aleatoric + epistemic  (default)
+#   "data"      -> aleatoric only (irreducible process noise)
+#   "knowledge" -> epistemic only (model has seen few cases like this)
+# This value is used ONLY to build the Pareto front and to pick the
+# (activity, resource) pairs. It is never written to the recommendation CSVs
+# and never reaches the simulation.
+UNCERTAINTY_KIND = "total"
+
+_UNCERTAINTY_WARNED = False
+
+
+def _minmax_columns(mat):
+    """Min-max scale each column of a 2-D array to [0, 1]; constant columns -> 0."""
+    mat = np.asarray(mat, dtype=float)
+    lo = mat.min(axis=0)
+    span = mat.max(axis=0) - lo
+    span[span == 0] = 1.0
+    return (mat - lo) / span
+
+
+def predict_time_and_uncertainty(predictive_time_model, rows_df):
+    """
+    Run the time model on rows_df and return (mean, uncertainty), both 1-D
+    numpy arrays.
+
+    `mean` is the predicted 'sigmoid_mm' remaining time -- exactly what
+    predictive_time_model.predict(rows_df) returned before. `uncertainty` is the
+    standard deviation of that prediction, of the kind selected by
+    UNCERTAINTY_KIND.
+
+    Works whether predictive_time_model is a bare estimator or an sklearn
+    Pipeline whose final "prediction" step is an UncertaintyRegressor. If the
+    model has no uncertainty support (an older RMSE/MAE model), `uncertainty`
+    comes back as all zeros and a one-time warning is printed, so the rest of
+    the pipeline still runs with the third objective effectively disabled.
+    """
+    global _UNCERTAINTY_WARNED
+
+    predictor = predictive_time_model
+    predictor_input = rows_df
+    if hasattr(predictive_time_model, "named_steps"):
+        steps = predictive_time_model.named_steps
+        predictor = steps.get("prediction", predictive_time_model)
+        if "transformation" in steps:
+            predictor_input = steps["transformation"].transform(rows_df)
+
+    if hasattr(predictor, "predict_uncertainty"):
+        out = predictor.predict_uncertainty(predictor_input)
+        key = {"total": "total_std", "data": "data_std", "knowledge": "knowledge_std"}[UNCERTAINTY_KIND]
+        return np.asarray(out["mean"], dtype=float), np.asarray(out[key], dtype=float)
+
+    mean = np.asarray(predictive_time_model.predict(rows_df), dtype=float)
+    if not _UNCERTAINTY_WARNED:
+        print(
+            "[recommendation_functions] time model exposes no uncertainty; the "
+            "third Pareto objective is disabled (all zeros). Retrain the time "
+            "model with loss_function='RMSEWithUncertainty'."
+        )
+        _UNCERTAINTY_WARNED = True
+    return mean, np.zeros_like(mean)
+
 # ---------------------------------------------------------------------------
 # Utils for run_experiment.py
 # ---------------------------------------------------------------------------
@@ -210,8 +273,10 @@ def _evaluate_candidates(
         predictive_time_model: The trained model used to predict the total or remaining time.
 
     Returns:
-        np.ndarray: A 2D numpy array where each row corresponds to a candidate pair, 
-                    formatted as [predicted_outcome, predicted_total_time].
+        np.ndarray: A 2D numpy array where each row corresponds to a candidate pair,
+                    formatted as [predicted_outcome, predicted_total_time,
+                    predicted_uncertainty] (the std of the time prediction, of
+                    the kind set by UNCERTAINTY_KIND).
     """
     base_outcome_row = align_query_instance_with_model(query_instance, predictive_outcome_model).iloc[0].to_dict()
     base_time_row = align_query_instance_with_model(query_instance, predictive_time_model).iloc[0].to_dict()
@@ -229,8 +294,10 @@ def _evaluate_candidates(
         time_rows.append(t_row)
 
     predicted_outcome = predictive_outcome_model.predict_proba(pd.DataFrame(outcome_rows))[:, 1]
-    predicted_total_time = predictive_time_model.predict(pd.DataFrame(time_rows))
-    return np.column_stack([predicted_outcome, predicted_total_time])
+    predicted_total_time, predicted_uncertainty = predict_time_and_uncertainty(
+        predictive_time_model, pd.DataFrame(time_rows)
+    )
+    return np.column_stack([predicted_outcome, predicted_total_time, predicted_uncertainty])
 
 # ---------------------------------------------------------------------------
 # Exhaustive research
@@ -254,8 +321,9 @@ def exhaustive_pareto_search(
         act_with_res (dict of str to list of str): Mapping of valid resources for each activity.
 
     Returns:
-        list of tuple: A list of tuples containing (activity, resource, predicted_outcome, predicted_time) 
-        for all evaluated valid pairs.
+        list of tuple: A list of tuples containing (activity, resource,
+        predicted_outcome, predicted_time, predicted_uncertainty) for all
+        evaluated valid pairs.
     """
     valid_pairs = _build_valid_pairs(possible_actions, act_with_res)
     if not valid_pairs:
@@ -263,8 +331,8 @@ def exhaustive_pareto_search(
 
     objs = _evaluate_candidates(valid_pairs, query_instance, predictive_outcome_model, predictive_time_model)
     return [
-        (act, res, float(outcome), float(total_time))
-        for (act, res), (outcome, total_time) in zip(valid_pairs, objs)
+        (act, res, float(outcome), float(total_time), float(uncertainty))
+        for (act, res), (outcome, total_time, uncertainty) in zip(valid_pairs, objs)
     ]
 
 
@@ -275,9 +343,10 @@ class _ActivityResourceProblem(Problem):
     """
     Integer-variable pymoo Problem subclass for evaluating activity and resource pairs.
 
-    It maps an integer decision variable to a candidate pair in order to minimize the negated 
-    predicted outcome (thereby maximizing it) and minimize the predicted total time.
-    This acts as a wrapper around the `_evaluate_candidates` function to satisfy the pymoo API.
+    It maps an integer decision variable to a candidate pair in order to minimize the negated
+    predicted outcome (thereby maximizing it), the predicted total time, and the predicted
+    uncertainty of that time. This acts as a wrapper around the `_evaluate_candidates` function
+    to satisfy the pymoo API.
     """
     def __init__(self, valid_pairs, query_instance, predictive_outcome_model, predictive_time_model):
         """
@@ -289,7 +358,7 @@ class _ActivityResourceProblem(Problem):
             predictive_outcome_model (estimator): Model to predict the target outcome.
             predictive_time_model (estimator): Model to predict the required time.
         """
-        super().__init__(n_var=1, n_obj=2, n_constr=0, xl=0, xu=max(len(valid_pairs) - 1, 0), vtype=int)
+        super().__init__(n_var=1, n_obj=3, n_constr=0, xl=0, xu=max(len(valid_pairs) - 1, 0), vtype=int)
         self.valid_pairs = valid_pairs
         self.query_instance = query_instance
         self.predictive_outcome_model = predictive_outcome_model
@@ -308,7 +377,8 @@ class _ActivityResourceProblem(Problem):
         idx = np.clip(np.round(X[:, 0]).astype(int), 0, len(self.valid_pairs) - 1)
         candidates = [self.valid_pairs[i] for i in idx]
         objs = _evaluate_candidates(candidates, self.query_instance, self.predictive_outcome_model, self.predictive_time_model)
-        out["F"] = np.column_stack([-objs[:, 0], objs[:, 1]])
+        # minimise: -outcome, time, uncertainty
+        out["F"] = np.column_stack([-objs[:, 0], objs[:, 1], objs[:, 2]])
 
 
 def nsga2_pareto_search(
@@ -322,10 +392,11 @@ def nsga2_pareto_search(
     crossover_rate: float = 0.9,
     mutation_rate: float = 0.3,
     random_state: Optional[int] = None,
-) -> List[Tuple[str, str, float, float]]:
+) -> List[Tuple[str, str, float, float, float]]:
     """
     Finds the Pareto front of best (activity, resource) pairs using the NSGA-II genetic algorithm.
-    It attempts to simultaneously maximize the predicted outcome and minimize the predicted time.
+    It simultaneously maximizes the predicted outcome and minimizes both the predicted time and
+    the predictive uncertainty of that time.
 
     Args:
         query_instance (pandas.DataFrame, pandas.Series, or dict): The current state features of the case.
@@ -340,8 +411,9 @@ def nsga2_pareto_search(
         random_state (int, optional): Seed for reproducibility. Defaults to None.
 
     Returns:
-        list of tuple: A list of tuples containing the Pareto-optimal 
-        (activity, resource, predicted_outcome, predicted_time) pairs discovered by the algorithm.
+        list of tuple: A list of tuples containing the Pareto-optimal
+        (activity, resource, predicted_outcome, predicted_time,
+        predicted_uncertainty) pairs discovered by the algorithm.
     """
     valid_pairs = _build_valid_pairs(possible_actions, act_with_res)
     if not valid_pairs:
@@ -350,7 +422,7 @@ def nsga2_pareto_search(
     if len(valid_pairs) == 1:
         objs = _evaluate_candidates(valid_pairs, query_instance, predictive_outcome_model, predictive_time_model)
         act, res = valid_pairs[0]
-        return [(act, res, float(objs[0, 0]), float(objs[0, 1]))]
+        return [(act, res, float(objs[0, 0]), float(objs[0, 1]), float(objs[0, 2]))]
 
     problem = _ActivityResourceProblem(valid_pairs, query_instance, predictive_outcome_model, predictive_time_model)
 
@@ -376,39 +448,51 @@ def nsga2_pareto_search(
             continue
         seen.add(xi)
         act, resource = valid_pairs[xi]
-        pareto_set.append((act, resource, float(-F[i, 0]), float(F[i, 1])))
+        pareto_set.append((act, resource, float(-F[i, 0]), float(F[i, 1]), float(F[i, 2])))
     return pareto_set
 
 # ---------------------------------------------------------------------------
 # Selection rules for the best action/resource pair from the Pareto set
 # ---------------------------------------------------------------------------
+def _front_objective_matrix(pareto_set):
+    """(..., outcome, time, uncertainty) tuples -> raw objective matrix
+    [outcome, 1 - time, uncertainty] plus the paretoset sense list."""
+    outcome_vals = np.array([item[2] for item in pareto_set], dtype=float)
+    inv_time_vals = 1.0 - np.array([item[3] for item in pareto_set], dtype=float)
+    uncertainty_vals = np.array([item[4] for item in pareto_set], dtype=float)
+    return np.column_stack([outcome_vals, inv_time_vals, uncertainty_vals]), ["max", "max", "min"]
+
+
 def select_best_pareto_action(pareto_set):
     """
     Selects the single best (activity, resource) pair from a computed Pareto set.
-    Time is first transformed into (1 - time), so both objectives are maximized
-    and the ideal point becomes [1.0, 1.0]. The true Pareto front is then computed
-    on (outcome, 1 - time), and the selected point is the one on that front closest
-    to the diagonal y = x, i.e. the most balanced trade-off between outcome and time.
+
+    The three objectives are outcome (maximize), 1 - time (maximize) and
+    predictive uncertainty (minimize). The true Pareto front is computed on
+    those, then each objective is min-max normalized across the front and the
+    uncertainty axis is flipped to a "confidence" (1 - normalized uncertainty),
+    so the ideal point is [1, 1, 1]. The selected point is the front point
+    closest (Euclidean) to that ideal point -- the most balanced trade-off.
 
     Args:
-        pareto_set (list of tuple): A list of evaluated candidate tuples (activity, resource, outcome, time).
+        pareto_set (list of tuple): evaluated candidate tuples
+            (activity, resource, outcome, time, uncertainty).
 
     Returns:
-        tuple: The optimal (activity, resource) pair. Returns None if the set is empty.
+        tuple: The optimal (activity, resource) pair. None if the set is empty.
     """
     if not pareto_set:
         return None
 
-    outcome_vals = np.array([item[2] for item in pareto_set], dtype=float)
-    inv_time_vals = 1.0 - np.array([item[3] for item in pareto_set], dtype=float)
-
-    pareto_vals = np.column_stack([outcome_vals, inv_time_vals])
-    is_pareto = paretoset(pareto_vals, sense=["max", "max"])
+    raw_vals, sense = _front_objective_matrix(pareto_set)
+    is_pareto = paretoset(raw_vals, sense=sense)
     pareto_front = [item for item, keep in zip(pareto_set, is_pareto) if keep]
-    pareto_front_vals = pareto_vals[is_pareto]
+    front_vals = raw_vals[is_pareto]
 
-    distances_to_diagonal = np.abs(pareto_front_vals[:, 0] - pareto_front_vals[:, 1])
-    best_index = np.argmin(distances_to_diagonal)
+    norm = _minmax_columns(front_vals)
+    norm[:, 2] = 1.0 - norm[:, 2]  # uncertainty -> confidence (higher is better)
+    distances_to_ideal = np.linalg.norm(norm - 1.0, axis=1)
+    best_index = int(np.argmin(distances_to_ideal))
     best_act, best_res = pareto_front[best_index][:2]
     return (best_act, best_res)
 
@@ -427,7 +511,8 @@ def select_top_k_pareto_actions(pareto_set, k=5):
     the CBC solver bundled with pulp.
 
     Args:
-        pareto_set (list of tuple): A list of evaluated candidate tuples (activity, resource, outcome, time).
+        pareto_set (list of tuple): evaluated candidate tuples
+            (activity, resource, outcome, time, uncertainty).
         k (int): Number of points to select. Defaults to 5.
 
     Returns:
@@ -436,19 +521,21 @@ def select_top_k_pareto_actions(pareto_set, k=5):
     if not pareto_set:
         return []
 
-    outcome_vals = np.array([item[2] for item in pareto_set], dtype=float)
-    inv_time_vals = 1.0 - np.array([item[3] for item in pareto_set], dtype=float)
-    pareto_vals = np.column_stack([outcome_vals, inv_time_vals])
-
-    is_pareto = paretoset(pareto_vals, sense=["max", "max"])
+    raw_vals, sense = _front_objective_matrix(pareto_set)  # [outcome, 1 - time, uncertainty]
+    is_pareto = paretoset(raw_vals, sense=sense)
     front = [item for item, keep in zip(pareto_set, is_pareto) if keep]
-    front_vals = pareto_vals[is_pareto]
+    front_vals = raw_vals[is_pareto]
 
     n_front = len(front)
     if n_front <= k:
         return [(item[0], item[1]) for item in front]
 
-    diff = front_vals[:, None, :] - front_vals[None, :, :]
+    # Min-max normalize the three objectives before measuring pairwise
+    # distances, so the p-dispersion spread is even across all three axes
+    # rather than dominated by whichever objective has the widest raw range
+    # (uncertainty is on a different scale than outcome / 1 - time).
+    norm = _minmax_columns(front_vals)
+    diff = norm[:, None, :] - norm[None, :, :]
     cost_matrix = np.linalg.norm(diff, axis=2)
 
     p_dispersion = PDispersion.from_cost_matrix(cost_matrix, k)
@@ -481,7 +568,10 @@ def compute_recommendations_top_k(
     mutation_rate: float = 0.3,
     random_state: Optional[int] = None,
     k: int = 5,
-) -> List[Dict[Any, Tuple[Optional[str], Optional[str]]]]:
+) -> Tuple[
+    List[Dict[Any, Tuple[Optional[str], Optional[str]]]],
+    List[Dict[Any, Tuple[Optional[float], Optional[float], Optional[float]]]],
+]:
     """
     Generates next-step recommendations (activity and resource) for all cases in a test dataset.
     This unified function supports both 'exhaustive' search and 'nsga2' (genetic algorithm) 
@@ -509,13 +599,25 @@ def compute_recommendations_top_k(
         k (int, optional): The number of top recommendations to return for each case. Defaults to 5.
 
     Returns:
-        list of dict: A list of length k; the j-th dict is the recommendations dictionary
-        {case_id: (next_activity, next_resource)} for the j-th selected pair.
+        tuple (rec_list, obj_list), each a list of length k:
+          - rec_list[j] is {case_id: (next_activity, next_resource)} for the
+            j-th selected pair (this is what gets written to the recommendation
+            CSVs and later fed to the simulation).
+          - obj_list[j] is {case_id: (pred_outcome, pred_time, pred_uncertainty)}
+            for that same pair -- diagnostic only (the confidence / uncertainty
+            KPI), never passed to the simulation.
+        Missing entries are (None, None) / (None, None, None).
     """
 
     method = method.lower()
     forbidden = set(forbidden_map.get(case_study, []))
     rec_list: List[Dict[Any, Tuple[Optional[str], Optional[str]]]] = [dict() for _ in range(k)]
+    obj_list: List[Dict[Any, Tuple[Optional[float], Optional[float], Optional[float]]]] = [dict() for _ in range(k)]
+
+    def _fill_empty(cid):
+        for rec, obj in zip(rec_list, obj_list):
+            rec[cid] = (None, None)
+            obj[cid] = (None, None, None)
 
     for cid in tqdm.tqdm(pd.unique(test_data[case_id_name])):
         trace_df = test_log[test_log[case_id_name] == cid]
@@ -526,8 +628,7 @@ def compute_recommendations_top_k(
         poss = next_possible_activities(trace_history, transition_graph, window_size)
         poss = [a for a in poss if a not in forbidden]
         if not poss:
-            for rec in rec_list:
-                rec[cid] = (None, None)
+            _fill_empty(cid)
             continue
 
         if method == "nsga2":
@@ -555,12 +656,19 @@ def compute_recommendations_top_k(
             raise ValueError("Unknown method for recommendations: %s" % method)
 
         if not pareto_front:
-            for rec in rec_list:
-                rec[cid] = (None, None)
+            _fill_empty(cid)
             continue
 
         top_k_pairs = select_top_k_pareto_actions(pareto_front, k=k)
-        for j, rec in enumerate(rec_list):
-            rec[cid] = top_k_pairs[j] if j < len(top_k_pairs) else (None, None)
+        # (act, res) -> (outcome, time, uncertainty), for the diagnostic file
+        obj_by_pair = {(t[0], t[1]): (float(t[2]), float(t[3]), float(t[4])) for t in pareto_front}
+        for j in range(k):
+            if j < len(top_k_pairs):
+                pair = top_k_pairs[j]
+                rec_list[j][cid] = pair
+                obj_list[j][cid] = obj_by_pair.get(pair, (None, None, None))
+            else:
+                rec_list[j][cid] = (None, None)
+                obj_list[j][cid] = (None, None, None)
 
-    return rec_list
+    return rec_list, obj_list

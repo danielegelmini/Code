@@ -1,3 +1,28 @@
+"""Visual comparison of the exhaustive and NSGA-II Pareto searches for one case.
+
+For a given case study this script picks one test-set case (either a case id
+passed on the command line or, by default, the case whose Pareto front has the
+most solutions and the widest spread), then for that case:
+
+  * builds the transition system from the training log and lists the valid
+    (next activity, next resource) pairs allowed after the case prefix;
+  * scores every pair with the predictive models on three objectives -- case
+    outcome probability (maximize), predicted total time (minimize, plotted as
+    1 - time) and prediction uncertainty (minimize, plotted as a normalised
+    "confidence" = 1 - uncertainty);
+  * computes the Pareto front twice, once with the exhaustive search and once
+    with NSGA-II, and records the wall-clock time of each;
+  * highlights the top-k actions chosen by p-dispersion and the "no
+    recommendation" baseline point (the case left as it happened in the log);
+  * saves one figure per method under ``save_dir`` -- either a 2D plot with
+    confidence encoded as point color (``--view color``, default) or a 3D
+    scatter with confidence on the third axis (``--view 3d``).
+
+Example usage:
+    python 3_plot_pareto.py --case_study "BAC" --k 5
+    python 3_plot_pareto.py --case_study "BAC" --k 5 --view 3d
+"""
+
 import os
 import argparse
 import numpy as np
@@ -20,13 +45,24 @@ from utils.recommendation_functions import (
     exhaustive_pareto_search,
     _build_valid_pairs,
     _evaluate_candidates,
+    predict_time_and_uncertainty,
     select_top_k_pareto_actions,
 )
+from mpl_toolkits.mplot3d import Axes3D  # noqa: F401  (registers the 3d projection)
 
 import warnings
 warnings.filterwarnings("ignore")
 
 def _default_forbidden_map():
+    """Return the per-case-study map of activities that must never be recommended.
+
+    Input:
+        None.
+    Output:
+        dict[str, list[str]] mapping a case-study name to the list of activity
+        labels that are forbidden as recommended next activities for that case
+        study (e.g. activities that trivially close the case).
+    """
     bpi17_forbidden = ["O_Accepted"]
     bac_forbidden = ["Network Adjustment Requested", "Back-Office Adjustment Requested"]
     return {
@@ -37,9 +73,23 @@ def _default_forbidden_map():
     }
 
 def evaluate_robust(valid_pairs, query_instance, predictive_outcome_model, predictive_time_model):
-    """
-    Funzione robusta che usa predict_proba se disponibile per l'outcome,
-    evitando di avere solo valori secchi 0 o 1.
+    """Evaluate every candidate (activity, resource) pair on the three objectives.
+
+    Uses ``predict_proba`` for the outcome model when available so that the
+    outcome objective is a probability rather than a hard 0/1 label.
+
+    Input:
+        valid_pairs: iterable of (next_activity, next_resource) tuples to score.
+        query_instance: the prefix/query instance (row-like) describing the case
+            state before applying a recommendation.
+        predictive_outcome_model: fitted classifier for the case outcome; its
+            ``predict_proba`` (preferred) or ``predict`` is called.
+        predictive_time_model: fitted model returning the predicted total time
+            and its uncertainty via ``predict_time_and_uncertainty``.
+    Output:
+        np.ndarray of shape (len(valid_pairs), 3) with columns
+        [predicted_outcome, predicted_total_time, predicted_uncertainty] -- the
+        same three objectives used by the Pareto search.
     """
     base_outcome_row = _to_row_df(query_instance).iloc[0].to_dict()
     base_time_row = _to_row_df(query_instance).iloc[0].to_dict()
@@ -62,8 +112,10 @@ def evaluate_robust(valid_pairs, query_instance, predictive_outcome_model, predi
     else:
         predicted_outcome = predictive_outcome_model.predict(df_out)
 
-    predicted_total_time = predictive_time_model.predict(pd.DataFrame(time_rows))
-    return np.column_stack([predicted_outcome, predicted_total_time])
+    predicted_total_time, predicted_uncertainty = predict_time_and_uncertainty(
+        predictive_time_model, pd.DataFrame(time_rows)
+    )
+    return np.column_stack([predicted_outcome, predicted_total_time, predicted_uncertainty])
 
 
 def run_and_plot_comparison(
@@ -74,11 +126,40 @@ def run_and_plot_comparison(
     n_generations: int = 10,
     random_state: int = 1234,
     k: int = 5,
+    view: str = "color",
     save_dir: str = "C:\\Users\\Utente\\Desktop\\tesi magistrale\\Code\\multi_obj\\pareto_front_images"
 ):
+    """Run the exhaustive and NSGA-II Pareto searches for one case and plot both.
+
+    For the chosen case the function evaluates every valid (activity, resource)
+    pair, computes the Pareto front with each method, highlights the top-k
+    actions selected by p-dispersion, adds the "no recommendation" baseline
+    point, and saves one figure per method to ``save_dir``.
+
+    Input:
+        case_study: dataset name (e.g. "BAC", "BPI12", "bpi17_before").
+        target_case_id: case id to analyse; if None or not present in the test
+            set, the case with the largest / most spread-out Pareto front is
+            selected automatically.
+        window_size: prefix window length used to build the transition system
+            and to look up the next possible activities.
+        pop_size: NSGA-II population size.
+        n_generations: number of NSGA-II generations.
+        random_state: seed for numpy / random and for NSGA-II reproducibility.
+        k: number of Pareto points to highlight as the top-k selection.
+        view: "color" -> 2D plot (outcome vs 1-time) with confidence
+            (1 - normalised uncertainty) mapped to point color; "3d" -> 3D
+            scatter with confidence as the third axis.
+        save_dir: directory where the output .jpg figures are written (created
+            if missing).
+    Output:
+        None. Figures are written to disk and progress is printed to stdout.
+        The function returns early (printing a message) if the case has no
+        possible next activity or no valid action-resource pair.
+    """
     np.random.seed(random_state)
     random.seed(random_state)
-    
+
     print(f"Loading data for {case_study}...")
     train_data, test_data, test_log = load_case_study(case_study)
 
@@ -109,17 +190,17 @@ def run_and_plot_comparison(
     act_with_res = act_with_res_func(train_data, activity_column_name, resource_column_name)
     forbidden_map = _default_forbidden_map()
     forbidden = set(forbidden_map.get(case_study, []))
-    
+
     query_instances_by_case = build_query_instances(test_data, case_id_name)
     unique_cases = pd.unique(test_data[case_id_name])
-    
-    # Selezione automatica del caso con la curva più ampia e distribuita
+
+    # Automatic selection of the case with the widest, most spread-out front
     if target_case_id is None or target_case_id not in unique_cases:
-        print("Ricerca del caso con il maggior numero di soluzioni e la curva di Pareto più distanziata...")
+        print("Searching for the case with the most solutions and the most spread-out Pareto curve...")
         best_score = -1
         best_case_id = None
-        
-        for cid in tqdm.tqdm(unique_cases, desc="Valutazione casi"):
+
+        for cid in tqdm.tqdm(unique_cases, desc="Evaluating cases"):
             trace_df = test_log[test_log[case_id_name] == cid]
             trace_history = trace_df[activity_column_name].tolist()
             query_instance = query_instances_by_case[cid]
@@ -133,87 +214,78 @@ def run_and_plot_comparison(
             n_solutions = len(valid_pairs)
             if n_solutions < 10:
                 continue
-                
+
             all_evals = evaluate_robust(valid_pairs, query_instance, predictive_outcome_model, predictive_time_model)
             all_x = all_evals[:, 0]
             all_y = 1.0 - all_evals[:, 1]
-            
+
             pareto_vals = np.column_stack((all_x, all_y))
             try:
                 is_pareto = paretoset(pareto_vals, sense=["max", "max"])
                 front_x = all_x[is_pareto]
                 front_y = all_y[is_pareto]
-                
+
                 spread_x = np.max(front_x) - np.min(front_x)
                 spread_y = np.max(front_y) - np.min(front_y)
                 spread_area = spread_x * spread_y
                 score = n_solutions * spread_area
-                
+
                 if score > best_score:
                     best_score = score
                     best_case_id = cid
             except Exception:
                 continue
-                
+
         if best_case_id is None:
             target_case_id = random.choice(unique_cases)
         else:
             target_case_id = best_case_id
-        print(f"\nCaso selezionato automaticamente: {target_case_id}")
+        print(f"\nAutomatically selected case: {target_case_id}")
     else:
-        print(f"Utilizzo il case_id fornito: {target_case_id}")
+        print(f"Using the provided case_id: {target_case_id}")
 
-    # Estrazione dati per il caso scelto
+    # Extract data for the chosen case
     trace_df = test_log[test_log[case_id_name] == target_case_id]
     trace_history = trace_df[activity_column_name].tolist()
     query_instance = query_instances_by_case[target_case_id]
 
     poss = next_possible_activities(trace_history, transition_graph, window_size)
     poss = [a for a in poss if a not in forbidden]
-    
+
     if not poss:
-        print("Nessuna attività successiva possibile per questo caso.")
+        print("No possible next activity for this case.")
         return
 
     valid_pairs = _build_valid_pairs(poss, act_with_res)
     if not valid_pairs:
-        print("Nessuna coppia azione-risorsa valida.")
+        print("No valid action-resource pair.")
         return
 
-    # Punto "senza raccomandazione": valuta i modelli sulla query_instance così
-    # com'è, cioè con NEXT_ACTIVITY/NEXT_RESOURCE pari a quanto realmente
-    # accaduto nel log (nessuna azione consigliata applicata).
+    # "No recommendation" point: evaluate the models on the query_instance as it
+    # is, i.e. with NEXT_ACTIVITY/NEXT_RESOURCE equal to what actually happened
+    # in the log (no recommended action applied).
     baseline_row = _to_row_df(query_instance)
     if hasattr(predictive_outcome_model, "predict_proba"):
         baseline_outcome = predictive_outcome_model.predict_proba(baseline_row)[:, 1][0]
     else:
         baseline_outcome = predictive_outcome_model.predict(baseline_row)[0]
-    baseline_time = predictive_time_model.predict(baseline_row)[0]
+    baseline_time_arr, baseline_unc_arr = predict_time_and_uncertainty(predictive_time_model, baseline_row)
+    baseline_time = float(baseline_time_arr[0])
+    baseline_unc = float(baseline_unc_arr[0])
     baseline_x = baseline_outcome
     baseline_y = 1.0 - baseline_time
 
     # =========================================================================
-    metodi = ["exhaustive", "nsga2"]
-    
-    for method in metodi:
-        print(f"\nEsecuzione metodo: {method.upper()}...")
+    methods = ["exhaustive", "nsga2"]
+
+    for method in methods:
+        print(f"\nRunning method: {method.upper()}...")
         t_start = time.time()
-        
+
+        all_evals = evaluate_robust(valid_pairs, query_instance, predictive_outcome_model, predictive_time_model)
         if method == "exhaustive":
-            # Tempo totale per la computazione di tutti i punti dello spazio di ricerca
-            all_evals = evaluate_robust(valid_pairs, query_instance, predictive_outcome_model, predictive_time_model)
             pareto_set = exhaustive_pareto_search(query_instance, poss, predictive_outcome_model, predictive_time_model, act_with_res)
-            elapsed_time = time.time() - t_start
-            
-            all_x = all_evals[:, 0]
-            all_y = 1.0 - all_evals[:, 1]
-            
         else:  # nsga2
-            # Tempo impiegato dall'algoritmo genetico per trovare il fronte
-            all_evals = evaluate_robust(valid_pairs, query_instance, predictive_outcome_model, predictive_time_model)
-            all_x = all_evals[:, 0]
-            all_y = 1.0 - all_evals[:, 1]
-            
             pareto_set = nsga2_pareto_search(
                 query_instance=query_instance,
                 possible_actions=poss,
@@ -224,84 +296,135 @@ def run_and_plot_comparison(
                 n_generations=n_generations,
                 random_state=random_state,
             )
-            elapsed_time = time.time() - t_start
+        elapsed_time = time.time() - t_start
+
+        all_x = all_evals[:, 0]
+        all_y = 1.0 - all_evals[:, 1]
+        all_unc = all_evals[:, 2]
 
         if not pareto_set:
-            print(f"Set di Pareto vuoto per {method}. Salto il plot.")
+            print(f"Empty Pareto set for {method}. Skipping the plot.")
             continue
-        
+
+        # Confidence = 1 - uncertainty, min-max normalised over all evaluated
+        # points (baseline included), so 0 = least reliable point, 1 = most
+        # reliable. Used only for the point color / the third plot axis.
+        unc_all = np.concatenate([all_unc, [baseline_unc]])
+        u_lo, u_hi = float(np.min(unc_all)), float(np.max(unc_all))
+        u_span = (u_hi - u_lo) or 1.0
+        to_conf = lambda u: 1.0 - (np.asarray(u, dtype=float) - u_lo) / u_span
+        all_conf = to_conf(all_unc)
+        baseline_conf = float(to_conf(baseline_unc))
+
         front_x_raw = np.array([item[2] for item in pareto_set], dtype=float)
         front_y_raw = np.array([1.0 - item[3] for item in pareto_set], dtype=float)
-        
-        pareto_vals = np.column_stack((front_x_raw, front_y_raw))
-        is_pareto = paretoset(pareto_vals, sense=["max", "max"])
-        
-        front_x_sorted = front_x_raw[is_pareto]
-        front_y_sorted = front_y_raw[is_pareto]
-        
-        sorted_indices = np.argsort(front_x_sorted)
-        front_x_sorted = front_x_sorted[sorted_indices]
-        front_y_sorted = front_y_sorted[sorted_indices]
+        front_unc_raw = np.array([item[4] for item in pareto_set], dtype=float)
 
-        # Punti selezionati da select_top_k_pareto_actions (max-min / p-dispersion
-        # su outcome e 1-time): un sottoinsieme del fronte, marcati a parte.
+        pareto_vals = np.column_stack((front_x_raw, front_y_raw, front_unc_raw))
+        is_pareto = paretoset(pareto_vals, sense=["max", "max", "min"])
+
+        front_x = front_x_raw[is_pareto]
+        front_y = front_y_raw[is_pareto]
+        front_conf = to_conf(front_unc_raw[is_pareto])
+        order = np.argsort(front_x)
+        front_x, front_y, front_conf = front_x[order], front_y[order], front_conf[order]
+
+        # Points selected by select_top_k_pareto_actions (p-dispersion over the 3
+        # normalised objectives): a subset of the front, marked separately.
         top_k_pairs = select_top_k_pareto_actions(pareto_set, k=k)
-        pair_to_xy = {(item[0], item[1]): (item[2], 1.0 - item[3]) for item in pareto_set}
-        top_k_x = np.array([pair_to_xy[p][0] for p in top_k_pairs], dtype=float)
-        top_k_y = np.array([pair_to_xy[p][1] for p in top_k_pairs], dtype=float)
-
-        # Generazione Grafico
-        plt.figure(figsize=(10, 7))
-
-        plt.scatter(all_x, all_y, color='black', label='Evaluated Pairs (All)', alpha=0.6)
-        plt.scatter(front_x_sorted, front_y_sorted, color='blue', label='Pareto Front', zorder=5)
-        plt.plot(front_x_sorted, front_y_sorted, color='blue', linestyle='--', alpha=0.5)
-        plt.scatter(top_k_x, top_k_y, color='purple', marker='P', s=100, edgecolors='black',
-                    linewidths=0.6, label=f'Top-{k} Selected (p-dispersion)', zorder=8)
-        plt.scatter(1.0, 1.0, color='green', marker='X', s=100, label='Ideal Point (1,1)', zorder=10)
-        plt.scatter(baseline_x, baseline_y, color='orange', marker='D', s=100, label='No Recommendation (Baseline)', zorder=10)
+        pair_to_obj = {(item[0], item[1]): (item[2], 1.0 - item[3], item[4]) for item in pareto_set}
+        top_k_x = np.array([pair_to_obj[p][0] for p in top_k_pairs], dtype=float)
+        top_k_y = np.array([pair_to_obj[p][1] for p in top_k_pairs], dtype=float)
+        top_k_conf = to_conf(np.array([pair_to_obj[p][2] for p in top_k_pairs], dtype=float))
 
         title_text = (
             f"Pareto Front Analysis ({method.upper()})\n"
             f"Dataset: {case_study} | Case ID: {target_case_id}\n"
             f"Execution Time: {elapsed_time:.4f} seconds"
         )
-        plt.title(title_text)
-        plt.xlabel("Predicted Outcome (Probability Maximize)")
-        plt.ylabel("1 - Predicted Time (Maximize)")
-        plt.grid(True, linestyle=':', alpha=0.7)
-        plt.legend(loc='lower left')
-
-        plot_x_min = min(np.min(all_x), baseline_x)
-        plot_x_max = max(np.max(all_x), baseline_x)
-        plot_y_min = min(np.min(all_y), baseline_y)
-        plot_y_max = max(np.max(all_y), baseline_y)
-
-        margin_x = (plot_x_max - plot_x_min) * 0.05 if plot_x_max != plot_x_min else 0.05
-        margin_y = (plot_y_max - plot_y_min) * 0.05 if plot_y_max != plot_y_min else 0.05
-
-        plt.xlim(min(plot_x_min - margin_x, -0.05), max(plot_x_max + margin_x, 1.05))
-        plt.ylim(min(plot_y_min - margin_y, -0.05), max(plot_y_max + margin_y, 1.05))
-
         os.makedirs(save_dir, exist_ok=True)
-        filename = f"pareto_{case_study}_{method}_{str(target_case_id).replace(':', '_')}.jpg"
+        filename = f"pareto_{case_study}_{str(target_case_id).replace(':', '_')}_{method}_{view}.jpg"
         filepath = os.path.join(save_dir, filename)
-        plt.savefig(filepath, format='jpg', dpi=300, bbox_inches='tight')
+
+        if view == "3d":
+            fig = plt.figure(figsize=(11, 8))
+            ax = fig.add_subplot(111, projection="3d")
+            ax.scatter(all_x, all_y, all_conf, color="black", alpha=0.35, s=18, label="Evaluated Pairs (All)")
+            ax.scatter(front_x, front_y, front_conf, color="blue", s=45, label="Pareto Front")
+            ax.scatter(top_k_x, top_k_y, top_k_conf, color="purple", marker="P", s=110,
+                       edgecolors="black", linewidths=0.6, label=f"Top-{k} Selected (p-dispersion)")
+            ax.scatter([1.0], [1.0], [1.0], color="green", marker="X", s=110, label="Ideal Point (1,1,1)")
+            ax.scatter([baseline_x], [baseline_y], [baseline_conf], color="orange", marker="D", s=90,
+                       label="No Recommendation (Baseline)")
+            ax.set_xlabel("Predicted Outcome (max)")
+            ax.set_ylabel("1 - Predicted Time (max)")
+            ax.set_zlabel("Confidence = 1 - norm(uncertainty) (max)")
+            ax.set_title(title_text)
+            ax.legend(loc="upper left", fontsize=8)
+        else:  # "color": 2D plot, confidence encoded as point color
+            import matplotlib.lines as mlines
+
+            fig, ax = plt.subplots(figsize=(10, 7))
+            ax.scatter(all_x, all_y, c=all_conf, cmap="viridis", vmin=0.0, vmax=1.0,
+                       alpha=0.55, s=35)
+            sc = ax.scatter(front_x, front_y, c=front_conf, cmap="viridis", vmin=0.0, vmax=1.0,
+                            s=95, edgecolors="black", linewidths=1.4, zorder=5)
+            ax.plot(front_x, front_y, color="grey", linestyle="--", alpha=0.5, zorder=4)
+            ax.scatter(top_k_x, top_k_y, facecolors="none", edgecolors="crimson", marker="P",
+                       s=190, linewidths=1.9, zorder=8)
+            ax.scatter(1.0, 1.0, color="green", marker="X", s=110, zorder=10)
+            ax.scatter(baseline_x, baseline_y, color="orange", marker="D", s=110,
+                       edgecolors="black", linewidths=0.6, zorder=10)
+            cbar = fig.colorbar(sc, ax=ax)
+            cbar.set_label("Confidence = 1 - norm(uncertainty)  (higher is better)")
+
+            legend_handles = [
+                mlines.Line2D([], [], marker="o", color="none", markerfacecolor="grey",
+                              markersize=8, label="Evaluated pairs (color = confidence)"),
+                mlines.Line2D([], [], marker="o", color="none", markerfacecolor="grey",
+                              markeredgecolor="black", markersize=9, label="Pareto front"),
+                mlines.Line2D([], [], marker="P", color="none", markeredgecolor="crimson",
+                              markerfacecolor="none", markersize=13, label=f"Top-{k} selected (p-dispersion)"),
+                mlines.Line2D([], [], marker="X", color="none", markerfacecolor="green",
+                              markersize=11, label="Ideal point (1, 1)"),
+                mlines.Line2D([], [], marker="D", color="none", markerfacecolor="orange",
+                              markeredgecolor="black", markersize=9, label="No recommendation (baseline)"),
+            ]
+            ax.legend(handles=legend_handles, loc="lower left")
+            ax.set_xlabel("Predicted Outcome (Probability Maximize)")
+            ax.set_ylabel("1 - Predicted Time (Maximize)")
+            ax.set_title(title_text)
+            ax.grid(True, linestyle=":", alpha=0.7)
+            ax.legend(loc="lower left")
+
+            plot_x_min = min(np.min(all_x), baseline_x)
+            plot_x_max = max(np.max(all_x), baseline_x)
+            plot_y_min = min(np.min(all_y), baseline_y)
+            plot_y_max = max(np.max(all_y), baseline_y)
+            margin_x = (plot_x_max - plot_x_min) * 0.05 if plot_x_max != plot_x_min else 0.05
+            margin_y = (plot_y_max - plot_y_min) * 0.05 if plot_y_max != plot_y_min else 0.05
+            ax.set_xlim(min(plot_x_min - margin_x, -0.05), max(plot_x_max + margin_x, 1.05))
+            ax.set_ylim(min(plot_y_min - margin_y, -0.05), max(plot_y_max + margin_y, 1.05))
+
+        plt.savefig(filepath, format="jpg", dpi=300, bbox_inches="tight")
         plt.close()
-        print(f"Grafico salvato in: {filepath} (Tempo: {elapsed_time:.4f}s)")
+        print(f"Figure saved to: {filepath} (Time: {elapsed_time:.4f}s)")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Plot Pareto comparison with execution times.')
     parser.add_argument('--case_study', type=str, required=True, help='Dataset name')
     parser.add_argument('--case_id', type=str, default=None, help='Specific case ID (optional)')
     parser.add_argument('--k', type=int, default=5, help='Number of top-k points to highlight (default: 5)')
+    parser.add_argument('--view', type=str, default='color', choices=['color', '3d'],
+                        help="'color' = 2D plot with confidence as point color (default); '3d' = 3D scatter")
 
     try:
         args = parser.parse_args()
-        run_and_plot_comparison(case_study=args.case_study, target_case_id=args.case_id, k=args.k)
+        run_and_plot_comparison(case_study=args.case_study, target_case_id=args.case_id, k=args.k, view=args.view)
     except Exception as e:
-        print(f"Errore durante l'esecuzione: {e}")
+        print(f"Error during execution: {e}")
 
 
 # example usage:
 # python 3_plot_pareto.py --case_study "BAC" --k 5
+# python 3_plot_pareto.py --case_study "BAC" --k 5 --view 3d

@@ -69,16 +69,19 @@ def _default_forbidden_map():
 
 
 def _front_xy(pareto_tuples):
-    """(act, res, outcome, time) tuples -> (outcome, 1 - time) points, both maximized."""
+    """(act, res, outcome, time, uncertainty) tuples -> (outcome, 1 - time,
+    -uncertainty) points, all three maximized (so the same paretoset/HV/IGD
+    machinery keeps working unchanged in 3-D)."""
     x = np.array([t[2] for t in pareto_tuples], dtype=float)
     y = 1.0 - np.array([t[3] for t in pareto_tuples], dtype=float)
-    return np.column_stack([x, y])
+    z = -np.array([t[4] for t in pareto_tuples], dtype=float)
+    return np.column_stack([x, y, z])
 
 
 def _true_front_points(vals):
     if len(vals) == 0:
         return vals
-    mask = paretoset(vals, sense=["max", "max"])
+    mask = paretoset(vals, sense=["max", "max", "max"])
     return vals[mask]
 
 
