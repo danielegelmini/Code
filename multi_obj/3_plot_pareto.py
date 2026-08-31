@@ -4,8 +4,10 @@ For a given case study this script picks one test-set case (either a case id
 passed on the command line or, by default, the case whose Pareto front has the
 most solutions and the widest spread), then for that case:
 
-  * builds the transition system from the training log and lists the valid
-    (next activity, next resource) pairs allowed after the case prefix;
+  * builds the transition system from the training log (cached on disk per
+    case study + window size -- see utils/setup_cache; pass --rebuild-cache to
+    force a recompute) and lists the valid (next activity, next resource) pairs
+    allowed after the case prefix;
   * scores every pair with the predictive models on three objectives -- case
     outcome probability (maximize), predicted total time (minimize, plotted as
     1 - time) and prediction uncertainty (minimize, plotted as a normalised
@@ -14,7 +16,8 @@ most solutions and the widest spread), then for that case:
     with NSGA-II, and records the wall-clock time of each;
   * highlights the top-k actions chosen by p-dispersion and the "no
     recommendation" baseline point (the case left as it happened in the log);
-  * saves one figure per method under ``save_dir`` -- either a 2D plot with
+  * saves a single figure under ``save_dir`` with one subplot per method
+    (exhaustive on the left, NSGA-II on the right) -- either a 2D plot with
     confidence encoded as point color (``--view color``, default) or a 3D
     scatter with confidence on the third axis (``--view 3d``).
 
@@ -28,6 +31,7 @@ import argparse
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.lines as mlines
 from paretoset import paretoset
 import random
 import time
@@ -35,7 +39,7 @@ import tqdm
 
 from utils.pre_processing_functions import convert_dtypes_bpi12
 from utils.get_features import load_case_study, get_case_study_features
-from utils.transition_system import transition_system
+from utils.setup_cache import get_transition_graph
 from utils.recommendation_functions import (
     act_with_res_func,
     build_query_instances,
@@ -127,6 +131,9 @@ def run_and_plot_comparison(
     random_state: int = 1234,
     k: int = 5,
     view: str = "color",
+    elev: float = 22.0,
+    azim: float = 0,
+    rebuild_cache: bool = False,
     save_dir: str = "C:\\Users\\Utente\\Desktop\\tesi magistrale\\Code\\multi_obj\\pareto_front_images"
 ):
     """Run the exhaustive and NSGA-II Pareto searches for one case and plot both.
@@ -134,7 +141,8 @@ def run_and_plot_comparison(
     For the chosen case the function evaluates every valid (activity, resource)
     pair, computes the Pareto front with each method, highlights the top-k
     actions selected by p-dispersion, adds the "no recommendation" baseline
-    point, and saves one figure per method to ``save_dir``.
+    point, and saves a single figure to ``save_dir`` with one subplot per
+    method (exhaustive and NSGA-II side by side).
 
     Input:
         case_study: dataset name (e.g. "BAC", "BPI12", "bpi17_before").
@@ -150,10 +158,15 @@ def run_and_plot_comparison(
         view: "color" -> 2D plot (outcome vs 1-time) with confidence
             (1 - normalised uncertainty) mapped to point color; "3d" -> 3D
             scatter with confidence as the third axis.
-        save_dir: directory where the output .jpg figures are written (created
+        elev, azim: elevation and azimuth (degrees) of the 3D camera. The
+            defaults keep the ideal point (1, 1, 1) at the top corner facing the
+            viewer while making the outcome and 1-time axes easy to read;
+            ignored when view != "3d".
+        save_dir: directory where the output .jpg figure is written (created
             if missing).
     Output:
-        None. Figures are written to disk and progress is printed to stdout.
+        None. The combined figure is written to disk and progress is printed
+        to stdout.
         The function returns early (printing a message) if the case has no
         possible next activity or no valid action-resource pair.
     """
@@ -181,11 +194,14 @@ def run_and_plot_comparison(
     ) = get_case_study_features(case_study)
 
     print("Building transition system and maps...")
-    transition_graph, _ = transition_system(
+    transition_graph = get_transition_graph(
+        case_study,
         train_data,
         case_id_name=case_id_name,
         activity_column_name=activity_column_name,
-        window_size=window_size)
+        window_size=window_size,
+        rebuild=rebuild_cache,
+    )
 
     act_with_res = act_with_res_func(train_data, activity_column_name, resource_column_name)
     forbidden_map = _default_forbidden_map()
@@ -278,7 +294,19 @@ def run_and_plot_comparison(
     # =========================================================================
     methods = ["exhaustive", "nsga2"]
 
-    for method in methods:
+    # Single figure with one subplot per method (side by side), saved as one file.
+    os.makedirs(save_dir, exist_ok=True)
+    if view == "3d":
+        # A near-square area per subplot wastes far less space around a 3D cube
+        # than a wide one; wspace still needs to be large enough that the right
+        # cube's (inner) z-axis and its tick labels are not hidden behind the
+        # left cube.
+        fig, axes = plt.subplots(1, 2, figsize=(15, 8), subplot_kw={"projection": "3d"},
+                                 gridspec_kw={"wspace": 0.22})
+    else:
+        fig, axes = plt.subplots(1, 2, figsize=(20, 7))
+
+    for ax, method in zip(axes, methods):
         print(f"\nRunning method: {method.upper()}...")
         t_start = time.time()
 
@@ -303,7 +331,9 @@ def run_and_plot_comparison(
         all_unc = all_evals[:, 2]
 
         if not pareto_set:
-            print(f"Empty Pareto set for {method}. Skipping the plot.")
+            print(f"Empty Pareto set for {method}. Skipping this subplot.")
+            ax.set_title(f"{method.upper()}\n(empty Pareto set)")
+            ax.set_axis_off()
             continue
 
         # Confidence = 1 - uncertainty, min-max normalised over all evaluated
@@ -338,33 +368,37 @@ def run_and_plot_comparison(
         top_k_conf = to_conf(np.array([pair_to_obj[p][2] for p in top_k_pairs], dtype=float))
 
         title_text = (
-            f"Pareto Front Analysis ({method.upper()})\n"
-            f"Dataset: {case_study} | Case ID: {target_case_id}\n"
+            f"{method.upper()}\n"
             f"Execution Time: {elapsed_time:.4f} seconds"
         )
-        os.makedirs(save_dir, exist_ok=True)
-        filename = f"pareto_{case_study}_{str(target_case_id).replace(':', '_')}_{method}_{view}.jpg"
-        filepath = os.path.join(save_dir, filename)
 
         if view == "3d":
-            fig = plt.figure(figsize=(11, 8))
-            ax = fig.add_subplot(111, projection="3d")
-            ax.scatter(all_x, all_y, all_conf, color="black", alpha=0.35, s=18, label="Evaluated Pairs (All)")
-            ax.scatter(front_x, front_y, front_conf, color="blue", s=45, label="Pareto Front")
-            ax.scatter(top_k_x, top_k_y, top_k_conf, color="purple", marker="P", s=110,
+            ax.scatter(all_x, all_y, all_conf, color="black", alpha=0.35, s=30, label="Evaluated Pairs (All)")
+            ax.scatter(front_x, front_y, front_conf, color="blue", s=80, label="Pareto Front")
+            ax.scatter(top_k_x, top_k_y, top_k_conf, color="purple", marker="P", s=180,
                        edgecolors="black", linewidths=0.6, label=f"Top-{k} Selected (p-dispersion)")
-            ax.scatter([1.0], [1.0], [1.0], color="green", marker="X", s=110, label="Ideal Point (1,1,1)")
-            ax.scatter([baseline_x], [baseline_y], [baseline_conf], color="orange", marker="D", s=90,
+            ax.scatter([1.0], [1.0], [1.0], color="green", marker="X", s=180, label="Ideal Point (1,1,1)")
+            ax.scatter([baseline_x], [baseline_y], [baseline_conf], color="orange", marker="D", s=150,
                        label="No Recommendation (Baseline)")
             ax.set_xlabel("Predicted Outcome (max)")
             ax.set_ylabel("1 - Predicted Time (max)")
             ax.set_zlabel("Confidence = 1 - norm(uncertainty) (max)")
+            # Axis limits are left to matplotlib's autoscaling so the plot zooms
+            # onto the region the points actually occupy (the ideal-point marker
+            # keeps (1, 1, 1) inside the view).
+            # Draw the "1 - Predicted Time" axis with 0 on the right (next to the
+            # confidence axis) and 1 on the left, so it grows away from the
+            # "Predicted Outcome" axis instead of sharing its far corner.
+            
+            # Orientation chosen so the ideal point (1, 1, 1) sits at the top
+            # corner toward the viewer and the outcome / 1-time axes stay
+            # readable; tune with --elev / --azim.
+            ax.view_init(elev=elev, azim=azim)
+            # Enlarge the drawn cube inside its axes rectangle -- by default
+            # matplotlib leaves a wide empty margin around a 3D plot.
+            ax.set_box_aspect(None, zoom=1.25)
             ax.set_title(title_text)
-            ax.legend(loc="upper left", fontsize=8)
         else:  # "color": 2D plot, confidence encoded as point color
-            import matplotlib.lines as mlines
-
-            fig, ax = plt.subplots(figsize=(10, 7))
             ax.scatter(all_x, all_y, c=all_conf, cmap="viridis", vmin=0.0, vmax=1.0,
                        alpha=0.55, s=35)
             sc = ax.scatter(front_x, front_y, c=front_conf, cmap="viridis", vmin=0.0, vmax=1.0,
@@ -378,24 +412,10 @@ def run_and_plot_comparison(
             cbar = fig.colorbar(sc, ax=ax)
             cbar.set_label("Confidence = 1 - norm(uncertainty)  (higher is better)")
 
-            legend_handles = [
-                mlines.Line2D([], [], marker="o", color="none", markerfacecolor="grey",
-                              markersize=8, label="Evaluated pairs (color = confidence)"),
-                mlines.Line2D([], [], marker="o", color="none", markerfacecolor="grey",
-                              markeredgecolor="black", markersize=9, label="Pareto front"),
-                mlines.Line2D([], [], marker="P", color="none", markeredgecolor="crimson",
-                              markerfacecolor="none", markersize=13, label=f"Top-{k} selected (p-dispersion)"),
-                mlines.Line2D([], [], marker="X", color="none", markerfacecolor="green",
-                              markersize=11, label="Ideal point (1, 1)"),
-                mlines.Line2D([], [], marker="D", color="none", markerfacecolor="orange",
-                              markeredgecolor="black", markersize=9, label="No recommendation (baseline)"),
-            ]
-            ax.legend(handles=legend_handles, loc="lower left")
             ax.set_xlabel("Predicted Outcome (Probability Maximize)")
             ax.set_ylabel("1 - Predicted Time (Maximize)")
             ax.set_title(title_text)
             ax.grid(True, linestyle=":", alpha=0.7)
-            ax.legend(loc="lower left")
 
             plot_x_min = min(np.min(all_x), baseline_x)
             plot_x_max = max(np.max(all_x), baseline_x)
@@ -406,9 +426,43 @@ def run_and_plot_comparison(
             ax.set_xlim(min(plot_x_min - margin_x, -0.05), max(plot_x_max + margin_x, 1.05))
             ax.set_ylim(min(plot_y_min - margin_y, -0.05), max(plot_y_max + margin_y, 1.05))
 
-        plt.savefig(filepath, format="jpg", dpi=300, bbox_inches="tight")
-        plt.close()
-        print(f"Figure saved to: {filepath} (Time: {elapsed_time:.4f}s)")
+        print(f"  ({method.upper()} done in {elapsed_time:.4f}s)")
+
+    # Both methods drawn -> save the combined figure as a single file.
+    fig.suptitle(
+        f"Pareto Front Analysis  |  Dataset: {case_study}  |  Case ID: {target_case_id}",
+        fontsize=13,
+    )
+
+    # One shared legend for the whole figure, laid out horizontally under both
+    # subplots -- avoids repeating the same box twice and frees up plot area.
+    ideal_label = "Ideal point (1, 1, 1)" if view == "3d" else "Ideal point (1, 1)"
+    legend_handles = [
+        mlines.Line2D([], [], marker="o", color="none", markerfacecolor="grey",
+                      markersize=8, label="Evaluated pairs (color = confidence)"),
+        mlines.Line2D([], [], marker="o", color="none", markerfacecolor="grey",
+                      markeredgecolor="black", markersize=9, label="Pareto front"),
+        mlines.Line2D([], [], marker="P", color="none", markeredgecolor="crimson",
+                      markerfacecolor="none", markersize=13, label=f"Top-{k} selected (p-dispersion)"),
+        mlines.Line2D([], [], marker="X", color="none", markerfacecolor="green",
+                      markersize=11, label=ideal_label),
+        mlines.Line2D([], [], marker="D", color="none", markerfacecolor="orange",
+                      markeredgecolor="black", markersize=9, label="No recommendation (baseline)"),
+    ]
+    fig.legend(handles=legend_handles, loc="lower center", ncol=len(legend_handles),
+               frameon=True, fontsize=9, bbox_to_anchor=(0.5, 0.0))
+
+    # tight_layout misbehaves with 3D axes (it collapses the wspace we set), so
+    # only use it for the 2D view; reserve a strip at the bottom for the legend.
+    if view != "3d":
+        fig.tight_layout(rect=(0, 0.06, 1, 0.97))
+    else:
+        fig.subplots_adjust(left=0.04, right=0.96, bottom=0.10, top=0.90, wspace=0.22)
+    filename = f"pareto_{case_study}_{str(target_case_id).replace(':', '_')}_{view}.jpg"
+    filepath = os.path.join(save_dir, filename)
+    fig.savefig(filepath, format="jpg", dpi=300, bbox_inches="tight")
+    plt.close(fig)
+    print(f"\nFigure saved to: {filepath}")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Plot Pareto comparison with execution times.')
@@ -417,10 +471,18 @@ if __name__ == '__main__':
     parser.add_argument('--k', type=int, default=5, help='Number of top-k points to highlight (default: 5)')
     parser.add_argument('--view', type=str, default='color', choices=['color', '3d'],
                         help="'color' = 2D plot with confidence as point color (default); '3d' = 3D scatter")
+    parser.add_argument('--elev', type=float, default=22.0,
+                        help="3D camera elevation in degrees (default: 22; only used with --view 3d)")
+    parser.add_argument('--azim', type=float, default=-45.0,
+                        help="3D camera azimuth in degrees (default: -90; only used with --view 3d)")
+    parser.add_argument('--rebuild-cache', dest='rebuild_cache', action='store_true',
+                        help="Force recomputing the (cached) transition system instead of loading it")
 
     try:
         args = parser.parse_args()
-        run_and_plot_comparison(case_study=args.case_study, target_case_id=args.case_id, k=args.k, view=args.view)
+        run_and_plot_comparison(case_study=args.case_study, target_case_id=args.case_id, k=args.k,
+                                view=args.view, elev=args.elev, azim=args.azim,
+                                rebuild_cache=args.rebuild_cache)
     except Exception as e:
         print(f"Error during execution: {e}")
 
@@ -428,3 +490,4 @@ if __name__ == '__main__':
 # example usage:
 # python 3_plot_pareto.py --case_study "BAC" --k 5
 # python 3_plot_pareto.py --case_study "BAC" --k 5 --view 3d
+# python 3_plot_pareto.py --case_study "BAC" --k 5 --view 3d --elev 30 --azim 45

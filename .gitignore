@@ -35,3 +35,6 @@ desktop.ini
 
 # macOS extra folders
 __MACOSX/
+
+# Derived transition-system caches (rebuilt on demand from train_data.csv)
+multi_obj/case_studies/*/cache/

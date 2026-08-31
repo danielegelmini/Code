@@ -19,6 +19,11 @@ python 3_plot_pareto.py --case_study "BPI12" --k 5
 python 3_plot_pareto.py --case_study "bpi17_before" --k 5
 python 3_plot_pareto.py --case_study "bpi17_after" --k 5
 
+python 3_plot_pareto.py --case_study "BAC" --k 5 --view 3d
+python 3_plot_pareto.py --case_study "BPI12" --k 5 --view 3d
+python 3_plot_pareto.py --case_study "bpi17_before" --k 5 --view 3d
+python 3_plot_pareto.py --case_study "bpi17_after" --k 5 --view 3d
+
 python 8_plot_case_comparison.py --case_study BAC --case_id 201812002630
 python 8_plot_case_comparison.py --case_study BAC --case_id 201812007727
 python 8_plot_case_comparison.py --case_study BAC --case_id 201812006707

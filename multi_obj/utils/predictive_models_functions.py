@@ -18,41 +18,39 @@ from optuna.integration import CatBoostPruningCallback
 
 from utils.train_test_split import extract_internal_running_validation
 
-DEFAULT_VIRTUAL_ENSEMBLES_COUNT = 10
-
-
 class UncertaintyRegressor:
     """
     Wraps a CatBoost regressor trained with loss_function='RMSEWithUncertainty'
-    (and posterior_sampling=True) so it can sit as the final step of an sklearn
-    Pipeline while still exposing CatBoost's uncertainty estimates.
+    so it can sit as the final step of an sklearn Pipeline while exposing the
+    per-prediction (aleatoric) uncertainty.
 
     - predict(X) returns only the mean prediction (column 0 of CatBoost's
-      2-column RMSEWithUncertainty output), so every existing caller that
-      expects a plain 1-D array of predicted 'sigmoid_mm' values keeps working
-      unchanged.
-    - predict_uncertainty(X) additionally runs a virtual ensemble to split the
-      predictive variance into its data (aleatoric) and knowledge (epistemic)
-      parts, and returns both plus the total standard deviation.
+      2-column output), so every caller that expects a plain 1-D array of
+      predicted 'sigmoid_mm' values keeps working unchanged.
+    - predict_uncertainty(X) returns {mean, std}, where std is the recalibrated
+      predictive standard deviation (sqrt of CatBoost's predicted variance,
+      times sigma_scale).
+
+    Only aleatoric (data) uncertainty is modelled. An epistemic component --
+    posterior_sampling + virtual ensembles -- was tried and dropped: it did not
+    rise on rare or never-seen inputs (one-hot encoding maps an unseen category
+    to an all-zero row that every sub-ensemble agrees on), it contributed ~0.1%
+    of the predictive variance, and it made training markedly slower.
 
     `sigma_scale` is a single post-hoc recalibration factor (>1 inflates,
     <1 shrinks). CatBoost's RMSEWithUncertainty tends to be over-confident --
-    fewer than 68% of test targets land inside mean +/- 1 sigma -- so every std
-    returned by predict_uncertainty is multiplied by this factor, fitted on a
-    held-out slice at training time (see train_ml_model). It rescales all three
-    components by the same amount, so their ratio (and any ranking of cases by
-    uncertainty) is unchanged; only the absolute interval width moves.
+    fewer than 68% of test targets land inside mean +/- 1 sigma -- so std is
+    multiplied by this factor, fitted on a held-out slice at training time
+    (see train_ml_model). It does not change any ranking of cases by
+    uncertainty, so the Pareto front is unaffected; only the interval width
+    moves.
 
-    The target is NOT transformed here: the previous ExpM1Regressor undid a
-    log1p transform of the target, but 'sigmoid_mm' is already a bounded [0, 1]
-    target and an ablation showed the transform did not help (and slightly hurt
-    the uncertainty model), so it was dropped.
+    The target is NOT transformed here: 'sigmoid_mm' is already bounded in
+    [0, 1] and an ablation showed a log1p transform did not help.
     """
 
-    def __init__(self, fitted_model, virtual_ensembles_count=DEFAULT_VIRTUAL_ENSEMBLES_COUNT,
-                 sigma_scale=1.0):
+    def __init__(self, fitted_model, sigma_scale=1.0):
         self.fitted_model = fitted_model
-        self.virtual_ensembles_count = virtual_ensembles_count
         self.sigma_scale = float(sigma_scale)
 
     def fit(self, X, y=None):
@@ -62,53 +60,24 @@ class UncertaintyRegressor:
         return self.fitted_model is not None
 
     @staticmethod
-    def _mean_only(preds):
-        preds = np.asarray(preds)
-        return preds[:, 0] if preds.ndim == 2 else preds
+    def _two_col(preds):
+        preds = np.asarray(preds, dtype=float)
+        return preds if preds.ndim == 2 else np.column_stack([preds, np.zeros_like(preds)])
 
     def predict(self, X):
-        return self._mean_only(self.fitted_model.predict(X))
+        return self._two_col(self.fitted_model.predict(X))[:, 0]
 
     def predict_uncertainty(self, X):
         """
-        Returns a dict of 1-D numpy arrays:
-          mean           - point prediction (same as predict())
-          data_std       - aleatoric uncertainty  = sqrt(data variance)
-          knowledge_std  - epistemic uncertainty  = sqrt(knowledge variance)
-          total_std      - sqrt(data variance + knowledge variance)
-
-        data variance is the noise the model expects for that input even with
-        infinite training data; knowledge variance is the disagreement between
-        the virtual sub-ensembles, i.e. how little the model has seen inputs
-        like this one.
+        Returns {mean, std}: the point prediction and its recalibrated
+        predictive standard deviation (both 1-D numpy arrays).
         """
-        n_trees = self.fitted_model.tree_count_ or 0
-        ve_count = int(max(1, min(self.virtual_ensembles_count, n_trees)))
-        out = np.asarray(
-            self.fitted_model.virtual_ensembles_predict(
-                X,
-                prediction_type="TotalUncertainty",
-                virtual_ensembles_count=ve_count,
-            ),
-            dtype=float,
-        )
-        mean = out[:, 0]
-        knowledge_var = np.clip(out[:, 1], 0.0, None)
-        data_var = np.clip(out[:, 2], 0.0, None)
-        s = self.sigma_scale
-        return {
-            "mean": mean,
-            "data_std": s * np.sqrt(data_var),
-            "knowledge_std": s * np.sqrt(knowledge_var),
-            "total_std": s * np.sqrt(data_var + knowledge_var),
-        }
+        out = self._two_col(self.fitted_model.predict(X))
+        var = np.clip(out[:, 1], 0.0, None)
+        return {"mean": out[:, 0], "std": self.sigma_scale * np.sqrt(var)}
 
     def get_params(self, deep=True):
-        return {
-            "fitted_model": self.fitted_model,
-            "virtual_ensembles_count": self.virtual_ensembles_count,
-            "sigma_scale": self.sigma_scale,
-        }
+        return {"fitted_model": self.fitted_model, "sigma_scale": self.sigma_scale}
 
     def set_params(self, **params):
         for key, value in params.items():
@@ -254,20 +223,13 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
             const_params.update({"loss_function": "Logloss", "eval_metric": "Logloss"})
         else:
             # Probabilistic regression: the model predicts a mean and a
-            # variance, and posterior_sampling (Langevin boosting) lets a
-            # virtual ensemble later split that variance into data (aleatoric)
-            # and knowledge (epistemic) uncertainty. Early stopping / trial
-            # selection still run on plain RMSE of the mean.
-            # bootstrap_type is pinned to MVS (minimum-variance importance
-            # sampling): Bernoulli's uniform row dropping would add a second
-            # stochastic source on top of SGLB's Langevin noise and distort the
-            # epistemic estimate. Its companion `subsample` is tuned via the
-            # search space instead.
+            # variance (the aleatoric uncertainty). Early stopping / trial
+            # selection run on plain RMSE of the mean. posterior_sampling /
+            # virtual-ensemble epistemic uncertainty was tried and dropped -- it
+            # did not discriminate rare/unseen inputs and only slowed training.
             const_params.update({
                 "loss_function": "RMSEWithUncertainty",
                 "eval_metric": "RMSE",
-                "posterior_sampling": True,
-                "bootstrap_type": "MVS",
             })
         
         def objective(trial):
@@ -355,8 +317,7 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
                 # (0.6745), i.e. roughly ~68% of |y - mean| land within
                 # s * sigma. The median form is used (not sqrt(mean(r^2/var)))
                 # because CatBoost occasionally predicts a near-zero variance
-                # and a moment estimator explodes on those rows. Uses the plain
-                # data-only variance -- fine, the epistemic part is negligible.
+                # and a moment estimator explodes on those rows.
                 # NB: the validation slice is the most recent training cases,
                 # not the "running cases" test set, and the final model is
                 # refit on 100% of the data, so s transfers only approximately;
@@ -439,40 +400,29 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
             print(f"RMSE / MAE of test set:     {test_score:.5f} / {test_mae:.5f}")
 
             # Uncertainty diagnostics on the test set. predict_uncertainty
-            # already returns the recalibrated stds (multiplied by sigma_scale);
-            # dividing by it recovers CatBoost's raw output for the "before"
-            # coverage numbers.
+            # already returns the recalibrated std (times sigma_scale); dividing
+            # by it recovers CatBoost's raw output for the "before" numbers.
             unc = prediction_step.predict_uncertainty(X_test_trans)
             abs_err = np.abs(y_test.to_numpy(dtype=float) - unc["mean"])
-            total_std_cal = unc["total_std"]
-            total_std_raw = total_std_cal / sigma_scale
-            mean_total_var = float(np.mean(total_std_cal ** 2))
+            std_cal = unc["std"]
+            std_raw = std_cal / sigma_scale
             uncertainty_report = {
                 "sigma_scale": sigma_scale,
-                "mean_data_std": float(np.mean(unc["data_std"])),
-                "mean_knowledge_std": float(np.mean(unc["knowledge_std"])),
-                "mean_total_std": float(np.mean(total_std_cal)),
-                # share of the average predictive variance that is epistemic
-                # (reducible with more/other training data) vs aleatoric.
-                "epistemic_var_fraction": (
-                    float(np.mean(unc["knowledge_std"] ** 2) / mean_total_var) if mean_total_var > 0 else 0.0
-                ),
+                "mean_std": float(np.mean(std_cal)),
+                # median predicted std -- "sharpness", how tight the intervals
+                # are regardless of whether they are calibrated.
+                "median_std": float(np.median(std_cal)),
                 # coverage with CatBoost's raw sigma vs the recalibrated sigma
                 # (target ~0.68 / ~0.95 for a well-calibrated Gaussian).
-                "coverage_1sigma_raw": float(np.mean(abs_err <= total_std_raw)),
-                "coverage_2sigma_raw": float(np.mean(abs_err <= 2.0 * total_std_raw)),
-                "coverage_1sigma": float(np.mean(abs_err <= total_std_cal)),
-                "coverage_2sigma": float(np.mean(abs_err <= 2.0 * total_std_cal)),
-                # median predicted total std -- "sharpness", how tight the
-                # intervals are regardless of whether they are calibrated.
-                "median_total_std": float(np.median(total_std_cal)),
+                "coverage_1sigma_raw": float(np.mean(abs_err <= std_raw)),
+                "coverage_2sigma_raw": float(np.mean(abs_err <= 2.0 * std_raw)),
+                "coverage_1sigma": float(np.mean(abs_err <= std_cal)),
+                "coverage_2sigma": float(np.mean(abs_err <= 2.0 * std_cal)),
                 "test_mae": test_mae,
             }
             print(
-                f"Uncertainty (test avg): data/aleatoric std = {uncertainty_report['mean_data_std']:.5f}, "
-                f"knowledge/epistemic std = {uncertainty_report['mean_knowledge_std']:.5f}, "
-                f"total std = {uncertainty_report['mean_total_std']:.5f} "
-                f"(epistemic share {uncertainty_report['epistemic_var_fraction'] * 100:.1f}%)"
+                f"Uncertainty (test): mean std = {uncertainty_report['mean_std']:.5f}, "
+                f"median std (sharpness) = {uncertainty_report['median_std']:.5f}"
             )
             print(
                 f"Calibration: sigma_scale = {sigma_scale:.3f} | "

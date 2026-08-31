@@ -16,7 +16,7 @@ from utils.recommendation_functions import (
     build_query_instances)
 
 from utils.get_features import load_case_study, get_case_study_features
-from utils.transition_system import transition_system
+from utils.setup_cache import get_transition_graph
 
 # Suppress all warnings
 import warnings
@@ -54,6 +54,7 @@ def run_experiment_top_k(
     mutation_rate: float = 0.3,
     random_state: Optional[int] = 1234,
     k: int = 5,
+    rebuild_cache: bool = False,
 ) -> Dict[str, List[Dict[Any, Any]]]:
     """
     Same as run_experiment, but instead of a single best (activity, resource)
@@ -133,14 +134,16 @@ def run_experiment_top_k(
     resource_column_name = resource_column_name_local
 
     # -------------------------
-    # Transition system
+    # Transition system (cached on disk per case study + window size)
     # -------------------------
-    print("Building transition system...")
-    transition_graph, ts_with_freq = transition_system(
+    transition_graph = get_transition_graph(
+        case_study,
         train_data,
         case_id_name=case_id_name,
         activity_column_name=activity_column_name,
-        window_size=window_size)
+        window_size=window_size,
+        rebuild=rebuild_cache,
+    )
 
     # -------------------------
     # Activity-resource map
@@ -307,6 +310,12 @@ if __name__ == "__main__":
         default=1234,
         help="Random seed for numpy and NSGA-II (default: 1234).",
     )
+    parser.add_argument(
+        "--rebuild-cache",
+        dest="rebuild_cache",
+        action="store_true",
+        help="Force recomputing the (cached) transition system instead of loading it.",
+    )
 
     args = parser.parse_args()
 
@@ -333,6 +342,7 @@ if __name__ == "__main__":
         mutation_rate=args.mutation_rate,
         random_state=args.random_state,
         k=args.k,
+        rebuild_cache=args.rebuild_cache,
     )
 
 # FOR RUNNING EXPERIMENT:

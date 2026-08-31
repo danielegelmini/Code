@@ -52,7 +52,7 @@ from utils.recommendation_functions import (
     next_possible_activities,
     nsga2_pareto_search,
 )
-from utils.transition_system import transition_system
+from utils.setup_cache import get_transition_graph
 
 warnings.filterwarnings("ignore")
 
@@ -152,6 +152,7 @@ def run_benchmark(
     window_size: int = 5,
     min_valid_pairs: int = 5,
     random_state: int = 1234,
+    rebuild_cache: bool = False,
     output_dir: str = None,
 ):
     np.random.seed(random_state)
@@ -176,8 +177,10 @@ def run_benchmark(
     ) = get_case_study_features(case_study)
 
     print("Building transition system and maps...")
-    transition_graph, _ = transition_system(
-        train_data, case_id_name=case_id_name, activity_column_name=activity_column_name, window_size=window_size
+    transition_graph = get_transition_graph(
+        case_study, train_data, case_id_name=case_id_name,
+        activity_column_name=activity_column_name, window_size=window_size,
+        rebuild=rebuild_cache,
     )
     act_with_res = act_with_res_func(train_data, activity_column_name, resource_column_name)
     forbidden = set(_default_forbidden_map().get(case_study, []))
@@ -320,6 +323,8 @@ if __name__ == "__main__":
         help="Skip cases with fewer than this many valid (activity, resource) pairs (default: 5).",
     )
     parser.add_argument("--random_state", type=int, default=1234, help="Random seed (default: 1234).")
+    parser.add_argument("--rebuild-cache", dest="rebuild_cache", action="store_true",
+                        help="Force recomputing the (cached) transition system instead of loading it.")
 
     args = parser.parse_args()
 
@@ -331,6 +336,7 @@ if __name__ == "__main__":
         window_size=args.window_size,
         min_valid_pairs=args.min_valid_pairs,
         random_state=args.random_state,
+        rebuild_cache=args.rebuild_cache,
     )
 
 # Example usage:

@@ -25,15 +25,11 @@ start_date_name = "start:timestamp"
 resource_column_name = "org:resource"
 outcome_name = "outcome"
 
-# Which component of the time regressor's predictive uncertainty is used as the
-# THIRD Pareto objective (minimised, i.e. "prefer confident predictions"):
-#   "total"     -> aleatoric + epistemic  (default)
-#   "data"      -> aleatoric only (irreducible process noise)
-#   "knowledge" -> epistemic only (model has seen few cases like this)
-# This value is used ONLY to build the Pareto front and to pick the
-# (activity, resource) pairs. It is never written to the recommendation CSVs
-# and never reaches the simulation.
-UNCERTAINTY_KIND = "total"
+# The THIRD Pareto objective is the regressor's (aleatoric) predictive std of
+# the remaining-time prediction, minimised -- "prefer recommendations whose
+# predicted duration is intrinsically more predictable". It is used ONLY to
+# build the Pareto front and pick the (activity, resource) pairs; it is never
+# written to the recommendation CSVs and never reaches the simulation.
 
 _UNCERTAINTY_WARNED = False
 
@@ -54,8 +50,7 @@ def predict_time_and_uncertainty(predictive_time_model, rows_df):
 
     `mean` is the predicted 'sigmoid_mm' remaining time -- exactly what
     predictive_time_model.predict(rows_df) returned before. `uncertainty` is the
-    standard deviation of that prediction, of the kind selected by
-    UNCERTAINTY_KIND.
+    recalibrated (aleatoric) predictive standard deviation of that prediction.
 
     Works whether predictive_time_model is a bare estimator or an sklearn
     Pipeline whose final "prediction" step is an UncertaintyRegressor. If the
@@ -75,8 +70,7 @@ def predict_time_and_uncertainty(predictive_time_model, rows_df):
 
     if hasattr(predictor, "predict_uncertainty"):
         out = predictor.predict_uncertainty(predictor_input)
-        key = {"total": "total_std", "data": "data_std", "knowledge": "knowledge_std"}[UNCERTAINTY_KIND]
-        return np.asarray(out["mean"], dtype=float), np.asarray(out[key], dtype=float)
+        return np.asarray(out["mean"], dtype=float), np.asarray(out["std"], dtype=float)
 
     mean = np.asarray(predictive_time_model.predict(rows_df), dtype=float)
     if not _UNCERTAINTY_WARNED:
@@ -275,8 +269,8 @@ def _evaluate_candidates(
     Returns:
         np.ndarray: A 2D numpy array where each row corresponds to a candidate pair,
                     formatted as [predicted_outcome, predicted_total_time,
-                    predicted_uncertainty] (the std of the time prediction, of
-                    the kind set by UNCERTAINTY_KIND).
+                    predicted_uncertainty] (the recalibrated aleatoric std of
+                    the time prediction).
     """
     base_outcome_row = align_query_instance_with_model(query_instance, predictive_outcome_model).iloc[0].to_dict()
     base_time_row = align_query_instance_with_model(query_instance, predictive_time_model).iloc[0].to_dict()

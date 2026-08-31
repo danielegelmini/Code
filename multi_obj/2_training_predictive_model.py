@@ -13,42 +13,44 @@ end_date_name = 'time:timestamp'
 start_date_name = 'start:timestamp'
 
 params = {
-    "case_study" : "BPI12",
-    #"case_study": ["BAC", "BPI12", "bpi17_before", "bpi17_after"],
+    #"case_study" : "BPI12",
+    "case_study": ["BAC", "BPI12", "bpi17_before", "bpi17_after"],
     "optuna_trials": 80,
     "optuna_timeout": 1200,  # seconds per Optuna study; 
     "early_stopping_rounds": 50,
     
+    # depth ceiling raised 10 -> 12: on the first full run 5 of the 8 models
+    # (4 of them pinned exactly at 10) wanted deep trees. l2_leaf_reg for the
+    # classifier is now log-scaled with a higher ceiling (was linear [1, 30],
+    # with BPI12/bpi17_before landing at ~24-26) -- matches the regressor and
+    # gives bpi17_after's classifier, the one model that overfits, more room to
+    # regularise.
     "search_spaces": {
         "label": {
             "learning_rate": {"type": "float", "min": 0.005, "max": 0.3, "log": True},
-            "depth": {"type": "int", "min": 3, "max": 10},
-            "l2_leaf_reg": {"type": "float", "min": 1.0, "max": 30.0},
+            "depth": {"type": "int", "min": 3, "max": 12},
+            "l2_leaf_reg": {"type": "float", "min": 1.0, "max": 50.0, "log": True},
             "colsample_bylevel": {"type": "float", "min": 0.6, "max": 1.0},
             "bootstrap_type": {"type": "categorical", "choices": ["Bayesian", "Bernoulli", "MVS"]},
         },
-        # SGLB (posterior_sampling) already injects Gaussian noise into the
-        # gradients, so:
-        #  - learning_rate floor raised (0.005 -> 0.02): very low rates + SGLB's
-        #    model-shrink do not converge within the timeout on 150k rows;
-        #  - depth up to 10: a first run pinned depth at the old cap of 8, so
-        #    the regressor wants the extra capacity;
-        #  - l2_leaf_reg on a log scale, higher ceiling -- the many correlated
-        #    one-hot columns need it;
-        #  - bootstrap_type pinned to MVS (see const_params); subsample kept
-        #    high (0.7-1.0) so SGLB's dynamics and the epistemic estimate stay
-        #    clean;
-        #  - random_strength dropped: a first run drove it to ~0 (Optuna does
-        #    not want extra split noise on top of the Langevin noise);
+        # Regressor space = classifier space, plus two changes that helped in
+        # the tuning runs:
+        #  - l2_leaf_reg with an even higher ceiling -- its effect is
+        #    multiplicative and the many correlated one-hot columns need strong
+        #    regularisation;
         #  - grow_policy left open so Optuna can trade the fast, self-regularising
-        #    symmetric trees for depthwise trees with a real min_data_in_leaf
-        #    floor (a no-op with SymmetricTree).
+        #    symmetric trees for depthwise trees, which unlock a real
+        #    min_data_in_leaf floor (a no-op with SymmetricTree) on the many
+        #    one-hot columns that fire on only a handful of rows.
+        # (An earlier version pinned bootstrap_type=MVS and used posterior_sampling
+        #  for epistemic uncertainty; both were dropped -- the epistemic part did
+        #  not discriminate rare/unseen inputs and only slowed training.)
         "sigmoid_mm": {
-            "learning_rate": {"type": "float", "min": 0.02, "max": 0.25, "log": True},
-            "depth": {"type": "int", "min": 4, "max": 10},
-            "l2_leaf_reg": {"type": "float", "min": 1.0, "max": 40.0, "log": True},
+            "learning_rate": {"type": "float", "min": 0.005, "max": 0.3, "log": True},
+            "depth": {"type": "int", "min": 3, "max": 12},
+            "l2_leaf_reg": {"type": "float", "min": 1.0, "max": 50.0, "log": True},
             "colsample_bylevel": {"type": "float", "min": 0.5, "max": 1.0},
-            "subsample": {"type": "float", "min": 0.7, "max": 1.0},
+            "bootstrap_type": {"type": "categorical", "choices": ["Bayesian", "Bernoulli", "MVS"]},
             "grow_policy": {"type": "categorical", "choices": ["SymmetricTree", "Depthwise"]},
         },
     },
@@ -128,9 +130,8 @@ def write_training_report(all_results, runtime_params, output_path):
     the whole run can be reviewed without opening any per-model file.
 
     For the regressor it also reports the predictive-uncertainty diagnostics
-    (average aleatoric / epistemic / total std, epistemic share of the
-    variance, sharpness, and the empirical coverage of the mean +/- 1 sigma
-    and +/- 2 sigma intervals).
+    (mean and median aleatoric std, and the empirical coverage of the mean
+    +/- 1 sigma and +/- 2 sigma intervals, raw vs recalibrated).
     """
     model_labels = {
         "label": "Model 1 (label - Classifier)",
@@ -172,12 +173,8 @@ def write_training_report(all_results, runtime_params, output_path):
             if unc:
                 lines.append(f"  - MAE score of test set: {unc['test_mae']:.5f}")
                 lines.append(
-                    f"  - Predictive uncertainty (test avg): data/aleatoric std = {unc['mean_data_std']:.5f}, "
-                    f"knowledge/epistemic std = {unc['mean_knowledge_std']:.5f}, total std = {unc['mean_total_std']:.5f}"
-                )
-                lines.append(
-                    f"  - Epistemic share of predictive variance: {unc['epistemic_var_fraction'] * 100:.1f}% "
-                    f"(rest is irreducible noise); median total std (sharpness) = {unc['median_total_std']:.5f}"
+                    f"  - Predictive uncertainty (aleatoric, test): mean std = {unc['mean_std']:.5f}, "
+                    f"median std / sharpness = {unc['median_std']:.5f}"
                 )
                 lines.append(
                     f"  - Calibration: sigma recalibration factor s = {unc.get('sigma_scale', 1.0):.3f} "
