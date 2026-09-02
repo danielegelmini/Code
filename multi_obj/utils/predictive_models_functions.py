@@ -337,10 +337,23 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
 
         # Training the model with Optuna hyperparameter optimization
         study = optuna.create_study(
-            pruner=optuna.pruners.MedianPruner(n_warmup_steps=20),
+            pruner=optuna.pruners.MedianPruner(n_warmup_steps=30),
             direction="minimize"
         )
-        study.optimize(objective, n_trials=optuna_trials, timeout=optuna_timeout)
+        # timeout is only a safety cap: when optuna_timeout is None/0 the study
+        # runs the full n_trials no matter how long that takes (whichever of the
+        # two criteria fires first otherwise).
+        study.optimize(objective, n_trials=optuna_trials,
+                       timeout=optuna_timeout if optuna_timeout else None)
+        n_trials_run = len(study.trials)
+        n_trials_complete = sum(
+            t.state == optuna.trial.TrialState.COMPLETE for t in study.trials
+        )
+        if n_trials_complete < optuna_trials:
+            print(
+                f"[WARN] only {n_trials_complete}/{optuna_trials} Optuna trials "
+                f"completed for {y_train.name} (timeout hit or trials pruned)."
+            )
         print(f"Best trial found for {y_train.name} with score {study.best_value:.5f}")
 
         # Final refit with the best hyperparameters, on 100% of the training
@@ -444,6 +457,8 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
 
         results[y_train.name] = {
             "metric_name": metric_name,
+            "n_trials_run": n_trials_run,
+            "n_trials_complete": n_trials_complete,
             "best_trial_number": study.best_trial.number,
             "best_validation_score": study.best_value,
             "best_params": study.best_params,

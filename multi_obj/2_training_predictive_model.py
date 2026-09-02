@@ -16,37 +16,20 @@ params = {
     #"case_study" : "BPI12",
     "case_study": ["BAC", "BPI12", "bpi17_before", "bpi17_after"],
     "optuna_trials": 80,
-    "optuna_timeout": 1200,  # seconds per Optuna study; 
+    "optuna_timeout": None,  # None/0 -> no wall-clock cap, run all optuna_trials
     "early_stopping_rounds": 50,
     
-    # depth ceiling raised 10 -> 12: on the first full run 5 of the 8 models
-    # (4 of them pinned exactly at 10) wanted deep trees. l2_leaf_reg for the
-    # classifier is now log-scaled with a higher ceiling (was linear [1, 30],
-    # with BPI12/bpi17_before landing at ~24-26) -- matches the regressor and
-    # gives bpi17_after's classifier, the one model that overfits, more room to
-    # regularise.
     "search_spaces": {
         "label": {
-            "learning_rate": {"type": "float", "min": 0.005, "max": 0.3, "log": True},
+            "learning_rate": {"type": "float", "min": 0.02, "max": 0.3, "log": True},
             "depth": {"type": "int", "min": 3, "max": 12},
             "l2_leaf_reg": {"type": "float", "min": 1.0, "max": 50.0, "log": True},
             "colsample_bylevel": {"type": "float", "min": 0.6, "max": 1.0},
             "bootstrap_type": {"type": "categorical", "choices": ["Bayesian", "Bernoulli", "MVS"]},
         },
-        # Regressor space = classifier space, plus two changes that helped in
-        # the tuning runs:
-        #  - l2_leaf_reg with an even higher ceiling -- its effect is
-        #    multiplicative and the many correlated one-hot columns need strong
-        #    regularisation;
-        #  - grow_policy left open so Optuna can trade the fast, self-regularising
-        #    symmetric trees for depthwise trees, which unlock a real
-        #    min_data_in_leaf floor (a no-op with SymmetricTree) on the many
-        #    one-hot columns that fire on only a handful of rows.
-        # (An earlier version pinned bootstrap_type=MVS and used posterior_sampling
-        #  for epistemic uncertainty; both were dropped -- the epistemic part did
-        #  not discriminate rare/unseen inputs and only slowed training.)
+
         "sigmoid_mm": {
-            "learning_rate": {"type": "float", "min": 0.005, "max": 0.3, "log": True},
+            "learning_rate": {"type": "float", "min": 0.02, "max": 0.3, "log": True},
             "depth": {"type": "int", "min": 3, "max": 12},
             "l2_leaf_reg": {"type": "float", "min": 1.0, "max": 50.0, "log": True},
             "colsample_bylevel": {"type": "float", "min": 0.5, "max": 1.0},
@@ -147,9 +130,16 @@ def write_training_report(all_results, runtime_params, output_path):
     for i, (case_study, case_results) in enumerate(all_results.items(), start=1):
         lines.append(f"{i}. DATASET {case_study.upper()}")
         lines.append("-" * 70)
+        timeout_val = runtime_params.get("optuna_timeout")
+        timeout_str = f"{timeout_val}s" if timeout_val else "none"
+        trials_run = {
+            t: r["n_trials_complete"]
+            for t, r in case_results.items() if r and "n_trials_complete" in r
+        }
+        trials_str = ", ".join(f"{t}: {n}" for t, n in trials_run.items()) or "n/a"
         lines.append(
-            f"* Optuna trials: {runtime_params['optuna_trials']} "
-            f"(timeout {runtime_params.get('optuna_timeout', 1200)}s) | "
+            f"* Optuna trials target: {runtime_params['optuna_trials']} "
+            f"(timeout {timeout_str}) | completed -> {trials_str} | "
             f"Early stopping rounds: {runtime_params['early_stopping_rounds']}"
         )
         lines.append("")
@@ -164,6 +154,11 @@ def write_training_report(all_results, runtime_params, output_path):
                 lines.append("  - Search space:")
                 for space_line in _format_search_space(target_space).splitlines():
                     lines.append(f"  {space_line}")
+            if "n_trials_complete" in res:
+                lines.append(
+                    f"  - Optuna trials completed: {res['n_trials_complete']}"
+                    f" / {res.get('n_trials_run', '?')} run"
+                )
             lines.append(f"  - Best Optuna trial: #{res['best_trial_number']} ({res['metric_name']} validation = {res['best_validation_score']:.5f})")
             lines.append(f"  - Best hyperparameters: {_format_best_params(res['best_params'])}")
             lines.append(f"  - Trees in final model (refit on 100% training data): {res['n_trees_final_model']}")

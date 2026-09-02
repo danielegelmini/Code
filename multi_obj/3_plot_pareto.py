@@ -298,11 +298,11 @@ def run_and_plot_comparison(
     os.makedirs(save_dir, exist_ok=True)
     if view == "3d":
         # A near-square area per subplot wastes far less space around a 3D cube
-        # than a wide one; wspace still needs to be large enough that the right
-        # cube's (inner) z-axis and its tick labels are not hidden behind the
-        # left cube.
-        fig, axes = plt.subplots(1, 2, figsize=(15, 8), subplot_kw={"projection": "3d"},
-                                 gridspec_kw={"wspace": 0.22})
+        # than a wide one; the cubes are then enlarged with set_box_aspect(zoom)
+        # and margins are trimmed at save time. wspace must stay wide enough that
+        # the left cube's (inner) z-axis does not touch the right cube.
+        fig, axes = plt.subplots(1, 2, figsize=(17, 8), subplot_kw={"projection": "3d"},
+                                 gridspec_kw={"wspace": 0.20})
     else:
         fig, axes = plt.subplots(1, 2, figsize=(20, 7))
 
@@ -382,14 +382,12 @@ def run_and_plot_comparison(
                        label="No Recommendation (Baseline)")
             ax.set_xlabel("Predicted Outcome (max)")
             ax.set_ylabel("1 - Predicted Time (max)")
-            ax.set_zlabel("Confidence = 1 - norm(uncertainty) (max)")
+            # Short z-axis label ("confidence" is spelled out fully in the
+            # caption); kept on both cubes so their vertical scale is readable.
+            ax.set_zlabel("Confidence (max)", labelpad=6)
             # Axis limits are left to matplotlib's autoscaling so the plot zooms
             # onto the region the points actually occupy (the ideal-point marker
             # keeps (1, 1, 1) inside the view).
-            # Draw the "1 - Predicted Time" axis with 0 on the right (next to the
-            # confidence axis) and 1 on the left, so it grows away from the
-            # "Predicted Outcome" axis instead of sharing its far corner.
-            
             # Orientation chosen so the ideal point (1, 1, 1) sits at the top
             # corner toward the viewer and the outcome / 1-time axes stay
             # readable; tune with --elev / --azim.
@@ -397,7 +395,7 @@ def run_and_plot_comparison(
             # Enlarge the drawn cube inside its axes rectangle -- by default
             # matplotlib leaves a wide empty margin around a 3D plot.
             ax.set_box_aspect(None, zoom=1.25)
-            ax.set_title(title_text)
+            ax.set_title(f"{method.upper()}  --  computing time: {elapsed_time:.2f} s", fontsize=11)
         else:  # "color": 2D plot, confidence encoded as point color
             ax.scatter(all_x, all_y, c=all_conf, cmap="viridis", vmin=0.0, vmax=1.0,
                        alpha=0.55, s=35)
@@ -431,7 +429,7 @@ def run_and_plot_comparison(
     # Both methods drawn -> save the combined figure as a single file.
     fig.suptitle(
         f"Pareto Front Analysis  |  Dataset: {case_study}  |  Case ID: {target_case_id}",
-        fontsize=13,
+        fontsize=13, y=0.97,
     )
 
     # One shared legend for the whole figure, laid out horizontally under both
@@ -440,7 +438,7 @@ def run_and_plot_comparison(
     legend_handles = [
         mlines.Line2D([], [], marker="o", color="none", markerfacecolor="grey",
                       markersize=8, label="Evaluated pairs (color = confidence)"),
-        mlines.Line2D([], [], marker="o", color="none", markerfacecolor="grey",
+        mlines.Line2D([], [], marker="o", color="none", markerfacecolor="blue",
                       markeredgecolor="black", markersize=9, label="Pareto front"),
         mlines.Line2D([], [], marker="P", color="none", markeredgecolor="crimson",
                       markerfacecolor="none", markersize=13, label=f"Top-{k} selected (p-dispersion)"),
@@ -450,17 +448,24 @@ def run_and_plot_comparison(
                       markeredgecolor="black", markersize=9, label="No recommendation (baseline)"),
     ]
     fig.legend(handles=legend_handles, loc="lower center", ncol=len(legend_handles),
-               frameon=True, fontsize=9, bbox_to_anchor=(0.5, 0.0))
+               frameon=True, fontsize=9, bbox_to_anchor=(0.5, 0.02))
+    fig.text(0.5, 0.005,
+             "All axes are objectives to maximize: outcome probability, 1 - predicted time, "
+             "confidence = 1 - min-max-normalized uncertainty.",
+             ha="center", fontsize=8, style="italic")
 
-    # tight_layout misbehaves with 3D axes (it collapses the wspace we set), so
-    # only use it for the 2D view; reserve a strip at the bottom for the legend.
-    if view != "3d":
-        fig.tight_layout(rect=(0, 0.06, 1, 0.97))
-    else:
-        fig.subplots_adjust(left=0.04, right=0.96, bottom=0.10, top=0.90, wspace=0.22)
     filename = f"pareto_{case_study}_{str(target_case_id).replace(':', '_')}_{view}.jpg"
     filepath = os.path.join(save_dir, filename)
-    fig.savefig(filepath, format="jpg", dpi=300, bbox_inches="tight")
+    if view != "3d":
+        # tight_layout misbehaves with 3D axes, so it is 2D-only; reserve a
+        # bottom strip for the shared legend and caption.
+        fig.tight_layout(rect=(0, 0.07, 1, 0.96))
+        fig.savefig(filepath, format="jpg", dpi=300, bbox_inches="tight")
+    else:
+        # Trim the wide default 3D margins; do NOT pass bbox_inches="tight" here
+        # -- it clips the rightmost cube's z-axis label.
+        fig.subplots_adjust(left=0.05, right=0.90, bottom=0.13, top=0.88, wspace=0.20)
+        fig.savefig(filepath, format="jpg", dpi=300)
     plt.close(fig)
     print(f"\nFigure saved to: {filepath}")
 
