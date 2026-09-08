@@ -1,0 +1,934 @@
+% =============================================================================
+%  CHAPTER: BACKGROUND
+% =============================================================================
+%  Master's thesis - Extension of "Balancing KPIs through Multi-Objective
+%  Prescriptive Process Analytics" (Le, Buliga, Ronzani, Padella, de Leoni).
+%
+%  Thesis contribution: quantification of the predictive uncertainty
+%  (aleatoric + epistemic) of the two CatBoost models, and use of "confidence
+%  as a KPI" in the Pareto front, together with probability calibration and
+%  diversified top-k selection.
+%
+%  HOW TO USE THIS FILE
+%  -------------------
+%  - This is only the skeleton of the chapter: every section/subsection is a
+%    real LaTeX command; ALL the guidance text is in comments (lines starting
+%    with %). Write the prose under each comment block.
+%  - Include it in the main file with \input{background} (or \include{...}).
+%  - Packages expected from the main file: booktabs (notation table), amsmath,
+%    hyperref, a bibliography backend (biblatex or bibtex).
+%  - Replace the \cite{...} keys with the ones in your .bib file.
+%
+%  GUIDING PRINCIPLES (note to self, not for the thesis)
+%  ----------------------------------------------------
+%  - FUNNEL structure: from the general (process mining) to the specific
+%    (uncertainty in gradient boosting). Each section introduces ONLY what the
+%    next one needs.
+%  - Follow the system PIPELINE:
+%       offline (log -> encoding -> predictive model)
+%    -> online (feasibility -> multi-objective search -> recommendation)
+%    -> evaluation (business process simulation).
+%  - Boundary with the other chapters:
+%     * BACKGROUND  = WHAT a concept is and WHY it exists (reusable literature,
+%                     independent of your work).
+%     * METHODOLOGY = how YOU combine those concepts (architecture, the
+%                     uncertainty wrappers, confidence as a Pareto objective).
+%     * EVALUATION / EXPERIMENTAL SETUP = the concrete VALUES (Optuna search
+%                     space, n. of trials, window_size, tau/alpha thresholds,
+%                     ...) and the result tables.
+%  - HYPERPARAMETERS: in Background you explain ONLY what a hyperparameter is
+%    and what each group controls. The chosen values and the search space go
+%    in the Experimental Setup, with a pointer to \ref{sec:bg:gbm}.
+%  - STATISTICAL tools do NOT get a section of their own: spread them across
+%    the point where the system uses them (see "STATISTICAL TOOLS MAP" at the
+%    end of the file).
+%
+%  SECTION DEPENDENCY ORDER
+%  -----------------------
+%    PM --+--> PPM --+--> GBM/CatBoost --> Uncertainty
+%         |          +--> PrPA --> Multi-objective opt.
+%         +----------------------------> Simulation
+%    If a topic is ONLY yours   -> Methodology.
+%    If it is reusable literature -> Background (even if little known: NSGA-II,
+%    SGLB, temperature scaling, p-dispersion, conformal prediction).
+% =============================================================================
+
+
+\chapter{Background}
+\label{chap:background}
+
+This chapter introduces the concepts on which the rest of the thesis builds.
+The problem it addresses lies at the intersection of several fields: process
+mining provides the data model (event logs and traces); predictive and
+prescriptive process monitoring turn a running trace into a recommendation;
+gradient boosting is the predictive engine, and quantifying its uncertainty
+is the core of this work; multi-objective optimization frames the trade-off
+between conflicting KPIs; and business process simulation is the vehicle used
+to evaluate the recommendations.
+
+% -----------------------------------------------------------------------------
+% (Chapter introduction above. Original planning notes kept for reference.)
+% -----------------------------------------------------------------------------
+% Goal: tell the reader WHAT they need to know and WHY, previewing the
+% "offline -> online -> evaluation" thread and flagging that the central
+% section is the one on uncertainty (the contribution). Close with a sentence
+% on the chapter's structure.
+%
+% Outline:
+%  - The problem tackled by the thesis lives at the intersection of process
+%    mining, machine learning and multi-objective optimization.
+%  - Introduce the domain first (event log, PPM, PrPA), then the predictive
+%    tool (gradient boosting) and its uncertainty, finally the process
+%    simulation used for evaluation.
+%  - List of the sections.
+
+
+% #############################################################################
+\section{Process Mining: Basic Concepts}
+\label{sec:bg:pm}
+% #############################################################################
+% Goal of the section: fix the minimal vocabulary (log, trace, event, prefix,
+% activity, resource) on which everything else rests.
+% References: \cite{vanderaalst2016} (Process Mining: Data Science in Action);
+% \cite{adams2021} (concept drift, to motivate the BPIC2017 split).
+% Do NOT put here: your transition-system cache implementation
+% (utils/setup_cache.py) -> Methodology.
+% Bridge to the next section: "Predictive models are built on top of these
+% prefixes."
+
+Process mining is a discipline that combines data science and process
+management: it analyzes the data recorded by information systems to
+reconstruct how business processes actually run~\cite{vanderaalst2016}. The
+basic idea is simple. Every time a process is executed, for example a
+reimbursement request, an order, a patient's hospital journey, the systems
+that support it leave traces in the form of event logs: they record which
+activity was performed, when, and for which specific case.
+
+From this data, process mining techniques make it possible to automatically
+reconstruct the process model as it is actually executed, to compare it with
+an expected model to identify deviations, and to enrich it with additional
+information useful for improving it~\cite{vanderaalst2016}. In practice, it
+shows organizations the difference between how they think their processes work
+and how they actually work.
+
+\subsection{Event Log, Traces, Events}
+\label{subsec:bg:pm:log}
+The starting point of any process-mining analysis is the \emph{event log}. An
+event log $\mathcal{L}$ collects the executions of a business process, called
+\emph{traces}: each trace $\sigma = \langle e_1, e_2, \dots, e_n \rangle$ is a
+chronologically ordered sequence of events produced by one instance (or case)
+of the process, and $|\sigma|$ denotes its length. Every event
+$e = (c, a, \mathbf{d})$ is uniquely tied to a trace through a case identifier
+$c$, records the execution of one activity $a$, and carries a vector of
+additional attributes $\mathbf{d}$ such as the start
+and completion timestamps of the activity and the resource that performed
+it~\cite{le2025balancing}.
+$\mathcal{A}$ and $\mathcal{R}$ denote, respectively, the set of activity
+labels and the set of resources that occur anywhere in the process;
+$\mathcal{E}$ is the universe of possible events and $\mathcal{E}^{*}$ the
+space of finite event sequences over it. Two projection functions,
+$act : \mathcal{E} \to \mathcal{A}$ and $res : \mathcal{E} \to \mathcal{R}$,
+extract the activity and the resource of an event. Because an activity can
+occur more than once along the same trace (e.g.\ inside a loop), ``event''
+and ``activity occurrence'' are the more precise terms, even though the
+shorter ``activity'' is used informally throughout whenever no ambiguity
+arises.
+
+\subsection{Prefixes and Running Traces}
+\label{subsec:bg:pm:prefix}
+Historical event logs only contain completed traces, but a prescriptive
+system observes a process while it is still unfolding. Given a complete trace
+$\sigma$, its $k$-\emph{prefix} $\sigma_{(k)} = \langle e_1, \dots, e_k
+\rangle$, with $k < |\sigma|$, is the sequence of its first $k$
+events~\cite{le2025balancing}; the
+remaining $\langle e_{k+1}, \dots, e_n \rangle$ is the suffix that has not
+happened yet. A \emph{running}, or ongoing, execution is exactly such a
+prefix, produced by a case that has not reached completion.
+
+\subsection{State Abstraction and Transition Systems}
+\label{subsec:bg:pm:ts}
+% (Needed by Section \ref{sec:bg:prpa}.)
+A running execution, as introduced above, is itself a prefix. A common way
+to reason about it in process mining is a \emph{transition
+system}~\cite{vanderaalst2016}, a
+directed graph whose nodes are \emph{states} and whose edges are labeled
+with activities: an edge from state $s$ to state $s'$ labeled $a$ means
+that executing $a$ from $s$ leads to $s'$. States abstract prefixes
+through a state-representation function $S$, mapping every prefix
+$\sigma_{(k)}$ to some state $S(\sigma_{(k)})$; two prefixes that map to
+the same state are treated as equivalent, even if they differ elsewhere.
+
+Given a log of completed traces $\mathcal{L}$, the transition system is
+mined by recording, for every state that occurs in the log, the
+activities empirically observed to follow it. Formally, the set of
+feasible next activities for a prefix $\sigma_{(k)}$
+is~\cite{le2025balancing}
+\begin{equation}
+\mathcal{A}|_{\sigma_{(k)}} = \{a \in \mathcal{A} \mid \exists\, \sigma'
+\in \mathcal{L}, \exists\, l < |\sigma'| : S(\tilde\sigma_{(l)}) =
+S(\sigma_{(k)}), a = act(\sigma'_{(l+1)})\}.
+\label{eq:bg:pm:feasible}
+\end{equation}
+That is, $a$ is feasible after $\sigma_{(k)}$ if some historical trace
+reached the same state and was then followed by $a$. This is what lets
+the transition system say something about a prefix it has never
+literally seen, as long as its state was reached, at some point, by
+another prefix in the log.
+
+The choice of $S$ has direct consequences on the resulting transition
+system. The most direct choice, using the prefix itself as the state
+($S(\sigma_{(k)}) = \sigma_{(k)}$), offers little help: a state would
+then correspond to one specific history, so nothing learned from one
+case would transfer to another, and the number of states would grow
+with every distinct prefix in the log. Some abstraction of the prefix
+into a state is therefore needed, coarse enough to generalize across
+similar histories, yet informative enough to keep the resulting
+recommendation meaningful.
+
+% -----------------------------------------------------------------------------
+% Original planning notes for this section, kept for reference.
+% -----------------------------------------------------------------------------
+% subsec:bg:pm:log
+% - Definition of event log L as a collection of traces (execution sequences
+%   of a business process).
+% - Trace sigma = <e1, ..., en>; |sigma| = number of events.
+% - Event e = (c, a, d): case id c, activity a, data payload d (start/complete
+%   timestamps, resource r, case attributes).
+% - Projection functions act: E -> A and res: E -> R.
+% - Sets A (activities) and R (resources) of the process.
+% - Distinction event / activity / case; note that "event" and "activity
+%   label" are often used interchangeably.
+%
+% subsec:bg:pm:prefix
+% - k-prefix: sigma(k) = <e1, ..., ek> with k < |sigma|.
+% - Running trace / ongoing execution: prefix of a trace that is not yet
+%   complete; it is the input of the prescriptive problem.
+% - Concept of "completion" of a prefix (its unknown suffix).
+%
+% subsec:bg:pm:ts
+% - Why an abstraction is needed: avoid an over-deterministic transition
+%   system and a state-space explosion.
+% - Sequence-based state representation with window w:
+%   S^w(sigma(k)) = last w activities of the prefix (or all of them if k < w).
+% - Transition system mined from the log: maps abstract state -> activities
+%   that can follow it.
+% - Small example (reuse Fig. 2 of the paper or build one).
+
+
+% #############################################################################
+\section{Predictive Process Monitoring}
+\label{sec:bg:ppm}
+% #############################################################################
+% Goal: how a property of the complete trace is predicted from a prefix;
+% introduce the two targets used (outcome and remaining time) and the
+% encoding.
+% References: \cite{difrancescomarino2022} (PPM, Process Mining Handbook);
+% \cite{marquezchamorro2018} (survey); \cite{teinemaa2018} (outcome-oriented);
+% \cite{galanti2023}.
+% Do NOT put here: your concrete sklearn pipeline, get_features() ->
+% Methodology.
+% Bridge: "PPM provides the estimate; Prescriptive Analytics uses it to
+% decide what to do."
+
+\subsection{The Predictive Process Monitoring Problem}
+\label{subsec:bg:ppm:problem}
+% - Definition: a function that, given a prefix, estimates a property of the
+%   complete trace (outcome, remaining time, next activity, cost...).
+% - Tasks relevant to the thesis:
+%    * CASE OUTCOME: binary classification; defined by the occurrence of a key
+%      activity (e.g. "O_Accepted" for BPIC2012/2017; "Network /
+%      Back-Office Adjustment Requested" as a negative outcome for BAC).
+%      The activity that defines the outcome is excluded from the
+%      prescribable activities (fair evaluation).
+%    * REMAINING TIME: regression on the time left until the case ends.
+% - Notion of KPI function F(sigma, i): the KPI value after the first i events.
+
+\subsection{Labeling}
+\label{subsec:bg:ppm:labeling}
+% - How the prefix training set is built: for every trace and every step k an
+%   example (prefix, target) is generated.
+% - Outcome label (boolean) and time label (continuous).
+
+\subsection{Prefix Encoding}
+\label{subsec:bg:ppm:encoding}
+% - Why it is needed: tabular ML techniques require a fixed-length numeric
+%   vector.
+% - ACTIVITY-FREQUENCY ENCODING: a vector counting the occurrences of each
+%   activity in the prefix. Other known options (last-state, aggregation,
+%   index-based, embedding) to mention briefly for context.
+% - Auxiliary attributes: prefix duration, current-event duration (end -
+%   start, or fallback end - previous end), weekday of the last timestamp.
+% - LABEL ENCODING of the candidate next activity and next resource
+%   (NEXT_ACTIVITY, NEXT_RESOURCE): they are model inputs, not outputs.
+% - Train/inference consistency: the same encoder is applied to the running
+%   execution online.
+% - One-hot vs label encoding: anticipate that the encoding choice affects
+%   epistemic uncertainty (an unseen category becomes an all-zero row that
+%   every sub-ensemble agrees on) -> picked up again in
+%   \ref{sec:bg:uncertainty}.
+
+\subsection{Normalization of the Time Target}
+\label{subsec:bg:ppm:normalization}
+% (BASIC STATISTICS.)
+% - Problem: the remaining time has a strongly skewed (long-tail) distribution
+%   and lives on a different scale than the binary outcome.
+% - Three-step transformation (define it formally):
+%    1. z-normalization (standardization): (x - mu) / s.
+%    2. sigmoid: 1 / (1 + e^-z).
+%    3. min-max scaling to [0, 1].
+%   Result: the "sigmoid_mm" variable, nearly uniform on [0,1], which makes
+%   the two KPIs comparable and makes even small improvements visible.
+% - Invertibility of the transformation (needed to bring simulated times back
+%   to seconds during evaluation): min-max^-1 -> logit -> de-standardization,
+%   with edge clipping.
+% - Recall: sample mean / standard deviation, the logistic function, monotone
+%   transformations and order preservation.
+
+
+% #############################################################################
+\section{Prescriptive Process Analytics}
+\label{sec:bg:prpa}
+% #############################################################################
+% Goal: introduce prescriptive process analytics (vs the other analytics
+% types and vs predictive monitoring), give its formal problem statement, and
+% explain what a KPI is. Three subsections: concept + examples; formal
+% definition; KPIs.
+% References: \cite{ibm_prescriptive} and \cite{wikipedia_prescriptive}
+% (analytics taxonomy, technology behind prescriptive analytics -- consider
+% replacing Wikipedia with a stronger source); \cite{kubrak2022} (Quo vadis?);
+% \cite{le2025} (next step recommendation); \cite{le2025balancing} (the
+% framework this thesis extends).
+% Do NOT put here: the feasibility module internals, the search strategies
+% (exhaustive vs genetic), the diverse top-k selection -> methodology chapter.
+% Planning notes for that relocated material are kept as comments at the end
+% of this section.
+% Bridge: "When the KPIs are more than one and in conflict, 'optimal' must be
+% redefined" -> Section \ref{sec:bg:moo}.
+
+\subsection{From Prediction to Prescription}
+\label{subsec:bg:prpa:pred2presc}
+Data analytics is commonly described as a progression of four questions of
+increasing sophistication and business value~\cite{ibm_prescriptive}:
+\emph{descriptive} analytics asks \emph{what happened}, \emph{diagnostic}
+analytics asks \emph{why it happened}, \emph{predictive} analytics asks
+\emph{what is likely to happen next}, and \emph{prescriptive} analytics asks
+\emph{what should be done next}. The four are complementary, each building on
+the output of the previous one, but they differ in what they deliver: the
+first three explain or forecast, whereas only the last one recommends a
+course of action and makes the implications of each option
+explicit~\cite{wikipedia_prescriptive}. Technically, prescriptive analytics
+combines historical and contextual data with business rules and with
+mathematical and computational models drawn from statistics, machine learning
+and operations research, in order to reason about objectives, constraints,
+uncertainty and trade-offs at
+once~\cite{wikipedia_prescriptive,ibm_prescriptive}. It is applied, for
+example, to recommend a treatment from a patient's characteristics, to set
+prices and plan promotions from a demand forecast, to schedule maintenance
+before a machine fails, or to score a transaction for fraud
+risk~\cite{ibm_prescriptive}.
+
+When this paradigm is applied to the executions of a business process
+recorded in an event log, it is called \emph{Prescriptive Process Analytics}
+(PrPA), or prescriptive process monitoring~\cite{kubrak2022}. PrPA supports
+\emph{ongoing} process executions: instead of only forecasting how a running
+case will end, it suggests interventions that steer it toward a desired
+result, for instance preventing an unfavorable outcome or reducing the cost
+or the duration of the case. The difference from predictive process
+monitoring is one of intent. Predictive monitoring passively estimates a
+property of the running case, such as its outcome, its remaining time or its
+most likely next activity; prescriptive monitoring uses those estimates to
+actively decide which action improves a target performance measure, taking
+the dependencies between the different aspects of the process into account.
+
+The kind of action prescribed varies across the literature. Early work
+recommended the next activity to execute by exploiting the event data payload
+and simple counterfactual reasoning~\cite{groger2014}. As prediction-based
+methods spread, attention moved to flagging cases at risk of an undesired
+outcome and to deciding \emph{whether} and \emph{when} to
+intervene~\cite{teinemaa2018,fahrenkrogpetersen2022}. More recent approaches
+recommend \emph{how} to proceed using causal inference~\cite{bozorgi2023},
+reinforcement learning~\cite{branchi2022,metzger2020,shoush2022} or
+interpretable, white-box predictors~\cite{padella2022}, and increasingly
+prescribe not only the next activity but also the resource that should carry
+it out --- the \emph{next step recommendation}~\cite{le2025} --- sometimes
+accounting for how a resource's performance changes with
+experience~\cite{padella2024}. Large language models have also started to be
+used to make such recommendations easier to interpret~\cite{kubrak2024}.
+
+What almost all of these approaches share is that they optimize a
+\emph{single} performance measure at a time. The few that consider several
+process aspects fold them into one fixed formula with a predetermined meaning
+(e.g.\ monetary profit), which does not let a decision-maker examine
+alternative trade-offs~\cite{le2025balancing}. Treating multiple, possibly
+conflicting measures explicitly is the setting of this thesis; the tools for
+it are introduced in Section~\ref{sec:bg:moo}.
+
+\subsection{Formal Problem Definition}
+\label{subsec:bg:prpa:formal}
+A performance measure is formalized as a \emph{Key Performance Indicator}
+(KPI) function $F : \mathcal{E}^{*} \times \mathbb{N} \to \mathbb{R}$ that,
+given a trace $\sigma$ and a position $1 \le i \le |\sigma|$, returns the
+value $F(\sigma, i)$ of that indicator for $\sigma$ after its first $i$
+events~\cite{le2025balancing}. Evaluating a KPI at an intermediate position,
+and not only on the completed trace, is what makes it usable while a case is
+still running.
+
+The prescription itself is a \emph{next step}: a pair
+$(a, r) \in \mathcal{A} \times \mathcal{R}$ consisting of the activity to
+perform next and the resource assigned to it. Given a running execution
+$\sigma' = \langle e_1, \dots, e_k \rangle$, the prescriptive problem is to
+choose the next event $e_{k+1}$ --- that is, the pair $(a, r)$ --- so that the
+resulting completed trace
+$\sigma_{\mathrm{pres}} = \langle e_1, \dots, e_k, e_{k+1}, \dots, e_n
+\rangle$ attains the best possible KPI value. The candidate pairs are not
+arbitrary: they are restricted to the activities that can actually follow the
+current state of the case and to the resources able to perform them, a
+feasibility constraint that is detailed, together with the rest of the
+framework, in the methodology chapter. When a single KPI $F$ is considered,
+``best'' simply means maximizing (or minimizing) $F$; when several KPIs
+$F_1, \dots, F_n$ matter at once, they are aggregated into a single
+\emph{utility function}
+\begin{equation}
+U_{\mathrm{KPI}}(\sigma, \boldsymbol{\lambda}, i)
+  = \sum_{j=1}^{n} \lambda_j \, F_j(\sigma, i),
+\label{eq:bg:prpa:utility}
+\end{equation}
+where $\boldsymbol{\lambda} = (\lambda_1, \dots, \lambda_n) \in [0, 1]^n$,
+with $\sum_{j} \lambda_j = 1$, weights the relative importance of each
+indicator according to the decision-maker's
+priorities~\cite{le2025balancing}. The limitations of this linear
+aggregation, and the alternative of not aggregating at all, are discussed in
+Section~\ref{sec:bg:moo}.
+
+\subsection{Key Performance Indicators}
+\label{subsec:bg:prpa:kpi}
+The objective of PrPA is stated informally as reaching a ``desired
+outcome'', and a KPI is what turns that vague notion into a quantity that can
+be optimized. Which quantity is appropriate depends entirely on the process
+and on the organization's goals; recurring dimensions are the throughput time
+of a case, its cost, some notion of quality or of regulatory compliance, and
+the efficiency with which resources are used.
+
+Two examples make the mapping concrete. In a loan-application process, a bank
+that wants to grant more loans can take the \emph{acceptance rate} --- the
+fraction of cases that reach a positive decision --- as a KPI to maximize,
+whereas a bank that wants faster decisions can take the \emph{time to
+decision} as a KPI to minimize. In a hospital, management may want to shorten
+the \emph{length of stay} of patients in order to free capacity, while also
+keeping the \emph{30-day readmission rate} low, so that discharging patients
+earlier does not degrade the quality of care.
+
+The two hospital KPIs illustrate a recurring difficulty: performance measures
+often \emph{conflict}, so that improving one worsens another, and the right
+balance between them is not fixed --- it depends on the domain, on the
+regulatory context and on situational priorities. A prescription that is
+optimal for one KPI can therefore be a poor choice overall. Making these
+trade-offs explicit, instead of hiding them inside a single composite score,
+is the problem addressed in Section~\ref{sec:bg:moo}.
+
+% -----------------------------------------------------------------------------
+% Planning notes -- material relocated to the methodology chapter, kept here
+% for reference.
+% -----------------------------------------------------------------------------
+% Feasibility module:
+% - Purpose: restrict the space to what is practically executable.
+% - Activity filter: A|sigma(k) = activities that in the log follow the
+%   abstract state of the prefix at least once (transition system, window w).
+%   Fall back to progressively shorter suffixes if the exact prefix was never
+%   seen.
+% - Resource filter: R_a = resources that executed a at least once in the log.
+% - Feasible prescription space: P_sigma(k) = {(a, r) : a in A|sigma(k),
+%   r in R_a}.
+% - Exclusion of "forbidden" activities (those defining the outcome).
+%
+% Search-space exploration strategies:
+% - Exhaustive search: evaluates all feasible pairs; optimal w.r.t. the model
+%   but costly when |P_sigma(k)| is large (many resources).
+% - Heuristic / metaheuristic (genetic) methods: explore a subset.
+%   (Algorithm detail belongs to Section \ref{sec:bg:moo} / methodology.)
+%
+% Extended single-KPI survey (if a separate Related Work chapter is wanted):
+% - Resource allocation for global KPI improvement \cite{meneghello2024}.
+% - de Leoni et al. on guidance for process continuation \cite{deleoni2020}.
+
+
+% #############################################################################
+\section{Conflicting KPIs and Multi-Objective Optimization}
+\label{sec:bg:moo}
+% #############################################################################
+% Goal: the tools to understand why a Pareto front is used, how it is explored
+% (enumeration, NSGA-II) and how a diversified subset of solutions is chosen.
+% References: \cite{marler2004} (multi-objective survey); \cite{deb2002}
+% (NSGA-II); \cite{mitchell1998} (genetic algorithms); \cite{mothilal2020}
+% (DiCE); \cite{buliga2025}; p-dispersion / facility-location literature.
+% Do NOT put here: the layout of the recommendations_*.csv files and the
+% _objectives.csv sidecars -> Methodology / Evaluation.
+% Bridge: "The quality of these decisions depends entirely on the quality -
+% and the reliability - of the model that estimates the three objectives."
+
+So far, most prescriptive-monitoring approaches optimize a single KPI. In
+practice this is rarely enough: a business process is judged on several
+performance measures at once, these measures are usually interdependent, and
+improving one of them often comes at the expense of another. What is needed is
+a way to reason about the whole set of measures together and to choose a
+deliberate trade-off among them.
+
+\subsection{Conflicting KPIs}
+\label{subsec:bg:moo:devil}
+The tension is easiest to see on an example. A hospital may want to shorten
+the length of stay of its patients, in order to free capacity, and at the
+same time keep the 30-day readmission rate low; discharging patients sooner
+helps the first measure but tends to hurt the second, so no policy is best on
+both counts and management has to settle on an acceptable compromise. The
+same situation recurs across domains, and it is not limited to two measures:
+the classical \emph{Devil's Quadrangle} already identifies four dimensions of
+process performance --- time, cost, quality and flexibility --- that
+typically cannot all be improved at once~\cite{dumas2018}.
+
+\subsection{Scalarization and Its Limitations}
+\label{subsec:bg:moo:scalarization}
+One way to keep the convenience of a single optimum is to collapse the
+several KPIs into one number. This is what the utility function of
+Equation~\eqref{eq:bg:prpa:utility} does: a weighted sum of the individual
+indicators, with weights $\boldsymbol{\lambda}$ chosen by the
+decision-maker~\cite{marler2004}. Scalarization of this kind is simple and it
+always yields one well-defined solution, but it has three drawbacks. It
+forces the weights to be fixed \emph{before} any solution is seen, even
+though the trade-off they encode is exactly what the decision-maker would
+like to inspect; it returns a single point for each weight vector, hiding the
+shape of the trade-off; and it requires the KPIs to be expressed on
+comparable scales, which is why the time target is normalized as described in
+Section~\ref{subsec:bg:ppm:normalization}.
+
+\subsection{Pareto Optimality}
+\label{subsec:bg:moo:pareto}
+When the objectives genuinely conflict there is no single solution that is
+best on all of them, and the problem instead has a whole set of equally
+defensible compromises. This is captured by the notion of \emph{Pareto
+optimality}~\cite{pareto1906,miettinen1999}. Consider a minimization problem
+with $m$ objective functions $f_1, \dots, f_m$ and a decision vector $x$
+ranging over a feasible set $X$. A solution $x_1$ is said to \emph{dominate}
+a solution $x_2$, written $x_1 \prec x_2$, when it is no worse on every
+objective and strictly better on at least one:
+\begin{equation}
+x_1 \prec x_2
+\iff
+\bigl( f_i(x_1) \le f_i(x_2)\ \ \forall\, i \in \{1, \dots, m\} \bigr)
+\ \wedge\
+\bigl( \exists\, j : f_j(x_1) < f_j(x_2) \bigr).
+\label{eq:bg:moo:dominance}
+\end{equation}
+A solution is \emph{Pareto-optimal} --- equivalently \emph{efficient} or
+\emph{non-dominated} --- if no feasible solution dominates it. The image of
+the Pareto-optimal set in objective space is the \emph{Pareto front}
+\begin{equation}
+P^{*} = \bigl\{\, f(x) \;\big|\; x \in X,\ \nexists\, x' \in X :
+f(x') \prec f(x) \,\bigr\}.
+\label{eq:bg:moo:front}
+\end{equation}
+A point lies on the front simply because nothing dominates it; it need not
+itself dominate any other point. The best and the worst value that each
+objective attains over $P^{*}$ define the \emph{ideal} and the \emph{nadir}
+point, which are convenient references for normalizing the objectives and for
+measuring how close a given solution is to the (generally unattainable)
+ideal. When two entire fronts have to be compared rather than two individual
+points, a common scalar summary is the \emph{hypervolume}: the volume of
+objective space that a front dominates with respect to a fixed reference
+point~\cite{deb2001}.
+
+Compared with scalarization, computing the Pareto front defers the trade-off
+decision. The optimizer returns all the non-dominated compromises, and the
+selection of one of them is made afterwards, with the cost of each
+alternative in full view~\cite{honegumi}. In this thesis the front is built
+on three objectives: the probability of a positive outcome, to be maximized;
+the predicted remaining time, to be minimized; and the predictive standard
+deviation of that time estimate, also to be minimized. The third objective
+treats the model's own \emph{confidence} as a KPI, a choice motivated in
+Section~\ref{sec:bg:uncertainty}.
+
+\subsection{Front-Exploration Algorithms}
+\label{subsec:bg:moo:algorithms}
+% - Exact enumeration + front extraction: exact on small discrete spaces.
+% - GENETIC ALGORITHMS: population, fitness, selection, crossover, mutation,
+%   elitism, stopping criterion.
+%    * The original paper's "custom fitness" approach: validity (val) +
+%      alpha * proximity (prox), inspired by \cite{buliga2025}; DiCE as the
+%      library \cite{mothilal2020}.
+%    * NSGA-II \cite{deb2002}: non-dominated sorting into fronts, crowding
+%      distance for diversity, tournament selection, elitism.
+%      Implemented with pymoo (an integer variable indexing the (a,r) pair,
+%      SBX + polynomial mutation + rounding repair), currently "parked"
+%      because it is slower on small candidate sets: explain it anyway, it is
+%      a methodological contribution.
+% - Enumeration vs metaheuristic comparison: quality vs cost; robustness to
+%   predictor errors on rare pairs (the paper's hypothesis: proximity favors
+%   frequent pairs, which are estimated better).
+
+\subsection{Selecting a Representative Subset of the Front}
+\label{subsec:bg:moo:dispersion}
+For a discrete problem the Pareto front can contain a large number of points,
+some of them very close to one another. A recommender that has to present
+alternatives to a user is often better served by a handful of clearly
+distinct options than by the entire front. Choosing the $k$ most
+representative points can be framed as a \emph{max-min dispersion}, or
+\emph{$p$-dispersion}, problem: given $n$ candidate points with pairwise
+distances $d_{ij}$, select a subset $S$ of size $k$ that maximizes the
+smallest distance between any two selected points,
+\begin{equation}
+\max_{\substack{S \subseteq \{1, \dots, n\} \\ |S| = k}}\ \
+\min_{\substack{i, j \in S \\ i \neq j}}\ d_{ij}.
+\label{eq:bg:moo:dispersion}
+\end{equation}
+The problem was first studied in facility location, where the aim is to place
+$p$ facilities so that the closest pair is as far apart as
+possible~\cite{kuby1987}, and it has since been used more generally to
+extract a maximally spread-out subset from a set of
+candidates~\cite{maliszewski2012}. Because it is stated purely in terms of a
+matrix of pairwise distances, the distance metric is a modeling choice; here
+the natural one is the Euclidean distance between points in the normalized
+objective space. The problem admits an exact mixed-integer programming
+formulation, for which off-the-shelf solvers are
+available~\cite{feng2022spopt}; the formulation actually used, together with
+the rule that picks a single final recommendation, is given in the
+methodology chapter.
+
+Every objective on the front is produced by a predictive model, so the value
+of the whole procedure rests on how accurate --- and how well calibrated ---
+that model is. The next two sections describe it.
+
+
+% #############################################################################
+\section{Gradient Boosting and CatBoost}
+\label{sec:bg:gbm}
+% #############################################################################
+% Goal: the model class used for the two predictors and what hyperparameters
+% are / what role they play, plus their optimization. NO concrete values here.
+% References: \cite{friedman2001} (gradient boosting); \cite{prokhorenkova2018}
+% (CatBoost); \cite{akiba2019} (Optuna); \cite{bergstra2011} (TPE);
+% \cite{galanti2023}.
+% Do NOT put here: the search_spaces of 2_training_predictive_model.py, the
+% number of trials, the best_hyperparams_*.json -> Experimental Setup (with a
+% pointer to \ref{sec:bg:gbm}).
+% Bridge: "A point model does not say how sure it is of what it predicts:
+% uncertainty must be quantified."
+
+\subsection{Tree Ensembles and Boosting}
+\label{subsec:bg:gbm:boosting}
+% - Decision / regression tree: splits, leaves, depth.
+% - Bagging vs boosting (general idea).
+% - Gradient boosting: sequential addition of trees fitting the negative
+%   gradient of the loss; learning rate as shrinkage; number of trees
+%   (iterations) and overfitting.
+
+\subsection{CatBoost}
+\label{subsec:bg:gbm:catboost}
+% - Motivation for the choice: high predictive quality with contained
+%   training time; native handling of categorical features; used in prior PPM
+%   work \cite{galanti2023}.
+% - Distinctive elements:
+%    * ordered boosting / ordered target statistics (mitigates target leakage
+%      / prediction shift);
+%    * oblivious (symmetric) trees: same split at every level -> balanced
+%      trees, fast inference, regularizing effect;
+%    * growth alternatives (Depthwise, Lossguide) and min_data_in_leaf.
+% - Losses used in the thesis (as CONCEPTS):
+%    * Logloss for outcome classification;
+%    * RMSE for regression; and the RMSEWithUncertainty variant, which
+%      predicts mean AND variance (bridge to \ref{sec:bg:uncertainty}).
+% - scale_pos_weight / class weights for imbalance (the positive-case
+%   percentages differ a lot across logs: e.g. BAC ~82.5%, BPIC2012 ~47.9%).
+
+\subsection{Hyperparameters: What They Are and What They Control}
+\label{subsec:bg:gbm:hyperparams}
+% - Definition: a parameter NOT learned from the data, fixed before training,
+%   governing model capacity and the optimization process.
+% - Grouped by ROLE (explain the role, not the value):
+%    * Capacity / complexity: depth, grow_policy, min_data_in_leaf.
+%    * Learning step: learning_rate, iterations.
+%    * Regularization: l2_leaf_reg.
+%    * Stochasticity / sub-sampling: bootstrap_type (Bayesian/Bernoulli/MVS),
+%      bagging_temperature, subsample, colsample_bylevel.
+%    * Imbalance: scale_pos_weight.
+% - The bias-variance trade-off is governed by these groups.
+
+\subsection{Hyperparameter Optimization}
+\label{subsec:bg:gbm:hpo}
+% - Why not by hand: large space, non-linear interactions.
+% - Validation: hold-out, k-fold cross-validation, and - for processes - a
+%   TEMPORAL split (avoid leakage from the future). Note the internal
+%   "running" validation (the most recent training cases as validation).
+% - Early stopping: stop adding trees when the validation metric stops
+%   improving.
+% - Search: grid / random search vs BAYESIAN OPTIMIZATION.
+%    * Optuna: TPE (Tree-structured Parzen Estimator) as the surrogate;
+%      define-by-run search space.
+%    * Pruning (MedianPruner): interrupt unpromising trials.
+% - Selection of the winning trial on ONE consistent metric (Logloss / RMSE)
+%   and a final refit on 100% of the training data with the chosen tree count.
+
+
+% #############################################################################
+\section{Predictive Uncertainty Quantification}
+\label{sec:bg:uncertainty}
+% #############################################################################
+% Goal: this is the THEORETICAL CORE of the contribution. Taxonomy of
+% uncertainty, its estimation in ensembles and in gradient boosting,
+% calibration. It must be the most developed section of the chapter.
+% References: \cite{malinin2021} (Uncertainty in Gradient Boosting via
+% Ensembles, ICLR 2021); \cite{hullermeier2021} (aleatoric vs epistemic,
+% survey); \cite{lakshminarayanan2017} (deep ensembles); \cite{guo2017}
+% (temperature scaling); \cite{kuleshov2018} (calibrated regression);
+% \cite{angelopoulos2023} (conformal prediction); \cite{gal2016} (MC-dropout).
+% Do NOT put here: the UncertaintyRegressor / UncertaintyClassifier classes,
+% how the wrappers plug into the Pipeline, how out["std"] becomes objective #3
+% -> Methodology. The obtained ECE/coverage/T/s values -> Evaluation.
+% Bridge: "The Pareto front and the recommendations are evaluated with a
+% process simulation, because a real A/B test is not possible."
+
+\subsection{Taxonomy of Uncertainty}
+\label{subsec:bg:uncertainty:taxonomy}
+% - ALEATORIC uncertainty (data uncertainty): intrinsic / irreducible noise in
+%   the data-generating process; does not shrink with more data.
+%    * homoscedastic vs heteroscedastic.
+% - EPISTEMIC uncertainty (knowledge / model uncertainty): the model's
+%   ignorance due to lack of data / coverage; reducible with more data; high
+%   on rare or out-of-distribution inputs.
+% - TOTAL predictive uncertainty: the combination of the two.
+% - Why distinguish them in the thesis: epistemic flags out-of-domain inputs /
+%   rarely observed (a,r) pairs; aleatoric says how noisy the estimate is even
+%   in the ideal case.
+% - RESULT PREVIEW: on one-hot tabular data the regressor's epistemic part is
+%   very small (~0.1% of the variance) and does NOT rise on never-seen inputs
+%   (an unknown category -> an all-zero row every sub-ensemble agrees on). It
+%   is reported anyway: the full decomposition is a result in itself
+%   ("epistemic is negligible here, and why").
+
+\subsection{Ensemble Methods for Uncertainty}
+\label{subsec:bg:uncertainty:ensembles}
+% - Idea: train/extract several models; the DISAGREEMENT among members
+%   estimates the epistemic part, the AVERAGE member variance estimates the
+%   aleatoric part.
+% - Deep ensembles, MC-dropout, bootstrap ensembles: cite as context.
+% - LAW OF TOTAL VARIANCE (regression):
+%     Var[y] = E_m[ Var(y | m) ]  +  Var_m[ E(y | m) ]
+%              \____ aleatoric ___/    \___ epistemic ___/
+% - ENTROPY decomposition (classification):
+%     H[ E_m p_m ]            = total uncertainty
+%     E_m[ H(p_m) ]           = aleatoric uncertainty (expected entropy)
+%     MI = total - aleatoric  = epistemic uncertainty (mutual information, BALD)
+%   All in nats.
+
+\subsection{Uncertainty in Gradient Boosting}
+\label{subsec:bg:uncertainty:gbm}
+% (\cite{malinin2021}.)
+% - SGLB - Stochastic Gradient Langevin Boosting: noise injected into the
+%   updates -> the model (approximately) samples from a posterior over the
+%   parameters. In CatBoost: posterior_sampling=True.
+% - VIRTUAL ENSEMBLES: from a single SGLB model several "sub-models" are
+%   obtained using growing prefixes of the tree sequence -> an ensemble at the
+%   cost of a single training run. Parameter: virtual_ensembles_count.
+% - Regression with the RMSEWithUncertainty loss: each sub-model predicts
+%   (mu_m, sigma_m^2); via the law of total variance:
+%     data_std      = sqrt( mean_m sigma_m^2 )     (aleatoric)
+%     knowledge_std = sqrt( var_m mu_m )           (epistemic)
+%     total_std     = sqrt( data_var + knowledge_var )
+% - Classification: prediction_type="TotalUncertainty" returns the expected
+%   entropy (aleatoric) and the total entropy; the mutual information
+%   (epistemic) is the difference.
+
+\subsection{Calibration}
+\label{subsec:bg:uncertainty:calibration}
+% - What a CALIBRATED (probabilistic) model is: among the events predicted
+%   with probability p, roughly a fraction p actually occur.
+% - Diagnostics:
+%    * reliability diagram;
+%    * ECE - Expected Calibration Error: |confidence - accuracy| averaged over
+%      probability bins;
+%    * for regression: interval COVERAGE (fraction of |y - mu| within
+%      +-1 sigma / +-2 sigma; target ~68% / ~95% for a Gaussian) and
+%      SHARPNESS (typical / median interval width).
+% - POST-HOC correction methods:
+%    * TEMPERATURE SCALING \cite{guo2017}: a single scalar T,
+%      p_cal = sigmoid( logit(p) / T ); T > 1 "softens" over-confident
+%      probabilities. Monotone -> it does not reorder candidates by
+%      probability, but it changes the magnitudes feeding the normalization
+%      and the front distances.
+%    * SIGMA RECALIBRATION for regression: a scalar factor s that rescales
+%      every standard-deviation component so the empirical coverage matches
+%      the nominal one; estimated on a held-out slice with a robust
+%      median-of-standardized-residual estimator (avoids blow-ups when
+%      CatBoost predicts a near-zero variance).
+% - CONFORMAL PREDICTION as the RIGOROUS alternative \cite{angelopoulos2023}:
+%   split-conformal on a dedicated holdout -> intervals with a distribution-
+%   free marginal coverage guarantee. Cite it as "the rigorous alternative"
+%   and motivate why the thesis used post-hoc recalibration instead (the
+%   models are trained once, cost/benefit trade-off).
+
+\subsection{Supporting Statistical Tools}
+\label{subsec:bg:uncertainty:stats}
+% (Compact recap.)
+% - Variance and standard deviation as dispersion measures.
+% - Shannon entropy of a Bernoulli; entropy as an uncertainty measure.
+% - Mutual information / information gain.
+% - The normal distribution, the 68-95-99.7 rule, the standardized residual,
+%   the 0.6745 quantile of the normal (median absolute value).
+
+
+% #############################################################################
+\section{Business Process Simulation}
+\label{sec:bg:simulation}
+% #############################################################################
+% Goal: what process simulation is, how a simulation model is obtained from
+% the data, and with which metrics its fidelity is assessed.
+% References: \cite{vinci2025prosit} (ProSiT); \cite{demoor2025} (SimBank);
+% \cite{chapelacampa2024} (extraneous delays); \cite{vanderaalst2016} (Petri
+% nets / soundness); \cite{vinci2025online} (online discovery).
+% Do NOT put here: the prosit_simulation_results/... paths, the
+% build_recommender_df code, the specific case ids -> Methodology / Evaluation.
+
+\subsection{Why Simulation}
+\label{subsec:bg:simulation:why}
+% - Impossibility of an A/B test: one cannot intervene on a real process just
+%   to evaluate.
+% - COUNTERFACTUAL evaluation: simulate "what would have happened" following /
+%   not following the recommendation.
+% - Standard in PrPA for evaluating recommendations \cite{demoor2025}.
+
+\subsection{Petri Nets and Process Models}
+\label{subsec:bg:simulation:petri}
+% - Petri net: places, transitions, arcs, marking, firing of a transition.
+% - Workflow net and soundness (every case can always complete).
+% - Initial / final marking; relation to the start/end of a case.
+% - Replay and ALIGNMENT of a log prefix against the model: reconstruct the
+%   marking reached by a historical prefix (log move, model move,
+%   model-inserted activities).
+
+\subsection{Stochastic Discrete-Event Simulation}
+\label{subsec:bg:simulation:des}
+% - Components of a process simulation model:
+%    * case ARRIVAL process;
+%    * transition branching weights / probabilities;
+%    * activity EXECUTION times;
+%    * WAITING times / queues;
+%    * resource CALENDARS and availability;
+%    * (extraneous delays \cite{chapelacampa2024}, as context).
+% - Repeating the runs to mitigate stochasticity (e.g. 10 runs per scenario).
+
+\subsection{Discovery of the Simulation Model}
+\label{subsec:bg:simulation:discovery}
+% - The simulation parameters are LEARNED from the historical log (resource
+%   discovery, transition weights, time distributions, calendars).
+% - METHODOLOGICAL NOTE: the simulator parameters are discovered from the FULL
+%   log, not from the training split.
+% - The Petri-net structure is a separate input (control-flow discovery),
+%   distinct from the parameter discovery.
+% - Online discovery for evolving processes \cite{vinci2025online} - context.
+
+\subsection{ProSiT}
+\label{subsec:bg:simulation:prosit}
+% - The simulator used \cite{vinci2025prosit}: interactive and transparent
+%   simulations.
+% - What it returns: simulated logs; diagnostics (unreachable recommendations,
+%   truncated "runaway" cases, non-fitting prefixes, model-inserted
+%   activities).
+
+\subsection{Assessing the Simulator's Fidelity}
+\label{subsec:bg:simulation:fidelity}
+% (STATISTICS.)
+% - Real vs simulated distribution comparison:
+%    * case-duration distributions (histograms / KDE, median);
+%    * rate of positive-outcome cases, real vs simulated.
+% - Distribution of the simulator's residuals.
+% - (Optional) distribution-distance metrics: EMD / Wasserstein, KS; or a
+%   comparison of summary statistics.
+
+\subsection{KPI Improvement Metrics}
+\label{subsec:bg:simulation:kpimetrics}
+% (Definition; the numbers are in Evaluation.)
+% - Delta_CO = average over prefixes of ( F_CO(sigma_pres) - F_CO(sigma_GT) ).
+% - Delta_RT = average relative improvement of the remaining time w.r.t. the
+%   ground truth.
+% - Baseline / Ground Truth: no recommendation applied.
+% - (Optional) confidence intervals on the deltas via bootstrap; 95%
+%   confidence bands in the plots as lambda varies.
+
+
+% #############################################################################
+\section{Notation}
+\label{sec:bg:notation}
+% #############################################################################
+% OPTIONAL but much appreciated by advisors. A half-page table of symbols,
+% consistent with those used in the rest of the thesis.
+% Uncomment and complete the table below (requires \usepackage{booktabs}).
+%
+% \begin{table}[h]
+%   \centering
+%   \begin{tabular}{ll}
+%     \toprule
+%     Symbol & Meaning \\
+%     \midrule
+%     $\mathcal{L}$              & event log \\
+%     $\sigma,\ \sigma_{(k)}$    & trace, $k$-prefix \\
+%     $\mathcal{A},\ \mathcal{R}$ & sets of activities and resources \\
+%     $act,\ res$                & projection functions \\
+%     $e = (c, a, \mathbf{d})$   & event (case id, activity, payload) \\
+%     $S^{w}(\sigma_{(k)})$      & state abstraction with window $w$ \\
+%     $\mathcal{P}_{\sigma_{(k)}}$ & feasible prescription space \\
+%     $F_{CO},\ F_{RT}$          & KPIs: case outcome, remaining time (norm.) \\
+%     $U_{KPI}$                  & utility function / combined KPI \\
+%     $\lambda$                  & KPI trade-off weight \\
+%     $\phi$                     & predictive model (regressor) \\
+%     $p,\ p_{cal}$              & raw / calibrated outcome probability \\
+%     $T$                        & calibration temperature \cite{guo2017} \\
+%     $s$                        & std recalibration factor \\
+%     $\sigma_{data}$            & aleatoric uncertainty (std) \\
+%     $\sigma_{know}$            & epistemic uncertainty (std) \\
+%     $\sigma_{tot}$             & total predictive uncertainty \\
+%     $\mathrm{MI}$              & mutual information (epistemic, classif.) \\
+%     $k$                        & n. of diversified recommendations per case \\
+%     $\tau,\ \alpha$            & validity threshold, proximity weight \\
+%     \bottomrule
+%   \end{tabular}
+%   \caption{Notation used in the thesis.}
+%   \label{tab:notation}
+% \end{table}
+
+
+% =============================================================================
+%  STATISTICAL TOOLS MAP -> WHERE THEY GO  (note to self, not for the thesis)
+% =============================================================================
+%   z-score, sigmoid, min-max, invertibility             -> \ref{subsec:bg:ppm:normalization}
+%   Bayesian optimization / TPE, CV, temporal split,
+%     early stopping, pruning                            -> \ref{subsec:bg:gbm:hpo}
+%   variance / std, Shannon entropy, mutual information,
+%     law of total variance                              -> \ref{subsec:bg:uncertainty:ensembles} / \ref{subsec:bg:uncertainty:stats}
+%   ECE, reliability diagram, temperature scaling,
+%     coverage, sharpness, conformal prediction          -> \ref{subsec:bg:uncertainty:calibration}
+%   68-95-99.7 rule, standardized residual,
+%     0.6745 quantile                                    -> \ref{subsec:bg:uncertainty:stats}
+%   distribution comparison (KDE, median, EMD/KS),
+%     residuals                                          -> \ref{subsec:bg:simulation:fidelity}
+%   bootstrap / 95% confidence bands                     -> \ref{subsec:bg:simulation:kpimetrics} and Evaluation
+%
+%   HYPERPARAMETERS appear in Background ONLY as concepts
+%   (\ref{subsec:bg:gbm:hyperparams}). Chosen values, search space, number of
+%   Optuna trials and best-params tables -> Experimental Setup, with the
+%   sentence "the concepts are introduced in Section~\ref{sec:bg:gbm}".
+%
+% =============================================================================
+%  FINAL CHECKLIST BEFORE HANDING IN THE CHAPTER
+% =============================================================================
+%  [ ] Every section ends with a "bridge" to the next one.
+%  [ ] No concrete experimental value in Background (concepts only).
+%  [ ] No description of YOUR classes/files/functions (-> Methodology).
+%  [ ] Every concept introduced is later used in Methodology or Evaluation
+%      (no "orphan" background).
+%  [ ] \ref{sec:bg:uncertainty} is the most developed section: it is the
+%      contribution.
+%  [ ] The aleatoric/epistemic taxonomy is explained BEFORE SGLB / virtual
+%      ensembles.
+%  [ ] Notation table consistent with the symbols in the rest of the thesis.
+%  [ ] Every subsection has at least one solid bibliographic reference.
+%  [ ] Agreed with the advisors whether Related Work stays here
+%      (\ref{subsec:bg:prpa:sota}) or is a separate chapter.
+% =============================================================================

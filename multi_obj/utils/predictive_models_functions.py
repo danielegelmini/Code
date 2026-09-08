@@ -15,43 +15,80 @@ import catboost
 from catboost import CatBoostRegressor, CatBoostClassifier
 import optuna
 from optuna.integration import CatBoostPruningCallback
+from scipy.optimize import minimize_scalar
 
 from utils.train_test_split import extract_internal_running_validation
+
+DEFAULT_VIRTUAL_ENSEMBLES_COUNT = 10
+
+
+def _binary_entropy(p):
+    """Shannon entropy (nats) of a Bernoulli(p), elementwise."""
+    p = np.clip(np.asarray(p, dtype=float), 1e-12, 1.0 - 1e-12)
+    return -(p * np.log(p) + (1.0 - p) * np.log1p(-p))
+
+
+def _expected_calibration_error(y_true, proba, n_bins=10):
+    """ECE: |confidence - accuracy| averaged over equal-width probability bins."""
+    y_true = np.asarray(y_true, dtype=float)
+    proba = np.asarray(proba, dtype=float)
+    edges = np.linspace(0.0, 1.0, n_bins + 1)
+    ece = 0.0
+    for lo, hi in zip(edges[:-1], edges[1:]):
+        mask = (proba > lo) & (proba <= hi)
+        if not mask.any():
+            continue
+        ece += mask.mean() * abs(proba[mask].mean() - y_true[mask].mean())
+    return float(ece)
+
+
+def _fit_temperature(logits, y_true):
+    """Single-scalar temperature T minimising the log-loss of sigmoid(logit / T)
+    on a held-out slice (Guo et al. 2017). T > 1 softens over-confident scores."""
+    logits = np.asarray(logits, dtype=float)
+    y_true = np.asarray(y_true, dtype=float)
+
+    def nll(temp):
+        p = np.clip(1.0 / (1.0 + np.exp(-logits / temp)), 1e-7, 1.0 - 1e-7)
+        return -np.mean(y_true * np.log(p) + (1.0 - y_true) * np.log(1.0 - p))
+
+    res = minimize_scalar(nll, bounds=(0.2, 5.0), method="bounded")
+    return float(np.clip(res.x, 0.2, 5.0))
 
 class UncertaintyRegressor:
     """
     Wraps a CatBoost regressor trained with loss_function='RMSEWithUncertainty'
-    so it can sit as the final step of an sklearn Pipeline while exposing the
-    per-prediction (aleatoric) uncertainty.
+    and posterior_sampling=True (SGLB) so it can sit as the final step of an
+    sklearn Pipeline while exposing the full predictive-uncertainty decomposition
+    (Malinin et al., "Uncertainty in Gradient Boosting via Ensembles", ICLR 2021).
 
-    - predict(X) returns only the mean prediction (column 0 of CatBoost's
-      2-column output), so every caller that expects a plain 1-D array of
-      predicted 'sigmoid_mm' values keeps working unchanged.
-    - predict_uncertainty(X) returns {mean, std}, where std is the recalibrated
-      predictive standard deviation (sqrt of CatBoost's predicted variance,
-      times sigma_scale).
-
-    Only aleatoric (data) uncertainty is modelled. An epistemic component --
-    posterior_sampling + virtual ensembles -- was tried and dropped: it did not
-    rise on rare or never-seen inputs (one-hot encoding maps an unseen category
-    to an all-zero row that every sub-ensemble agrees on), it contributed ~0.1%
-    of the predictive variance, and it made training markedly slower.
+    - predict(X) returns only the mean prediction (column 0 of CatBoost's output),
+      so every caller expecting a plain 1-D array of 'sigmoid_mm' values keeps
+      working unchanged.
+    - predict_uncertainty(X) runs the virtual ensemble and returns, via the law
+      of total variance:
+        data_std       = sqrt( mean_m sigma_m^2 )            (aleatoric)
+        knowledge_std  = sqrt( Var_m mu_m )                  (epistemic)
+        total_std      = sqrt( data_var + knowledge_var )
+      plus `std` as an alias of total_std for backward compatibility. NB: on
+      one-hot-encoded tabular data the epistemic part is typically tiny (the
+      paper's own finding, and our 2d check) -- it is useful mainly to flag
+      out-of-domain / rarely-seen inputs, not to improve error estimates.
 
     `sigma_scale` is a single post-hoc recalibration factor (>1 inflates,
-    <1 shrinks). CatBoost's RMSEWithUncertainty tends to be over-confident --
-    fewer than 68% of test targets land inside mean +/- 1 sigma -- so std is
-    multiplied by this factor, fitted on a held-out slice at training time
-    (see train_ml_model). It does not change any ranking of cases by
-    uncertainty, so the Pareto front is unaffected; only the interval width
-    moves.
+    <1 shrinks), fitted on a held-out slice at training time. It rescales every
+    std component by the same amount, so it does not change any ranking of cases
+    by uncertainty; only the interval width moves.
 
     The target is NOT transformed here: 'sigmoid_mm' is already bounded in
     [0, 1] and an ablation showed a log1p transform did not help.
     """
 
-    def __init__(self, fitted_model, sigma_scale=1.0):
+    def __init__(self, fitted_model, sigma_scale=1.0,
+                 virtual_ensembles_count=DEFAULT_VIRTUAL_ENSEMBLES_COUNT):
         self.fitted_model = fitted_model
         self.sigma_scale = float(sigma_scale)
+        self.virtual_ensembles_count = int(virtual_ensembles_count)
 
     def fit(self, X, y=None):
         return self
@@ -64,20 +101,134 @@ class UncertaintyRegressor:
         preds = np.asarray(preds, dtype=float)
         return preds if preds.ndim == 2 else np.column_stack([preds, np.zeros_like(preds)])
 
+    def _ve_count(self):
+        n_trees = getattr(self.fitted_model, "tree_count_", 0) or 0
+        return int(max(1, min(self.virtual_ensembles_count, n_trees)))
+
     def predict(self, X):
         return self._two_col(self.fitted_model.predict(X))[:, 0]
 
     def predict_uncertainty(self, X):
         """
-        Returns {mean, std}: the point prediction and its recalibrated
-        predictive standard deviation (both 1-D numpy arrays).
+        Returns {mean, data_std, knowledge_std, total_std, std} -- all 1-D numpy
+        arrays, std being an alias of total_std. Every std is multiplied by
+        sigma_scale.
         """
-        out = self._two_col(self.fitted_model.predict(X))
-        var = np.clip(out[:, 1], 0.0, None)
-        return {"mean": out[:, 0], "std": self.sigma_scale * np.sqrt(var)}
+        out = np.asarray(
+            self.fitted_model.virtual_ensembles_predict(
+                X, prediction_type="TotalUncertainty",
+                virtual_ensembles_count=self._ve_count(),
+            ),
+            dtype=float,
+        )
+        mean = out[:, 0]
+        knowledge_var = np.clip(out[:, 1], 0.0, None)
+        data_var = np.clip(out[:, 2], 0.0, None)
+        s = self.sigma_scale
+        total_std = s * np.sqrt(data_var + knowledge_var)
+        return {
+            "mean": mean,
+            "data_std": s * np.sqrt(data_var),
+            "knowledge_std": s * np.sqrt(knowledge_var),
+            "total_std": total_std,
+            "std": total_std,
+        }
 
     def get_params(self, deep=True):
-        return {"fitted_model": self.fitted_model, "sigma_scale": self.sigma_scale}
+        return {
+            "fitted_model": self.fitted_model,
+            "sigma_scale": self.sigma_scale,
+            "virtual_ensembles_count": self.virtual_ensembles_count,
+        }
+
+    def set_params(self, **params):
+        for key, value in params.items():
+            setattr(self, key, value)
+        return self
+
+
+class UncertaintyClassifier:
+    """
+    Wraps a CatBoost classifier trained with posterior_sampling=True (SGLB) so
+    the Pipeline can expose, besides the usual probability, the ensemble-based
+    uncertainty decomposition for classification (Malinin et al., ICLR 2021):
+        data / aleatoric  = E_m H(p_m)                (expected entropy of members)
+        total             = H( mean_m p_m )           (entropy of the mean prob)
+        knowledge / epist. = total - data             (mutual information / BALD)
+    All in nats. Knowledge uncertainty is what an ensemble adds over a single
+    model; on this data it is small in magnitude but is the signal for
+    out-of-domain / anomalous inputs.
+
+    predict() and predict_proba() are unchanged (raw CatBoost outputs), so
+    nothing downstream shifts. `temperature` is a single post-hoc calibration
+    scalar (Guo et al. 2017 temperature scaling), fitted on a held-out slice:
+    p_cal = sigmoid( logit(p) / T ), T > 1 softening over-confident probabilities.
+    It is returned by predict_uncertainty()["proba_calibrated"] and is NOT
+    applied by predict_proba() -- switching the recommendation pipeline to the
+    calibrated probability is a separate, deliberate step.
+    """
+
+    def __init__(self, fitted_model, temperature=1.0,
+                 virtual_ensembles_count=DEFAULT_VIRTUAL_ENSEMBLES_COUNT):
+        self.fitted_model = fitted_model
+        self.temperature = float(temperature)
+        self.virtual_ensembles_count = int(virtual_ensembles_count)
+
+    def fit(self, X, y=None):
+        return self
+
+    def __sklearn_is_fitted__(self):
+        return self.fitted_model is not None
+
+    @property
+    def classes_(self):
+        return self.fitted_model.classes_
+
+    def _ve_count(self):
+        n_trees = getattr(self.fitted_model, "tree_count_", 0) or 0
+        return int(max(1, min(self.virtual_ensembles_count, n_trees)))
+
+    def predict(self, X):
+        return self.fitted_model.predict(X)
+
+    def predict_proba(self, X):
+        return self.fitted_model.predict_proba(X)
+
+    def predict_uncertainty(self, X):
+        """
+        Returns {proba, proba_calibrated, data_entropy, knowledge_entropy,
+        total_entropy} -- all 1-D numpy arrays (proba* are P(y = positive class)).
+        """
+        out = np.asarray(
+            self.fitted_model.virtual_ensembles_predict(
+                X, prediction_type="TotalUncertainty",
+                virtual_ensembles_count=self._ve_count(),
+            ),
+            dtype=float,
+        )
+        # classification: column 0 = data (expected) entropy, column 1 = total entropy
+        data_entropy = np.clip(out[:, 0], 0.0, None)
+        total_entropy = np.clip(out[:, 1], 0.0, None)
+        knowledge_entropy = np.clip(total_entropy - data_entropy, 0.0, None)
+
+        proba = np.asarray(self.fitted_model.predict_proba(X), dtype=float)[:, 1]
+        p = np.clip(proba, 1e-7, 1.0 - 1e-7)
+        logit = np.log(p / (1.0 - p))
+        proba_cal = 1.0 / (1.0 + np.exp(-logit / self.temperature))
+        return {
+            "proba": proba,
+            "proba_calibrated": proba_cal,
+            "data_entropy": data_entropy,
+            "knowledge_entropy": knowledge_entropy,
+            "total_entropy": total_entropy,
+        }
+
+    def get_params(self, deep=True):
+        return {
+            "fitted_model": self.fitted_model,
+            "temperature": self.temperature,
+            "virtual_ensembles_count": self.virtual_ensembles_count,
+        }
 
     def set_params(self, **params):
         for key, value in params.items():
@@ -168,15 +319,13 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
     optuna_trials = params.get("optuna_trials", 80)
     optuna_timeout = params.get("optuna_timeout", 1200)
     early_stopping_rounds = params.get("early_stopping_rounds", 50)
-    # search_spaces is now one sub-dict per target: {"label": {...}, "sigmoid_mm": {...}}.
-    # Fall back to treating a flat dict as "same space for both" for backward compatibility.
+    
     all_search_spaces = params.get("search_spaces", {})
     if all_search_spaces and not any(k in ("label", "sigmoid_mm") for k in all_search_spaces):
         all_search_spaces = {"label": all_search_spaces, "sigmoid_mm": all_search_spaces}
 
     X_train_raw, y_train1, y_train2 = prepare_df_for_ml(train_data, case_id_name,  columns_to_remove)
-    X_test_raw,  y_test1,  y_test2 = prepare_df_for_ml(test_data, 
-    case_id_name,  columns_to_remove)
+    X_test_raw,  y_test1,  y_test2 = prepare_df_for_ml(test_data, case_id_name,  columns_to_remove)
 
     continuous_features = filter_features(continuous_features, X_train_raw.columns, "continuous")
     categorical_features = filter_features(categorical_features, X_train_raw.columns, "categorical")
@@ -220,16 +369,16 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
         }
         
         if y_train.name == "label":
-            const_params.update({"loss_function": "Logloss", "eval_metric": "Logloss"})
+            const_params.update({
+                "loss_function": "Logloss",
+                "eval_metric": "Logloss",
+                "posterior_sampling": True,
+            })
         else:
-            # Probabilistic regression: the model predicts a mean and a
-            # variance (the aleatoric uncertainty). Early stopping / trial
-            # selection run on plain RMSE of the mean. posterior_sampling /
-            # virtual-ensemble epistemic uncertainty was tried and dropped -- it
-            # did not discriminate rare/unseen inputs and only slowed training.
             const_params.update({
                 "loss_function": "RMSEWithUncertainty",
                 "eval_metric": "RMSE",
+                "posterior_sampling": True,
             })
         
         def objective(trial):
@@ -329,6 +478,17 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
                 sigma = np.sqrt(np.clip(val_pred[:, 1], 1e-9, None))
                 s = float(np.median(np.abs(resid) / sigma) / 0.674489)
                 trial.set_user_attr("sigma_scale", float(np.clip(s, 0.5, 5.0)))
+            else:
+                # Temperature-scaling factor for the classifier (Guo et al.
+                # 2017), fitted on this trial's held-out validation slice:
+                # p_cal = sigmoid(raw_logit / T). Carried over to the final
+                # model like sigma_scale is for the regressor.
+                val_logits = np.asarray(
+                    model.predict(X_val, prediction_type="RawFormulaVal"), dtype=float
+                )
+                trial.set_user_attr(
+                    "temperature", _fit_temperature(val_logits, y_val.to_numpy(dtype=float))
+                )
 
             # Same metric as eval_metric (Logloss or RMSE), read directly from
             # CatBoost's best validation score -- keeps early stopping, pruning
@@ -377,16 +537,18 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
 
         final_model.fit(X_train_trans, y_train, verbose=500)
 
+        # Reuse the winning trial's post-hoc calibration scalar (sigma_scale for
+        # the regressor, temperature for the classifier). It was fitted on that
+        # trial's clean 20% holdout; after this 100% refit there is no untouched
+        # slice left, and the scalar captures a systematic miscalibration of the
+        # loss (not something 20% more data would move), so carrying it over is
+        # the pragmatic choice.
         if is_regression_target:
-            # Reuse the winning trial's uncertainty recalibration factor. It was
-            # fitted on that trial's clean 20% holdout; after this 100% refit
-            # there is no untouched slice left to refit it on, and s captures a
-            # systematic miscalibration of the loss (not something 20% more data
-            # would move), so carrying it over is the pragmatic choice.
             sigma_scale = float(study.best_trial.user_attrs.get("sigma_scale", 1.0))
             prediction_step = UncertaintyRegressor(final_model, sigma_scale=sigma_scale)
         else:
-            prediction_step = final_model
+            temperature = float(study.best_trial.user_attrs.get("temperature", 1.0))
+            prediction_step = UncertaintyClassifier(final_model, temperature=temperature)
  
         print("\n[INFO] Training complete. Evaluating performance...")
 
@@ -399,9 +561,39 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
             test_score = log_loss(y_test, y_test_proba)
             print("Logloss score of training set:", train_score)
             print("Logloss score of test set:", test_score)
+
+            # Classifier uncertainty (entropy decomposition) + temperature
+            # calibration, on the test set. predict_proba stays the RAW
+            # probability; proba_calibrated applies sigmoid(logit / T).
+            y_test_arr = y_test.to_numpy(dtype=float)
+            cu = prediction_step.predict_uncertainty(X_test_trans)
+            total_var = float(np.mean(cu["total_entropy"]))
+            uncertainty_report = {
+                "temperature": temperature,
+                "logloss_raw": test_score,
+                "logloss_calibrated": float(log_loss(y_test, cu["proba_calibrated"])),
+                "ece_raw": _expected_calibration_error(y_test_arr, cu["proba"]),
+                "ece_calibrated": _expected_calibration_error(y_test_arr, cu["proba_calibrated"]),
+                "mean_data_entropy": float(np.mean(cu["data_entropy"])),
+                "mean_knowledge_entropy": float(np.mean(cu["knowledge_entropy"])),
+                "mean_total_entropy": total_var,
+                "epistemic_entropy_fraction": (
+                    float(np.mean(cu["knowledge_entropy"]) / total_var) if total_var > 0 else 0.0
+                ),
+            }
+            print(
+                f"Uncertainty (test avg): data/aleatoric entropy = {uncertainty_report['mean_data_entropy']:.5f}, "
+                f"knowledge/epistemic = {uncertainty_report['mean_knowledge_entropy']:.5f}, "
+                f"total = {uncertainty_report['mean_total_entropy']:.5f} "
+                f"(epistemic share {uncertainty_report['epistemic_entropy_fraction'] * 100:.1f}%)"
+            )
+            print(
+                f"Calibration: temperature T = {temperature:.3f} | "
+                f"Logloss {test_score:.5f} -> {uncertainty_report['logloss_calibrated']:.5f}, "
+                f"ECE {uncertainty_report['ece_raw']:.4f} -> {uncertainty_report['ece_calibrated']:.4f}"
+            )
         else:
-            # Native 'sigmoid_mm' scale now (no log1p transform). Trial
-            # selection tracked RMSE, so that stays the headline metric.
+
             metric_name = "RMSE"
             y_train_pred = prediction_step.predict(X_train_trans)
             y_test_pred = prediction_step.predict(X_test_trans)
@@ -413,17 +605,24 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
             print(f"RMSE / MAE of test set:     {test_score:.5f} / {test_mae:.5f}")
 
             # Uncertainty diagnostics on the test set. predict_uncertainty
-            # already returns the recalibrated std (times sigma_scale); dividing
-            # by it recovers CatBoost's raw output for the "before" numbers.
+            # returns the recalibrated std components (times sigma_scale);
+            # dividing total_std by sigma_scale recovers CatBoost's raw output
+            # for the "before" coverage numbers.
             unc = prediction_step.predict_uncertainty(X_test_trans)
             abs_err = np.abs(y_test.to_numpy(dtype=float) - unc["mean"])
-            std_cal = unc["std"]
+            std_cal = unc["total_std"]
             std_raw = std_cal / sigma_scale
+            mean_total_var = float(np.mean(std_cal ** 2))
             uncertainty_report = {
                 "sigma_scale": sigma_scale,
+                "mean_data_std": float(np.mean(unc["data_std"])),
+                "mean_knowledge_std": float(np.mean(unc["knowledge_std"])),
                 "mean_std": float(np.mean(std_cal)),
-                # median predicted std -- "sharpness", how tight the intervals
-                # are regardless of whether they are calibrated.
+                "epistemic_var_fraction": (
+                    float(np.mean(unc["knowledge_std"] ** 2) / mean_total_var) if mean_total_var > 0 else 0.0
+                ),
+                # median predicted total std -- "sharpness", how tight the
+                # intervals are regardless of whether they are calibrated.
                 "median_std": float(np.median(std_cal)),
                 # coverage with CatBoost's raw sigma vs the recalibrated sigma
                 # (target ~0.68 / ~0.95 for a well-calibrated Gaussian).
@@ -434,8 +633,11 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
                 "test_mae": test_mae,
             }
             print(
-                f"Uncertainty (test): mean std = {uncertainty_report['mean_std']:.5f}, "
-                f"median std (sharpness) = {uncertainty_report['median_std']:.5f}"
+                f"Uncertainty (test avg): data/aleatoric std = {uncertainty_report['mean_data_std']:.5f}, "
+                f"knowledge/epistemic std = {uncertainty_report['mean_knowledge_std']:.5f}, "
+                f"total std = {uncertainty_report['mean_std']:.5f} "
+                f"(epistemic share {uncertainty_report['epistemic_var_fraction'] * 100:.1f}%) | "
+                f"median (sharpness) = {uncertainty_report['median_std']:.5f}"
             )
             print(
                 f"Calibration: sigma_scale = {sigma_scale:.3f} | "

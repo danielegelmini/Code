@@ -3,6 +3,7 @@ import numpy as np
 from tqdm import tqdm
 
 from utils.pre_processing_functions import convert_dtypes_bpi12
+from utils.data_normalization import remaining_time_to_sigmoid_mm
 
 import sys
 import warnings
@@ -41,7 +42,7 @@ def to_be_named(case_study, method, n_sim, folder_path, encoded_activity=None):
 
     rec_df = preparing_data_for_simulation(result_df, test_log, case_id_name, end_date_name, case_study)
 
-    res, res_status = compute_res_and_status(case_study, rec_df, test_data_simulation, n_sim)
+    res, _, res_status, _ = compute_res_and_status(case_study, rec_df, test_data_simulation, n_sim)
 
     return res, res_status
 
@@ -247,20 +248,50 @@ def status_encoding(df: pd.DataFrame, case_study: str, encoded_activity: str | N
 
     return df.sort_values(by=["case:concept:name", "time:timestamp"]).reset_index(drop=True)
 
-def compute_res_and_status(case_study, rec_df, test_simu, n_sim):
+def compute_res_and_status(case_study, rec_df, test_simu, n_sim,
+                           std_scaler=None, mm_scaler=None, excluded_by_run=None):
     """
-    Compute average remaining_time and status per trace_id.
+    Per trace_id, aggregate remaining_time and status over the n_sim simulation runs.
 
-    Notes:
-    - The original code looped over n_sim but did not filter by simulation,
-      so it averaged identical values. This version preserves that behavior.
-    - If you truly have per-simulation rows, see the comment at the bottom.
-    # """
+    Reference point -- remaining_time is read at the LAST event of the replayed
+    historical prefix, positional index ``repl_id`` (NOT ``repl_id + 1``). That is
+    the remaining time measured from the decision point, ``case_end - end(last
+    prefix event)`` -- exactly the reference the offline predictive time-model
+    target uses. Reading one event later would silently drop the sojourn time of
+    the first post-prefix event (which in BAC can be months) and break the
+    comparison with the model prediction.
+
+    Returns four dicts keyed by trace_id:
+      - res_seconds : mean remaining_time in seconds (np.nan if no usable run).
+      - res_sigmoid : mean over runs of ``remaining_time_to_sigmoid_mm(rt_run)``
+                      -- i.e. the Monte-Carlo estimate of ``E[sigmoid_mm(RT)]``,
+                      the quantity comparable to the offline "true" sigmoid_mm
+                      (a per-row nonlinear map, averaged -- NOT
+                      sigmoid_mm(mean(seconds))). np.nan when std_scaler/mm_scaler
+                      are not supplied or no run is usable.
+      - res_status  : mean status (np.nan if no usable run).
+      - res_applied_fraction : fraction of the runs that had data for the case in
+                      which the recommendation was actually applied (1.0 for the
+                      baseline / when excluded_by_run is None). Runs listed in
+                      excluded_by_run are dropped from every average above.
+
+    excluded_by_run : optional {run_index (1-based): set(str(trace_id))} listing
+      (case, run) pairs where the recommendation was reported unreachable and the
+      run therefore continued as a free simulation -- see
+      sim_<i>_unreachable_recommendations.csv. Those runs do not measure "the
+      recommendation applied" and are excluded.
+    """
     if case_study in {"BPI12", "BPI12_time", "BPI12_status", "BPI12_025", "BPI12_075", "consulta", "BPI12_0", "BPI12_039"}:
         test_simu = convert_dtypes_bpi12(test_simu, 'simulation')
         rec_df = convert_dtypes_bpi12(rec_df, 'simulation_')
-    res = {}
+
+    excluded_by_run = excluded_by_run or {}
+    have_scalers = std_scaler is not None and mm_scaler is not None
+
+    res_seconds = {}
+    res_sigmoid = {}
     res_status = {}
+    res_applied_fraction = {}
     trace_ids = rec_df[case_id_name].unique()
 
     # repl_id per trace_id, first occurrence -- matches the original
@@ -277,28 +308,45 @@ def compute_res_and_status(case_study, rec_df, test_simu, n_sim):
     sim_groups = {key: group for key, group in test_simu.groupby(case_id_name)}
 
     for trace_id in trace_ids:
-        rec_index = int(repl_id_by_trace.loc[trace_id]) + 1
-        list_remaning_time = []
-        list_status = []
+        rec_index = int(repl_id_by_trace.loc[trace_id])
+        remaining_times = []
+        statuses = []
+        n_runs_with_data = 0
+        n_runs_applied = 0
         for i in range(n_sim):
-            idx_sim = str(trace_id) + "_" + str(i+1)
+            run_index = i + 1
+            idx_sim = str(trace_id) + "_" + str(run_index)
             trace_df = sim_groups.get(idx_sim)
-            if trace_df is not None and not trace_df.empty:
-                if rec_index >= len(trace_df):
-                    remaining_time = 0
-                else:
-                    remaining_time = trace_df['remaining_time'].iloc[rec_index]
-                status = trace_df['status'].iloc[0]
-                if remaining_time < 0:
-                    print(idx_sim)
-                list_remaning_time.append(remaining_time)
-                list_status.append(status)
+            if trace_df is None or trace_df.empty:
+                continue
+            n_runs_with_data += 1
+            if str(trace_id) in excluded_by_run.get(run_index, ()):
+                continue  # recommendation not applied this run -> not a "rec applied" measurement
+            n_runs_applied += 1
+            if rec_index >= len(trace_df):
+                remaining_time = 0.0  # replayed prefix already at case end
+            else:
+                remaining_time = float(trace_df['remaining_time'].iloc[rec_index])
+            if remaining_time < 0:
+                print(idx_sim)
+            remaining_times.append(remaining_time)
+            statuses.append(trace_df['status'].iloc[0])
 
-        if len(list_remaning_time) > 0 and len(list_status) > 0:
-            res[trace_id] = np.mean(list_remaning_time)
-            res_status[trace_id] = np.mean(list_status)
+        if remaining_times:
+            res_seconds[trace_id] = float(np.mean(remaining_times))
+            res_status[trace_id] = float(np.mean(statuses))
+            if have_scalers:
+                per_run_sigmoid = remaining_time_to_sigmoid_mm(remaining_times, std_scaler, mm_scaler)
+                res_sigmoid[trace_id] = float(np.mean(per_run_sigmoid))
+            else:
+                res_sigmoid[trace_id] = np.nan
         else:
-            res[trace_id] = -1
-            res_status[trace_id] = 0
+            res_seconds[trace_id] = np.nan
+            res_sigmoid[trace_id] = np.nan
+            res_status[trace_id] = np.nan
 
-    return res, res_status
+        res_applied_fraction[trace_id] = (
+            n_runs_applied / n_runs_with_data if n_runs_with_data else np.nan
+        )
+
+    return res_seconds, res_sigmoid, res_status, res_applied_fraction

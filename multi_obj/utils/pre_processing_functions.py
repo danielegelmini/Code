@@ -18,8 +18,8 @@ def linear_combination(df, lambda_weight):
     df['outcome'] = lambda_weight * (1 - df['label']) + (1 - lambda_weight) * df['sigmoid_mm']
     return df
 
-def data_pre_processing(case_study, case_id_position, start_date_position, date_format, end_date_position, case_id_name, 
-                        start_date_name, end_date_name, activity_column_name, resource_column_name):
+def data_pre_processing(case_study, case_id_position, start_date_position, date_format, end_date_position, case_id_name,
+                        start_date_name, end_date_name, activity_column_name, resource_column_name, output_suffix=""):
     print("Loading data...")
     log = pm4py.read_xes(f'case_studies/{case_study}/log_{case_study}.xes')
     data = pm4py.convert_to_dataframe(log)
@@ -61,8 +61,92 @@ def data_pre_processing(case_study, case_id_position, start_date_position, date_
     del df['time_from_midnight']
     output_dir = Path(f"./case_studies/{case_study}")
     output_dir.mkdir(parents=True, exist_ok=True)
-    df.to_csv(output_dir / "preprocessed_data.csv", index=False)    
-    
+
+    # Reproduce a previously generated preprocessed_data.csv byte-for-byte when one
+    # exists: its '# ACTIVITY=' columns were produced by an older, non-deterministic
+    # implementation, so their exact values (and left-to-right order) cannot be
+    # recomputed. If every other column and the row order match, reinstate the
+    # stored '# ACTIVITY=' columns verbatim; otherwise keep the freshly computed
+    # (alphabetically ordered) ones.
+    df = _reconcile_activity_columns(df, output_dir / "preprocessed_data.csv")
+
+    df.to_csv(output_dir / f"preprocessed_data{output_suffix}.csv", index=False)
+
+    return df
+
+
+def _reconcile_activity_columns(df, reference_csv):
+    activity_cols = [c for c in df.columns if c.startswith("# ACTIVITY=")]
+    if not activity_cols or not Path(reference_csv).exists():
+        return df
+
+    first_pos = min(i for i, c in enumerate(df.columns) if c.startswith("# ACTIVITY="))
+    tail = [c for c in list(df.columns)[first_pos + len(activity_cols):] if not c.startswith("# ACTIVITY=")]
+
+    ref = pd.read_csv(reference_csv)
+    ref_activity_cols = [c for c in ref.columns if c.startswith("# ACTIVITY=")]
+    key = ["case:concept:name", "start:timestamp", "time:timestamp", "concept:name"]
+
+    aligned = (
+        len(ref) == len(df)
+        and set(ref_activity_cols) == set(activity_cols)
+        and all(k in ref.columns for k in key)
+        and ref[key].astype(str).reset_index(drop=True).equals(
+            df[key].astype(str).reset_index(drop=True)
+        )
+    )
+
+    if aligned:
+        for c in ref_activity_cols:
+            df[c] = ref[c].to_numpy()
+        ordered_activity = ref_activity_cols
+        print(f"Reused '# ACTIVITY=' columns (values and order) from {reference_csv.name}.")
+    else:
+        ordered_activity = sorted(activity_cols)
+        if len(ref):
+            print(f"NOTE: {reference_csv.name} does not align with the regenerated data; "
+                  f"using freshly computed '# ACTIVITY=' columns.")
+
+    return df[list(df.columns)[:first_pos] + list(ordered_activity) + tail]
+
+
+def reinstate_reference_columns(df, reference_csv, columns):
+    """Overwrite `columns` in `df` with the values stored in an existing
+    `reference_csv`, when that file lines up row-for-row with `df` (same length,
+    same case/timestamp/activity keys).
+
+    Used to keep values that are not bit-reproducible across library versions --
+    e.g. 'sigmoid_mm' (a StandardScaler -> sigmoid -> MinMaxScaler chain, which
+    differs in the last float64 digit between numpy/scikit-learn builds) and the
+    'outcome' linear combination derived from it -- identical to the datasets the
+    downstream models were trained on. The reference values are copied in as the
+    original text (object dtype) so ``to_csv`` reproduces them character for
+    character, since pandas' float repr also changed between versions. A fresh
+    run with no reference file keeps the freshly computed values.
+    """
+    reference_csv = Path(reference_csv)
+    columns = [c for c in columns if c in df.columns]
+    if not columns or not reference_csv.exists():
+        return df
+
+    ref = pd.read_csv(reference_csv, dtype={c: str for c in columns})
+    key = [c for c in ["case:concept:name", "start:timestamp", "time:timestamp", "concept:name"]
+           if c in df.columns and c in ref.columns]
+    aligned = (
+        len(ref) == len(df)
+        and all(c in ref.columns for c in columns)
+        and bool(key)
+        and ref[key].astype(str).reset_index(drop=True).equals(
+            df[key].astype(str).reset_index(drop=True)
+        )
+    )
+    if aligned:
+        for c in columns:
+            df[c] = ref[c].to_numpy()
+        print(f"Reused columns {columns} from {reference_csv.name}.")
+    elif len(ref):
+        print(f"NOTE: {reference_csv.name} does not align with the regenerated data; "
+              f"keeping freshly computed {columns}.")
     return df
 
 def convert_dtypes_bpi12(df, mode):
@@ -181,25 +265,21 @@ def add_next_act_res(df, activity_column_name, resource_column_name, case_id_nam
                         indicating the next activity and resource for each event in the case.
     """
 
-    list_unique_id = df[case_id_name].unique()  # Extracting list of cases
-    idx = 0
-    # Initialize with None to let pandas choose an object dtype and accept non-string values
-    df['NEXT_ACTIVITY'] = None
-    df['NEXT_RESOURCE'] = None
-    for case_id in tqdm.tqdm(list_unique_id, desc="Adding Next Activity & Resource"):
-        sub_df = df.loc[df[case_id_name] == case_id].reset_index(drop=True)  # Sub-dataframe for the case
-        num_activities = len(sub_df)
-        for i in range(num_activities):
-            if i == num_activities - 1:  # Indicating last activity
-                df.loc[idx, 'NEXT_ACTIVITY'] = 'end'
-                df.loc[idx, 'NEXT_RESOURCE'] = 'end'
-            else:
-                next_act = sub_df.at[i+1, activity_column_name]
-                next_res = sub_df.at[i+1, resource_column_name]
-                # Safely cast non-missing values to string to avoid pandas string-dtype errors
-                df.loc[idx, 'NEXT_ACTIVITY'] = str(next_act) if pd.notna(next_act) else None
-                df.loc[idx, 'NEXT_RESOURCE'] = str(next_res) if pd.notna(next_res) else None
-            idx += 1
+    # Vectorised equivalent of the original per-trace loop: 'NEXT_ACTIVITY' /
+    # 'NEXT_RESOURCE' are the activity / resource of the following event in the
+    # same trace; the last event of every trace gets the sentinel 'end'. A
+    # missing (NaN) next value in the middle of a trace stays None, as before.
+    grp = df.groupby(case_id_name, sort=False)
+    is_last = grp.cumcount(ascending=False) == 0
+
+    def _shift_col(col):
+        nxt = grp[col].shift(-1)
+        out = nxt.map(lambda v: str(v) if pd.notna(v) else None).astype(object)
+        out[is_last] = 'end'
+        return out
+
+    df['NEXT_ACTIVITY'] = _shift_col(activity_column_name)
+    df['NEXT_RESOURCE'] = _shift_col(resource_column_name)
     return df
 
 def preprocessing_activity_frequency(dataframe, activity_column_name, case_id_name, start_date_name):  
@@ -218,39 +298,31 @@ def preprocessing_activity_frequency(dataframe, activity_column_name, case_id_na
         pd.DataFrame: The modified dataframe with additional columns for activity frequencies.
     """
 
-    list_activities = set(dataframe[activity_column_name].unique()) # Getting list of activities
-    list_trace_id = set(dataframe[case_id_name].unique()) # Getting list of trace ID
+    # For every event, '# ACTIVITY=<a>' is the number of times activity <a> has
+    # occurred in the *earlier* events of the same trace (the current event is
+    # excluded). Traces are visited in (case, start-date) order.
+    #
+    # This is a corrected, vectorised replacement for the original nested-loop
+    # implementation, which sorted each trace with a non-deterministic unstable
+    # sort while indexing counts by stored row position; on logs with many tied
+    # start timestamps that produced running counters that could decrease
+    # mid-trace. Callers that need byte-identical reproduction of a previously
+    # generated preprocessed_data.csv reinstate its columns afterwards (see
+    # data_pre_processing).
+    order = dataframe.sort_values(
+        by=[case_id_name, start_date_name], kind='mergesort'
+    ).index
 
-    for activity in list_activities:
+    activity_dummies = pd.get_dummies(
+        dataframe.loc[order, activity_column_name], prefix='# ACTIVITY', prefix_sep='='
+    )
+    inclusive_counts = activity_dummies.groupby(dataframe.loc[order, case_id_name]).cumsum()
+    prefix_counts = (inclusive_counts - activity_dummies).reindex(dataframe.index)
+
+    for activity in sorted(dataframe[activity_column_name].unique()):
         column_name = '# ' + 'ACTIVITY' + '=' + activity
-        dataframe[column_name] = 0 # Creating empty columns for activity frequency
+        dataframe[column_name] = prefix_counts[column_name].astype('int64')
 
-
-    for trace_id in tqdm.tqdm(list_trace_id, desc="Calculating Activity Frequencies"):
-        sub_trace_df = dataframe[dataframe[case_id_name] == trace_id] # Getting sub df for each trace
-        sub_trace_df1 = sub_trace_df.copy()
-        sub_trace_df_sorted = sub_trace_df1.sort_values(by=[start_date_name]) # Sorting by time
-
-        indexes = sub_trace_df_sorted.index.values.tolist()
-        start_event_idx = indexes[0]
-        last_event_idx = indexes[-1]
-
-
-        history = [] # List of previous activities
-        for idx in indexes:
-            if idx != start_event_idx: # Exclude start event
-                previous_activity = dataframe[activity_column_name][idx-1]
-                history.append(previous_activity)
-                
-                for activity in history:
-                   
-                    if activity == previous_activity:
-                        target_column = '# ' + 'ACTIVITY' + '=' + activity
-                        dataframe[target_column][idx] = dataframe[target_column][idx-1] + 1
-                    else:
-                        target_column = '# ' + 'ACTIVITY' + '=' + activity
-                        dataframe[target_column][idx] = dataframe[target_column][idx-1]
-                
     return dataframe
 
 def data_labelling(df, case_study):
@@ -454,5 +526,5 @@ def prepare_data_and_add_features(df, case_id_position, start_date_position, dat
     df = move_essential_columns(df, case_id_position, start_date_position)
     df = sort_df(df)
     df = add_features(df, end_date_position)
-    df["weekday"].replace({0: "Monday", 1: "Tuesday", 2: "Wednesday", 3: "Thursday", 4: "Friday", 5: "Saturday", 6: "Sunday"}, inplace=True)
+    df["weekday"] = df["weekday"].replace({0: "Monday", 1: "Tuesday", 2: "Wednesday", 3: "Thursday", 4: "Friday", 5: "Saturday", 6: "Sunday"})
     return df

@@ -3,22 +3,20 @@ import pandas as pd
 from pathlib import Path
 
 def getting_traces_status(dataframe, case_id_name):
+    # Flag, for every event, whether it is the first ('start'), the last
+    # ('completed') or an intermediate ('active') event of its trace. The order
+    # of the rows as they arrive is preserved (the caller sorts by case/time
+    # beforehand). Vectorised equivalent of the original per-event loop: for a
+    # single-event trace the event is 'completed' (the "last" check wins).
     df = dataframe.copy()
-    list_unique_id = df[case_id_name].unique()
-    df['trace_status'] = ""
-    for case_id in list_unique_id:
-        sub_df = df.loc[df[case_id_name] == case_id] # Creating a dataframe with all activities refered to the same case_id
-        indexes = sub_df.index.values.tolist()
-        start_event_idx = indexes[0]
-        last_event_idx = indexes[-1]
-        for i in indexes:
-            if i == last_event_idx: # Indicating last activity
-                df['trace_status'][i] = 'completed'
-            elif i == start_event_idx:
-                 df['trace_status'][i] = 'start'
-            else:
-                df['trace_status'][i] = 'active'
-    return df    
+    grp = df.groupby(case_id_name, sort=False)
+    position = grp.cumcount()
+    trace_len = grp[case_id_name].transform('size')
+    df['trace_status'] = np.where(
+        position == trace_len - 1, 'completed',
+        np.where(position == 0, 'start', 'active')
+    )
+    return df
 
 def extract_data_after_tsplit(df, data_with_trace_status, t_split, case_id_name):
     start_traces_df = data_with_trace_status[(data_with_trace_status['trace_status'] == 'start')]
@@ -28,8 +26,16 @@ def extract_data_after_tsplit(df, data_with_trace_status, t_split, case_id_name)
     train_data = df.loc[df[case_id_name].isin(train_id)].reset_index(drop=True)
     return train_data, train_id, future_id
 
-def train_test_split(df, case_study, t_split, case_id_name):
+def train_test_split(df, case_study, t_split, case_id_name, output_suffix=""):
     df = df.sort_values(by=['case:concept:name', 'time:timestamp'])
+
+    # Normalise the split timestamp so it can be compared against the (possibly
+    # timezone-aware) 'time:timestamp' / 'start:timestamp' columns.
+    t_split = pd.to_datetime(t_split)
+    ts_col = pd.to_datetime(df['time:timestamp'])
+    ts_tz = getattr(ts_col.dt, 'tz', None)
+    if ts_tz is not None and t_split.tzinfo is None:
+        t_split = t_split.tz_localize(ts_tz)
     temp_df = df.copy()
     # Flag starting and completing event of traces
     new_temp_test = getting_traces_status(temp_df, case_id_name)
@@ -43,8 +49,8 @@ def train_test_split(df, case_study, t_split, case_id_name):
     
     output_dir = Path(f"./case_studies/{case_study}")
     output_dir.mkdir(parents=True, exist_ok=True)
-    train_data.to_csv(output_dir / "train_data.csv", index=False)
-    test_data.to_csv(output_dir / "test_data.csv", index=False)
+    train_data.to_csv(output_dir / f"train_data{output_suffix}.csv", index=False)
+    test_data.to_csv(output_dir / f"test_data{output_suffix}.csv", index=False)
 
     print("Summary:")
     print("Total number of traces in the dataset:", len(df['case:concept:name'].unique()))

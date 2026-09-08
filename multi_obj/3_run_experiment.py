@@ -64,9 +64,10 @@ def run_experiment_top_k(
 
     The expensive setup (loading data, transition system, activity->resources
     map, query instances) depends only on case_study, not on the method --
-    so it's done ONCE here and reused for both methods. By default (method
-    left as None) it runs 'exhaustive' and 'nsga2' back to back on that same
-    setup; pass method="exhaustive" or method="nsga2" to run only one.
+    so it's done ONCE here and reused. By default (method left as None) only
+    the exhaustive search runs; NSGA-II is parked "until further notice" (it is
+    consistently slower on these small candidate sets). Pass method="nsga2" to
+    still run it.
 
     Parameters
     ----------
@@ -92,7 +93,10 @@ def run_experiment_top_k(
     reduced_percentage = 1 - reduced_threshold
 
     if method is None:
-        methods_to_run = ["exhaustive", "nsga2"]
+        # NSGA-II is parked "until further notice" -- it is consistently slower
+        # than the exhaustive search on these small discrete candidate sets.
+        # Pass method="nsga2" explicitly to still run it.
+        methods_to_run = ["exhaustive"]
     else:
         method = method.lower()
         if method not in {"exhaustive", "nsga2"}:
@@ -260,7 +264,7 @@ if __name__ == "__main__":
         default=None,
         choices=["nsga2", "exhaustive"],
         help="Specify the method: 'nsga2' (NSGA-II, pymoo) or 'exhaustive'. "
-             "If omitted, runs both back to back on the same setup.",
+             "If omitted, only 'exhaustive' runs (NSGA-II is parked).",
     )
     parser.add_argument(
         "--window_size",
@@ -348,8 +352,8 @@ if __name__ == "__main__":
 # FOR RUNNING EXPERIMENT:
 # case_study: "BAC", "BPI12", "bpi17_before", "bpi17_after"
 
-# default: runs both "exhaustive" and "nsga2" back to back (shared setup)
-# python 3_run_experiment.py --case_study "BAC" --window_size 5 --reduced_threshold 0.05 --pop_size 50 --n_generations 10 --k 5
+# default: only "exhaustive" (NSGA-II parked until further notice)
+# python 3_run_experiment.py --case_study "BAC" --window_size 5 --reduced_threshold 0.05 --k 5
 
 # example method: only "nsga2"
 # python 3_run_experiment.py --case_study "BAC" --method "nsga2" --window_size 5 --reduced_threshold 0.05 --pop_size 50 --n_generations 10 --k 5

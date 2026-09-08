@@ -25,13 +25,23 @@ start_date_name = "start:timestamp"
 resource_column_name = "org:resource"
 outcome_name = "outcome"
 
-# The THIRD Pareto objective is the regressor's (aleatoric) predictive std of
-# the remaining-time prediction, minimised -- "prefer recommendations whose
-# predicted duration is intrinsically more predictable". It is used ONLY to
-# build the Pareto front and pick the (activity, resource) pairs; it is never
-# written to the recommendation CSVs and never reaches the simulation.
+# Pareto objectives:
+#   #1  outcome probability, maximised -- the TEMPERATURE-CALIBRATED P(y=positive)
+#       (predict_outcome_proba); the classifier's confidence enters the front
+#       here, as a better-calibrated objective #1, not as a separate axis (its
+#       entropy is a deterministic function of P, so it would just mirror #1).
+#   #2  predicted remaining time, minimised.
+#   #3  the regressor's TOTAL predictive std of the time prediction (aleatoric +
+#       epistemic; UncertaintyRegressor exposes it as out["std"]), minimised --
+#       "prefer recommendations whose predicted duration the model is confident
+#       about".
+# The objectives are used ONLY to build the Pareto front and pick the
+# (activity, resource) pairs; they are never written to the recommendation CSVs
+# and never reach the simulation. The classifier's entropy decomposition stays
+# diagnostic-only and is not a Pareto objective.
 
 _UNCERTAINTY_WARNED = False
+_CALIBRATION_WARNED = False
 
 
 def _minmax_columns(mat):
@@ -50,7 +60,8 @@ def predict_time_and_uncertainty(predictive_time_model, rows_df):
 
     `mean` is the predicted 'sigmoid_mm' remaining time -- exactly what
     predictive_time_model.predict(rows_df) returned before. `uncertainty` is the
-    recalibrated (aleatoric) predictive standard deviation of that prediction.
+    recalibrated TOTAL predictive standard deviation of that prediction
+    (aleatoric + epistemic).
 
     Works whether predictive_time_model is a bare estimator or an sklearn
     Pipeline whose final "prediction" step is an UncertaintyRegressor. If the
@@ -81,6 +92,47 @@ def predict_time_and_uncertainty(predictive_time_model, rows_df):
         )
         _UNCERTAINTY_WARNED = True
     return mean, np.zeros_like(mean)
+
+def predict_outcome_proba(predictive_outcome_model, rows_df):
+    """
+    Return P(y = positive class) for rows_df as a 1-D numpy array, using the
+    temperature-calibrated probability when the outcome model supports it.
+
+    Objective #1 of the Pareto front is "maximise the outcome probability". The
+    classifier is trained with posterior_sampling=True and its UncertaintyClassifier
+    wrapper carries a temperature-scaling scalar T (Guo et al. 2017) fitted on a
+    held-out slice: p_cal = sigmoid(logit(p) / T). predict_proba() stays raw, so
+    this is the single deliberate place where the recommendation pipeline switches
+    to the calibrated probability. T-scaling is monotone -> it does not reorder
+    candidates by probability, but it does change the magnitudes that feed the
+    min-max normalisation and the p-dispersion distances used to pick the k
+    diverse pairs, so the front is built on honest (better-calibrated) probabilities.
+
+    Falls back to the raw predict_proba()[:, 1] (with a one-time warning) for an
+    older outcome model without uncertainty support.
+    """
+    global _CALIBRATION_WARNED
+
+    predictor = predictive_outcome_model
+    predictor_input = rows_df
+    if hasattr(predictive_outcome_model, "named_steps"):
+        steps = predictive_outcome_model.named_steps
+        predictor = steps.get("prediction", predictive_outcome_model)
+        if "transformation" in steps:
+            predictor_input = steps["transformation"].transform(rows_df)
+
+    if hasattr(predictor, "predict_uncertainty"):
+        out = predictor.predict_uncertainty(predictor_input)
+        return np.asarray(out["proba_calibrated"], dtype=float)
+
+    if not _CALIBRATION_WARNED:
+        print(
+            "[recommendation_functions] outcome model exposes no temperature "
+            "calibration; objective #1 uses the raw predict_proba. Retrain the "
+            "outcome model with posterior_sampling=True to calibrate it."
+        )
+        _CALIBRATION_WARNED = True
+    return np.asarray(predictive_outcome_model.predict_proba(rows_df), dtype=float)[:, 1]
 
 # ---------------------------------------------------------------------------
 # Utils for run_experiment.py
@@ -269,8 +321,10 @@ def _evaluate_candidates(
     Returns:
         np.ndarray: A 2D numpy array where each row corresponds to a candidate pair,
                     formatted as [predicted_outcome, predicted_total_time,
-                    predicted_uncertainty] (the recalibrated aleatoric std of
-                    the time prediction).
+                    predicted_uncertainty]. predicted_outcome is the
+                    temperature-calibrated P(y=positive) (predict_outcome_proba);
+                    predicted_uncertainty is the recalibrated total std of the
+                    time prediction.
     """
     base_outcome_row = align_query_instance_with_model(query_instance, predictive_outcome_model).iloc[0].to_dict()
     base_time_row = align_query_instance_with_model(query_instance, predictive_time_model).iloc[0].to_dict()
@@ -287,7 +341,7 @@ def _evaluate_candidates(
         t_row['NEXT_RESOURCE'] = next_res
         time_rows.append(t_row)
 
-    predicted_outcome = predictive_outcome_model.predict_proba(pd.DataFrame(outcome_rows))[:, 1]
+    predicted_outcome = predict_outcome_proba(predictive_outcome_model, pd.DataFrame(outcome_rows))
     predicted_total_time, predicted_uncertainty = predict_time_and_uncertainty(
         predictive_time_model, pd.DataFrame(time_rows)
     )
@@ -456,39 +510,6 @@ def _front_objective_matrix(pareto_set):
     uncertainty_vals = np.array([item[4] for item in pareto_set], dtype=float)
     return np.column_stack([outcome_vals, inv_time_vals, uncertainty_vals]), ["max", "max", "min"]
 
-
-def select_best_pareto_action(pareto_set):
-    """
-    Selects the single best (activity, resource) pair from a computed Pareto set.
-
-    The three objectives are outcome (maximize), 1 - time (maximize) and
-    predictive uncertainty (minimize). The true Pareto front is computed on
-    those, then each objective is min-max normalized across the front and the
-    uncertainty axis is flipped to a "confidence" (1 - normalized uncertainty),
-    so the ideal point is [1, 1, 1]. The selected point is the front point
-    closest (Euclidean) to that ideal point -- the most balanced trade-off.
-
-    Args:
-        pareto_set (list of tuple): evaluated candidate tuples
-            (activity, resource, outcome, time, uncertainty).
-
-    Returns:
-        tuple: The optimal (activity, resource) pair. None if the set is empty.
-    """
-    if not pareto_set:
-        return None
-
-    raw_vals, sense = _front_objective_matrix(pareto_set)
-    is_pareto = paretoset(raw_vals, sense=sense)
-    pareto_front = [item for item, keep in zip(pareto_set, is_pareto) if keep]
-    front_vals = raw_vals[is_pareto]
-
-    norm = _minmax_columns(front_vals)
-    norm[:, 2] = 1.0 - norm[:, 2]  # uncertainty -> confidence (higher is better)
-    distances_to_ideal = np.linalg.norm(norm - 1.0, axis=1)
-    best_index = int(np.argmin(distances_to_ideal))
-    best_act, best_res = pareto_front[best_index][:2]
-    return (best_act, best_res)
 
 def select_top_k_pareto_actions(pareto_set, k=5):
     """

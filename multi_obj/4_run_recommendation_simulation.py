@@ -166,27 +166,8 @@ def setup_simulator(case_dir: Path, case_study: str, force_rediscover: bool) -> 
         print(f"Loading event log: {log_path}")
         log = xes_importer.apply(str(log_path))
 
-        train_data_path = case_dir / "train_data.csv"
-        if not train_data_path.exists():
-            raise FileNotFoundError(
-                f"No train_data.csv found at {train_data_path} -- needed to "
-                f"restrict parameter discovery to training cases only (to "
-                f"avoid leaking test cases into the simulator's learned "
-                f"parameters, since {log_path.name} contains train+test+more)."
-            )
-        train_case_ids = set(
-            pd.read_csv(train_data_path, usecols=[CASE_ID_NAME])[CASE_ID_NAME].astype(str)
-        )
-        n_before = len(log)
-        # Trace-level case id attribute in a parsed EventLog is "concept:name"
-        # (not "case:concept:name" -- that "case:" prefix only appears after
-        # flattening to a DataFrame).
-        log = pm4py.filter_trace_attribute_values(
-            log, "concept:name", train_case_ids, retain=True, case_id_key="concept:name"
-        )
-        print(f"Restricted event log to {len(log)}/{n_before} training cases (from {train_data_path.name}).")
-
-        print("Discovering simulation parameters from event log (this can take a few minutes)...")
+        print(f"Discovering simulation parameters from the full event log "
+              f"({len(log)} cases; this can take a few minutes)...")
         params.discover_from_eventlog(log, max_depth_tree=0)
         params_cache_path.parent.mkdir(parents=True, exist_ok=True)
         params.to_json(str(params_cache_path))

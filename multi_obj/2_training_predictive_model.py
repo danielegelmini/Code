@@ -112,12 +112,13 @@ def write_training_report(all_results, runtime_params, output_path):
     number of trees in the final model, and the train/test scores -- so
     the whole run can be reviewed without opening any per-model file.
 
-    For the regressor it also reports the predictive-uncertainty diagnostics
-    (mean and median aleatoric std, and the empirical coverage of the mean
-    +/- 1 sigma and +/- 2 sigma intervals, raw vs recalibrated).
+    For both models it also reports the predictive-uncertainty diagnostics:
+    the regressor as data/knowledge/total std with mean +/- 1/2 sigma coverage
+    (raw vs sigma-recalibrated); the classifier as data/knowledge/total entropy
+    with the temperature-scaling factor and Logloss/ECE (raw vs calibrated).
     """
     model_labels = {
-        "label": "Model 1 (label - Classifier)",
+        "label": "Model 1 (label - Classifier with uncertainty)",
         "sigmoid_mm": "Model 2 (sigmoid_mm - Regressor with uncertainty)",
     }
 
@@ -165,11 +166,15 @@ def write_training_report(all_results, runtime_params, output_path):
             lines.append(f"  - {res['metric_name']} score of training set: {res['train_score']:.5f}")
             lines.append(f"  - {res['metric_name']} score of test set: {res['test_score']:.5f}")
             unc = res.get("uncertainty")
-            if unc:
+            if unc and target_name == "sigmoid_mm":
                 lines.append(f"  - MAE score of test set: {unc['test_mae']:.5f}")
                 lines.append(
-                    f"  - Predictive uncertainty (aleatoric, test): mean std = {unc['mean_std']:.5f}, "
-                    f"median std / sharpness = {unc['median_std']:.5f}"
+                    f"  - Predictive uncertainty (test avg): data/aleatoric std = {unc['mean_data_std']:.5f}, "
+                    f"knowledge/epistemic std = {unc['mean_knowledge_std']:.5f}, total std = {unc['mean_std']:.5f}"
+                )
+                lines.append(
+                    f"    epistemic share of variance = {unc['epistemic_var_fraction'] * 100:.1f}% "
+                    f"(rest is irreducible noise); median total std / sharpness = {unc['median_std']:.5f}"
                 )
                 lines.append(
                     f"  - Calibration: sigma recalibration factor s = {unc.get('sigma_scale', 1.0):.3f} "
@@ -182,6 +187,26 @@ def write_training_report(all_results, runtime_params, output_path):
                 lines.append(
                     f"    mean +/- 2 sigma coverage (target ~95%): raw {unc.get('coverage_2sigma_raw', float('nan')) * 100:.1f}% "
                     f"-> recalibrated {unc['coverage_2sigma'] * 100:.1f}%"
+                )
+            elif unc and target_name == "label":
+                lines.append(
+                    f"  - Predictive uncertainty (test avg, entropy in nats): data/aleatoric = {unc['mean_data_entropy']:.5f}, "
+                    f"knowledge/epistemic = {unc['mean_knowledge_entropy']:.5f}, total = {unc['mean_total_entropy']:.5f}"
+                )
+                lines.append(
+                    f"    epistemic share of entropy = {unc['epistemic_entropy_fraction'] * 100:.1f}% "
+                    f"(useful mainly for flagging out-of-domain inputs, per Malinin et al. 2021)"
+                )
+                lines.append(
+                    f"  - Calibration: temperature T = {unc['temperature']:.3f} "
+                    f"(fitted on a held-out slice; p_cal = sigmoid(logit(p) / T), NOT applied by predict_proba)"
+                )
+                lines.append(
+                    f"    Logloss: raw {unc['logloss_raw']:.5f} -> temperature-calibrated {unc['logloss_calibrated']:.5f}"
+                )
+                lines.append(
+                    f"    ECE (expected calibration error): raw {unc['ece_raw'] * 100:.2f}% "
+                    f"-> temperature-calibrated {unc['ece_calibrated'] * 100:.2f}%"
                 )
             lines.append("")
 

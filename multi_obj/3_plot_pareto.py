@@ -1,4 +1,4 @@
-"""Visual comparison of the exhaustive and NSGA-II Pareto searches for one case.
+"""Visualise the Pareto search of ONE method for one case, as a 2D + 3D pair.
 
 For a given case study this script picks one test-set case (either a case id
 passed on the command line or, by default, the case whose Pareto front has the
@@ -12,18 +12,17 @@ most solutions and the widest spread), then for that case:
     outcome probability (maximize), predicted total time (minimize, plotted as
     1 - time) and prediction uncertainty (minimize, plotted as a normalised
     "confidence" = 1 - uncertainty);
-  * computes the Pareto front twice, once with the exhaustive search and once
-    with NSGA-II, and records the wall-clock time of each;
+  * computes the Pareto front once with the chosen method (``--method``,
+    default "exhaustive"; "nsga2" is parked) and records its wall-clock time;
   * highlights the top-k actions chosen by p-dispersion and the "no
     recommendation" baseline point (the case left as it happened in the log);
-  * saves a single figure under ``save_dir`` with one subplot per method
-    (exhaustive on the left, NSGA-II on the right) -- either a 2D plot with
-    confidence encoded as point color (``--view color``, default) or a 3D
-    scatter with confidence on the third axis (``--view 3d``).
+  * saves a single figure under ``save_dir`` with TWO subplots of that same
+    front: a 2D view on the left (confidence encoded as point color) and a 3D
+    view on the right (confidence on the third axis), under one shared legend.
 
 Example usage:
     python 3_plot_pareto.py --case_study "BAC" --k 5
-    python 3_plot_pareto.py --case_study "BAC" --k 5 --view 3d
+    python 3_plot_pareto.py --case_study "BAC" --k 5 --method exhaustive
 """
 
 import os
@@ -50,6 +49,7 @@ from utils.recommendation_functions import (
     _build_valid_pairs,
     _evaluate_candidates,
     predict_time_and_uncertainty,
+    predict_outcome_proba,
     select_top_k_pareto_actions,
 )
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401  (registers the 3d projection)
@@ -79,8 +79,9 @@ def _default_forbidden_map():
 def evaluate_robust(valid_pairs, query_instance, predictive_outcome_model, predictive_time_model):
     """Evaluate every candidate (activity, resource) pair on the three objectives.
 
-    Uses ``predict_proba`` for the outcome model when available so that the
-    outcome objective is a probability rather than a hard 0/1 label.
+    The outcome objective is the temperature-calibrated P(y=positive)
+    (``predict_outcome_proba``) -- the same quantity the real Pareto search
+    uses in recommendation_functions -- so the plotted front matches it.
 
     Input:
         valid_pairs: iterable of (next_activity, next_resource) tuples to score.
@@ -110,16 +111,59 @@ def evaluate_robust(valid_pairs, query_instance, predictive_outcome_model, predi
         t_row['NEXT_RESOURCE'] = next_res
         time_rows.append(t_row)
 
-    df_out = pd.DataFrame(outcome_rows)
-    if hasattr(predictive_outcome_model, "predict_proba"):
-        predicted_outcome = predictive_outcome_model.predict_proba(df_out)[:, 1]
-    else:
-        predicted_outcome = predictive_outcome_model.predict(df_out)
+    predicted_outcome = predict_outcome_proba(predictive_outcome_model, pd.DataFrame(outcome_rows))
 
     predicted_total_time, predicted_uncertainty = predict_time_and_uncertainty(
         predictive_time_model, pd.DataFrame(time_rows)
     )
     return np.column_stack([predicted_outcome, predicted_total_time, predicted_uncertainty])
+
+
+def _draw_2d(ax, fig, *, all_x, all_y, all_conf, front_x, front_y, front_conf,
+             top_k_x, top_k_y, baseline_x, baseline_y):
+    """Left subplot: outcome vs 1 - time, confidence encoded as point color."""
+    ax.scatter(all_x, all_y, c=all_conf, cmap="viridis", vmin=0.0, vmax=1.0, alpha=0.55, s=35)
+    sc = ax.scatter(front_x, front_y, c=front_conf, cmap="viridis", vmin=0.0, vmax=1.0,
+                    s=95, edgecolors="black", linewidths=1.4, zorder=5)
+    ax.plot(front_x, front_y, color="grey", linestyle="--", alpha=0.5, zorder=4)
+    ax.scatter(top_k_x, top_k_y, facecolors="none", edgecolors="crimson", marker="P",
+               s=190, linewidths=1.9, zorder=8)
+    ax.scatter(1.0, 1.0, color="green", marker="X", s=110, zorder=10)
+    ax.scatter(baseline_x, baseline_y, color="orange", marker="D", s=110,
+               edgecolors="black", linewidths=0.6, zorder=10)
+    cbar = fig.colorbar(sc, ax=ax, fraction=0.046, pad=0.04)
+    cbar.set_label("Confidence = 1 - norm(uncertainty)  (higher is better)")
+    ax.set_xlabel("Predicted Outcome (Probability Maximize)")
+    ax.set_ylabel("1 - Predicted Time (Maximize)")
+    ax.set_title("2D view  --  confidence as point color")
+    ax.grid(True, linestyle=":", alpha=0.7)
+
+    plot_x_min = min(np.min(all_x), baseline_x)
+    plot_x_max = max(np.max(all_x), baseline_x)
+    plot_y_min = min(np.min(all_y), baseline_y)
+    plot_y_max = max(np.max(all_y), baseline_y)
+    margin_x = (plot_x_max - plot_x_min) * 0.05 if plot_x_max != plot_x_min else 0.05
+    margin_y = (plot_y_max - plot_y_min) * 0.05 if plot_y_max != plot_y_min else 0.05
+    ax.set_xlim(min(plot_x_min - margin_x, -0.05), max(plot_x_max + margin_x, 1.05))
+    ax.set_ylim(min(plot_y_min - margin_y, -0.05), max(plot_y_max + margin_y, 1.05))
+
+
+def _draw_3d(ax, *, all_x, all_y, all_conf, front_x, front_y, front_conf,
+             top_k_x, top_k_y, top_k_conf, baseline_x, baseline_y, baseline_conf,
+             elev, azim):
+    """Right subplot: the same front with confidence on the third axis."""
+    ax.scatter(all_x, all_y, all_conf, color="black", alpha=0.35, s=30)
+    ax.scatter(front_x, front_y, front_conf, color="blue", s=80)
+    ax.scatter(top_k_x, top_k_y, top_k_conf, facecolors="none", edgecolors="crimson",
+               marker="P", s=180, linewidths=1.9)
+    ax.scatter([1.0], [1.0], [1.0], color="green", marker="X", s=180)
+    ax.scatter([baseline_x], [baseline_y], [baseline_conf], color="orange", marker="D", s=150)
+    ax.set_xlabel("Predicted Outcome (max)")
+    ax.set_ylabel("1 - Predicted Time (max)")
+    ax.set_zlabel("Confidence (max)", labelpad=6)
+    ax.view_init(elev=elev, azim=azim)
+    ax.set_box_aspect(None, zoom=1.15)
+    ax.set_title("3D view  --  confidence as third axis")
 
 
 def run_and_plot_comparison(
@@ -130,19 +174,19 @@ def run_and_plot_comparison(
     n_generations: int = 10,
     random_state: int = 1234,
     k: int = 5,
-    view: str = "color",
+    method: str = "exhaustive",
     elev: float = 22.0,
     azim: float = 0,
     rebuild_cache: bool = False,
     save_dir: str = "C:\\Users\\Utente\\Desktop\\tesi magistrale\\Code\\multi_obj\\pareto_front_images"
 ):
-    """Run the exhaustive and NSGA-II Pareto searches for one case and plot both.
+    """Run ONE Pareto search for one case and plot its front as a 2D + 3D pair.
 
     For the chosen case the function evaluates every valid (activity, resource)
-    pair, computes the Pareto front with each method, highlights the top-k
-    actions selected by p-dispersion, adds the "no recommendation" baseline
-    point, and saves a single figure to ``save_dir`` with one subplot per
-    method (exhaustive and NSGA-II side by side).
+    pair, computes the Pareto front with the requested ``method``, highlights
+    the top-k actions selected by p-dispersion, adds the "no recommendation"
+    baseline point, and saves a single figure to ``save_dir`` holding two views
+    of that same front: a 2D scatter (left) and a 3D scatter (right).
 
     Input:
         case_study: dataset name (e.g. "BAC", "BPI12", "bpi17_before").
@@ -151,24 +195,23 @@ def run_and_plot_comparison(
             selected automatically.
         window_size: prefix window length used to build the transition system
             and to look up the next possible activities.
-        pop_size: NSGA-II population size.
-        n_generations: number of NSGA-II generations.
+        pop_size: NSGA-II population size (only used when method="nsga2").
+        n_generations: number of NSGA-II generations (only used when method="nsga2").
         random_state: seed for numpy / random and for NSGA-II reproducibility.
         k: number of Pareto points to highlight as the top-k selection.
-        view: "color" -> 2D plot (outcome vs 1-time) with confidence
-            (1 - normalised uncertainty) mapped to point color; "3d" -> 3D
-            scatter with confidence as the third axis.
-        elev, azim: elevation and azimuth (degrees) of the 3D camera. The
-            defaults keep the ideal point (1, 1, 1) at the top corner facing the
-            viewer while making the outcome and 1-time axes easy to read;
-            ignored when view != "3d".
+        method: "exhaustive" (default) or "nsga2" -- the single search whose
+            front is plotted. In both subplots confidence = 1 - normalised
+            uncertainty (color in 2D, third axis in 3D).
+        elev, azim: elevation and azimuth (degrees) of the 3D camera in the
+            right subplot.
         save_dir: directory where the output .jpg figure is written (created
             if missing).
     Output:
         None. The combined figure is written to disk and progress is printed
         to stdout.
         The function returns early (printing a message) if the case has no
-        possible next activity or no valid action-resource pair.
+        possible next activity, no valid action-resource pair, or an empty
+        Pareto set.
     """
     np.random.seed(random_state)
     random.seed(random_state)
@@ -281,169 +324,119 @@ def run_and_plot_comparison(
     # is, i.e. with NEXT_ACTIVITY/NEXT_RESOURCE equal to what actually happened
     # in the log (no recommended action applied).
     baseline_row = _to_row_df(query_instance)
-    if hasattr(predictive_outcome_model, "predict_proba"):
-        baseline_outcome = predictive_outcome_model.predict_proba(baseline_row)[:, 1][0]
-    else:
-        baseline_outcome = predictive_outcome_model.predict(baseline_row)[0]
+    baseline_outcome = float(predict_outcome_proba(predictive_outcome_model, baseline_row)[0])
     baseline_time_arr, baseline_unc_arr = predict_time_and_uncertainty(predictive_time_model, baseline_row)
     baseline_time = float(baseline_time_arr[0])
     baseline_unc = float(baseline_unc_arr[0])
     baseline_x = baseline_outcome
     baseline_y = 1.0 - baseline_time
 
-    # =========================================================================
-    methods = ["exhaustive", "nsga2"]
+    # -------------------------------------------------------------------------
+    # Run the chosen search once, then draw its front twice (2D + 3D).
+    # -------------------------------------------------------------------------
+    method = method.lower()
+    if method not in {"exhaustive", "nsga2"}:
+        raise ValueError("method must be either 'exhaustive' or 'nsga2'.")
 
-    # Single figure with one subplot per method (side by side), saved as one file.
-    os.makedirs(save_dir, exist_ok=True)
-    if view == "3d":
-        # A near-square area per subplot wastes far less space around a 3D cube
-        # than a wide one; the cubes are then enlarged with set_box_aspect(zoom)
-        # and margins are trimmed at save time. wspace must stay wide enough that
-        # the left cube's (inner) z-axis does not touch the right cube.
-        fig, axes = plt.subplots(1, 2, figsize=(17, 8), subplot_kw={"projection": "3d"},
-                                 gridspec_kw={"wspace": 0.20})
-    else:
-        fig, axes = plt.subplots(1, 2, figsize=(20, 7))
-
-    for ax, method in zip(axes, methods):
-        print(f"\nRunning method: {method.upper()}...")
-        t_start = time.time()
-
-        all_evals = evaluate_robust(valid_pairs, query_instance, predictive_outcome_model, predictive_time_model)
-        if method == "exhaustive":
-            pareto_set = exhaustive_pareto_search(query_instance, poss, predictive_outcome_model, predictive_time_model, act_with_res)
-        else:  # nsga2
-            pareto_set = nsga2_pareto_search(
-                query_instance=query_instance,
-                possible_actions=poss,
-                act_with_res=act_with_res,
-                predictive_outcome_model=predictive_outcome_model,
-                predictive_time_model=predictive_time_model,
-                pop_size=pop_size,
-                n_generations=n_generations,
-                random_state=random_state,
-            )
-        elapsed_time = time.time() - t_start
-
-        all_x = all_evals[:, 0]
-        all_y = 1.0 - all_evals[:, 1]
-        all_unc = all_evals[:, 2]
-
-        if not pareto_set:
-            print(f"Empty Pareto set for {method}. Skipping this subplot.")
-            ax.set_title(f"{method.upper()}\n(empty Pareto set)")
-            ax.set_axis_off()
-            continue
-
-        # Confidence = 1 - uncertainty, min-max normalised over all evaluated
-        # points (baseline included), so 0 = least reliable point, 1 = most
-        # reliable. Used only for the point color / the third plot axis.
-        unc_all = np.concatenate([all_unc, [baseline_unc]])
-        u_lo, u_hi = float(np.min(unc_all)), float(np.max(unc_all))
-        u_span = (u_hi - u_lo) or 1.0
-        to_conf = lambda u: 1.0 - (np.asarray(u, dtype=float) - u_lo) / u_span
-        all_conf = to_conf(all_unc)
-        baseline_conf = float(to_conf(baseline_unc))
-
-        front_x_raw = np.array([item[2] for item in pareto_set], dtype=float)
-        front_y_raw = np.array([1.0 - item[3] for item in pareto_set], dtype=float)
-        front_unc_raw = np.array([item[4] for item in pareto_set], dtype=float)
-
-        pareto_vals = np.column_stack((front_x_raw, front_y_raw, front_unc_raw))
-        is_pareto = paretoset(pareto_vals, sense=["max", "max", "min"])
-
-        front_x = front_x_raw[is_pareto]
-        front_y = front_y_raw[is_pareto]
-        front_conf = to_conf(front_unc_raw[is_pareto])
-        order = np.argsort(front_x)
-        front_x, front_y, front_conf = front_x[order], front_y[order], front_conf[order]
-
-        # Points selected by select_top_k_pareto_actions (p-dispersion over the 3
-        # normalised objectives): a subset of the front, marked separately.
-        top_k_pairs = select_top_k_pareto_actions(pareto_set, k=k)
-        pair_to_obj = {(item[0], item[1]): (item[2], 1.0 - item[3], item[4]) for item in pareto_set}
-        top_k_x = np.array([pair_to_obj[p][0] for p in top_k_pairs], dtype=float)
-        top_k_y = np.array([pair_to_obj[p][1] for p in top_k_pairs], dtype=float)
-        top_k_conf = to_conf(np.array([pair_to_obj[p][2] for p in top_k_pairs], dtype=float))
-
-        title_text = (
-            f"{method.upper()}\n"
-            f"Execution Time: {elapsed_time:.4f} seconds"
+    print(f"\nRunning method: {method.upper()}...")
+    t_start = time.time()
+    all_evals = evaluate_robust(valid_pairs, query_instance, predictive_outcome_model, predictive_time_model)
+    if method == "exhaustive":
+        pareto_set = exhaustive_pareto_search(
+            query_instance, poss, predictive_outcome_model, predictive_time_model, act_with_res
         )
+    else:  # nsga2
+        pareto_set = nsga2_pareto_search(
+            query_instance=query_instance,
+            possible_actions=poss,
+            act_with_res=act_with_res,
+            predictive_outcome_model=predictive_outcome_model,
+            predictive_time_model=predictive_time_model,
+            pop_size=pop_size,
+            n_generations=n_generations,
+            random_state=random_state,
+        )
+    elapsed_time = time.time() - t_start
+    print(f"  ({method.upper()} done in {elapsed_time:.4f}s)")
 
-        if view == "3d":
-            ax.scatter(all_x, all_y, all_conf, color="black", alpha=0.35, s=30, label="Evaluated Pairs (All)")
-            ax.scatter(front_x, front_y, front_conf, color="blue", s=80, label="Pareto Front")
-            ax.scatter(top_k_x, top_k_y, top_k_conf, color="purple", marker="P", s=180,
-                       edgecolors="black", linewidths=0.6, label=f"Top-{k} Selected (p-dispersion)")
-            ax.scatter([1.0], [1.0], [1.0], color="green", marker="X", s=180, label="Ideal Point (1,1,1)")
-            ax.scatter([baseline_x], [baseline_y], [baseline_conf], color="orange", marker="D", s=150,
-                       label="No Recommendation (Baseline)")
-            ax.set_xlabel("Predicted Outcome (max)")
-            ax.set_ylabel("1 - Predicted Time (max)")
-            # Short z-axis label ("confidence" is spelled out fully in the
-            # caption); kept on both cubes so their vertical scale is readable.
-            ax.set_zlabel("Confidence (max)", labelpad=6)
-            # Axis limits are left to matplotlib's autoscaling so the plot zooms
-            # onto the region the points actually occupy (the ideal-point marker
-            # keeps (1, 1, 1) inside the view).
-            # Orientation chosen so the ideal point (1, 1, 1) sits at the top
-            # corner toward the viewer and the outcome / 1-time axes stay
-            # readable; tune with --elev / --azim.
-            ax.view_init(elev=elev, azim=azim)
-            # Enlarge the drawn cube inside its axes rectangle -- by default
-            # matplotlib leaves a wide empty margin around a 3D plot.
-            ax.set_box_aspect(None, zoom=1.25)
-            ax.set_title(f"{method.upper()}  --  computing time: {elapsed_time:.2f} s", fontsize=11)
-        else:  # "color": 2D plot, confidence encoded as point color
-            ax.scatter(all_x, all_y, c=all_conf, cmap="viridis", vmin=0.0, vmax=1.0,
-                       alpha=0.55, s=35)
-            sc = ax.scatter(front_x, front_y, c=front_conf, cmap="viridis", vmin=0.0, vmax=1.0,
-                            s=95, edgecolors="black", linewidths=1.4, zorder=5)
-            ax.plot(front_x, front_y, color="grey", linestyle="--", alpha=0.5, zorder=4)
-            ax.scatter(top_k_x, top_k_y, facecolors="none", edgecolors="crimson", marker="P",
-                       s=190, linewidths=1.9, zorder=8)
-            ax.scatter(1.0, 1.0, color="green", marker="X", s=110, zorder=10)
-            ax.scatter(baseline_x, baseline_y, color="orange", marker="D", s=110,
-                       edgecolors="black", linewidths=0.6, zorder=10)
-            cbar = fig.colorbar(sc, ax=ax)
-            cbar.set_label("Confidence = 1 - norm(uncertainty)  (higher is better)")
+    if not pareto_set:
+        print(f"Empty Pareto set for {method}. Nothing to plot.")
+        return
 
-            ax.set_xlabel("Predicted Outcome (Probability Maximize)")
-            ax.set_ylabel("1 - Predicted Time (Maximize)")
-            ax.set_title(title_text)
-            ax.grid(True, linestyle=":", alpha=0.7)
+    all_x = all_evals[:, 0]
+    all_y = 1.0 - all_evals[:, 1]
+    all_unc = all_evals[:, 2]
 
-            plot_x_min = min(np.min(all_x), baseline_x)
-            plot_x_max = max(np.max(all_x), baseline_x)
-            plot_y_min = min(np.min(all_y), baseline_y)
-            plot_y_max = max(np.max(all_y), baseline_y)
-            margin_x = (plot_x_max - plot_x_min) * 0.05 if plot_x_max != plot_x_min else 0.05
-            margin_y = (plot_y_max - plot_y_min) * 0.05 if plot_y_max != plot_y_min else 0.05
-            ax.set_xlim(min(plot_x_min - margin_x, -0.05), max(plot_x_max + margin_x, 1.05))
-            ax.set_ylim(min(plot_y_min - margin_y, -0.05), max(plot_y_max + margin_y, 1.05))
+    # Confidence = 1 - uncertainty, min-max normalised over all evaluated points
+    # (baseline included): 0 = least reliable, 1 = most reliable. Only used for
+    # the point color (2D) / the third axis (3D).
+    unc_all = np.concatenate([all_unc, [baseline_unc]])
+    u_lo, u_hi = float(np.min(unc_all)), float(np.max(unc_all))
+    u_span = (u_hi - u_lo) or 1.0
+    to_conf = lambda u: 1.0 - (np.asarray(u, dtype=float) - u_lo) / u_span
+    all_conf = to_conf(all_unc)
+    baseline_conf = float(to_conf(baseline_unc))
 
-        print(f"  ({method.upper()} done in {elapsed_time:.4f}s)")
+    front_x_raw = np.array([item[2] for item in pareto_set], dtype=float)
+    front_y_raw = np.array([1.0 - item[3] for item in pareto_set], dtype=float)
+    front_unc_raw = np.array([item[4] for item in pareto_set], dtype=float)
 
-    # Both methods drawn -> save the combined figure as a single file.
+    pareto_vals = np.column_stack((front_x_raw, front_y_raw, front_unc_raw))
+    is_pareto = paretoset(pareto_vals, sense=["max", "max", "min"])
+    front_x = front_x_raw[is_pareto]
+    front_y = front_y_raw[is_pareto]
+    front_conf = to_conf(front_unc_raw[is_pareto])
+    order = np.argsort(front_x)
+    front_x, front_y, front_conf = front_x[order], front_y[order], front_conf[order]
+
+    # Points selected by select_top_k_pareto_actions (p-dispersion over the 3
+    # normalised objectives): a subset of the front, marked separately.
+    top_k_pairs = select_top_k_pareto_actions(pareto_set, k=k)
+    pair_to_obj = {(item[0], item[1]): (item[2], 1.0 - item[3], item[4]) for item in pareto_set}
+    top_k_x = np.array([pair_to_obj[p][0] for p in top_k_pairs], dtype=float)
+    top_k_y = np.array([pair_to_obj[p][1] for p in top_k_pairs], dtype=float)
+    top_k_conf = to_conf(np.array([pair_to_obj[p][2] for p in top_k_pairs], dtype=float))
+
+    # -------------------------------------------------------------------------
+    # One figure, two subplots of the SAME front: 2D (left) + 3D (right).
+    # -------------------------------------------------------------------------
+    os.makedirs(save_dir, exist_ok=True)
+    fig = plt.figure(figsize=(20, 9))
+    ax2d = fig.add_subplot(1, 2, 1)
+    ax3d = fig.add_subplot(1, 2, 2, projection="3d")
+
+    _draw_2d(
+        ax2d, fig,
+        all_x=all_x, all_y=all_y, all_conf=all_conf,
+        front_x=front_x, front_y=front_y, front_conf=front_conf,
+        top_k_x=top_k_x, top_k_y=top_k_y,
+        baseline_x=baseline_x, baseline_y=baseline_y,
+    )
+    _draw_3d(
+        ax3d,
+        all_x=all_x, all_y=all_y, all_conf=all_conf,
+        front_x=front_x, front_y=front_y, front_conf=front_conf,
+        top_k_x=top_k_x, top_k_y=top_k_y, top_k_conf=top_k_conf,
+        baseline_x=baseline_x, baseline_y=baseline_y, baseline_conf=baseline_conf,
+        elev=elev, azim=azim,
+    )
+
     fig.suptitle(
-        f"Pareto Front Analysis  |  Dataset: {case_study}  |  Case ID: {target_case_id}",
+        f"Pareto Front Analysis  |  Dataset: {case_study}  |  Case ID: {target_case_id}  |  "
+        f"Method: {method.upper()}  ({elapsed_time:.2f} s)",
         fontsize=13, y=0.97,
     )
 
-    # One shared legend for the whole figure, laid out horizontally under both
-    # subplots -- avoids repeating the same box twice and frees up plot area.
-    ideal_label = "Ideal point (1, 1, 1)" if view == "3d" else "Ideal point (1, 1)"
+    # One shared legend for the whole figure, horizontal, under both subplots.
     legend_handles = [
         mlines.Line2D([], [], marker="o", color="none", markerfacecolor="grey",
-                      markersize=8, label="Evaluated pairs (color = confidence)"),
+                      markersize=8, label="Evaluated pairs (2D: color = confidence / 3D: black)"),
         mlines.Line2D([], [], marker="o", color="none", markerfacecolor="blue",
                       markeredgecolor="black", markersize=9, label="Pareto front"),
         mlines.Line2D([], [], marker="P", color="none", markeredgecolor="crimson",
                       markerfacecolor="none", markersize=13, label=f"Top-{k} selected (p-dispersion)"),
         mlines.Line2D([], [], marker="X", color="none", markerfacecolor="green",
-                      markersize=11, label=ideal_label),
+                      markersize=11, label="Ideal point (1, 1, 1)"),
         mlines.Line2D([], [], marker="D", color="none", markerfacecolor="orange",
                       markeredgecolor="black", markersize=9, label="No recommendation (baseline)"),
     ]
@@ -454,18 +447,13 @@ def run_and_plot_comparison(
              "confidence = 1 - min-max-normalized uncertainty.",
              ha="center", fontsize=8, style="italic")
 
-    filename = f"pareto_{case_study}_{str(target_case_id).replace(':', '_')}_{view}.jpg"
+    # tight_layout misbehaves with 3D axes -> manual margins; no bbox_inches="tight"
+    # either (it clips the 3D z-axis label).
+    fig.subplots_adjust(left=0.05, right=0.95, bottom=0.16, top=0.88, wspace=0.12)
+
+    filename = f"pareto_{case_study}_{str(target_case_id).replace(':', '_')}_{method}.jpg"
     filepath = os.path.join(save_dir, filename)
-    if view != "3d":
-        # tight_layout misbehaves with 3D axes, so it is 2D-only; reserve a
-        # bottom strip for the shared legend and caption.
-        fig.tight_layout(rect=(0, 0.07, 1, 0.96))
-        fig.savefig(filepath, format="jpg", dpi=300, bbox_inches="tight")
-    else:
-        # Trim the wide default 3D margins; do NOT pass bbox_inches="tight" here
-        # -- it clips the rightmost cube's z-axis label.
-        fig.subplots_adjust(left=0.05, right=0.90, bottom=0.13, top=0.88, wspace=0.20)
-        fig.savefig(filepath, format="jpg", dpi=300)
+    fig.savefig(filepath, format="jpg", dpi=300)
     plt.close(fig)
     print(f"\nFigure saved to: {filepath}")
 
@@ -474,19 +462,19 @@ if __name__ == '__main__':
     parser.add_argument('--case_study', type=str, required=True, help='Dataset name')
     parser.add_argument('--case_id', type=str, default=None, help='Specific case ID (optional)')
     parser.add_argument('--k', type=int, default=5, help='Number of top-k points to highlight (default: 5)')
-    parser.add_argument('--view', type=str, default='color', choices=['color', '3d'],
-                        help="'color' = 2D plot with confidence as point color (default); '3d' = 3D scatter")
+    parser.add_argument('--method', type=str, default='exhaustive', choices=['exhaustive', 'nsga2'],
+                        help="Search method whose front is plotted (default: exhaustive; nsga2 is parked)")
     parser.add_argument('--elev', type=float, default=22.0,
-                        help="3D camera elevation in degrees (default: 22; only used with --view 3d)")
+                        help="3D camera elevation in degrees for the right subplot (default: 22)")
     parser.add_argument('--azim', type=float, default=-45.0,
-                        help="3D camera azimuth in degrees (default: -90; only used with --view 3d)")
+                        help="3D camera azimuth in degrees for the right subplot (default: -45)")
     parser.add_argument('--rebuild-cache', dest='rebuild_cache', action='store_true',
                         help="Force recomputing the (cached) transition system instead of loading it")
 
     try:
         args = parser.parse_args()
         run_and_plot_comparison(case_study=args.case_study, target_case_id=args.case_id, k=args.k,
-                                view=args.view, elev=args.elev, azim=args.azim,
+                                method=args.method, elev=args.elev, azim=args.azim,
                                 rebuild_cache=args.rebuild_cache)
     except Exception as e:
         print(f"Error during execution: {e}")
@@ -494,5 +482,5 @@ if __name__ == '__main__':
 
 # example usage:
 # python 3_plot_pareto.py --case_study "BAC" --k 5
-# python 3_plot_pareto.py --case_study "BAC" --k 5 --view 3d
-# python 3_plot_pareto.py --case_study "BAC" --k 5 --view 3d --elev 30 --azim 45
+# python 3_plot_pareto.py --case_study "BAC" --k 5 --method exhaustive
+# python 3_plot_pareto.py --case_study "BAC" --k 5 --elev 30 --azim 45

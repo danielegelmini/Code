@@ -1,0 +1,614 @@
+================================================================================
+SCHELETRO DETTAGLIATO DEL CAPITOLO "BACKGROUND"
+Tesi magistrale - Estensione di "Balancing KPIs through Multi-Objective
+Prescriptive Process Analytics" (Le, Buliga, Ronzani, Padella, de Leoni)
+Contributo della tesi: quantificazione dell'incertezza predittiva (aleatoria +
+epistemica) dei due modelli CatBoost e uso della "confidenza come KPI" nel
+fronte di Pareto, con calibrazione delle probabilita' e selezione top-k
+diversificata.
+================================================================================
+
+--------------------------------------------------------------------------------
+0. PRINCIPI GUIDA (non e' una sezione della tesi, e' una nota per te)
+--------------------------------------------------------------------------------
+- Struttura a IMBUTO: dal generale (process mining) allo specifico (incertezza
+  nel gradient boosting). Ogni sezione introduce SOLO cio' che serve alla
+  successiva.
+- Segui la PIPELINE del sistema:
+      offline (log -> encoding -> modello predittivo)
+   -> online (feasibility -> ricerca multi-obiettivo -> raccomandazione)
+   -> valutazione (business process simulation).
+  Il lettore incontra i concetti nell'ordine in cui il sistema li usa.
+- Confine con gli altri capitoli:
+   * BACKGROUND  = COS'E' e PERCHE' ESISTE un concetto, in forma indipendente
+                   dal tuo lavoro e riusabile (letteratura).
+   * METHODOLOGY = come TU componi quei concetti (architettura, wrapper di
+                   uncertainty, confidenza come obiettivo di Pareto, ecc.).
+   * EVALUATION / EXPERIMENTAL SETUP = i VALORI concreti (search space Optuna,
+                   n. trial, window_size, soglie tau/alpha, ...) e le tabelle
+                   di risultati.
+- Regola per gli IPERPARAMETRI: in Background si spiega SOLO cosa e' un
+  iperparametro e cosa controlla ciascun gruppo (capacita', passo, regolariz-
+  zazione, sub-sampling, sbilanciamento). I valori scelti e lo spazio di
+  ricerca vanno in una tabella nell'Experimental Setup, con un rimando a
+  questa sezione.
+- Gli strumenti STATISTICI non vanno in una sezione a se': si distribuiscono
+  nel punto in cui il sistema li usa (vedi mappa in fondo, sezione "MAPPA
+  STRUMENTI STATISTICI").
+
+--------------------------------------------------------------------------------
+ORDINE DI DIPENDENZA DELLE SEZIONI (per decidere cosa e' Background e cosa e'
+Methodology)
+
+  3.1 Process mining --+--> 3.2 PPM --+--> 3.5 Gradient boosting/CatBoost --> 3.6 Uncertainty
+                       |              +--> 3.3 PrPA --> 3.4 Multi-objective opt.
+                       +-----------------------------------> 3.7 Simulation
+
+  Se un argomento e' SOLO tuo  -> Methodology.
+  Se e' letteratura riusabile  -> Background (anche se poco noto: NSGA-II,
+  SGLB, temperature scaling, p-dispersion, conformal prediction).
+--------------------------------------------------------------------------------
+
+
+================================================================================
+3.1  PROCESS MINING: CONCETTI DI BASE
+================================================================================
+Obiettivo della sezione: fissare il vocabolario minimo (log, traccia, evento,
+prefisso, attivita', risorsa) su cui poggia tutto il resto.
+
+3.1.1  Event log, tracce, eventi
+   - Definizione di event log L come collezione di tracce (sequenze di
+     esecuzione di un processo).
+   - Traccia sigma = <e1, ..., en>; |sigma| = numero di eventi.
+   - Evento e = (c, a, d): case id c, attivita' a, data payload d (vettore di
+     attributi: timestamp start/complete, risorsa r, attributi di caso).
+   - Funzioni di proiezione act: E -> A e res: E -> R.
+   - Insiemi A (attivita') e R (risorse) del processo.
+   - Distinzione evento / attivita' / caso; nota che spesso in letteratura
+     "evento" e "label di attivita'" si usano in modo intercambiabile.
+
+3.1.2  Prefissi e tracce in esecuzione
+   - k-prefisso: sigma(k) = <e1, ..., ek> con k < |sigma|.
+   - Traccia "running" / esecuzione in corso: prefisso di una traccia che non
+     e' ancora completata; e' l'input del problema prescrittivo.
+   - Concetto di "completamento" di un prefisso (il suo suffisso sconosciuto).
+
+3.1.3  Astrazione di stato e sistemi di transizione  (serve alla 3.3)
+   - Perche' serve un'astrazione: evitare un sistema di transizione troppo
+     deterministico e l'esplosione degli stati.
+   - Rappresentazione di stato sequence-based a finestra w:
+     S^w(sigma(k)) = ultime w attivita' del prefisso (o tutte se k < w).
+   - Sistema di transizione minato dal log: mappa stato astratto -> attivita'
+     che possono seguirlo.
+   - Esempio piccolo (riprendere la Fig. 2 del paper o costruirne uno).
+
+Riferimenti: van der Aalst, "Process Mining: Data Science in Action" (2016);
+Adams et al. 2021 (concept drift, per motivare lo split di BPIC2017).
+
+Cosa NON mettere qui: la tua implementazione del transition system cache
+(utils/setup_cache.py, transition_system.py) -> Methodology.
+
+Ponte verso 3.2: "Su questi prefissi si costruiscono i modelli predittivi."
+
+
+================================================================================
+3.2  PREDICTIVE PROCESS MONITORING (PPM)
+================================================================================
+Obiettivo: spiegare come si predice una proprieta' della traccia completa a
+partire da un prefisso, e introdurre i due target usati (outcome e remaining
+time) e l'encoding.
+
+3.2.1  Il problema del PPM
+   - Definizione: funzione che, dato un prefisso, stima una proprieta' della
+     traccia completa (outcome, tempo rimanente, prossima attivita', costo...).
+   - Task rilevanti per la tesi:
+        * OUTCOME del caso: classificazione binaria; l'outcome e' definito
+          dall'occorrenza di un'attivita' chiave (es. "O_Accepted" per
+          BPIC2012/2017; "Network/Back-Office Adjustment Requested" come
+          outcome negativo per BAC). L'attivita' che definisce l'outcome viene
+          esclusa dalle attivita' prescrivibili (fair evaluation).
+        * REMAINING TIME: regressione sul tempo residuo fino a fine caso.
+   - Nozione di funzione KPI F(sigma, i): valore del KPI dopo i primi i eventi.
+
+3.2.2  Labeling
+   - Come si costruisce il training set di prefissi: per ogni traccia e ogni
+     step k si genera un esempio (prefisso, target).
+   - Label di outcome (booleana) e label di tempo (continua).
+
+3.2.3  Encoding del prefisso
+   - Perche' serve: le tecniche di ML tabulari richiedono un vettore numerico
+     a lunghezza fissa.
+   - ACTIVITY-FREQUENCY ENCODING: vettore che conta le occorrenze di ciascuna
+     attivita' nel prefisso. Alternative note (last-state, aggregation,
+     index-based, embedding) da citare brevemente per contesto.
+   - Attributi ausiliari: durata del prefisso, durata dell'evento corrente
+     (end - start, o fallback end - end precedente), weekday dell'ultimo
+     timestamp.
+   - LABEL ENCODING della prossima attivita' e prossima risorsa candidate
+     (NEXT_ACTIVITY, NEXT_RESOURCE): sono input del modello, non output.
+   - Coerenza train/inference: lo stesso encoder si applica alla running
+     execution online.
+   - One-hot vs label encoding: nota che la scelta di encoding ha effetti
+     sull'incertezza epistemica (una categoria mai vista diventa una riga di
+     zeri su cui ogni sub-ensemble concorda) -> anticipa il punto, che
+     riprenderai in 3.6.
+
+3.2.4  Normalizzazione del target "remaining time"  (STATISTICA DI BASE)
+   - Problema: il tempo residuo ha distribuzione fortemente asimmetrica
+     (long tail) e vive su una scala diversa dall'outcome binario.
+   - Trasformazione in tre passi (definirla formalmente):
+        1. z-normalization (standardizzazione): (x - mu) / s.
+        2. sigmoide: 1 / (1 + e^-z).
+        3. min-max scaling su [0, 1].
+     Risultato: la variabile "sigmoid_mm", quasi-uniforme su [0,1], che rende
+     confrontabili i due KPI e rende visibili anche piccoli miglioramenti.
+   - Invertibilita' della trasformazione (serve per riportare i tempi simulati
+     in secondi in fase di valutazione): catena inversa min-max^-1 -> logit ->
+     de-standardizzazione, con clipping ai bordi.
+   - Richiamo ai concetti statistici: media/deviazione standard campionaria,
+     funzione logistica, trasformazioni monotone e preservazione dell'ordine.
+
+Riferimenti: Di Francescomarino & Ghidini, "Predictive Process Monitoring"
+(Process Mining Handbook, 2022); Marquez-Chamorro et al. 2018 (survey);
+Teinemaa et al. (outcome-oriented PPM); Galanti et al. 2023.
+
+Cosa NON mettere: la tua pipeline sklearn concreta, i nomi delle colonne
+ingegnerizzate, get_features() -> Methodology.
+
+Ponte verso 3.3: "Il PPM fornisce la stima; la Prescriptive Analytics la usa
+per decidere cosa fare."
+
+
+================================================================================
+3.3  PRESCRIPTIVE PROCESS ANALYTICS (PrPA)
+================================================================================
+Obiettivo: passare dalla predizione alla raccomandazione; introdurre la
+next-step recommendation e il modulo di feasibility.
+
+3.3.1  Dalla predizione alla prescrizione
+   - Definizione di PrPA: guidare le esecuzioni in corso verso esiti
+     desiderabili (misurati da KPI).
+   - Tipi di prescrizione in letteratura: allarmi / timing dell'intervento,
+     next activity, resource allocation, next step (attivita' + risorsa).
+   - Formulazione del problema: dato sigma' = <e1,...,ek>, trovare e_{k+1}
+     (coppia attivita'-risorsa) che porta a un completamento con utilita'
+     ottimale.
+
+3.3.2  Modulo di feasibility (spazio delle prescrizioni ammissibili)
+   - Scopo: restringere lo spazio a cio' che e' praticamente eseguibile.
+   - Filtro attivita': A|sigma(k) = attivita' che nel log seguono almeno una
+     volta lo stato astratto del prefisso (transition system, finestra w).
+     Fallback a suffissi progressivamente piu' corti se il prefisso esatto non
+     e' mai stato visto.
+   - Filtro risorse: R_a = risorse che nel log hanno eseguito a almeno una
+     volta.
+   - Spazio delle prescrizioni feasible: P_sigma(k) = {(a, r) : a in A|sigma(k),
+     r in R_a}.
+   - Esclusione delle attivita' "proibite" (quelle che definiscono l'outcome).
+
+3.3.3  Strategie di esplorazione dello spazio (panoramica)
+   - Exhaustive search: valuta tutte le coppie feasible; ottimale rispetto al
+     modello ma costoso se |P_sigma(k)| e' grande (molte risorse).
+   - Metodi euristici / metaeuristici (genetici): esplorano un sottoinsieme;
+     dettaglio in 3.4.
+
+3.3.4  Stato dell'arte mono-KPI (rassegna sintetica)
+   - Approcci basati su counterfactual / data payload (Groger et al. 2014).
+   - Approcci prediction-based e alarm-based (Teinemaa et al., Fahrenkrog-
+     Petersen et al.).
+   - Causal inference (Bozorgi et al.), reinforcement learning (Branchi et al.,
+     Metzger et al., Shoush & Dumas), white-box / gradient boosting (Padella et
+     al.).
+   - Resource allocation e next-step con esperienza (Meneghello et al.,
+     Padella et al. 2024), LLM per l'interpretabilita' (Kubrak et al.).
+   - Il gap: quasi tutti ottimizzano UN solo KPI, o combinano piu' aspetti in
+     una formula rigida.
+   NOTA: puoi tenere questa rassegna qui OPPURE spostarla in un capitolo
+   "Related Work" a se'. Decidi con i relatori; se resta qui, tienila stretta.
+
+Riferimenti: Kubrak et al. 2022 ("Prescriptive process monitoring: Quo
+vadis?"); de Leoni et al. 2020; Le et al. 2025 (counterfactuals, il lavoro da
+cui parte la dottoranda).
+
+Ponte verso 3.4: "Quando i KPI sono piu' di uno e in conflitto, 'ottimale'
+va ridefinito."
+
+
+================================================================================
+3.4  KPI IN CONFLITTO E OTTIMIZZAZIONE MULTI-OBIETTIVO
+================================================================================
+Obiettivo: dare gli strumenti per capire perche' si usa un fronte di Pareto,
+come lo si esplora (enumerazione, NSGA-II) e come si sceglie un sottoinsieme
+di soluzioni diversificate.
+
+3.4.1  KPI di processo e loro conflitti
+   - Devil's Quadrangle (Dumas et al.): tempo, costo, qualita', flessibilita';
+     migliorare una dimensione puo' peggiorarne un'altra.
+   - I due KPI della tesi: remaining time (dimensione tempo) vs case outcome
+     (dimensione qualita'); esempio del "cancel application" che azzera il
+     tempo ma anche l'accettazione.
+
+3.4.2  Scalarizzazione: weighted global criterion method
+   - Utilita' U_KPI(sigma, lambda, i) = somma_j lambda_j F_j(sigma, i), con
+     somma dei pesi = 1.
+   - Istanza a due KPI: U = lambda (1 - F_CO) + (1 - lambda) F_RT.
+   - Interpretazione del peso lambda (trade-off qualita' vs tempo).
+   - LIMITI (da esplicitare, motivano il passaggio a Pareto):
+        * richiede di conoscere i pesi a priori;
+        * un solo punto di soluzione per ogni lambda;
+        * i KPI vanno riportati su scale comparabili (da cui la
+          normalizzazione della 3.2.4);
+        * non esplora esplicitamente il trade-off intrinseco.
+
+3.4.3  Ottimalita' di Pareto
+   - Relazione di dominanza tra vettori obiettivo.
+   - Insieme di Pareto e fronte di Pareto (immagine dell'insieme nello spazio
+     obiettivo).
+   - Punto ideale / punto di nadir.
+   - Perche' e' la formulazione naturale quando i pesi non sono noti: si
+     produce l'intero fronte e si lascia la scelta al decisore.
+   - Nella tesi: 3 obiettivi
+        (1) probabilita' di outcome positivo  -> da massimizzare
+        (2) tempo rimanente predetto          -> da minimizzare
+        (3) deviazione standard predittiva totale del tempo -> da minimizzare
+            ("confidenza come KPI"; giustificata a fondo in 3.6 e Methodology).
+
+3.4.4  Algoritmi di esplorazione del fronte
+   - Enumerazione esatta + estrazione del fronte (paretoset): esatta su spazi
+     discreti piccoli.
+   - ALGORITMI GENETICI: popolazione, fitness, selezione, crossover, mutazione,
+     elitismo, convergenza / criterio di stop.
+        * Approccio "fitness custom" del paper originale: validity (val) +
+          alpha * proximity (prox), ispirato a Buliga et al. 2025
+          (counterfactual guidati da conoscenza temporale); DiCE come libreria.
+        * NSGA-II (Deb et al.): non-dominated sorting in fronti, crowding
+          distance per la diversita', selezione per torneo, elitismo.
+          Nel codice e' implementato con pymoo (variabile intera che indicizza
+          la coppia (a,r), SBX + polynomial mutation + rounding repair) anche
+          se attualmente "parcheggiato" perche' piu' lento sui candidate set
+          piccoli. Spiega comunque il metodo: e' un contributo metodologico.
+   - Confronto concettuale enumerazione vs metaeuristica: qualita' vs costo
+     computazionale; robustezza rispetto agli errori del predittore sulle
+     coppie rare (ipotesi del paper: la proximity favorisce coppie frequenti,
+     stimate meglio).
+
+3.4.5  Selezione di un sottoinsieme diversificato dal fronte
+   - Motivazione: il fronte puo' avere molti punti; se ne vogliono k "spread
+     out" invece di k che si accalcano in una regione.
+   - Selezione del singolo miglior punto: normalizzazione min-max degli
+     obiettivi sul fronte, asse incertezza ribaltato a "confidenza", punto
+     piu' vicino (distanza euclidea) al punto ideale [1,1,1].
+   - Selezione top-k: problema di MAX-MIN DISPERSION / p-DISPERSION -
+     scegliere k punti che massimizzano la minima distanza a coppie tra i
+     selezionati.
+        * Formulazione come MILP (programmazione lineare intera).
+        * Risolto esattamente con spopt.locate.PDispersion + solver CBC.
+        * Matrice delle distanze euclidee sui 3 obiettivi min-max normalizzati.
+
+Riferimenti: Marler & Arora 2004 (survey multi-objective); Deb et al. 2002
+(NSGA-II); Mitchell 1998 (genetic algorithms); Mothilal et al. 2020 (DiCE);
+Buliga et al. 2025; letteratura p-dispersion / facility location; docs pysal
+spopt.
+
+Cosa NON mettere: la struttura esatta dei file recommendations_*.csv e dei
+sidecar _objectives.csv -> Methodology / Evaluation.
+
+Ponte verso 3.5: "La bonta' di queste decisioni dipende interamente dalla
+qualita' - e dall'affidabilita' - del modello che stima i tre obiettivi."
+
+
+================================================================================
+3.5  GRADIENT BOOSTING E CATBOOST
+================================================================================
+Obiettivo: spiegare la classe di modello usata per i due predittori e cosa
+sono/che ruolo hanno gli iperparametri e la loro ottimizzazione. NIENTE valori
+concreti qui.
+
+3.5.1  Ensemble di alberi e boosting
+   - Albero di decisione / regressione: split, foglie, profondita'.
+   - Bagging vs boosting (idea generale).
+   - Gradient boosting: addizione sequenziale di alberi che fittano il
+     gradiente negativo della loss; learning rate come shrinkage; numero di
+     alberi (iterations) e overfitting.
+
+3.5.2  CatBoost
+   - Motivazione della scelta: alta qualita' predittiva con tempi di training
+     contenuti; gestione nativa delle feature categoriche; usato in lavori
+     PPR precedenti (Galanti et al.).
+   - Elementi distintivi:
+        * ordered boosting / ordered target statistics (mitiga il target
+          leakage / prediction shift);
+        * oblivious (symmetric) trees: stesso split a ogni livello -> alberi
+          bilanciati, inferenza veloce, effetto regolarizzante;
+        * alternative di crescita (Depthwise, Lossguide) e min_data_in_leaf.
+   - Loss usate nella tesi (introdurle come CONCETTI):
+        * Logloss per la classificazione dell'outcome;
+        * RMSE per la regressione; e la variante RMSEWithUncertainty, che
+          predice media E varianza (ponte esplicito verso 3.6).
+   - scale_pos_weight / class weights per lo sbilanciamento (i log hanno
+     percentuali di casi positivi molto diverse: es. BAC 82.5%, BPIC2012 47.9%).
+
+3.5.3  Iperparametri: cosa sono e cosa controllano
+   - Definizione: parametro NON appreso dai dati, fissato prima del training,
+     che governa capacita' del modello e processo di ottimizzazione.
+   - Raggruppali per ruolo (spiega il ruolo, non il valore):
+        * Capacita' / complessita': depth, grow_policy, min_data_in_leaf.
+        * Passo di apprendimento: learning_rate, iterations.
+        * Regolarizzazione: l2_leaf_reg.
+        * Stochasticita' / sub-sampling: bootstrap_type (Bayesian/Bernoulli/
+          MVS), bagging_temperature, subsample, colsample_bylevel.
+        * Sbilanciamento: scale_pos_weight.
+   - Trade-off bias-varianza governato da questi gruppi.
+
+3.5.4  Ottimizzazione degli iperparametri (HPO)
+   - Perche' non si fa a mano: spazio ampio, interazioni non lineari.
+   - Validazione: hold-out, k-fold cross-validation, e - per i processi -
+     split TEMPORALE (evitare leakage dal futuro). Nota la validazione interna
+     "running" (piu' recenti casi di training come validation).
+   - Early stopping: fermare l'aggiunta di alberi quando la metrica di
+     validazione smette di migliorare.
+   - Ricerca: grid / random search vs OTTIMIZZAZIONE BAYESIANA.
+        * Optuna: TPE (Tree-structured Parzen Estimator) come surrogato;
+          define-by-run search space.
+        * Pruning (MedianPruner): interrompere trial poco promettenti.
+   - Selezione del trial vincente su UNA metrica coerente (Logloss / RMSE) e
+     refit finale sul 100% dei dati di training con il numero di alberi scelto.
+
+Riferimenti: Friedman 2001 (gradient boosting); Prokhorenko / Dorogush et al.
+2018 (CatBoost); Akiba et al. 2019 (Optuna); Bergstra et al. (TPE / random
+search); Galanti et al. 2023.
+
+Cosa NON mettere: lo search_spaces del file 2_training_predictive_model.py, il
+numero di trial (80), i best_hyperparams_*.json -> Experimental Setup (con
+rimando a questa sezione).
+
+Ponte verso 3.6: "Un modello puntuale non dice quanto e' sicuro di cio' che
+predice: serve quantificare l'incertezza."
+
+
+================================================================================
+3.6  QUANTIFICAZIONE DELL'INCERTEZZA PREDITTIVA
+================================================================================
+Obiettivo: e' il cuore teorico del contributo. Spiegare la tassonomia
+dell'incertezza, come si stima negli ensemble e nel gradient boosting, e come
+si calibra. Dev'essere la sezione piu' ampia del capitolo.
+
+3.6.1  Tassonomia dell'incertezza
+   - Incertezza ALEATORIA (data uncertainty): rumore intrinseco / irriducibile
+     nel processo generativo dei dati; non si riduce con piu' dati.
+        * omoschedastica vs eteroschedastica.
+   - Incertezza EPISTEMICA (knowledge / model uncertainty): ignoranza del
+     modello per mancanza di dati / copertura; riducibile con piu' dati; alta
+     su input rari o fuori distribuzione.
+   - Incertezza PREDITTIVA TOTALE: combinazione delle due.
+   - Perche' distinguerle nel contesto della tesi: l'epistemica serve a
+     segnalare input out-of-domain / coppie (a,r) poco osservate; l'aleatoria
+     dice quanto e' rumorosa la stima anche nel caso ideale.
+   - ANTICIPAZIONE DEL RISULTATO: su dati tabulari one-hot l'epistemica del
+     regressore risulta molto piccola (~0.1% della varianza) e NON cresce su
+     input mai visti (una categoria sconosciuta -> riga di zeri su cui ogni
+     sub-ensemble concorda). La tesi la riporta comunque, perche' la
+     decomposizione completa e' un risultato in se': "l'epistemica e'
+     trascurabile qui, e perche'".
+
+3.6.2  Metodi ensemble per l'incertezza
+   - Idea: addestrare/estrarre piu' modelli; il DISACCORDO tra i membri stima
+     l'epistemica, la varianza MEDIA dei membri stima l'aleatoria.
+   - Deep ensembles, MC-dropout, ensemble bootstrap: citarli come contesto.
+   - LEGGE DELLA VARIANZA TOTALE (per la regressione):
+        Var[y] = E_m[ Var(y | m) ]  +  Var_m[ E(y | m) ]
+                 \____ aleatoria ___/    \___ epistemica ___/
+   - Decomposizione dell'ENTROPIA (per la classificazione):
+        H[ E_m p_m ]            = incertezza totale
+        E_m[ H(p_m) ]           = incertezza aleatoria (entropia attesa)
+        MI = totale - aleatoria = incertezza epistemica (mutual information,
+                                  "BALD")
+     Tutte in nats.
+
+3.6.3  Incertezza nel gradient boosting (Malinin et al., ICLR 2021)
+   - SGLB - Stochastic Gradient Langevin Boosting: rumore iniettato negli
+     aggiornamenti -> il modello campiona (approssimativamente) da una
+     posteriori sui parametri. Attivato in CatBoost da posterior_sampling=True.
+   - VIRTUAL ENSEMBLES: da un singolo modello SGLB si ricavano piu'
+     "sub-modelli" usando prefissi crescenti della sequenza di alberi ->
+     ensemble a costo di training singolo. Parametro: virtual_ensembles_count.
+   - Regressione con loss RMSEWithUncertainty: ogni sub-modello predice
+     (mu_m, sigma_m^2); via legge della varianza totale:
+        data_std      = sqrt( media_m sigma_m^2 )     (aleatoria)
+        knowledge_std = sqrt( var_m mu_m )            (epistemica)
+        total_std     = sqrt( data_var + knowledge_var )
+   - Classificazione: prediction_type="TotalUncertainty" restituisce entropia
+     attesa (aleatoria) ed entropia totale; la mutual information (epistemica)
+     e' la differenza.
+
+3.6.4  Calibrazione
+   - Cos'e' un modello (probabilistico) CALIBRATO: tra gli eventi predetti con
+     probabilita' p, circa una frazione p si verifica davvero.
+   - Diagnostica:
+        * reliability diagram;
+        * ECE - Expected Calibration Error: |confidenza - accuratezza| mediato
+          su bin di probabilita';
+        * per la regressione: COVERAGE degli intervalli (frazione di |y - mu|
+          entro +-1 sigma / +-2 sigma; target ~68% / ~95% per una gaussiana)
+          e SHARPNESS (larghezza tipica / mediana degli intervalli, a
+          prescindere dalla calibrazione).
+   - Metodi di correzione POST-HOC:
+        * TEMPERATURE SCALING (Guo et al. 2017): singolo scalare T,
+          p_cal = sigmoid( logit(p) / T ); T > 1 "ammorbidisce" probabilita'
+          troppo confidenti. Monotono -> non riordina i candidati per
+          probabilita', ma cambia le magnitudini che alimentano la
+          normalizzazione e le distanze del fronte.
+        * RICALIBRAZIONE DELLA SIGMA per la regressione: fattore scalare s che
+          riscala tutte le componenti di deviazione standard perche' la
+          copertura empirica corrisponda a quella nominale; stimato su una
+          slice held-out con una stima robusta basata sulla mediana del
+          residuo standardizzato (per evitare esplosioni quando CatBoost
+          predice varianza ~0).
+   - CONFORMAL PREDICTION come alternativa RIGOROSA: split-conformal su un
+     holdout dedicato fornisce intervalli con garanzia di copertura marginale
+     distribution-free. Da citare come "la scelta rigorosa alternativa" e
+     motivare perche' nella tesi si e' usata la ricalibrazione post-hoc
+     (modelli addestrati una volta sola, trade-off costo/beneficio).
+
+3.6.5  Strumenti statistici di supporto (richiamo compatto)
+   - Varianza e deviazione standard come misure di dispersione.
+   - Entropia di Shannon di una Bernoulli; entropia come misura di incertezza.
+   - Mutual information / information gain.
+   - Distribuzione normale, regola 68-95-99.7, residuo standardizzato,
+     quantile 0.6745 della normale (mediana del valore assoluto).
+
+Riferimenti: Malinin, Prokhorenkova, Ustimenko, "Uncertainty in Gradient
+Boosting via Ensembles", ICLR 2021; Hullermeier & Waegeman 2021 (aleatoric vs
+epistemic, survey); Lakshminarayanan et al. 2017 (deep ensembles); Guo et al.
+2017 (calibration / temperature scaling); Kuleshov et al. 2018 (calibrated
+regression); Angelopoulos & Bates 2023 (conformal prediction, gentle intro);
+Gal & Ghahramani 2016 (MC-dropout, contesto).
+
+Cosa NON mettere: le classi UncertaintyRegressor / UncertaintyClassifier, come
+i wrapper si inseriscono nella Pipeline, come out["std"] diventa l'obiettivo #3
+-> Methodology. I valori di ECE/coverage/T/s ottenuti -> Evaluation.
+
+Ponte verso 3.7: "Fronte di Pareto e raccomandazioni si valutano con una
+simulazione del processo, perche' un A/B test reale non e' possibile."
+
+
+================================================================================
+3.7  BUSINESS PROCESS SIMULATION
+================================================================================
+Obiettivo: spiegare cos'e' la simulazione di processo, come si ottiene un
+modello di simulazione dai dati, e con quali metriche se ne valuta la fedelta'.
+
+3.7.1  Perche' la simulazione
+   - Impossibilita' di un A/B test: non si puo' intervenire su un processo
+     reale solo per valutare.
+   - Valutazione CONTROFATTUALE: simulare "cosa sarebbe successo" seguendo /
+     non seguendo la raccomandazione.
+   - La simulazione e' uno standard in PrPA per valutare le raccomandazioni
+     (De Moor et al. 2025, SimBank).
+
+3.7.2  Reti di Petri e modelli di processo
+   - Rete di Petri: posti, transizioni, archi, marcatura, scatto di una
+     transizione.
+   - Workflow net e soundness (ogni caso puo' sempre completare).
+   - Marcatura iniziale / finale; relazione con l'inizio/fine di un caso.
+   - Replay e ALLINEAMENTO (alignment) di un prefisso di log sul modello:
+     ricostruire la marcatura raggiunta da un prefisso storico (log move,
+     model move, attivita' inserite dal modello).
+
+3.7.3  Simulazione a eventi discreti stocastica
+   - Componenti di un modello di simulazione di processo:
+        * processo di ARRIVO dei casi;
+        * pesi / probabilita' di ramificazione delle transizioni;
+        * tempi di ESECUZIONE delle attivita';
+        * tempi di ATTESA / code;
+        * CALENDARI e disponibilita' delle risorse;
+        * (ritardi extranei: Chapela-Campa & Dumas 2024, come contesto).
+   - Ripetizione delle run per mitigare la stocasticita' (es. 10 run per
+     scenario).
+
+3.7.4  Discovery del modello di simulazione
+   - I parametri di simulazione si APPRENDONO dal log storico (resource
+     discovery, transition weights, distribuzioni dei tempi, calendari).
+   - NOTA METODOLOGICA IMPORTANTE (tua): i parametri del simulatore si
+     scoprono dal LOG COMPLETO, non dallo split di training.
+   - La struttura della rete di Petri e' un input separato (discovery del
+     control-flow), distinta dalla discovery dei parametri.
+   - Online discovery per processi che evolvono (Vinci et al. 2025) - contesto.
+
+3.7.5  ProSiT
+   - Il simulatore usato (Vinci, Park, van der Aalst, de Leoni): simulazioni
+     interattive e trasparenti.
+   - Cosa restituisce: log simulati; diagnostica (raccomandazioni non
+     raggiungibili, casi "runaway" troncati, prefissi non-fitting, attivita'
+     inserite dal modello).
+
+3.7.6  Valutare la FEDELTA' del simulatore (STATISTICA)
+   - Confronto tra distribuzioni reale vs simulata:
+        * distribuzioni della durata dei casi (istogrammi / KDE, mediana);
+        * tasso di casi con outcome positivo reale vs simulato.
+   - Distribuzione dei residui del simulatore.
+   - (Facoltativo, se lo usi) test/metriche di distanza tra distribuzioni:
+     EMD / Wasserstein, KS; oppure semplice confronto di statistiche riassuntive.
+
+3.7.7  Metriche di miglioramento dei KPI (definizione, i numeri sono in Eval.)
+   - Delta_CO = media sui prefissi di ( F_CO(sigma_pres) - F_CO(sigma_GT) ).
+   - Delta_RT = miglioramento relativo medio del tempo rimanente rispetto al
+     ground truth.
+   - Baseline / Ground Truth: nessuna raccomandazione applicata.
+   - (Facoltativo) intervalli di confidenza sui delta via bootstrap; bande di
+     confidenza al 95% nei plot al variare di lambda.
+
+Riferimenti: Vinci et al. 2025 (ProSiT); De Moor et al. 2025 (SimBank);
+Chapela-Campa & Dumas 2024; van der Aalst 2016 (Petri nets / soundness);
+Vinci et al. 2025 (online discovery).
+
+Cosa NON mettere: i path prosit_simulation_results/..., il codice di
+build_recommender_df, i case id specifici -> Methodology / Evaluation.
+
+
+================================================================================
+3.8  (OPZIONALE) NOTAZIONE
+================================================================================
+Mezza pagina di tabella dei simboli, molto apprezzata dai relatori. Esempi:
+
+   L                event log
+   sigma, sigma(k)  traccia, k-prefisso
+   A, R             insiemi di attivita' e risorse
+   act, res         funzioni di proiezione
+   e = (c, a, d)    evento (case id, attivita', payload)
+   S^w(sigma(k))    astrazione di stato a finestra w
+   P_sigma(k)       spazio delle prescrizioni feasible per il prefisso
+   F_CO, F_RT       KPI: case outcome, remaining time (normalizzato)
+   U_KPI            funzione di utilita' / KPI combinato
+   lambda           peso del trade-off tra KPI
+   phi              modello predittivo (regressore)
+   p, p_cal         probabilita' di outcome grezza / calibrata
+   T                temperatura di calibrazione (Guo et al.)
+   s (sigma_scale)  fattore di ricalibrazione della deviazione standard
+   sigma_data       incertezza aleatoria (deviazione standard)
+   sigma_know       incertezza epistemica (deviazione standard)
+   sigma_tot        incertezza predittiva totale
+   MI               mutual information (incertezza epistemica, classificazione)
+   k                numero di raccomandazioni diversificate per caso
+   tau, alpha       soglia di validity e peso della proximity (metodo genetico)
+
+
+================================================================================
+MAPPA STRUMENTI STATISTICI -> DOVE VANNO
+================================================================================
+   z-score, sigmoide, min-max, invertibilita' della trasf.  -> 3.2.4
+   ottimizzazione bayesiana / TPE, CV, split temporale,
+     early stopping, pruning                                 -> 3.5.4
+   varianza / deviazione standard, entropia di Shannon,
+     mutual information, legge della varianza totale         -> 3.6.2 / 3.6.5
+   ECE, reliability diagram, temperature scaling,
+     coverage, sharpness, conformal prediction               -> 3.6.4
+   regola 68-95-99.7, residuo standardizzato, quantile
+     0.6745                                                  -> 3.6.5
+   confronto di distribuzioni (KDE, mediana, EMD/KS),
+     residui                                                 -> 3.7.6
+   bootstrap / intervalli e bande di confidenza al 95%       -> 3.7.7 e Evaluation
+
+Gli IPERPARAMETRI in Background compaiono SOLO come concetti (3.5.3). I valori
+scelti, lo spazio di ricerca, il numero di trial Optuna e le tabelle di best
+params vanno nell'Experimental Setup con la frase "i concetti sono introdotti
+in Sezione 3.5".
+
+
+================================================================================
+CHECKLIST FINALE PRIMA DI CONSEGNARE IL CAPITOLO
+================================================================================
+[ ] Ogni sezione termina con un "ponte" verso la successiva.
+[ ] Nessun valore sperimentale concreto nel Background (solo concetti).
+[ ] Nessuna descrizione di TUE classi/file/funzioni (quelle stanno in
+    Methodology).
+[ ] Ogni concetto introdotto viene poi effettivamente usato in Methodology o
+    Evaluation (niente background "orfano").
+[ ] 3.6 (incertezza) e' la sezione piu' sviluppata: e' il contributo.
+[ ] La tassonomia aleatoria/epistemica e' spiegata PRIMA di SGLB/virtual
+    ensembles.
+[ ] Tabella di notazione coerente con i simboli usati nel resto della tesi.
+[ ] Ogni sottosezione ha almeno un riferimento bibliografico solido.
+[ ] Concordato con i relatori se la Related Work sta qui (3.3.4) o e' un
+    capitolo a se'.
+================================================================================
