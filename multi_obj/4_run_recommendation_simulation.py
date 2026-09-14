@@ -387,7 +387,7 @@ def _simulate_recommendation_file(
         rec_df = rec_df.loc[~missing_mask].reset_index(drop=True)
 
     current_prev_log = clean_prev_log.copy()
-    if case_study.upper() == "BPI12":
+    if case_study.upper() in ("BPI12", "BPI12_SIM"):
         print(f"{prefix}Applying BPI12 specific data type conversions...")
         rec_df = convert_dtypes_bpi12(rec_df, "simulation_prep")
         current_prev_log = convert_dtypes_bpi12(current_prev_log, "simulation")
@@ -458,7 +458,8 @@ def run_recommendation_simulations(
     if k < 1:
         raise ValueError(f"k must be >= 1, got {k}.")
 
-    for method in ["exhaustive", "nsga2"]:
+    #for method in ["exhaustive", "nsga2"]:
+    for method in ["exhaustive"]:
         print(f"=== STARTING {method.upper()} SIMULATION (k={k}) ===")
 
         for rank in range(1, k + 1):

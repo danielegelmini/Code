@@ -33,6 +33,18 @@ desktop.ini
 .env
 *.log
 
+# LaTeX build artifacts
+*.aux
+*.synctex.gz
+*.nav
+*.snm
+*.toc
+*.out
+*.fls
+*.fdb_latexmk
+*.vrb
+*.pdf
+
 # macOS extra folders
 __MACOSX/
 

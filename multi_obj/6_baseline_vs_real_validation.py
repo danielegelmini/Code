@@ -36,16 +36,17 @@ from utils.simulation_functions import (
 )
 from utils.pre_processing_functions import convert_dtypes_bpi12
 
-CASE_STUDIES = ["BAC", "BPI12", "bpi17_after", "bpi17_before"]
+CASE_STUDIES = ["BAC", "BPI12", "BPI12_sim", "bpi17_after", "bpi17_before"]
 SIM_SUBDIR = "prosit_simulation_results"
 BASELINE_FOLDER_NAME = "baseline"
 
 ENCODED_ACTIVITY_BY_CASE_STUDY = {
     "BPI12": "O_ACCEPTED",
+    "BPI12_sim": "O_ACCEPTED",
     "bpi17_after": "O_Accepted",
     "bpi17_before": "O_Accepted",
 }
-BPI12_DTYPE_CASE_STUDIES = {"BPI12"}
+BPI12_DTYPE_CASE_STUDIES = {"BPI12", "BPI12_sim"}
 
 
 # ---------------------------------------------------------------------------

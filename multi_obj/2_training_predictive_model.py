@@ -13,8 +13,8 @@ end_date_name = 'time:timestamp'
 start_date_name = 'start:timestamp'
 
 params = {
-    #"case_study" : "BPI12",
-    "case_study": ["BAC", "BPI12", "bpi17_before", "bpi17_after"],
+    "case_study" : "BPI12_sim",
+    #"case_study": ["BAC", "BPI12", "BPI12_sim", "bpi17_before", "bpi17_after"],
     "optuna_trials": 80,
     "optuna_timeout": None,  # None/0 -> no wall-clock cap, run all optuna_trials
     "early_stopping_rounds": 50,
@@ -50,7 +50,7 @@ def run_for_case_study(case_study, runtime_params):
     train_data = pd.read_csv(data_dir / "train_data.csv", parse_dates=[end_date_name, start_date_name])
     test_data = pd.read_csv(data_dir / "test_data.csv", parse_dates=[end_date_name, start_date_name])
 
-    if case_study == "BPI12":
+    if case_study in ("BPI12", "BPI12_sim"):
         print("\nApplying BPI12 specific data type conversions...")
         train_data = convert_dtypes_bpi12(train_data, "experiment")
         test_data  = convert_dtypes_bpi12(test_data, "experiment")
@@ -113,9 +113,10 @@ def write_training_report(all_results, runtime_params, output_path):
     the whole run can be reviewed without opening any per-model file.
 
     For both models it also reports the predictive-uncertainty diagnostics:
-    the regressor as data/knowledge/total std with mean +/- 1/2 sigma coverage
-    (raw vs sigma-recalibrated); the classifier as data/knowledge/total entropy
-    with the temperature-scaling factor and Logloss/ECE (raw vs calibrated).
+    the regressor as data/knowledge/total std with the sigma-scaling factor,
+    ENCE and c_v (Levi et al. 2022) and mean +/- 1/2 sigma coverage, each raw
+    vs sigma-recalibrated; the classifier as data/knowledge/total entropy with
+    the temperature-scaling factor and Logloss/ECE (raw vs calibrated).
     """
     model_labels = {
         "label": "Model 1 (label - Classifier with uncertainty)",
@@ -177,8 +178,18 @@ def write_training_report(all_results, runtime_params, output_path):
                     f"(rest is irreducible noise); median total std / sharpness = {unc['median_std']:.5f}"
                 )
                 lines.append(
-                    f"  - Calibration: sigma recalibration factor s = {unc.get('sigma_scale', 1.0):.3f} "
-                    f"(fitted on a held-out slice; does NOT affect the Pareto front, only the interval width)"
+                    f"  - Calibration: sigma-scaling factor s = {unc.get('sigma_scale', 1.0):.3f} "
+                    f"(Levi et al. 2022, Gaussian NLL on a held-out slice; rescales the "
+                    f"interval width only, NOT the Pareto front)"
+                )
+                lines.append(
+                    f"    ENCE (expected normalized calibration error, {unc.get('calib_n_bins', 15)} std bins): "
+                    f"raw {unc.get('ence_raw', float('nan')) * 100:.2f}% "
+                    f"-> recalibrated {unc.get('ence', float('nan')) * 100:.2f}%"
+                )
+                lines.append(
+                    f"    c_v (dispersion of predicted std, scale-invariant): {unc.get('cv', float('nan')):.3f} "
+                    f"(must be well above 0 for the uncertainty to be informative)"
                 )
                 lines.append(
                     f"    mean +/- 1 sigma coverage (target ~68%): raw {unc.get('coverage_1sigma_raw', float('nan')) * 100:.1f}% "
@@ -188,6 +199,15 @@ def write_training_report(all_results, runtime_params, output_path):
                     f"    mean +/- 2 sigma coverage (target ~95%): raw {unc.get('coverage_2sigma_raw', float('nan')) * 100:.1f}% "
                     f"-> recalibrated {unc['coverage_2sigma'] * 100:.1f}%"
                 )
+                rmv_bins = unc.get("rmv_bins") or []
+                rmse_bins = unc.get("rmse_bins") or []
+                if rmv_bins and rmse_bins:
+                    lines.append(
+                        "    RMV  per std bin (recalibrated): " + " ".join(f"{v:.4f}" for v in rmv_bins)
+                    )
+                    lines.append(
+                        "    RMSE per std bin (recalibrated): " + " ".join(f"{v:.4f}" for v in rmse_bins)
+                    )
             elif unc and target_name == "label":
                 lines.append(
                     f"  - Predictive uncertainty (test avg, entropy in nats): data/aleatoric = {unc['mean_data_entropy']:.5f}, "

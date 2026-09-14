@@ -685,93 +685,411 @@ that model is. The next two sections describe it.
 % Bridge: "The Pareto front and the recommendations are evaluated with a
 % process simulation, because a real A/B test is not possible."
 
-\subsection{Taxonomy of Uncertainty}
+A trained model turns an input into a prediction, and on its own that
+prediction is just a value with no indication of how far it can be trusted.
+For many uses this is fine. When a wrong prediction is costly, the model is
+expected to also report how confident it is, so that uncertain cases can be
+flagged and handed to a human or to a safe default rather than acted on
+blindly~\cite{malinin2021}. A useful confidence measure also separates the
+reasons a prediction can be wrong: the data may be inherently noisy, or the
+model may be extrapolating to inputs it has rarely seen, and the two call for
+different responses.
+
+\subsection{Aleatoric and Epistemic Uncertainty}
 \label{subsec:bg:uncertainty:taxonomy}
-% - ALEATORIC uncertainty (data uncertainty): intrinsic / irreducible noise in
-%   the data-generating process; does not shrink with more data.
-%    * homoscedastic vs heteroscedastic.
-% - EPISTEMIC uncertainty (knowledge / model uncertainty): the model's
-%   ignorance due to lack of data / coverage; reducible with more data; high
-%   on rare or out-of-distribution inputs.
-% - TOTAL predictive uncertainty: the combination of the two.
-% - Why distinguish them in the thesis: epistemic flags out-of-domain inputs /
-%   rarely observed (a,r) pairs; aleatoric says how noisy the estimate is even
-%   in the ideal case.
-% - RESULT PREVIEW: on one-hot tabular data the regressor's epistemic part is
-%   very small (~0.1% of the variance) and does NOT rise on never-seen inputs
-%   (an unknown category -> an all-zero row every sub-ensemble agrees on). It
-%   is reported anyway: the full decomposition is a result in itself
-%   ("epistemic is negligible here, and why").
+The cleanest way to name the sources of uncertainty is the Bayesian one. Let a
+model be described by parameters $\theta$ and trained on a dataset
+$\mathcal{D} = \{(x^{(i)}, y^{(i)})\}_{i=1}^{N}$. Treating $\theta$ as a random
+variable with a prior $p(\theta)$, Bayes' rule gives the posterior
+\begin{equation}
+p(\theta \mid \mathcal{D}) =
+\frac{p(\mathcal{D} \mid \theta)\, p(\theta)}{p(\mathcal{D})}.
+\label{eq:bg:unc:bayes}
+\end{equation}
+Each value of $\theta$ is one hypothesis about how the data is generated, and
+the posterior concentrates on the hypotheses that agree with what has been
+observed. A prediction for a new input $x$ averages over them,
+\begin{equation}
+p(y \mid x, \mathcal{D}) =
+\mathbb{E}_{p(\theta \mid \mathcal{D})}\!\left[\, p(y \mid x; \theta) \,\right],
+\label{eq:bg:unc:predpost}
+\end{equation}
+and the quantity to characterize is the spread of this predictive
+distribution, measured by its entropy
+$\mathrm{H}\!\left[ p(y \mid x, \mathcal{D}) \right] =
+\mathbb{E}_{p(y \mid x, \mathcal{D})}\!\left[ -\ln p(y \mid x, \mathcal{D}) \right]$.
 
-\subsection{Ensemble Methods for Uncertainty}
+That spread has two sources, and they behave differently. \emph{Aleatoric}
+uncertainty, also called \emph{data} uncertainty, is the irreducible noise of
+the process itself: label noise, overlapping classes, features that do not
+determine the target. It is a property of the data rather than of the model,
+so more training examples do not reduce it; it may be constant over the input
+space (homoscedastic) or depend on $x$ (heteroscedastic). \emph{Epistemic}
+uncertainty, also called \emph{knowledge} or \emph{model} uncertainty, is the
+model's lack of knowledge. It is large where training data is sparse or
+absent, because there the posterior still spreads over many values of $\theta$
+that extrapolate in different ways, and it is small where the data is dense
+and those values agree. It shrinks as the training set grows, and it is the
+component that rises on inputs drawn from outside the training distribution.
+
+Keeping the two apart is useful in practice. Aleatoric uncertainty sets how
+wide an honest prediction interval has to be even for an ideal model.
+Epistemic uncertainty signals when the model is extrapolating, so that its
+output should be discounted regardless of how narrow that interval
+looks~\cite{gal2016,hullermeier2021,malinin2021}.
+
+\subsection{Decomposing Uncertainty with Ensembles}
 \label{subsec:bg:uncertainty:ensembles}
-% - Idea: train/extract several models; the DISAGREEMENT among members
-%   estimates the epistemic part, the AVERAGE member variance estimates the
-%   aleatoric part.
-% - Deep ensembles, MC-dropout, bootstrap ensembles: cite as context.
-% - LAW OF TOTAL VARIANCE (regression):
-%     Var[y] = E_m[ Var(y | m) ]  +  Var_m[ E(y | m) ]
-%              \____ aleatoric ___/    \___ epistemic ___/
-% - ENTROPY decomposition (classification):
-%     H[ E_m p_m ]            = total uncertainty
-%     E_m[ H(p_m) ]           = aleatoric uncertainty (expected entropy)
-%     MI = total - aleatoric  = epistemic uncertainty (mutual information, BALD)
-%   All in nats.
+\label{subsec:bg:uncertainty:stats}
+A single model offers no way to separate the two sources, because one value of
+$\theta$ cannot disagree with itself. An ensemble can. Take $M$ parameter
+vectors $\{\theta^{(m)}\}_{m=1}^{M}$ drawn approximately from the posterior
+$p(\theta \mid \mathcal{D})$. The predictive distribution
+\eqref{eq:bg:unc:predpost} is approximated by the average over the members,
+\begin{equation}
+p(y \mid x, \mathcal{D}) \approx
+\frac{1}{M} \sum_{m=1}^{M} p(y \mid x; \theta^{(m)}),
+\label{eq:bg:unc:ensavg}
+\end{equation}
+so that the total uncertainty is the entropy of this average, while the two
+components are recovered by comparing the average against the members taken
+one at a time.
 
-\subsection{Uncertainty in Gradient Boosting}
+\paragraph{Classification.}
+Write $\mathrm{H}[p] = -\sum_k p_k \ln p_k$ for the Shannon entropy of a
+distribution $p$ over the labels, in nats, and $\mathrm{I}[\,\cdot\,,\cdot\,]$
+for the mutual information between two random variables. The decomposition is
+then exact~\cite{depeweg2018,malinin2021}:
+\begin{equation}
+\underbrace{\mathrm{I}\!\left[ y, \theta \mid x, \mathcal{D} \right]}_{\text{knowledge}}
+=
+\underbrace{\mathrm{H}\!\left[ \tfrac{1}{M} \textstyle\sum_{m} p(y \mid x; \theta^{(m)}) \right]}_{\text{total}}
+-
+\underbrace{\tfrac{1}{M} \textstyle\sum_{m} \mathrm{H}\!\left[ p(y \mid x; \theta^{(m)}) \right]}_{\text{data}} .
+\label{eq:bg:unc:mi}
+\end{equation}
+Total uncertainty is the entropy of the averaged prediction. The data term is
+the mean entropy of the individual members, that is, the uncertainty left once
+the model is fixed. Their difference is the mutual information between the
+parameters and the label: it is exactly the disagreement among the members,
+and vanishes when they all predict the same distribution. A gradient-boosted
+classifier trained under log-loss already produces the categorical
+distribution $p(y \mid x; \theta)$ that this requires, so the model needs no
+change.
+
+\paragraph{Regression.}
+The differential entropy of the averaged distribution has no closed form, so
+the same split is applied to the variance, through the law of total
+variance~\cite{malinin2021}:
+\begin{equation}
+\underbrace{\operatorname{Var}_{p(y \mid x, \mathcal{D})}[y]}_{\text{total}}
+=
+\underbrace{\operatorname{Var}_{p(\theta \mid \mathcal{D})}\!\bigl[ \mathbb{E}[y \mid x, \theta] \bigr]}_{\text{knowledge}}
++
+\underbrace{\mathbb{E}_{p(\theta \mid \mathcal{D})}\!\bigl[ \operatorname{Var}[y \mid x, \theta] \bigr]}_{\text{data}} .
+\label{eq:bg:unc:totvar}
+\end{equation}
+This needs each member to report a variance, not just a point value. A
+gradient-boosted regressor trained under squared error does not; the standard
+fix, introduced with NGBoost~\cite{duan2020ngboost} and adopted by Malinin et
+al.~\cite{malinin2021}, is to let the model predict the mean and the log
+standard deviation $\bigl(\mu(x), \log \sigma(x)\bigr)$ of a Normal
+distribution and to train it by minimizing the negative log-likelihood. With
+member $m$ then reporting a mean $\mu_m$ and a variance $\sigma_m^2$, and
+$\bar\mu = \tfrac{1}{M}\sum_m \mu_m$, the two terms of the total variance
+become
+\begin{equation}
+\operatorname{Var}[y] \approx
+\underbrace{\frac{1}{M} \sum_{m=1}^{M} (\mu_m - \bar\mu)^2}_{\text{knowledge}}
++
+\underbrace{\frac{1}{M} \sum_{m=1}^{M} \sigma_m^2}_{\text{data}} .
+\label{eq:bg:unc:gaussvar}
+\end{equation}
+Knowledge uncertainty is the variance of the predicted means, data uncertainty
+is the mean of the predicted variances, and the total predictive standard
+deviation is the square root of their sum. Both estimators use only the first
+two moments of the member distributions, so they can miss higher-order
+structure of the predictive distribution, and neither is
+scale-invariant~\cite{malinin2021}.
+
+\subsection{Uncertainty in Gradient-Boosted Decision Trees}
 \label{subsec:bg:uncertainty:gbm}
-% (\cite{malinin2021}.)
-% - SGLB - Stochastic Gradient Langevin Boosting: noise injected into the
-%   updates -> the model (approximately) samples from a posterior over the
-%   parameters. In CatBoost: posterior_sampling=True.
-% - VIRTUAL ENSEMBLES: from a single SGLB model several "sub-models" are
-%   obtained using growing prefixes of the tree sequence -> an ensemble at the
-%   cost of a single training run. Parameter: virtual_ensembles_count.
-% - Regression with the RMSEWithUncertainty loss: each sub-model predicts
-%   (mu_m, sigma_m^2); via the law of total variance:
-%     data_std      = sqrt( mean_m sigma_m^2 )     (aleatoric)
-%     knowledge_std = sqrt( var_m mu_m )           (epistemic)
-%     total_std     = sqrt( data_var + knowledge_var )
-% - Classification: prediction_type="TotalUncertainty" returns the expected
-%   entropy (aleatoric) and the total entropy; the mutual information
-%   (epistemic) is the difference.
+Carrying the ensemble decomposition over to gradient-boosted trees raises one
+question: where do the parameter samples $\{\theta^{(m)}\}$ come from, when a
+boosted model is a deterministic sequence of trees? Malinin et
+al.~\cite{malinin2021} give three answers: perturb the training with extra
+randomness, turn the training itself into a sampler of the posterior, or reuse
+the intermediate stages of a single model. The last two are what this thesis
+relies on.
+
+\emph{Stochastic gradient boosting} takes the first route. Several models are
+trained independently, each with its own seed for the row subsampling the
+algorithm already performs~\cite{friedman2002}, and the subsampling perturbs
+every fit enough to spread the learned parameters out. That spread is real but
+uncontrolled: nothing ties it to the posterior $p(\theta \mid \mathcal{D})$, so
+the disagreement among the models has no formal reading as epistemic
+uncertainty.
+
+\emph{Stochastic gradient Langevin boosting} (SGLB) closes that gap by making
+the training a posterior sampler. It adds Gaussian noise to the gradient at
+every iteration,
+\begin{equation}
+h^{(t)} = \arg\min_{h \in \mathcal{H}}
+\mathbb{E}_{\mathcal{D}}\!\left[ \bigl( -g^{(t)}(x, y) - h(x, \phi) + \nu \bigr)^{2} \right],
+\qquad
+\nu \sim \mathcal{N}\!\left( 0, \tfrac{2}{\beta \epsilon}\, \mathbf{I} \right),
+\label{eq:bg:unc:sglbnoise}
+\end{equation}
+and replaces the plain additive update with a shrinking one,
+\begin{equation}
+F^{(t)}(x) = (1 - \gamma)\, F^{(t-1)}(x) + \epsilon\, h^{(t)}(x, \phi^{(t)}),
+\label{eq:bg:unc:sglbupdate}
+\end{equation}
+where $\epsilon$ is the learning rate and $\gamma$ a shrinkage coefficient.
+Under these dynamics the parameter sequence $\theta^{(t)}$ is a Markov chain
+that converges weakly to the stationary distribution
+$p^{*}_{\beta}(\theta) \propto
+\exp\!\bigl( -\beta\, \mathcal{L}(\theta \mid \mathcal{D})
+- \beta \gamma \lVert \Gamma \theta \rVert_2^2 \bigr)$,
+with $\Gamma$ an implicitly defined regularization matrix. Setting
+$\beta = \lvert \mathcal{D} \rvert$ and $\gamma = 1 / (2\lvert \mathcal{D} \rvert)$
+makes that stationary distribution proportional to
+$p(\mathcal{D} \mid \theta)\, p(\theta)$ under a Gaussian prior, that is, to
+the true posterior~\cite{ustimenko2021sglb}. A single SGLB run therefore
+produces, in its later iterations, a trajectory of approximate posterior
+samples, with no need to train several models.
+
+\emph{Virtual ensembles} turn that trajectory into ensemble members at no
+extra training cost. A boosted model of $T$ trees is a sum of weak learners,
+so its truncations to the first $t$ trees are themselves models and can serve
+as members. To keep them from being near-duplicates, only every $K$-th
+truncation is kept, and only from the second half of the run, where the chain
+has reached its stationary regime:
+\begin{equation}
+\Theta_{T,K} =
+\Bigl\{ \theta^{(Kt)} \;:\;
+\bigl\lceil \tfrac{T}{2K} \bigr\rceil \le t \le \bigl\lfloor \tfrac{T}{K} \bigr\rfloor
+\Bigr\}.
+\label{eq:bg:unc:virtual}
+\end{equation}
+The members are read off in a single forward pass by accumulating partial
+sums of the trees, so the whole ensemble costs about as much as one model.
+They come from one correlated chain rather than from independent runs, which
+weakens the epistemic estimate relative to a true ensemble: the price of not
+paying for $M$ separate trainings. Both predictors in this thesis use this
+combination, a single SGLB model from which a virtual ensemble is read at
+prediction time, with the decomposition of
+Section~\ref{subsec:bg:uncertainty:ensembles} computed over its members.
+
+How much these estimates are worth is set by how they behave on tabular data.
+Knowledge uncertainty from a GBDT ensemble flags out-of-domain inputs well,
+and better than total uncertainty does. On in-domain data it adds little to
+error detection: a single boosted model is already an ensemble of trees, and
+averaging a few truncations of it mostly raises capacity rather than exposing
+new disagreement. Its magnitude is typically well below the data term and
+contributes little to the total. Virtual ensembles are measurably weaker than
+independently trained ones for knowledge uncertainty, though on classification
+with categorical features they stay useful at single-model
+cost~\cite{malinin2021}. In CatBoost both pieces are built in: SGLB is enabled
+by a posterior-sampling flag, and the virtual ensemble is an inference mode
+that returns the entropy or variance decomposition directly.
 
 \subsection{Calibration}
 \label{subsec:bg:uncertainty:calibration}
-% - What a CALIBRATED (probabilistic) model is: among the events predicted
-%   with probability p, roughly a fraction p actually occur.
-% - Diagnostics:
-%    * reliability diagram;
-%    * ECE - Expected Calibration Error: |confidence - accuracy| averaged over
-%      probability bins;
-%    * for regression: interval COVERAGE (fraction of |y - mu| within
-%      +-1 sigma / +-2 sigma; target ~68% / ~95% for a Gaussian) and
-%      SHARPNESS (typical / median interval width).
-% - POST-HOC correction methods:
-%    * TEMPERATURE SCALING \cite{guo2017}: a single scalar T,
-%      p_cal = sigmoid( logit(p) / T ); T > 1 "softens" over-confident
-%      probabilities. Monotone -> it does not reorder candidates by
-%      probability, but it changes the magnitudes feeding the normalization
-%      and the front distances.
-%    * SIGMA RECALIBRATION for regression: a scalar factor s that rescales
-%      every standard-deviation component so the empirical coverage matches
-%      the nominal one; estimated on a held-out slice with a robust
-%      median-of-standardized-residual estimator (avoids blow-ups when
-%      CatBoost predicts a near-zero variance).
-% - CONFORMAL PREDICTION as the RIGOROUS alternative \cite{angelopoulos2023}:
-%   split-conformal on a dedicated holdout -> intervals with a distribution-
-%   free marginal coverage guarantee. Cite it as "the rigorous alternative"
-%   and motivate why the thesis used post-hoc recalibration instead (the
-%   models are trained once, cost/benefit trade-off).
+A number that reports uncertainty is only useful if it means what it says. A
+model is \emph{calibrated} when its stated confidence matches its observed
+accuracy: of the cases it labels with probability $0.8$, close to $80\%$
+should turn out correct. High-capacity models tend to break this in a
+predictable direction. Once training accuracy saturates, the log-likelihood
+keeps improving by making the probabilities sharper rather than by getting
+more cases right, so the model ends up overconfident~\cite{guo2017}.
 
-\subsection{Supporting Statistical Tools}
-\label{subsec:bg:uncertainty:stats}
-% (Compact recap.)
-% - Variance and standard deviation as dispersion measures.
-% - Shannon entropy of a Bernoulli; entropy as an uncertainty measure.
-% - Mutual information / information gain.
-% - The normal distribution, the 68-95-99.7 rule, the standardized residual,
-%   the 0.6745 quantile of the normal (median absolute value).
+\paragraph{Classification.}
+The outcome classifier returns, for each case, a probability $\hat{p}$ that the
+positive outcome occurs, and this is the number whose reliability is at stake;
+write $\hat{P}$ for it as a random variable. The classifier is perfectly
+calibrated when that probability coincides with the frequency of the outcome,
+\begin{equation}
+\mathbb{P}\!\left( Y = 1 \;\middle|\; \hat{P} = p \right) = p
+\qquad \text{for all } p \in [0, 1],
+\label{eq:bg:unc:calibclf}
+\end{equation}
+the positive outcome appearing in a fraction $p$ of the cases assigned
+probability $p$. The condition cannot be checked directly: $\hat{P}$ is
+continuous, and the conditional frequency on the left cannot be estimated at a
+single value of $p$ from a finite sample~\cite{guo2017}.
+
+A \emph{reliability diagram} gets around this by grouping. The range $[0, 1]$ is
+cut into $M$ equal-width bins, and $B_m$ collects the cases whose predicted
+probability falls in the $m$-th interval
+$\left( \tfrac{m-1}{M}, \tfrac{m}{M} \right]$. Each bin carries two numbers, the
+mean probability the model assigned and the fraction of its cases that were
+actually positive,
+\begin{equation}
+\operatorname{conf}(B_m) = \frac{1}{\lvert B_m \rvert} \sum_{i \in B_m} \hat{p}_i ,
+\qquad
+\operatorname{acc}(B_m) = \frac{1}{\lvert B_m \rvert} \sum_{i \in B_m} \mathbf{1}\{ y_i = 1 \} .
+\label{eq:bg:unc:confacc}
+\end{equation}
+The diagram plots $\operatorname{acc}(B_m)$ against $\operatorname{conf}(B_m)$,
+and a calibrated model puts every bin on the diagonal. A bin below the diagonal
+has $\operatorname{conf}(B_m) > \operatorname{acc}(B_m)$, the model claiming more
+certainty than the outcomes support, which is the direction a saturated
+classifier drifts. The vertical distance
+$\lvert \operatorname{acc}(B_m) - \operatorname{conf}(B_m) \rvert$ is the
+\emph{calibration gap} of the bin. What the picture leaves out is how many cases
+each bin holds, so a wide gap in a nearly empty bin looks as bad as one in a
+crowded bin.
+
+The \emph{expected calibration error} puts that weight back and collapses the
+diagram to one number,
+\begin{equation}
+\mathrm{ECE} = \sum_{m=1}^{M} \frac{\lvert B_m \rvert}{n}
+\bigl\lvert \operatorname{acc}(B_m) - \operatorname{conf}(B_m) \bigr\rvert ,
+\label{eq:bg:unc:ece}
+\end{equation}
+with $n$ the number of cases. Each term is a bin's gap scaled by the share
+$\lvert B_m \rvert / n$ of cases in it, so ECE is the average distance between
+predicted probability and observed frequency, weighted toward the bins where
+most predictions land; it estimates
+$\mathbb{E}_{\hat{P}}\bigl[\, \lvert \mathbb{P}(Y = 1 \mid \hat{P} = p) - p \rvert \,\bigr]$.
+It is zero only when confidence matches frequency in every populated bin, and it
+grows both with the size of the gaps and with how many predictions fall in the
+mismatched bins. Its value depends on $M$ and on the binning rule, so it is read
+as a relative measure at a fixed setting, and its usual job is to be compared
+before and after a calibration step~\cite{naeini2015}.
+
+\emph{Temperature scaling} is that step. It acts after training, on the frozen
+model. The classifier forms its probability by passing a real-valued score, the
+logit $z$, through the logistic function $\sigma$, so $\hat{p} = \sigma(z)$;
+temperature scaling divides the score by a single positive constant $T$ before
+that last step,
+\begin{equation}
+\hat{p}_{\mathrm{cal}} = \sigma\!\left( z / T \right)
+= \sigma\!\bigl( \sigma^{-1}(\hat{p}) / T \bigr) .
+\label{eq:bg:unc:temp}
+\end{equation}
+At $T = 1$ nothing changes. With $T > 1$ the probability moves toward $0.5$ and
+the confidence drops; with $T < 1$ it is pushed toward the extremes. Because
+the fault being corrected is overconfidence, the fitted temperature is normally
+above one. $T$ is fitted on a held-out slice, kept apart from the data used to
+fit the model. Holding the logits $z_j$ of that slice fixed and writing
+$y_j \in \{0, 1\}$ for its labels, the temperature is the value that minimizes
+the mean log-loss of the rescaled probabilities,
+\begin{equation}
+T = \arg\min_{T > 0} \; -\frac{1}{L} \sum_{j=1}^{L}
+\Bigl[ y_j \ln \sigma(z_j / T)
++ (1 - y_j) \ln\bigl( 1 - \sigma(z_j / T) \bigr) \Bigr] ,
+\label{eq:bg:unc:tempfit}
+\end{equation}
+with $L$ the size of the slice. This is the same log-loss used to train the
+classifier, now minimized over $T$ alone: a one-dimensional search, solved by a
+bounded scalar minimization over a small interval around $1$. Division by a
+positive constant is monotone and does not cross the $0.5$ mark, so the
+predicted label and every
+metric computed from it stay exactly as they were, and only the probability
+attached to the label is rescaled. The calibrated probability is therefore kept
+as a separate output next to the raw one. One parameter is enough here because
+the overconfidence of a saturated model is close to a uniform stretch of the
+scores, which a single temperature undoes.
+
+\paragraph{Regression.}
+Calibrating a predicted distribution over a continuous target is harder, and
+the first natural definition is too weak. Following Kuleshov et
+al.~\cite{kuleshov2018}, a regression forecaster is calibrated when the target
+lands below the predicted $p$-quantile for a $p$ fraction of the data,
+\begin{equation}
+\frac{1}{T} \sum_{t=1}^{T} \mathbf{1}\!\left\{ y_t \le F_t^{-1}(p) \right\}
+\;\xrightarrow[T \to \infty]{}\; p
+\qquad \text{for all } p \in [0, 1],
+\label{eq:bg:unc:calibreg}
+\end{equation}
+where $F_t$ is the predicted cumulative distribution for example $t$. Levi et
+al.~\cite{levi2022} show that this can be satisfied by uncertainty estimates
+that carry no information: the empirical coverage is monotone in $p$, so
+fitting an isotonic regression to it produces a perfect match on the
+calibration set, and even a predicted variance drawn independently of the true
+error passes. Their alternative ties the predicted variance to the actual
+squared error, conditionally on the predicted variance itself,
+\begin{equation}
+\mathbb{E}_{x, y}\!\left[ \bigl( \mu(x) - y \bigr)^{2}
+\;\middle|\; \sigma(x)^{2} = \sigma^{2} \right] = \sigma^{2}
+\qquad \text{for all } \sigma .
+\label{eq:bg:unc:varcalib}
+\end{equation}
+Each exact value of $\sigma$ tends to occur once, so the check is again done by
+binning, this time into $N$ groups of equal size after the examples are sorted
+by predicted standard deviation. Bin $j$ then covers a range of $\sigma$ and is
+summarized by its root mean predicted variance and its empirical root mean
+squared error,
+\begin{equation}
+\mathrm{RMV}(j) = \sqrt{ \frac{1}{\lvert B_j \rvert} \sum_{t \in B_j} \sigma_t^{2} },
+\qquad
+\mathrm{RMSE}(j) = \sqrt{ \frac{1}{\lvert B_j \rvert} \sum_{t \in B_j} (y_t - \hat{y}_t)^{2} } .
+\label{eq:bg:unc:rmvrmse}
+\end{equation}
+The first is the error size the model expects in that bin, the second the size
+it turns out to be; for a calibrated model the two agree, and the diagram that
+plots $\mathrm{RMSE}(j)$ against $\mathrm{RMV}(j)$ sits on the diagonal, just as
+the classification reliability diagram does. The scalar summary, the analogue of
+\eqref{eq:bg:unc:ece}, is the \emph{expected normalized calibration error},
+\begin{equation}
+\mathrm{ENCE} = \frac{1}{N} \sum_{j=1}^{N}
+\frac{\bigl\lvert \mathrm{RMV}(j) - \mathrm{RMSE}(j) \bigr\rvert}{\mathrm{RMV}(j)} .
+\label{eq:bg:unc:ence}
+\end{equation}
+Each term is a bin's gap divided by its predicted error scale. Without that
+normalization the sum would be dominated by the high-$\sigma$ bins, where the
+errors are larger in absolute terms only because the inputs are harder. ENCE is
+zero only when the predicted and observed error sizes agree at every level of
+$\sigma$, not just on average, so a single global rescaling of $\sigma$ need not
+drive it to zero.
+
+A low ENCE is necessary but not sufficient: a model that returns the same
+standard deviation everywhere can reach it while telling the caller nothing. It
+is read together with the \emph{coefficient of variation} of the predicted
+standard deviations,
+$c_v = \operatorname{std}(\{\sigma_t\}) / \operatorname{mean}(\{\sigma_t\})$,
+which has to sit well above zero for the uncertainty to separate one input from
+another.
+
+Recalibration is the regression counterpart of temperature scaling. Every
+predicted standard deviation is multiplied by one positive scalar $s$, fitted on
+a held-out slice of $L$ examples by minimizing the Gaussian negative
+log-likelihood of $\mathcal{N}\!\bigl( \hat{y}_j, (s\sigma_j)^{2} \bigr)$,
+\begin{equation}
+s = \arg\min_{s > 0} \; \sum_{j=1}^{L}
+\left[ \ln\!\bigl( s\, \sigma_j \bigr)
++ \frac{\bigl( y_j - \hat{y}_j \bigr)^{2}}{2\, s^{2} \sigma_j^{2}} \right] ,
+\label{eq:bg:unc:sigmafit}
+\end{equation}
+with $\hat{y}_j$ and $\sigma_j$ the predicted mean and standard deviation for
+example $j$. The objective is convex in $\ln s$, and its minimizer is the root
+mean square of the standardized residuals,
+$s^{\star} = \bigl( L^{-1} \sum_j (y_j - \hat{y}_j)^{2} / \sigma_j^{2} \bigr)^{1/2}$;
+in practice it is found by a one-dimensional search. A value $s > 1$ widens
+intervals that were too tight, $s < 1$ shrinks intervals that were too loose.
+Multiplying by a constant
+leaves the mean prediction untouched, keeps the ordering of inputs by
+uncertainty, and does not change $c_v$, so it corrects the width of the
+intervals and nothing else. The standard-deviation output is trained on one
+split and $s$ is fitted on another, so the correction does not simply absorb the
+fit's own residuals. Next to ENCE the empirical coverage of the
+$\hat{y} \pm \sigma$ and $\hat{y} \pm 2\sigma$ intervals is reported, which for a
+calibrated Gaussian should approach $0.68$ and $0.95$; it is the same
+calibration read at two quantiles instead of across the whole range of $\sigma$.
+A distribution-free alternative, not pursued here, is conformal prediction: it
+wraps any predictor in intervals with a finite-sample coverage guarantee
+obtained by calibrating on a held-out set, at the price of returning intervals
+rather than a full predictive distribution~\cite{angelopoulos2023}.
+
+\medskip
+
+Predictive models, and the uncertainty attached to their outputs, fix what a
+recommendation is expected to achieve. Whether it achieves it once applied to
+a running case is a separate question, and one the historical log cannot
+answer on its own. The next section introduces the simulation machinery used
+to answer it.
 
 
 % #############################################################################

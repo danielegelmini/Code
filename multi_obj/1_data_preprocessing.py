@@ -35,6 +35,11 @@ resource_column_name = "org:resource"
 SPLIT_TIMES = {
     "BAC": "2019-01-31 00:00:00",
     "BPI12": "2012-02-16 00:00:00",
+    # BPI12_sim's dataset is normally built by 9_generate_simulated_training_set.py
+    # (whole simulated log = train, real BPI12 test set reused), NOT by this script.
+    # This entry only keeps a bare `1_data_preprocessing.py --case_study BPI12_sim`
+    # run from crashing; it would overwrite that purpose-built split.
+    "BPI12_sim": "2012-02-16 00:00:00",
     "bpi17_before": "2016-05-28 00:00:00",
     "bpi17_after": "2016-11-01 00:00:00",
 }

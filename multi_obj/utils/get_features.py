@@ -137,6 +137,11 @@ def get_features(case_study: str) -> Tuple[str, str, str, List[str], List[str], 
         },
     }
 
+    # BPI12_sim is the fully-simulated stand-in for BPI12 (see
+    # 9_generate_simulated_training_set.py); it shares BPI12's activity/resource
+    # schema, so it reuses BPI12's feature configuration verbatim.
+    CONFIG["BPI12_sim"] = CONFIG["BPI12"]
+
     if key not in CONFIG:
         raise ValueError(f"Unknown case_study: {case_study!r}")
 

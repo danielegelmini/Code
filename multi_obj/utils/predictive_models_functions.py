@@ -55,6 +55,80 @@ def _fit_temperature(logits, y_true):
     res = minimize_scalar(nll, bounds=(0.2, 5.0), method="bounded")
     return float(np.clip(res.x, 0.2, 5.0))
 
+
+DEFAULT_CALIB_BINS = 15
+
+
+def _fit_sigma_scale(resid, sigma):
+    """Single-scalar std-scaling factor s that minimises the Gaussian negative
+    log-likelihood of N(mu, (s * sigma)^2) on a held-out slice -- the regression
+    analogue of temperature scaling (Levi et al. 2022, eq. 11-12). s > 1 inflates
+    intervals that were too tight, s < 1 shrinks intervals that were too wide.
+    The exact minimiser is sqrt(mean(resid^2 / sigma^2)); it is obtained here by
+    a bounded 1-D search, and the predicted variance is floored, so a stray
+    near-zero variance from RMSEWithUncertainty cannot drive the estimate to the
+    bound."""
+    resid = np.asarray(resid, dtype=float)
+    sigma = np.asarray(sigma, dtype=float)
+    var = np.clip(sigma ** 2, 1e-12, None)
+    var = np.clip(var, 1e-4 * float(np.mean(var)), None)
+
+    def nll(s):
+        v = (s ** 2) * var
+        return float(np.mean(0.5 * np.log(v) + resid ** 2 / (2.0 * v)))
+
+    res = minimize_scalar(nll, bounds=(0.2, 5.0), method="bounded")
+    return float(np.clip(res.x, 0.2, 5.0))
+
+
+def _regression_calibration_metrics(resid, sigma, n_bins=DEFAULT_CALIB_BINS):
+    """Levi et al. (2022) calibration diagnostics for a Gaussian regression
+    forecaster. Examples are sorted by predicted std and split into n_bins
+    equal-count bins; per bin j,
+
+        RMV(j)  = sqrt( mean_{t in B_j} sigma_t^2 )         (eq. 6)
+        RMSE(j) = sqrt( mean_{t in B_j} (y_t - mu_t)^2 )    (eq. 7)
+
+    A calibrated model has RMV(j) ~ RMSE(j) in every bin. The scalar summary is
+    the expected normalized calibration error (eq. 8), the ENCE, the analogue of
+    the classifier's ECE,
+
+        ENCE = (1 / N) sum_j |RMV(j) - RMSE(j)| / RMV(j) ,
+
+    reported next to the coefficient of variation of the predicted stds (eq. 9),
+    cv = std(sigma) / mean(sigma), which must be well above zero for the
+    uncertainty to carry per-example information (a constant sigma can reach
+    ENCE ~ 0 while saying nothing). cv is invariant to the uniform sigma scaling,
+    so raw and recalibrated stds share one value.
+
+    Returns {ence, cv, rmv_bins, rmse_bins, n_bins}.
+    """
+    resid = np.asarray(resid, dtype=float)
+    sigma = np.asarray(sigma, dtype=float)
+    n = sigma.size
+    n_bins = int(max(1, min(n_bins, n)))
+    order = np.argsort(sigma, kind="stable")
+    resid, sigma = resid[order], sigma[order]
+
+    rmv, rmse = [], []
+    for b in np.array_split(np.arange(n), n_bins):
+        rmv.append(float(np.sqrt(np.mean(sigma[b] ** 2))))
+        rmse.append(float(np.sqrt(np.mean(resid[b] ** 2))))
+    rmv = np.asarray(rmv)
+    rmse = np.asarray(rmse)
+    ence = float(np.mean(np.abs(rmv - rmse) / np.clip(rmv, 1e-12, None)))
+
+    mean_sigma = float(np.mean(sigma))
+    cv = float(np.std(sigma, ddof=1) / mean_sigma) if (n > 1 and mean_sigma > 0) else 0.0
+    return {
+        "ence": ence,
+        "cv": cv,
+        "rmv_bins": rmv.tolist(),
+        "rmse_bins": rmse.tolist(),
+        "n_bins": n_bins,
+    }
+
+
 class UncertaintyRegressor:
     """
     Wraps a CatBoost regressor trained with loss_function='RMSEWithUncertainty'
@@ -102,8 +176,17 @@ class UncertaintyRegressor:
         return preds if preds.ndim == 2 else np.column_stack([preds, np.zeros_like(preds)])
 
     def _ve_count(self):
+        # CatBoost's virtual_ensembles_predict splits the model's trees into
+        # virtual_ensembles_count contiguous groups and needs at least 2 trees per
+        # group -- it raises "Not enough trees in model for N virtual Ensembles"
+        # otherwise (empirically verified: requires tree_count_ >= 2 * count, NOT
+        # just tree_count_ >= count as a naive clamp would assume). This matters
+        # here because the final model's tree count is best_iteration + 1 from the
+        # winning Optuna trial (see train_ml_model), which can be a single-digit
+        # number when a trial's validation loss stops improving almost immediately
+        # -- observed on BPI12_sim's classifier (tree_count_ == 8).
         n_trees = getattr(self.fitted_model, "tree_count_", 0) or 0
-        return int(max(1, min(self.virtual_ensembles_count, n_trees)))
+        return int(max(0, min(self.virtual_ensembles_count, n_trees // 2)))
 
     def predict(self, X):
         return self._two_col(self.fitted_model.predict(X))[:, 0]
@@ -114,10 +197,24 @@ class UncertaintyRegressor:
         arrays, std being an alias of total_std. Every std is multiplied by
         sigma_scale.
         """
+        ve_count = self._ve_count()
+        if ve_count < 1:
+            # Fewer than 2 trees total -- can't form even one virtual ensemble.
+            # Degrade to a zero-uncertainty point prediction rather than crashing;
+            # this final model is too small for the ensemble decomposition to mean
+            # anything anyway.
+            n_trees = getattr(self.fitted_model, "tree_count_", 0) or 0
+            print(f"WARNING: final model has only {n_trees} tree(s) -- too few for "
+                  f"virtual-ensemble uncertainty. Reporting zero std.")
+            mean = self.predict(X)
+            zeros = np.zeros_like(mean)
+            return {"mean": mean, "data_std": zeros, "knowledge_std": zeros,
+                    "total_std": zeros, "std": zeros}
+
         out = np.asarray(
             self.fitted_model.virtual_ensembles_predict(
                 X, prediction_type="TotalUncertainty",
-                virtual_ensembles_count=self._ve_count(),
+                virtual_ensembles_count=ve_count,
             ),
             dtype=float,
         )
@@ -185,8 +282,11 @@ class UncertaintyClassifier:
         return self.fitted_model.classes_
 
     def _ve_count(self):
+        # See UncertaintyRegressor._ve_count(): virtual_ensembles_predict needs
+        # >= 2 trees per virtual ensemble (tree_count_ >= 2 * count), not just
+        # tree_count_ >= count.
         n_trees = getattr(self.fitted_model, "tree_count_", 0) or 0
-        return int(max(1, min(self.virtual_ensembles_count, n_trees)))
+        return int(max(0, min(self.virtual_ensembles_count, n_trees // 2)))
 
     def predict(self, X):
         return self.fitted_model.predict(X)
@@ -199,10 +299,29 @@ class UncertaintyClassifier:
         Returns {proba, proba_calibrated, data_entropy, knowledge_entropy,
         total_entropy} -- all 1-D numpy arrays (proba* are P(y = positive class)).
         """
+        proba = np.asarray(self.fitted_model.predict_proba(X), dtype=float)[:, 1]
+        p = np.clip(proba, 1e-7, 1.0 - 1e-7)
+        logit = np.log(p / (1.0 - p))
+        proba_cal = 1.0 / (1.0 + np.exp(-logit / self.temperature))
+
+        ve_count = self._ve_count()
+        if ve_count < 1:
+            # See UncertaintyRegressor.predict_uncertainty(): too few trees to form
+            # even one virtual ensemble -- degrade to zero-uncertainty instead of
+            # crashing.
+            n_trees = getattr(self.fitted_model, "tree_count_", 0) or 0
+            print(f"WARNING: final model has only {n_trees} tree(s) -- too few for "
+                  f"virtual-ensemble uncertainty. Reporting zero entropy.")
+            zeros = np.zeros_like(proba)
+            return {
+                "proba": proba, "proba_calibrated": proba_cal,
+                "data_entropy": zeros, "knowledge_entropy": zeros, "total_entropy": zeros,
+            }
+
         out = np.asarray(
             self.fitted_model.virtual_ensembles_predict(
                 X, prediction_type="TotalUncertainty",
-                virtual_ensembles_count=self._ve_count(),
+                virtual_ensembles_count=ve_count,
             ),
             dtype=float,
         )
@@ -211,10 +330,6 @@ class UncertaintyClassifier:
         total_entropy = np.clip(out[:, 1], 0.0, None)
         knowledge_entropy = np.clip(total_entropy - data_entropy, 0.0, None)
 
-        proba = np.asarray(self.fitted_model.predict_proba(X), dtype=float)[:, 1]
-        p = np.clip(proba, 1e-7, 1.0 - 1e-7)
-        logit = np.log(p / (1.0 - p))
-        proba_cal = 1.0 / (1.0 + np.exp(-logit / self.temperature))
         return {
             "proba": proba,
             "proba_calibrated": proba_cal,
@@ -461,23 +576,20 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
                 # Post-hoc uncertainty recalibration factor, fitted on this
                 # trial's held-out validation slice (clean: the model was not
                 # trained on it). RMSEWithUncertainty predict() returns
-                # [mean, variance]; we scale sigma by s so that the median
-                # standardised absolute residual matches a standard normal's
-                # (0.6745), i.e. roughly ~68% of |y - mean| land within
-                # s * sigma. The median form is used (not sqrt(mean(r^2/var)))
-                # because CatBoost occasionally predicts a near-zero variance
-                # and a moment estimator explodes on those rows.
+                # [mean, variance]; STD scaling multiplies every sigma by one
+                # scalar s that minimises the Gaussian NLL of N(mu, (s*sigma)^2)
+                # on the slice -- the regression analogue of temperature scaling
+                # (Levi et al. 2022, eq. 11-12; see _fit_sigma_scale).
                 # NB: the validation slice is the most recent training cases,
                 # not the "running cases" test set, and the final model is
                 # refit on 100% of the data, so s transfers only approximately;
-                # the report shows raw vs recalibrated coverage so the gap is
-                # visible. For guaranteed coverage, split-conformal on a
+                # the report shows raw vs recalibrated ENCE / coverage so the
+                # gap is visible. For guaranteed coverage, split-conformal on a
                 # dedicated holdout would be the rigorous alternative.
                 val_pred = np.asarray(model.predict(X_val), dtype=float)
                 resid = y_val.to_numpy(dtype=float) - val_pred[:, 0]
-                sigma = np.sqrt(np.clip(val_pred[:, 1], 1e-9, None))
-                s = float(np.median(np.abs(resid) / sigma) / 0.674489)
-                trial.set_user_attr("sigma_scale", float(np.clip(s, 0.5, 5.0)))
+                sigma = np.sqrt(np.clip(val_pred[:, 1], 1e-12, None))
+                trial.set_user_attr("sigma_scale", _fit_sigma_scale(resid, sigma))
             else:
                 # Temperature-scaling factor for the classifier (Guo et al.
                 # 2017), fitted on this trial's held-out validation slice:
@@ -607,12 +719,16 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
             # Uncertainty diagnostics on the test set. predict_uncertainty
             # returns the recalibrated std components (times sigma_scale);
             # dividing total_std by sigma_scale recovers CatBoost's raw output
-            # for the "before" coverage numbers.
+            # for the "before" numbers.
             unc = prediction_step.predict_uncertainty(X_test_trans)
-            abs_err = np.abs(y_test.to_numpy(dtype=float) - unc["mean"])
+            resid = y_test.to_numpy(dtype=float) - unc["mean"]
+            abs_err = np.abs(resid)
             std_cal = unc["total_std"]
             std_raw = std_cal / sigma_scale
             mean_total_var = float(np.mean(std_cal ** 2))
+            # Levi et al. (2022) calibration diagnostics, raw sigma vs recalibrated
+            calib_cal = _regression_calibration_metrics(resid, std_cal)
+            calib_raw = _regression_calibration_metrics(resid, std_raw)
             uncertainty_report = {
                 "sigma_scale": sigma_scale,
                 "mean_data_std": float(np.mean(unc["data_std"])),
@@ -624,8 +740,19 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
                 # median predicted total std -- "sharpness", how tight the
                 # intervals are regardless of whether they are calibrated.
                 "median_std": float(np.median(std_cal)),
+                # expected normalized calibration error (Levi et al. 2022, eq. 8),
+                # raw sigma vs sigma * s; and the coefficient of variation of the
+                # predicted stds (eq. 9), scale-invariant so one value only.
+                "ence_raw": calib_raw["ence"],
+                "ence": calib_cal["ence"],
+                "cv": calib_cal["cv"],
+                "calib_n_bins": calib_cal["n_bins"],
+                "rmv_bins": calib_cal["rmv_bins"],
+                "rmse_bins": calib_cal["rmse_bins"],
+                "rmv_bins_raw": calib_raw["rmv_bins"],
                 # coverage with CatBoost's raw sigma vs the recalibrated sigma
-                # (target ~0.68 / ~0.95 for a well-calibrated Gaussian).
+                # (target ~0.68 / ~0.95 for a well-calibrated Gaussian) -- the
+                # coarser two-quantile check, kept alongside ENCE.
                 "coverage_1sigma_raw": float(np.mean(abs_err <= std_raw)),
                 "coverage_2sigma_raw": float(np.mean(abs_err <= 2.0 * std_raw)),
                 "coverage_1sigma": float(np.mean(abs_err <= std_cal)),
@@ -641,7 +768,9 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
             )
             print(
                 f"Calibration: sigma_scale = {sigma_scale:.3f} | "
-                f"coverage +/-1s {uncertainty_report['coverage_1sigma_raw']:.3f} -> {uncertainty_report['coverage_1sigma']:.3f}, "
+                f"ENCE {uncertainty_report['ence_raw'] * 100:.2f}% -> {uncertainty_report['ence'] * 100:.2f}% | "
+                f"c_v {uncertainty_report['cv']:.3f} | "
+                f"cov +/-1s {uncertainty_report['coverage_1sigma_raw']:.3f} -> {uncertainty_report['coverage_1sigma']:.3f}, "
                 f"+/-2s {uncertainty_report['coverage_2sigma_raw']:.3f} -> {uncertainty_report['coverage_2sigma']:.3f}"
             )
         print("--------------------------------------------------")

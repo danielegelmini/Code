@@ -88,7 +88,7 @@ def _load(case_study):
     d = Path(f"./case_studies/{case_study}")
     train = pd.read_csv(d / "train_data.csv", parse_dates=[END_DATE_NAME, START_DATE_NAME])
     test = pd.read_csv(d / "test_data.csv", parse_dates=[END_DATE_NAME, START_DATE_NAME])
-    if case_study == "BPI12":
+    if case_study in ("BPI12", "BPI12_sim"):
         train = convert_dtypes_bpi12(train, "experiment")
         test = convert_dtypes_bpi12(test, "experiment")
     X_test, _, _ = prepare_df_for_ml(test, case_id_name, columns_to_remove)

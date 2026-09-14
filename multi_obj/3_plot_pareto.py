@@ -73,6 +73,7 @@ def _default_forbidden_map():
         "bpi17_before": bpi17_forbidden,
         "bpi17_after": bpi17_forbidden,
         "BPI12": ["O_ACCEPTED"],
+        "BPI12_sim": ["O_ACCEPTED"],
         "BAC": bac_forbidden,
     }
 
@@ -219,7 +220,7 @@ def run_and_plot_comparison(
     print(f"Loading data for {case_study}...")
     train_data, test_data, test_log = load_case_study(case_study)
 
-    if case_study in {"BPI12"}:
+    if case_study in {"BPI12", "BPI12_sim"}:
         train_data = convert_dtypes_bpi12(train_data, "experiment")
         test_data  = convert_dtypes_bpi12(test_data, "experiment")
         test_log  = convert_dtypes_bpi12(test_log, "experiment")
