@@ -103,10 +103,15 @@ def parse_args():
                         help="Arrival timestamp of the first simulated trace "
                              "(e.g. '2011-10-01 00:38:44'). Defaults to the earliest "
                              "start:timestamp of the source event log.")
-    parser.add_argument("--oversample", type=float, default=1.4,
-                        help="Simulate ceil(n_train_traces * oversample) traces, then trim back "
-                             "to exactly n_train_traces after the '>3 events' filter "
-                             "drops the shortest traces (~20-25%% of simulated traces) (default: 1.4).")
+    parser.add_argument("--oversample", type=float, default=1.0,
+                        help="Simulate ceil(n_train_traces * oversample) traces (default: 1.0, i.e. "
+                             "simulate exactly n_train_traces, no surplus). trim_to_exact() still runs "
+                             "afterwards as a safety net -- if the feature pipeline happens to lose a "
+                             "few traces for any reason, it randomly subsamples whatever remains down "
+                             "to n_train_traces, and warns instead of failing if fewer survived than "
+                             "the target. Raise this above 1.0 only if you've observed real losses for "
+                             "a given case study/net; empirically (BPI12_reordered_sim) the '>3 events' "
+                             "filter alone drops ~0 traces, so oversampling was pure surplus there.")
     parser.add_argument("--seed", type=int, default=42,
                         help="Seed for the simulator's RNG and the final trim (default: 42). "
                              "Note: the prosit simulator has residual run-to-run variation from "

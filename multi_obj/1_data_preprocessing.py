@@ -40,6 +40,13 @@ SPLIT_TIMES = {
     # This entry only keeps a bare `1_data_preprocessing.py --case_study BPI12_sim`
     # run from crashing; it would overwrite that purpose-built split.
     "BPI12_sim": "2012-02-16 00:00:00",
+    # Same underlying 2011-2012 BPIC12 loan-application process as "BPI12" (see
+    # 0_prepare_bpi12_clean_log.py), so the same split date applies.
+    "BPI12_clean": "2012-02-16 00:00:00",
+    "BPI12_clean_filtered": "2012-02-16 00:00:00",
+    # Same 4685 cases as BPI12, only event order/labels corrected within same-instant
+    # ties (see discovery/reorder_bpi12_ties_from_clean_log.py) -- same split date.
+    "BPI12_reordered": "2012-02-16 00:00:00",
     "bpi17_before": "2016-05-28 00:00:00",
     "bpi17_after": "2016-11-01 00:00:00",
 }

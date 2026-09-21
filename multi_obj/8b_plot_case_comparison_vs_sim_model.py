@@ -55,7 +55,7 @@ PLOTS_SUBDIR = "plots"
 # Case studies whose resource ids are numeric-looking and must be forced to string --
 # otherwise a query instance built from test_data (read back as int64) mismatches the
 # str categories the model's OneHotEncoder was fit on. Mirrors 5_result_computation.py.
-BPI12_DTYPE_CASE_STUDIES = {"BPI12", "BPI12_sim"}
+BPI12_DTYPE_CASE_STUDIES = {"BPI12", "BPI12_sim", "BPI12_reordered", "BPI12_reordered_sim"}
 
 # BPI12_sim is currently the only fully-simulated training set (see
 # 9_generate_simulated_training_set.py), so the comparison defaults to it.
@@ -259,36 +259,6 @@ def plot_case_comparison_vs_sim_model(
             ax.tick_params(axis="x", labelbottom=True)  # sharex hides these by default on non-last rows
             ax.set_xlabel("Outcome (maximize)")
             ax.grid(True, linestyle=":", alpha=0.6)
-
-        # Both predicted panels are benchmarked against the same reference, the simulated
-        # (ProSiT) panel -- so the two MAE boxes answer "how far off is each model" on the same
-        # scale, isolating the simulator's own gap (panel 1) from the sim-trained model's
-        # additional gap (panel 2).
-        finite_real = np.isfinite(pred_x) & np.isfinite(pred_y) & np.isfinite(sim_x) & np.isfinite(sim_y)
-        if finite_real.any():
-            mae_outcome = float(np.mean(np.abs(pred_x[finite_real] - sim_x[finite_real])))
-            mae_time = float(np.mean(np.abs(pred_y[finite_real] - sim_y[finite_real])))
-            axes[row_idx, 2].text(
-                0.03, 0.03,
-                f"real-trained model vs simulated ({int(finite_real.sum())} rank(s))\n"
-                f"MAE outcome = {mae_outcome:.3f}\n"
-                f"MAE 1-sigmoid_mm = {mae_time:.3f}",
-                transform=axes[row_idx, 2].transAxes, fontsize=9, va="bottom", ha="left",
-                bbox=dict(boxstyle="round,pad=0.4", facecolor="white", alpha=0.85, edgecolor="gray"),
-            )
-
-        finite_sim = np.isfinite(sim_model_x) & np.isfinite(sim_model_y) & np.isfinite(sim_x) & np.isfinite(sim_y)
-        if finite_sim.any():
-            mae_outcome_sim = float(np.mean(np.abs(sim_model_x[finite_sim] - sim_x[finite_sim])))
-            mae_time_sim = float(np.mean(np.abs(sim_model_y[finite_sim] - sim_y[finite_sim])))
-            axes[row_idx, 1].text(
-                0.03, 0.03,
-                f"sim-trained model vs simulated ({int(finite_sim.sum())} rank(s))\n"
-                f"MAE outcome = {mae_outcome_sim:.3f}\n"
-                f"MAE 1-sigmoid_mm = {mae_time_sim:.3f}",
-                transform=axes[row_idx, 1].transAxes, fontsize=9, va="bottom", ha="left",
-                bbox=dict(boxstyle="round,pad=0.4", facecolor="white", alpha=0.85, edgecolor="gray"),
-            )
 
     handles_by_label = {}
     for ax in axes.flat:

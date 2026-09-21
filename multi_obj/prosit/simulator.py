@@ -53,8 +53,25 @@ class SimulatorParameters:
             initial_marking: Marking,
             final_marking: Marking
         ):
-        """ Initilize parameters """
-        
+        """
+        Creates a SimulatorParameters holder wrapping a given Petri net, and initializes
+        every simulation parameter (transition weights, resources, calendars, execution/
+        waiting/arrival time distributions) to a trivial, history-independent default (a
+        single "auto" resource always available, uniform transition weights, fixed
+        distributions all equal to 1). These defaults are placeholders meant to be
+        overwritten either by fitting them from a real event log (discover_from_eventlog)
+        or by loading a previously-fitted set of parameters (from_json / from_dict).
+
+        Args:
+            net (PetriNet): the discovered/loaded Petri net the simulation will run on.
+            initial_marking (Marking): the net's initial marking (where every case starts).
+            final_marking (Marking): the net's final marking (a case is complete once its
+                marking reaches this).
+
+        Returns:
+            None (constructor).
+        """
+
         self.net: PetriNet = net
         self.initial_marking: Marking = initial_marking
         self.final_marking: Marking = final_marking
@@ -79,6 +96,20 @@ class SimulatorParameters:
 
     @staticmethod
     def _sanitize_for_json(value):
+        """
+        Recursively converts an arbitrary (possibly nested) Python value into something
+        json.dump can serialize: dict keys are passed through _serialize_key (to handle
+        non-string keys such as tuples or PetriNet.Transition objects), numpy-like objects
+        exposing .tolist() are converted to plain lists, and dicts/lists/tuples are walked
+        recursively. Used as the final pass in to_dict() before writing to JSON.
+
+        Args:
+            value: any Python value (dict, list, tuple, numpy array/scalar, or a plain
+                JSON-native primitive).
+
+        Returns:
+            The same structure with every non-JSON-safe piece converted to a JSON-safe one.
+        """
         if isinstance(value, dict):
             return {
                 SimulatorParameters._serialize_key(k): SimulatorParameters._sanitize_for_json(v)
@@ -95,6 +126,20 @@ class SimulatorParameters:
 
     @staticmethod
     def _serialize_key(key):
+        """
+        Converts a single dict key into a JSON-safe key. JSON object keys must be plain
+        strings, so a tuple key (e.g. a (case_id, prefix) style key) is encoded into a
+        special "__tuple__:<json-encoded tuple>" string that _restore_from_json later
+        recognizes and decodes back into a real tuple. Ordinary JSON-native primitives
+        (str/int/float/bool/None) pass through unchanged; anything else (e.g. a
+        PetriNet.Transition object used as a dict key) falls back to str(key).
+
+        Args:
+            key: any hashable value used as a dict key.
+
+        Returns:
+            A JSON-safe key: the original value if already JSON-native, otherwise a string.
+        """
         if isinstance(key, tuple):
             return f"__tuple__:{json.dumps(key)}"
         if isinstance(key, (str, int, float, bool)) or key is None:
@@ -103,6 +148,19 @@ class SimulatorParameters:
 
     @staticmethod
     def _restore_from_json(value):
+        """
+        Inverse of _sanitize_for_json / _serialize_key: walks a dict/list structure just
+        loaded from JSON and turns any dict key that starts with the "__tuple__:" marker
+        back into a real Python tuple (by parsing the JSON payload embedded after the
+        marker), recursively over the whole structure. Called once at the top of
+        from_dict() before any parameter is actually read out of dict_params.
+
+        Args:
+            value: a dict/list/primitive, as produced by json.load.
+
+        Returns:
+            The same structure with every "__tuple__:..." key restored to a tuple key.
+        """
         if isinstance(value, dict):
             restored = {}
             for k, v in value.items():
@@ -117,6 +175,20 @@ class SimulatorParameters:
 
     @staticmethod
     def _normalize_distribution_params(params):
+        """
+        Normalizes a distribution's "params" field (as read back from a loaded JSON file)
+        into a tuple, regardless of whether it was stored as None, a list, or a single
+        scalar value. Needed because downstream code passes these params positionally into
+        a scipy.stats distribution constructor (dist(*params)), which requires a tuple/list,
+        not an arbitrary type.
+
+        Args:
+            params: None, a list/tuple of distribution parameters, or a single scalar.
+
+        Returns:
+            tuple: () if params was None, tuple(params) if it was already list-like,
+            otherwise a 1-element tuple wrapping the scalar.
+        """
         if params is None:
             return ()
         if isinstance(params, (list, tuple)):
@@ -131,7 +203,49 @@ class SimulatorParameters:
             grace_period: int = 1000,
             verbose: bool = True
         ):
-        """ Discovery Parameters from event log data """
+        """
+        Fits every simulation parameter of this SimulatorParameters instance from a real
+        event log, by delegating to the discovery functions in prosit/discovery/ and
+        prosit/discovery/online_discovery/: control-flow / transition weights
+        (discover_weight_transitions, one binary "did this transition fire when enabled"
+        model per transition -- see cf_discovery.py), execution time, waiting time and
+        arrival time distributions, plus resources, calendars and (if present) case/event
+        data-attribute distributions. Mutates self in place; does not return anything.
+
+        Two independent axes control HOW each parameter is fit:
+        - max_depth_tree selects history-conditioned "rules mode" (a decision tree per
+          transition/activity/resource, cross-validated over depths 1..max_depth_tree,
+          self.rules_mode=True) when >= 1, or flat, history-independent probabilities/
+          distributions (self.rules_mode=False, no trees at all) when < 1.
+        - incremental_discovery selects streaming/online fitting (river's
+          HoeffdingAdaptiveTreeClassifier, one pass over the log row by row) instead of the
+          default batch fitting (scikit-learn, sees the whole dataset at once, with
+          cross-validation over max_depth_tree candidate depths).
+
+        Any transition never found enabled anywhere in the (aligned) log is defaulted to a
+        constant weight of 0 after discovery, since it has no training data to fit a
+        probability from.
+
+        Args:
+            log (EventLog): the (training) event log to discover parameters from.
+            max_depth_tree (int, optional): maximum decision-tree depth for control-flow/
+                execution/waiting-time trees; < 1 disables trees entirely (flat mode).
+                Defaults to 3.
+            incremental_discovery (bool, optional): if True, fit every model incrementally/
+                online (river) instead of in one batch (scikit-learn). Defaults to False.
+            grace_period (int, optional): river's minimum number of observations an
+                incremental tree waits before considering a split (only used when
+                incremental_discovery=True). Defaults to 1000.
+            verbose (bool, optional): if True, print a progress message before each
+                discovery stage. Defaults to True.
+
+        Returns:
+            None (mutates self in place: transition_weights, execution_time_distributions,
+            waiting_time_distributions, arrival_time_distribution, resources,
+            act_resource_prob, multitasking_resources, calendars, arrival_calendar,
+            label_data_attributes(_categorical), attribute_values_label_categorical,
+            distribution_data_attributes, rules_mode).
+        """
 
         if max_depth_tree < 1:
             self.rules_mode = False
@@ -270,6 +384,21 @@ class SimulatorParameters:
 
 
     def to_dict(self) ->  dict:
+        """
+        Serializes every fitted parameter of this instance into a plain, nested dict of
+        JSON-safe primitives -- the exact structure from_dict() later reads back. Converts
+        PetriNet.Transition objects to plain names (transition_to_name), DecisionRules trees
+        to nested dicts (decision_rules_to_dict), and resource calendars to a JSON-friendly
+        weekday/hour encoding (convert_calendar_names), then runs the whole result through
+        _sanitize_for_json as a final safety pass (handles remaining non-string dict keys,
+        numpy types, etc.).
+
+        Args:
+            None (self).
+
+        Returns:
+            dict: nested parameter dict, ready to be passed to json.dump (see to_json).
+        """
 
         dict_params = {
 
@@ -309,6 +438,18 @@ class SimulatorParameters:
         return self._sanitize_for_json(dict_params)
 
     def to_json(self, path: str = "simulator_params.json"):
+        """
+        Writes self.to_dict() to disk as JSON at `path`. Writes to a temporary "<path>.tmp"
+        file first and only then atomically replaces `path` with it (os.replace), so a
+        crash or interruption mid-write can never leave a corrupted/partially-written
+        parameters file at the real destination path.
+
+        Args:
+            path (str, optional): destination file path. Defaults to "simulator_params.json".
+
+        Returns:
+            None (side effect: writes/overwrites the file at `path`).
+        """
 
         dict_params = self.to_dict()
         temp_path = f"{path}.tmp"
@@ -318,6 +459,30 @@ class SimulatorParameters:
 
 
     def from_dict(self, dict_params):
+        """
+        Inverse of to_dict(): restores every simulation parameter attribute of this instance
+        from a plain nested dict (as produced by to_dict(), typically after a json.load).
+        Requires self.net to already be a valid, matching PetriNet (transition names are
+        mapped back to real PetriNet.Transition objects via name_to_transition(t_name,
+        self.net)).
+
+        self.rules_mode is inferred from the shape of the stored arrival-time distribution
+        (whether it has a "mean_value" key, which only flat/non-tree distributions carry),
+        and every other attribute is then restored either as DecisionRules trees
+        (rules_mode=True, via dict_to_decrules) or as flat (scipy_dist, params, min, max,
+        mean) tuples (rules_mode=False).
+
+        Args:
+            dict_params (dict): nested parameter dict, as produced by to_dict() (or loaded
+                from JSON via from_json).
+
+        Returns:
+            None (mutates self in place: rules_mode, label_data_attributes(_categorical),
+            attribute_values_label_categorical, distribution_data_attributes, resources,
+            act_resource_prob, multitasking_resources, calendars, arrival_calendar,
+            transition_weights, execution_time_distributions, waiting_time_distributions,
+            arrival_time_distribution).
+        """
 
         dict_params = self._restore_from_json(dict_params)
 
@@ -370,6 +535,23 @@ class SimulatorParameters:
             )
 
     def from_json(self, path: str = "simulator_params.json"):
+        """
+        Loads simulation parameters from a JSON file on disk (as written by to_json()) and
+        populates this instance via from_dict(). Raises a clear, actionable ValueError
+        instead of letting a raw json.JSONDecodeError propagate if the file is corrupted or
+        not valid JSON -- typically the sign of a discovery run that was interrupted before
+        finishing to_json()'s write (though to_json()'s own atomic write greatly reduces how
+        often that can actually happen).
+
+        Args:
+            path (str, optional): source file path. Defaults to "simulator_params.json".
+
+        Returns:
+            None (mutates self in place via from_dict()).
+
+        Raises:
+            ValueError: if the file at `path` is not valid JSON.
+        """
         try:
             with open(path, "r", encoding="utf-8") as file:
                 dict_params = json.load(file)
@@ -388,6 +570,25 @@ class SimulatorEngine:
             self, 
             simulation_parameters: SimulatorParameters
         ):
+        """
+        Wraps an already-fitted SimulatorParameters into a runnable simulation engine.
+        Precomputes a fixed, deterministic ordering over every transition in the net
+        (_build_transition_rank -- used by _sort_transitions/_get_enabled_transitions_sorted
+        so that, whenever multiple transitions are enabled together, they are always
+        presented to the rest of the code in the same order across runs, keeping simulation
+        output reproducible instead of depending on incidental Python set/dict iteration
+        order) and initializes the diagnostic lists and caches populated during apply() runs
+        (last_unreachable_recommendations, last_runaway_cases, last_non_fitting_prefixes,
+        last_model_inserted_activities, _prefix_state_cache -- see their own inline comments
+        below and apply()'s docstring for what each one records).
+
+        Args:
+            simulation_parameters (SimulatorParameters): a parameters object already fitted
+                via discover_from_eventlog(), or restored via from_json()/from_dict().
+
+        Returns:
+            None (constructor).
+        """
 
         self.net = simulation_parameters.net
         self.initial_marking = simulation_parameters.initial_marking
@@ -426,6 +627,20 @@ class SimulatorEngine:
         self._reachability_search_max_seconds = 5.0
 
     def _build_transition_rank(self) -> dict:
+        """
+        Builds a fixed, deterministic total ordering over every transition in the net,
+        sorted by label, then internal transition name, then input/output place names (as
+        a tie-breaker for transitions sharing the same label, e.g. duplicate/silent-routing
+        copies of the same activity). Called once in __init__(); the resulting lookup is
+        what _sort_transitions uses to always present a given set of transitions in the
+        same order, regardless of incidental Python set/dict iteration order.
+
+        Args:
+            None (self, reads self.net.transitions).
+
+        Returns:
+            dict: {PetriNet.Transition: int rank}, rank 0 being first in the fixed order.
+        """
         ordered = sorted(
             list(self.net.transitions),
             key=lambda t: (
@@ -438,6 +653,18 @@ class SimulatorEngine:
         return {t: i for i, t in enumerate(ordered)}
 
     def _sort_transitions(self, transitions) -> list:
+        """
+        Sorts an arbitrary iterable of transitions into the engine's fixed deterministic
+        order (via the ranks precomputed by _build_transition_rank; anything not found in
+        the rank table -- should not normally happen -- sorts last, by label/name as a
+        fallback key).
+
+        Args:
+            transitions (iterable of PetriNet.Transition): the transitions to sort.
+
+        Returns:
+            list of PetriNet.Transition: the same transitions, deterministically ordered.
+        """
         return sorted(
             list(transitions),
             key=lambda t: (
@@ -448,9 +675,37 @@ class SimulatorEngine:
         )
 
     def _get_enabled_transitions_sorted(self, marking) -> list:
+        """
+        Convenience wrapper: computes which transitions are enabled at a given Petri net
+        marking (return_enabled_transitions, the token-game check) and returns them in the
+        engine's fixed deterministic order (_sort_transitions) instead of raw set order.
+        This is the function called everywhere in the simulation loop and in the discovery/
+        reachability helpers whenever "what can fire from here" is needed.
+
+        Args:
+            marking (Marking): the Petri net marking to check.
+
+        Returns:
+            list of PetriNet.Transition: every transition enabled at `marking`, in the
+            engine's fixed deterministic order.
+        """
         return self._sort_transitions(return_enabled_transitions(self.net, marking))
 
     def _get_case_enabled_time(self, case) -> datetime:
+        """
+        Returns the earliest timestamp among a case's currently-enabled transitions (i.e.
+        the next moment this case is ready to fire something), or -- if nothing is enabled
+        yet (e.g. right at the very start, before "enabled" has been populated) -- falls
+        back to the case's arrival time. Used as a default "enabled at" timestamp in a couple
+        of places where no more specific one is available.
+
+        Args:
+            case (dict): one entry of apply()'s internal `cases` list (must have "enabled"
+                and "arrival_time" keys).
+
+        Returns:
+            datetime: the case's next enabled time, or its arrival time as a fallback.
+        """
         if case["enabled"]:
             return min(case["enabled"].values())
         return case["arrival_time"]
@@ -471,7 +726,25 @@ class SimulatorEngine:
         that fully exhausted the reachable state space without finding the target (that
         one really is unreachable).
 
-        Returns (path_or_None, status) with status in {"found", "exhausted", "capped"}.
+        Args:
+            start_marking (Marking): the marking to search from.
+            target_activity (str or None): the activity label to look for (a transition
+                becomes the search's target as soon as it is enabled with this label).
+            only_invisible (bool): if True, only invisible/silent transitions (label is
+                None) may be fired while searching -- used to find a "free" routing path
+                that doesn't consume/emit any visible activity of its own. If False, any
+                enabled transition (visible or not) may be used to reach the target.
+            max_depth (int, optional): maximum path length (number of transitions fired)
+                to explore. Defaults to 200.
+
+        Returns:
+            tuple(path_or_None, status): `path` is a list of PetriNet.Transition to fire
+            (in order) to enable target_activity, not including target_activity itself, or
+            None if no path was found within the given bounds. `status` is one of "found",
+            "exhausted" (the full reachable state space was searched, target truly
+            unreachable), or "capped" (the max_nodes/max_seconds safety limit was hit before
+            either finding the target or exhausting the state space -- reachability is
+            genuinely undetermined in this case, not proven impossible).
         """
         queue = deque([(start_marking, [])])
         visited = {frozenset(start_marking.items())}
@@ -536,7 +809,27 @@ class SimulatorEngine:
         it (e.g. across the N runs of a batch, or across baseline/exhaustive/nsga2 for the
         same underlying case).
 
-        Returns a dict: {"marking", "history", "is_fit"}.
+        Args:
+            case_id_c: the case's identifier (used only as part of the cache key).
+            prefix_log_c_sorted (pd.DataFrame): this case's historical prefix event rows,
+                sorted chronologically, with a "concept:name" column giving each event's
+                activity label.
+
+        Returns:
+            dict with keys:
+                "marking" (Marking): the reconstructed Petri net marking right after the
+                    prefix (guaranteed legally reachable from the initial marking).
+                "history" (dict): {activity_label: count} of how many times each activity
+                    fired to reach this marking (including any model-inserted activities --
+                    see below), used as a feature for history-conditioned probabilistic
+                    weighting of subsequent simulated events.
+                "is_fit" (bool): False if the alignment needed at least one "log move" (a
+                    logged activity the model could not explain at all) to explain the
+                    prefix; True if every logged event was matched by a real model move.
+                "inserted_activities" (list of str): visible activity labels the alignment
+                    fired against the net to explain the prefix but which are NOT present in
+                    the historical log itself (see the inline comment above where this list
+                    is built) -- affects "history" but is never written to the output log.
         """
         cache_key = (case_id_c, tuple(prefix_log_c_sorted["concept:name"]))
         cached = self._prefix_state_cache.get(cache_key)
@@ -604,6 +897,46 @@ class SimulatorEngine:
         return result
 
     def _resolve_recommended_transition(self, case, enabled_transitions):
+        """
+        Decides how to advance a case that has a pending recommendation (case["rec_act"]/
+        case["rec_res"]) for this simulation step, trying to realize that recommendation as
+        the very next (or next reachable) step, best-effort, in this priority order:
+        1. If a multi-step path to the recommendation was already computed on a previous
+           call (case["pending_invisible_path"]), consume its next transition.
+        2. If the recommended activity is already directly enabled, fire it immediately.
+        3. Otherwise, search for a legal path using ONLY invisible/silent transitions
+           (_bfs_path_to_activity, only_invisible=True) to reach it "for free"; if found,
+           queue the rest of the path and start consuming it.
+        4. Otherwise (and only if step 3's search was not itself capped, since a wider
+           search would almost certainly hit the same cap too), search a broader path that
+           may also fire visible transitions along the way.
+        5. If no path is found at all: in strict mode (case["strict_recommendation"]),
+           record the failure in self.last_unreachable_recommendations (and raise if
+           self.raise_on_unreachable_recommendation is set); either way, give up on the
+           recommendation (clear rec_act/rec_res) so the caller falls back to normal
+           weighted simulation for this step.
+
+        A synthetic sentinel recommendation (case["rec_act"] starting with
+        "__NO_RECOMMENDATION__", used by baseline simulation runs) is treated as "no
+        recommendation" immediately, without triggering any search.
+
+        Args:
+            case (dict): the case being advanced (mutated in place: may update
+                case["pending_invisible_path"], case["rec_act"]/case["rec_res"]).
+            enabled_transitions (list of PetriNet.Transition): transitions currently enabled
+                at case["marking"] (used for the direct-match check in step 2).
+
+        Returns:
+            tuple(chosen_transition, activity, t_enabled, flag_rec):
+                chosen_transition (PetriNet.Transition or None): the transition to fire this
+                    step, or None if no recommendation-driven move was made.
+                activity (str or None): its label, if directly matching the recommendation
+                    (None for an intermediate invisible/path step, even if chosen_transition
+                    is not None).
+                t_enabled (datetime or None): when it became enabled.
+                flag_rec (bool): True if this step was recommendation-driven (the caller
+                    should skip the normal weighted-roulette choice), False otherwise.
+        """
         if case["rec_act"] is None:
             return None, None, None, False
 
@@ -681,6 +1014,25 @@ class SimulatorEngine:
 
     @staticmethod
     def _apply_recommendation_lock(case, enabled_time, transition):
+        """
+        After a recommended activity has just fired, the case is "locked" (via
+        case["recommendation_lock_until"], set in apply() right after firing a
+        recommendation-matching transition) so that no OTHER visible activity can start
+        before that time -- this stops the normal weighted-random background simulation
+        from immediately racing past / overtaking the just-applied recommendation. Only
+        visible transitions are ever delayed by the lock; invisible/silent transitions
+        (transition.label is None) are structural routing steps and are never held back.
+
+        Args:
+            case (dict): the case being evaluated (reads case["recommendation_lock_until"]).
+            enabled_time (datetime): the transition's naturally computed enabled time.
+            transition (PetriNet.Transition): the transition being considered.
+
+        Returns:
+            datetime: `enabled_time` unchanged if no lock applies (no lock set, it has
+            already passed, or `transition` is invisible), otherwise
+            max(enabled_time, lock_until).
+        """
         lock_until = case.get("recommendation_lock_until")
         if lock_until is None:
             return enabled_time
@@ -699,7 +1051,55 @@ class SimulatorEngine:
         max_reachability_search_seconds: float = 5.0,
     ) -> pd.DataFrame:
         """
-        max_events_per_case: safety valve against runaway/near-infinite loops. If a single
+        Runs the discrete-event simulation itself and returns the resulting event log.
+
+        Internally drives a min-heap priority queue of (next_enabled_time, case_id): at each
+        iteration it pops whichever case's next event is chronologically earliest across ALL
+        cases, decides which transition fires for it (a pending recommendation if one
+        applies -- see _resolve_recommended_transition -- otherwise a weighted random draw
+        over the case's currently-enabled transitions via return_fired_transition), resolves
+        a resource assignment, samples/computes a waiting time and an execution time,
+        appends the resulting event, advances that case's Petri net marking, and -- unless
+        the case just completed (reached self.final_marking) -- re-enqueues it with its new
+        next-enabled time. Repeats until the heap is empty (every case has either completed
+        or been force-truncated).
+
+        Two mutually exclusive modes, selected by whether `prev_log` is given:
+        - Pure generation (prev_log=None): samples `n_traces` brand-new cases from scratch
+          (arrival time, then every event) using the fitted simulation_parameters, with no
+          historical data involved.
+        - Recommendation / prefix-continuation (prev_log given): `n_traces` is ignored (set
+          to 0); instead, every case in `prev_log` carrying a
+          recommendation:act/recommendation:res value is treated as a real historical
+          prefix. Each such prefix's current Petri net state is reconstructed via alignment
+          (_reconstruct_prefix_state), and only the FUTURE of that prefix is simulated,
+          best-effort honoring the given recommendation as the next step before falling back
+          to normal weighted simulation for everything after it. The returned log then
+          contains the original prev_log rows concatenated with the newly simulated
+          continuation events.
+
+        Every call resets and repopulates four diagnostic lists on self, which the caller
+        can inspect afterwards: self.last_unreachable_recommendations (recommendations that
+        could not be honored at all), self.last_runaway_cases (cases force-truncated by
+        max_events_per_case), self.last_non_fitting_prefixes and
+        self.last_model_inserted_activities (informational, from prefix reconstruction --
+        see _reconstruct_prefix_state).
+
+        Args:
+            n_traces (int, optional): number of brand-new cases to generate. Ignored (forced
+                to 0) when `prev_log` is given. Defaults to 1.
+            t_start (datetime, optional): simulation start time for newly generated cases'
+                arrivals. Ignored (overridden by the latest prefix start time in `prev_log`)
+                when `prev_log` is given. Defaults to datetime.now().
+            deterministic_time (bool, optional): if True, use each distribution's stored
+                mean/representative value instead of sampling randomly -- for reproducible,
+                "expected value" runs rather than stochastic ones. Defaults to False.
+            prev_log (pd.DataFrame, optional): historical event log to continue from (see
+                "Recommendation / prefix-continuation" above). Must contain, per case, rows
+                with "case:concept:name", "org:resource", "start:timestamp",
+                "time:timestamp", and (for the rows to actually continue) non-null
+                "recommendation:act"/"recommendation:res" on the last row of each prefix to
+                continue. Defaults to None (pure generation mode).
             case fires more than this many NEW (simulated, non-historical) visible events,
             it is force-truncated -- logged to self.last_runaway_cases -- instead of being
             left to spin (possibly forever) and starve every other case in the batch. This
@@ -717,8 +1117,17 @@ class SimulatorEngine:
             search instead of letting it hang. When the cap is hit, the recommendation is
             reported as unreachable with a reason that makes clear it is undetermined (search
             aborted) rather than proven impossible -- see self.last_unreachable_recommendations.
-        """
 
+        Returns:
+            pd.DataFrame: the resulting event log, with columns "case:concept:name",
+            "concept:name", "org:resource", "start:timestamp", "time:timestamp" (plus any
+            case/event data-attribute columns), sorted by start/end timestamp. Contains only
+            the newly simulated events in pure-generation mode, or `prev_log`'s rows
+            concatenated with the simulated continuation events in prefix-continuation mode.
+        """
+        ##########################################
+        #SETUP of the simulator
+        ##########################################
         self.last_unreachable_recommendations = []
         self.last_runaway_cases = []
         self.last_non_fitting_prefixes = []
@@ -727,23 +1136,20 @@ class SimulatorEngine:
         self._reachability_search_max_seconds = max_reachability_search_seconds
 
         event_log = []
-        enabled_heap = []
-        resource_schedule = {r: [] for r in self.simulation_parameters.resources}
-        # Parallel sorted start/end timestamp lists per resource, kept in sync with
-        # resource_schedule via bisect.insort. These let count_concurrent_events_fast
-        # answer "how many intervals are open at time t" in O(log n) instead of the O(n)
-        # full rescan that count_concurrent_events needs -- this matters a lot here because
-        # it is recomputed for every resource on every single simulated event.
-        resource_starts = {r: [] for r in self.simulation_parameters.resources}
-        resource_ends = {r: [] for r in self.simulation_parameters.resources}
+        enabled_heap = [] # will have (time, case_id)
+        resource_schedule = {r: [] for r in self.simulation_parameters.resources} # {resource: [(start, end), ...]}
+        resource_starts = {r: [] for r in self.simulation_parameters.resources} # {resource: [start, ...]}
+        resource_ends = {r: [] for r in self.simulation_parameters.resources} # {resource: [end, ...]}
         cases = []
 
-        if prev_log is not None:
+        ##########################################
+        #MANAGING the prev_log
+        ##########################################
+        if prev_log is not None: #only if we want to continue the prefix
             if prev_log.empty:
                 raise ValueError(
                     "prev_log is empty. Verify case-id filtering and input log content before simulation."
                 )
-
             if "recommendation:act" not in prev_log.columns:
                 prev_log = prev_log.copy()
                 prev_log["recommendation:act"] = None
@@ -751,9 +1157,6 @@ class SimulatorEngine:
                 if "recommendation:act" not in prev_log.columns:
                     prev_log = prev_log.copy()
                 prev_log["recommendation:res"] = None
-
-            # Only the historical prefixes themselves are simulated -- no additional new
-            # cases are sampled to start alongside them.
             trace_durations = prev_log.groupby("case:concept:name").agg(
                 trace_start=('start:timestamp', 'min'),
                 trace_end=('time:timestamp', 'max')
@@ -762,13 +1165,13 @@ class SimulatorEngine:
                 raise ValueError(
                     "No cases found in prev_log after grouping by case:concept:name."
                 )
+            # Only the historical prefixes themselves are simulated -- no additional new cases are sampled to start alongside them.
             n_traces = 0
 
-            # compute the t_start
-            t_start = trace_durations["trace_start"].max()
+            t_start = trace_durations["trace_start"].max() #time of the last event in the prefix
 
             # update the resource_schedule with the previous log
-            for _, row in prev_log.iterrows():
+            for _, row in prev_log.iterrows(): 
                 res = row['org:resource']
                 if res not in resource_schedule:
                     resource_schedule[res] = []
@@ -786,9 +1189,12 @@ class SimulatorEngine:
         else:
             n_prefixes = 0
 
+        ##########################################
+        # SAMPLING
+        ##########################################
         effective_n_traces = max(n_traces, 1)
 
-        if not self.simulation_parameters.rules_mode:
+        if not self.simulation_parameters.rules_mode: #if max_depth = 0
             if deterministic_time:
                 sampled_arrivals = self.simulation_parameters.arrival_time_distribution[-1]
                 sampled_waiting_times = {res : self.simulation_parameters.waiting_time_distributions[res][-1] for res in self.simulation_parameters.resources}
@@ -798,7 +1204,7 @@ class SimulatorEngine:
                 sampled_waiting_times = {res : sampling_from_dist(*self.simulation_parameters.waiting_time_distributions[res], n_sample=effective_n_traces) for res in self.simulation_parameters.resources}
                 sampled_execution_times = {act: sampling_from_dist(*self.simulation_parameters.execution_time_distributions[act], n_sample=effective_n_traces) for act in self.simulation_parameters.net_transition_labels}
 
-        if self.simulation_parameters.label_data_attributes:
+        if self.simulation_parameters.label_data_attributes: # when generating new cases we sample the case attributes
             x_attr_list = random.choices(
                 list(self.simulation_parameters.distribution_data_attributes.keys()), 
                 weights=list(self.simulation_parameters.distribution_data_attributes.values()),
@@ -808,14 +1214,16 @@ class SimulatorEngine:
         else:
             x_attr_list = [[]]*n_traces
 
+        ##########################################
+        # INITIALIZE CASES
+        ##########################################
         current_arr_ts = t_start
 
-        # INITIALIZE CASES
-
-        if prev_log is not None:
+        if prev_log is not None: # only for continuation of prefixes
             rename_case_id = dict()
             for c in range(n_prefixes):
-                case_id_c = cases_prefixes[c]
+                # extract values of prefix c + recommendation 
+                case_id_c = cases_prefixes[c] #id of prefix (case:concept:name)
                 rename_case_id[f"case_{c+1}"] = case_id_c
                 prefix_log_c = prefixes_log[prefixes_log['case:concept:name'] == case_id_c]
                 prefix_log_c_sorted = prefix_log_c.sort_values('time:timestamp')
@@ -823,10 +1231,12 @@ class SimulatorEngine:
                 rec_act_c = prefix_log_c_sorted['recommendation:act'].iloc[-1]
                 rec_res_c = prefix_log_c_sorted['recommendation:res'].iloc[-1]
 
+                # reconstruct state of prefix c using alignment 
                 prefix_state = self._reconstruct_prefix_state(case_id_c, prefix_log_c_sorted)
                 current_marking_c = prefix_state["marking"]
-                history_c = prefix_state["history"]
+                history_c = prefix_state["history"] #how many times each activity has been visited
 
+                # if is_fit = false for prefix c we save the log moves and save the case_id 
                 if not prefix_state["is_fit"]:
                     self.last_non_fitting_prefixes.append({
                         "case:concept:name": str(case_id_c),
@@ -836,7 +1246,6 @@ class SimulatorEngine:
                                    "replay, the reconstructed marking is always legally reachable, so this "
                                    "does not by itself put the case at risk of an unrecoverable loop."),
                     })
-
                 if prefix_state["inserted_activities"]:
                     self.last_model_inserted_activities.append({
                         "case:concept:name": str(case_id_c),
@@ -849,39 +1258,42 @@ class SimulatorEngine:
                                    "weighting of subsequent simulated events."),
                     })
 
+                # case attribute extraction from log
                 trace_attributes = prefix_log_c[self.simulation_parameters.label_data_attributes].iloc[-1].to_dict()
                 trace_attributes_c = dict()
                 if self.simulation_parameters.label_data_attributes:
                     for  a in self.simulation_parameters.label_data_attributes:
-                        if a in self.simulation_parameters.label_data_attributes_categorical:
+                        if a in self.simulation_parameters.label_data_attributes_categorical: #one-hot encoding
                             for v in self.simulation_parameters.attribute_values_label_categorical[a]:
                                 trace_attributes_c[a+' = '+str(v)] = int(trace_attributes[a] == v)
                         else:
                             trace_attributes_c[a] = trace_attributes[a]
 
+                #case creation
                 case = {
-                    "arrival_time": prefix_end_c,
-                        "case_id": c,
-                        "case_external_id": case_id_c,
-                        "marking": current_marking_c,
+                        "arrival_time": prefix_end_c,                   #end of the prefix
+                        "case_id": c,                                   #index that represent the case id
+                        "case_external_id": case_id_c,                  #real case id 
+                        "marking": current_marking_c,                   #current marking at the end of the prefix
                         "place_token_time": {},
                         "enabled": {},
-                        "history": history_c,
-                        "attributes": trace_attributes_c,
-                        "rec_act": rec_act_c,
-                        "rec_res": rec_res_c,
-                        "pending_invisible_path": [],
-                        "recommendation_lock_until": None,
-                        "strict_recommendation": pd.notna(rec_act_c),
-                        "sim_event_count": 0,
+                        "history": history_c,                           #counts from alignment 
+                        "attributes": trace_attributes_c,               #case attributes
+                        "rec_act": rec_act_c,                           #recommendation activity
+                        "rec_res": rec_res_c,                           #recommendation resource
+                        "pending_invisible_path": [],                   #will contain the invisible transition used to get to the reccomendation if needed
+                        "recommendation_lock_until": None,              #will be true after the recommendation will be executed
+                        "strict_recommendation": pd.notna(rec_act_c),   #true only if the recommendation is something real, false for the baseline 
+                        "sim_event_count": 0,                           #how many events are generated for this case
                     }
 
+                #place token time is used to compute when a transition is enabled, we need to have all input's token to fire, the time will be the max between those
                 for place in self.net.places:
                     case["place_token_time"][place] = None
                 for place in current_marking_c.keys():
                     case["place_token_time"][place] = case["arrival_time"]
-
                 enabled = self._get_enabled_transitions_sorted(case["marking"])
+                #for each transition we understand when it becomes enabled 
                 for t in enabled:
                     input_places = [arc.source for arc in self.net.arcs if arc.target == t]
                     enabled_time = max(case["place_token_time"][p] for p in input_places)
@@ -889,20 +1301,15 @@ class SimulatorEngine:
                     enabled_time = self._apply_recommendation_lock(case, enabled_time, t)
                     case["enabled"][t] = enabled_time
 
+                #baseline sentinel
                 is_sentinel_rec_act = isinstance(rec_act_c, str) and rec_act_c.startswith("__NO_RECOMMENDATION__")
-                if case["enabled"]:
+
+                if case["enabled"]: 
+                    #there is at least an enabled transition, we take the closest one in time and put it in the heap
                     enabled_time_case = min(case["enabled"].values())
                     heapq.heappush(enabled_heap, (enabled_time_case, c))
                 elif case["strict_recommendation"] and not is_sentinel_rec_act:
-                    # No transition is enabled at all right after replaying the historical
-                    # prefix, so this case would silently never be pushed onto the heap and
-                    # the recommendation would never be attempted or reported. Two known
-                    # causes: the replayed marking already equals the final marking (the
-                    # "prefix" was actually the full, already-completed case -- a recommendation
-                    # for it is trivially impossible), or the prefix replay left the case in a
-                    # genuine deadlock (no legal continuation at all). Either way this is a
-                    # "genuinely not possible" case per the strict-recommendation contract, so
-                    # it belongs in last_unreachable_recommendations like any other failure.
+                    # No transition is enabled at all right after replaying the historical  prefix, so this case would silently never be pushed onto the heap and the recommendation would never be attempted or reported. Two known causes: the replayed marking already equals the final marking (the "prefix" was actually the full, already-completed case, or the prefix replay left the case in a genuine deadlock (no legal continuation at all). Either way this is a "genuinely not possible" case per the strict-recommendation contract, so it belongs in last_unreachable_recommendations like any other failure.
                     reason = (
                         "case_already_complete_after_replayed_prefix"
                         if case["marking"] == self.final_marking
@@ -919,6 +1326,7 @@ class SimulatorEngine:
 
                 cases.append(case)
 
+        # when generating cases from scratch
         for i in range(n_traces):
 
             trace_attributes = dict()
@@ -982,7 +1390,9 @@ class SimulatorEngine:
 
         attribute_columns = list(cases[0]["attributes"].keys()) if cases and cases[0]["attributes"] else []
 
+        ##########################################
         # START SIMULATION
+        ##########################################
         completed_cases = set()
         if prev_log is not None:
             progress_total = n_prefixes + n_traces
@@ -990,7 +1400,7 @@ class SimulatorEngine:
             progress_total = n_traces
         pbar = tqdm(total=max(progress_total, 1), desc="Simulating Cases")
         while enabled_heap:
-            _, case_id = heapq.heappop(enabled_heap)
+            _, case_id = heapq.heappop(enabled_heap) #pop the one with smallest time
             case = cases[case_id]
 
             if not case["enabled"]:
@@ -998,27 +1408,34 @@ class SimulatorEngine:
 
             enabled_transitions = self._sort_transitions(case["enabled"].keys())
             flag_rec = False
-            chosen_transition, activity, t_enabled, flag_rec = self._resolve_recommended_transition(case, enabled_transitions)
+            chosen_transition, activity, t_enabled, flag_rec = self._resolve_recommended_transition(case, enabled_transitions) #look if there is recommendation, flag_reg true if the rec is possible 
 
-            if not flag_rec:
-                if not self.simulation_parameters.rules_mode:
+
+            #flag_rec true if we have the rec (possible) or an invisible transition needed to get to the rec 
+            if not flag_rec: #if the next activity is not the rec or the baseline 
+                if not self.simulation_parameters.rules_mode: #if rules_mode false 
                     transition_weights = self.simulation_parameters.transition_weights
-                else:
-                    transition_weights = compute_transition_weights_from_model(self.simulation_parameters.transition_weights, case["attributes"] | case["history"])
-                chosen_transition = return_fired_transition(transition_weights, enabled_transitions)
+                else: #if rules mode true
+                    transition_weights = compute_transition_weights_from_model(self.simulation_parameters.transition_weights, case["attributes"] | case["history"], enabled_transitions)
+                chosen_transition = return_fired_transition(transition_weights, enabled_transitions) #given the transition available it extract the chosen one 
                 activity = chosen_transition.label
                 t_enabled = case["enabled"][chosen_transition]
-            elif activity is not None:
-                case["rec_act"] = None
+            elif activity is not None: #rec executed
+                case["rec_act"] = None #set to none so that the model understand that there are no more constraints
 
-            if activity is not None:
+            if activity is not None: 
+                #chosen transition correspond to a real one (no invisible transition)
+
+                #resource 
                 if flag_rec and case["rec_res"] is not None:
+                    #rec and resource to use -> we force it
                     resource = case["rec_res"]
                     t_enabled_waited = t_enabled
                     r_workload = count_concurrent_events_fast(
                         resource_starts.get(resource, []), resource_ends.get(resource, []), t_enabled
                     )
                 else:
+                    # choice of the resource based on the workload at time t_enabled
                     workloads = {
                         r: count_concurrent_events_fast(resource_starts[r], resource_ends[r], t_enabled)
                         for r in self.simulation_parameters.resources
@@ -1026,22 +1443,27 @@ class SimulatorEngine:
                     enabled_resources_act = [r for r, v in self.simulation_parameters.act_resource_prob[activity].items() if v>0]
                     enabled_resources = []
                     for r in enabled_resources_act:
+                        #keep only the available one between the qualified ones
                         if workloads[r] == 0:
                             enabled_resources.append(r)
                         else:
                             if r in self.simulation_parameters.multitasking_resources:
                                 enabled_resources.append(r)
+
                     if not enabled_resources:
+                        # if there are no available resources we chose the one that becomes free first, so we have a waiting time for the resource
                         t_enabled_enabled_resources = [resource_schedule[r][-1][-1] for r in enabled_resources_act]
                         index_res, t_enabled_waited = min(enumerate(t_enabled_enabled_resources), key=lambda x: x[1])
                         resource = enabled_resources_act[index_res]
                     else:
+                        # if there are enabled resources we extract it, no waiting time 
                         resource_weights = self.simulation_parameters.act_resource_prob[activity]
                         resource = return_resource(resource_weights, enabled_resources)
                         t_enabled_waited = t_enabled
                     r_workload = workloads[resource]
-                
-                if sum(case["history"].values()) == 0:
+
+                #waiting time
+                if sum(case["history"].values()) == 0: #it the activity if the first one 
                     waiting_time = 0
                 else:
                     if not self.simulation_parameters.rules_mode:
@@ -1057,20 +1479,22 @@ class SimulatorEngine:
                                 waiting_time = random.choice(candidate_waiting_times)
                             else:
                                 waiting_time = 0
-                    else:
+                    else: #rules_mode = TRUE
                         if deterministic_time:
                             waiting_time = self.simulation_parameters.waiting_time_distributions[resource].apply({'workload': r_workload} | case["history"] | case["attributes"])
                             try:
                                 int(waiting_time)
                             except:
                                 waiting_time = 0
-                        else:
+                        else: #sample waiting time 
                             waiting_time = self.simulation_parameters.waiting_time_distributions[resource].apply_distribution({'workload': r_workload} | case["history"] | case["attributes"])
 
+                #t_enabled_waited - t_enabled = time used for the resource to free itself, we subtract in order to not count it twice
                 waiting_time -= (t_enabled_waited - t_enabled).total_seconds() / 60
                 waiting_time = max(0, waiting_time)
-                t_start_exec = add_minutes_with_calendar(t_enabled_waited, int(waiting_time), self.simulation_parameters.calendars[resource])
+                t_start_exec = add_minutes_with_calendar(t_enabled_waited, int(waiting_time), self.simulation_parameters.calendars[resource]) #time when the next activity starts but it must respect the resource calendar (otherwise it will be postponed)
 
+                #execution time
                 if not self.simulation_parameters.rules_mode:
                     if deterministic_time:
                         ex_time = sampled_execution_times[activity]
@@ -1078,25 +1502,26 @@ class SimulatorEngine:
                             int(ex_time)
                         except:
                             ex_time = 0
-                    else:
+                    else: 
                         candidate_execution_times = list(sampled_execution_times[activity])
                         if candidate_execution_times:
                             ex_time = random.choice(candidate_execution_times)
                         else:
                             ex_time = 0
-                else:    
+                else: #rules_mode TRUE
                     if deterministic_time:
                         ex_time = self.simulation_parameters.execution_time_distributions[activity].apply({'resource = '+res: (res == resource)*1 for res in self.simulation_parameters.resources} | case["history"] | case["attributes"])
                         try:
                             int(ex_time)
                         except: 
                             ex_time = 0
-                    else:
+                    else: #extraction from trees
                         ex_time = self.simulation_parameters.execution_time_distributions[activity].apply_distribution({'resource = '+res: (res == resource)*1 for res in self.simulation_parameters.resources} | case["history"] | case["attributes"])
 
-                
+                # end time for the execution of the activity considering the resource calendar
                 t_end = add_minutes_with_calendar(t_start_exec, int(ex_time), self.simulation_parameters.calendars[resource])
 
+                # event added to the log 
                 event_log.append((case_id, activity, resource, t_enabled, t_start_exec, t_end) + tuple(case['attributes'].values()))
                 if resource not in resource_schedule:
                     resource_schedule[resource] = []
@@ -1108,9 +1533,10 @@ class SimulatorEngine:
                 case["history"][activity] += 1
                 case["sim_event_count"] = case.get("sim_event_count", 0) + 1
 
+                #check if the rec is the chosen one we lock and fix that no other visible event can start before this moment
                 if flag_rec and chosen_transition is not None and chosen_transition.label == activity:
                     case["recommendation_lock_until"] = t_end
-            else:
+            else: # invisible transition
                 t_end = t_enabled
 
             if chosen_transition is None:
@@ -1127,9 +1553,9 @@ class SimulatorEngine:
                     heapq.heappush(enabled_heap, (next_enabled_time, case_id))
                 continue
 
+            #marking update
             for arc in chosen_transition.out_arcs:
                 case["place_token_time"][arc.target] = t_end
-
             case["enabled"] = {}
             can_fire = True
             for arc in chosen_transition.in_arcs:
@@ -1138,12 +1564,14 @@ class SimulatorEngine:
                     break
             if can_fire:
                 case["marking"] = update_current_marking(case["marking"], chosen_transition)
+            #if we are at the final marking we stop and go to the next event
             if case["marking"] == self.final_marking:
                 if case_id not in completed_cases:
                     pbar.update(1)
                     completed_cases.add(case_id)
                 continue
 
+            #if the case generate too many events it will be cut
             if max_events_per_case is not None and case.get("sim_event_count", 0) >= max_events_per_case:
                 self.last_runaway_cases.append({
                     "case:concept:name": str(case.get("case_external_id", case.get("case_id"))),
@@ -1158,6 +1586,7 @@ class SimulatorEngine:
                     completed_cases.add(case_id)
                 continue
 
+            # if case non completed we compute the new transition and put the case back in the heap
             enabled = self._get_enabled_transitions_sorted(case["marking"])
             for t in enabled:
                 input_places = [arc.source for arc in self.net.arcs if arc.target == t]
@@ -1170,6 +1599,10 @@ class SimulatorEngine:
                 heapq.heappush(enabled_heap, (next_enabled_time, case_id))
 
         pbar.close()
+
+        ##########################################
+        # Final Dataframe Construction
+        ########################################## 
         df_log = pd.DataFrame(event_log, columns=["case:concept:name", "concept:name", "org:resource", "enabled:timestamp", "start:timestamp", "time:timestamp"] + attribute_columns)
         df_log["case:concept:name"] = df_log["case:concept:name"].apply(lambda x: f"case_{x+1}")
         if prev_log is not None:

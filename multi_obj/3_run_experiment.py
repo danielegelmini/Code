@@ -13,7 +13,8 @@ from utils.recommendation_functions import (
     compute_recommendations_top_k,
     act_with_res_func,
     next_possible_activities,
-    build_query_instances)
+    build_query_instances,
+    build_baseline_instances)
 
 from utils.get_features import load_case_study, get_case_study_features
 from utils.setup_cache import get_transition_graph
@@ -41,6 +42,8 @@ def _default_forbidden_map() -> Dict[str, list[str]]:
         "bpi17_after": bpi17_forbidden,
         "BPI12": ["O_ACCEPTED"],
         "BPI12_sim": ["O_ACCEPTED"],
+        "BPI12_reordered": ["O_ACCEPTED"],
+        "BPI12_reordered_sim": ["O_ACCEPTED"],
         "BAC": bac_forbidden,
     }
 
@@ -56,6 +59,8 @@ def run_experiment_top_k(
     random_state: Optional[int] = 1234,
     k: int = 5,
     rebuild_cache: bool = False,
+    gamma_cls: float = 0.5,
+    gamma_reg: float = 0.5,
 ) -> Dict[str, List[Dict[Any, Any]]]:
     """
     Same as run_experiment, but instead of a single best (activity, resource)
@@ -94,9 +99,6 @@ def run_experiment_top_k(
     reduced_percentage = 1 - reduced_threshold
 
     if method is None:
-        # NSGA-II is parked "until further notice" -- it is consistently slower
-        # than the exhaustive search on these small discrete candidate sets.
-        # Pass method="nsga2" explicitly to still run it.
         methods_to_run = ["exhaustive"]
     else:
         method = method.lower()
@@ -112,7 +114,7 @@ def run_experiment_top_k(
     print("Loading data...")
     train_data, test_data, test_log = load_case_study(case_study)
 
-    if case_study in {"BPI12", "BPI12_sim"}:
+    if case_study in {"BPI12", "BPI12_sim", "BPI12_reordered", "BPI12_reordered_sim"}:
         train_data = convert_dtypes_bpi12(train_data, "experiment")
         test_data  = convert_dtypes_bpi12(test_data, "experiment")
         test_log  = convert_dtypes_bpi12(test_log, "experiment")
@@ -162,12 +164,23 @@ def run_experiment_top_k(
     forbidden_map = _default_forbidden_map()
 
     # -------------------------
-    # Prepare query instances
+    # Prepare query instances + confidence-as-KPI baseline instances
     # -------------------------
     print("Preparing query instances...")
     query_instances_by_case = build_query_instances(
             test_data, case_id_name
         )  # Using test data with last row only
+
+    # The "no recommendation" baseline for the confidence-as-KPI filter (only
+    # used for method="exhaustive"): the real transition one prefix step
+    # earlier for the same case, taken as-is (see build_baseline_instances).
+    # Built from test_log (NOT test_data, which is loaded from
+    # test_log_with_last_act.csv and has only ONE row per case): test_log
+    # has one row per prefix length per case, with the same feature columns,
+    # so its second-to-last row per case is the state right before e_k.
+    # A case missing here (fewer than 2 rows in test_log) simply has the
+    # confidence filter disabled for it.
+    baseline_instances_by_case = build_baseline_instances(test_log, case_id_name)
 
     print(f"Setup done in {time.time() - t0:.2f}s. Running: {', '.join(methods_to_run)}\n")
 
@@ -188,7 +201,7 @@ def run_experiment_top_k(
             + (f" | pop_size: {pop_size} | n_generations: {n_generations}" if current_method == "nsga2" else "")
         )
         print(f"Generating top-{k} recommendations...")
-        recommendations_list, objectives_list = compute_recommendations_top_k(
+        recommendations_list, objectives_list, status_by_case = compute_recommendations_top_k(
             test_log=test_log,
             test_data=test_data,
             case_study=case_study,
@@ -208,6 +221,9 @@ def run_experiment_top_k(
             mutation_rate=mutation_rate,
             random_state=random_state,
             k=k,
+            baseline_instances_by_case=baseline_instances_by_case if current_method == "exhaustive" else None,
+            gamma_cls=gamma_cls,
+            gamma_reg=gamma_reg,
         )
 
         for rank, (recommendations, objectives) in enumerate(
@@ -232,13 +248,17 @@ def run_experiment_top_k(
                 save_path,
                 f"recommendations_{case_study}_{current_method}_top{rank}of{k}_objectives.csv",
             )
-            pd.DataFrame.from_dict(
+            obj_df = pd.DataFrame.from_dict(
                 objectives,
                 orient="index",
-                columns=["pred_outcome", "pred_sigmoid_mm_time", "pred_uncertainty"],
-            ).reset_index().rename(columns={"index": "case:concept:name"}).to_csv(
-                obj_filename, index=False
-            )
+                columns=["pred_outcome", "pred_sigmoid_mm_time", "pred_uncertainty",
+                         "prob_outcome_better", "prob_time_better"],
+            ).reset_index().rename(columns={"index": "case:concept:name"})
+            # status is per-case (not per-rank): "ok", "no_possible_actions", or
+            # "no_confident_recommendation" (valid pairs existed but none passed
+            # the gamma_cls/gamma_reg confidence filter -- exhaustive method only).
+            obj_df["status"] = obj_df["case:concept:name"].map(status_by_case)
+            obj_df.to_csv(obj_filename, index=False)
             print(f"Saved rank {rank}/{k} results to {filename}")
 
         results_by_method[current_method] = recommendations_list
@@ -321,20 +341,24 @@ if __name__ == "__main__":
         action="store_true",
         help="Force recomputing the (cached) transition system instead of loading it.",
     )
+    parser.add_argument(
+        "--gamma_cls",
+        type=float,
+        default=0.5,
+        help="Confidence-as-KPI threshold (method='exhaustive' only): minimum "
+             "required P(candidate outcome beats the real-transition baseline) "
+             "for a candidate to survive the pre-Pareto filter (default: 0.5).",
+    )
+    parser.add_argument(
+        "--gamma_reg",
+        type=float,
+        default=0.5,
+        help="Confidence-as-KPI threshold (method='exhaustive' only): minimum "
+             "required P(candidate remaining time beats the real-transition "
+             "baseline) for a candidate to survive the pre-Pareto filter (default: 0.5).",
+    )
 
     args = parser.parse_args()
-
-    # run_experiment(
-    #     case_study=args.case_study,
-    #     method=args.method,
-    #     window_size=args.window_size,
-    #     reduced_threshold=args.reduced_threshold,
-    #     pop_size=args.pop_size,
-    #     n_generations=args.n_generations,
-    #     crossover_rate=args.crossover_rate,
-    #     mutation_rate=args.mutation_rate,
-    #     random_state=args.random_state,
-    # )
 
     run_experiment_top_k(
         case_study=args.case_study,
@@ -348,6 +372,8 @@ if __name__ == "__main__":
         random_state=args.random_state,
         k=args.k,
         rebuild_cache=args.rebuild_cache,
+        gamma_cls=args.gamma_cls,
+        gamma_reg=args.gamma_reg,
     )
 
 # FOR RUNNING EXPERIMENT:

@@ -1,28 +1,34 @@
-"""Visualise the Pareto search of ONE method for one case, as a 2D + 3D pair.
+"""Visualise the Pareto search of ONE method for one case.
+
+For method="exhaustive" (the only one used in production): scores every
+valid (activity, resource) pair on two objectives -- outcome probability
+(max) and 1 - predicted time (max) -- filters them by confidence against a
+"no recommendation" baseline (gamma_cls/gamma_reg, the same confidence-as-KPI
+filter as utils/recommendation_functions.py's exhaustive_pareto_search) --
+the real transition that happened one prefix step earlier for the same case
+(see build_baseline_instances), NOT a synthetic or statistical pair -- and
+plots a single 2D scatter with four colour-coded categories: candidates
+discarded by the confidence filter, candidates confident enough but not on
+the Pareto front, the Pareto front itself, and the top-k pairs selected by
+p-dispersion.
+
+For method="nsga2" (parked, not used in production): UNCHANGED from before
+this filter existed -- three objectives (outcome, time, predictive
+uncertainty), no confidence filter, "no recommendation" baseline = the
+case's real historical continuation, plotted as a 2D + 3D pair with
+confidence (1 - normalised uncertainty) as point colour / third axis.
 
 For a given case study this script picks one test-set case (either a case id
-passed on the command line or, by default, the case whose Pareto front has the
-most solutions and the widest spread), then for that case:
-
-  * builds the transition system from the training log (cached on disk per
-    case study + window size -- see utils/setup_cache; pass --rebuild-cache to
-    force a recompute) and lists the valid (next activity, next resource) pairs
-    allowed after the case prefix;
-  * scores every pair with the predictive models on three objectives -- case
-    outcome probability (maximize), predicted total time (minimize, plotted as
-    1 - time) and prediction uncertainty (minimize, plotted as a normalised
-    "confidence" = 1 - uncertainty);
-  * computes the Pareto front once with the chosen method (``--method``,
-    default "exhaustive"; "nsga2" is parked) and records its wall-clock time;
-  * highlights the top-k actions chosen by p-dispersion and the "no
-    recommendation" baseline point (the case left as it happened in the log);
-  * saves a single figure under ``save_dir`` with TWO subplots of that same
-    front: a 2D view on the left (confidence encoded as point color) and a 3D
-    view on the right (confidence on the third axis), under one shared legend.
+passed on the command line or, by default, the case whose front has the most
+solutions and the widest spread), then builds the transition system and (for
+"exhaustive") the pair-frequency system from the training log -- both cached
+on disk per case study + window size, see utils/setup_cache; pass
+--rebuild-cache to force a recompute.
 
 Example usage:
     python 3_plot_pareto.py --case_study "BAC" --k 5
-    python 3_plot_pareto.py --case_study "BAC" --k 5 --method exhaustive
+    python 3_plot_pareto.py --case_study "BAC" --k 5 --method exhaustive --gamma_cls 0.5 --gamma_reg 0.5
+    python 3_plot_pareto.py --case_study "BAC" --k 5 --method nsga2
 """
 
 import os
@@ -42,17 +48,19 @@ from utils.setup_cache import get_transition_graph
 from utils.recommendation_functions import (
     act_with_res_func,
     build_query_instances,
+    build_baseline_instances,
     next_possible_activities,
     _to_row_df,
     nsga2_pareto_search,
-    exhaustive_pareto_search,
     _build_valid_pairs,
     _evaluate_candidates,
+    _compute_confidence_probabilities,
+    _filter_by_confidence,
     predict_time_and_uncertainty,
     predict_outcome_proba,
     select_top_k_pareto_actions,
 )
-from mpl_toolkits.mplot3d import Axes3D  # noqa: F401  (registers the 3d projection)
+from mpl_toolkits.mplot3d import Axes3D  # noqa: F401  (registers the 3d projection, nsga2 branch only)
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -74,52 +82,15 @@ def _default_forbidden_map():
         "bpi17_after": bpi17_forbidden,
         "BPI12": ["O_ACCEPTED"],
         "BPI12_sim": ["O_ACCEPTED"],
+        "BPI12_reordered": ["O_ACCEPTED"],
+        "BPI12_reordered_sim": ["O_ACCEPTED"],
         "BAC": bac_forbidden,
     }
 
-def evaluate_robust(valid_pairs, query_instance, predictive_outcome_model, predictive_time_model):
-    """Evaluate every candidate (activity, resource) pair on the three objectives.
 
-    The outcome objective is the temperature-calibrated P(y=positive)
-    (``predict_outcome_proba``) -- the same quantity the real Pareto search
-    uses in recommendation_functions -- so the plotted front matches it.
-
-    Input:
-        valid_pairs: iterable of (next_activity, next_resource) tuples to score.
-        query_instance: the prefix/query instance (row-like) describing the case
-            state before applying a recommendation.
-        predictive_outcome_model: fitted classifier for the case outcome; its
-            ``predict_proba`` (preferred) or ``predict`` is called.
-        predictive_time_model: fitted model returning the predicted total time
-            and its uncertainty via ``predict_time_and_uncertainty``.
-    Output:
-        np.ndarray of shape (len(valid_pairs), 3) with columns
-        [predicted_outcome, predicted_total_time, predicted_uncertainty] -- the
-        same three objectives used by the Pareto search.
-    """
-    base_outcome_row = _to_row_df(query_instance).iloc[0].to_dict()
-    base_time_row = _to_row_df(query_instance).iloc[0].to_dict()
-
-    outcome_rows, time_rows = [], []
-    for next_act, next_res in valid_pairs:
-        o_row = dict(base_outcome_row)
-        o_row['NEXT_ACTIVITY'] = next_act
-        o_row['NEXT_RESOURCE'] = next_res
-        outcome_rows.append(o_row)
-
-        t_row = dict(base_time_row)
-        t_row['NEXT_ACTIVITY'] = next_act
-        t_row['NEXT_RESOURCE'] = next_res
-        time_rows.append(t_row)
-
-    predicted_outcome = predict_outcome_proba(predictive_outcome_model, pd.DataFrame(outcome_rows))
-
-    predicted_total_time, predicted_uncertainty = predict_time_and_uncertainty(
-        predictive_time_model, pd.DataFrame(time_rows)
-    )
-    return np.column_stack([predicted_outcome, predicted_total_time, predicted_uncertainty])
-
-
+# ---------------------------------------------------------------------------
+# method="nsga2" plotting (unchanged from before the confidence-as-KPI filter)
+# ---------------------------------------------------------------------------
 def _draw_2d(ax, fig, *, all_x, all_y, all_conf, front_x, front_y, front_conf,
              top_k_x, top_k_y, baseline_x, baseline_y):
     """Left subplot: outcome vs 1 - time, confidence encoded as point color."""
@@ -167,6 +138,306 @@ def _draw_3d(ax, *, all_x, all_y, all_conf, front_x, front_y, front_conf,
     ax.set_title("3D view  --  confidence as third axis")
 
 
+def _run_and_plot_nsga2(
+    *, case_study, target_case_id, query_instance, poss, valid_pairs, act_with_res,
+    predictive_outcome_model, predictive_time_model, pop_size, n_generations,
+    random_state, k, elev, azim, save_dir,
+):
+    """NSGA2 branch: UNCHANGED from before the confidence-as-KPI filter existed.
+    Three objectives (outcome, time, predictive uncertainty), no confidence
+    filter, baseline = the case's real historical continuation. Plotted as a
+    2D + 3D pair with confidence (1 - normalised uncertainty) as point
+    colour / third axis."""
+    # "No recommendation" point: evaluate the models on the query_instance as it
+    # is, i.e. with NEXT_ACTIVITY/NEXT_RESOURCE equal to what actually happened
+    # in the log (no recommended action applied).
+    baseline_row = _to_row_df(query_instance)
+    baseline_outcome = float(predict_outcome_proba(predictive_outcome_model, baseline_row)[0])
+    baseline_time_arr, baseline_unc_arr = predict_time_and_uncertainty(predictive_time_model, baseline_row)
+    baseline_time = float(baseline_time_arr[0])
+    baseline_unc = float(baseline_unc_arr[0])
+    baseline_x = baseline_outcome
+    baseline_y = 1.0 - baseline_time
+
+    print("\nRunning method: NSGA2...")
+    t_start = time.time()
+    all_evals = _evaluate_candidates(valid_pairs, query_instance, predictive_outcome_model, predictive_time_model)
+    pareto_set = nsga2_pareto_search(
+        query_instance=query_instance,
+        possible_actions=poss,
+        act_with_res=act_with_res,
+        predictive_outcome_model=predictive_outcome_model,
+        predictive_time_model=predictive_time_model,
+        pop_size=pop_size,
+        n_generations=n_generations,
+        random_state=random_state,
+    )
+    elapsed_time = time.time() - t_start
+    print(f"  (NSGA2 done in {elapsed_time:.4f}s)")
+
+    if not pareto_set:
+        print("Empty Pareto set for nsga2. Nothing to plot.")
+        return
+
+    all_x = all_evals[:, 0]
+    all_y = 1.0 - all_evals[:, 1]
+    all_unc = all_evals[:, 2]
+
+    # Confidence = 1 - uncertainty, min-max normalised over all evaluated points
+    # (baseline included): 0 = least reliable, 1 = most reliable. Only used for
+    # the point color (2D) / the third axis (3D).
+    unc_all = np.concatenate([all_unc, [baseline_unc]])
+    u_lo, u_hi = float(np.min(unc_all)), float(np.max(unc_all))
+    u_span = (u_hi - u_lo) or 1.0
+    to_conf = lambda u: 1.0 - (np.asarray(u, dtype=float) - u_lo) / u_span
+    all_conf = to_conf(all_unc)
+    baseline_conf = float(to_conf(baseline_unc))
+
+    front_x_raw = np.array([item[2] for item in pareto_set], dtype=float)
+    front_y_raw = np.array([1.0 - item[3] for item in pareto_set], dtype=float)
+    front_unc_raw = np.array([item[4] for item in pareto_set], dtype=float)
+
+    pareto_vals = np.column_stack((front_x_raw, front_y_raw, front_unc_raw))
+    is_pareto = paretoset(pareto_vals, sense=["max", "max", "min"])
+    front_x = front_x_raw[is_pareto]
+    front_y = front_y_raw[is_pareto]
+    front_conf = to_conf(front_unc_raw[is_pareto])
+    order = np.argsort(front_x)
+    front_x, front_y, front_conf = front_x[order], front_y[order], front_conf[order]
+
+    # Points selected by select_top_k_pareto_actions (p-dispersion over the 3
+    # normalised objectives): a subset of the front, marked separately.
+    top_k_pairs = select_top_k_pareto_actions(pareto_set, k=k)
+    pair_to_obj = {(item[0], item[1]): (item[2], 1.0 - item[3], item[4]) for item in pareto_set}
+    top_k_x = np.array([pair_to_obj[p][0] for p in top_k_pairs], dtype=float)
+    top_k_y = np.array([pair_to_obj[p][1] for p in top_k_pairs], dtype=float)
+    top_k_conf = to_conf(np.array([pair_to_obj[p][2] for p in top_k_pairs], dtype=float))
+
+    # -------------------------------------------------------------------------
+    # One figure, two subplots of the SAME front: 2D (left) + 3D (right).
+    # -------------------------------------------------------------------------
+    fig = plt.figure(figsize=(20, 9))
+    ax2d = fig.add_subplot(1, 2, 1)
+    ax3d = fig.add_subplot(1, 2, 2, projection="3d")
+
+    _draw_2d(
+        ax2d, fig,
+        all_x=all_x, all_y=all_y, all_conf=all_conf,
+        front_x=front_x, front_y=front_y, front_conf=front_conf,
+        top_k_x=top_k_x, top_k_y=top_k_y,
+        baseline_x=baseline_x, baseline_y=baseline_y,
+    )
+    _draw_3d(
+        ax3d,
+        all_x=all_x, all_y=all_y, all_conf=all_conf,
+        front_x=front_x, front_y=front_y, front_conf=front_conf,
+        top_k_x=top_k_x, top_k_y=top_k_y, top_k_conf=top_k_conf,
+        baseline_x=baseline_x, baseline_y=baseline_y, baseline_conf=baseline_conf,
+        elev=elev, azim=azim,
+    )
+
+    fig.suptitle(
+        f"Pareto Front Analysis  |  Dataset: {case_study}  |  Case ID: {target_case_id}  |  "
+        f"Method: NSGA2  ({elapsed_time:.2f} s)",
+        fontsize=13, y=0.97,
+    )
+
+    # One shared legend for the whole figure, horizontal, under both subplots.
+    legend_handles = [
+        mlines.Line2D([], [], marker="o", color="none", markerfacecolor="grey",
+                      markersize=8, label="Evaluated pairs (2D: color = confidence / 3D: black)"),
+        mlines.Line2D([], [], marker="o", color="none", markerfacecolor="blue",
+                      markeredgecolor="black", markersize=9, label="Pareto front"),
+        mlines.Line2D([], [], marker="P", color="none", markeredgecolor="crimson",
+                      markerfacecolor="none", markersize=13, label=f"Top-{k} selected (p-dispersion)"),
+        mlines.Line2D([], [], marker="X", color="none", markerfacecolor="green",
+                      markersize=11, label="Ideal point (1, 1, 1)"),
+        mlines.Line2D([], [], marker="D", color="none", markerfacecolor="orange",
+                      markeredgecolor="black", markersize=9, label="No recommendation (baseline)"),
+    ]
+    fig.legend(handles=legend_handles, loc="lower center", ncol=len(legend_handles),
+               frameon=True, fontsize=9, bbox_to_anchor=(0.5, 0.02))
+    fig.text(0.5, 0.005,
+             "All axes are objectives to maximize: outcome probability, 1 - predicted time, "
+             "confidence = 1 - min-max-normalized uncertainty.",
+             ha="center", fontsize=8, style="italic")
+
+    # tight_layout misbehaves with 3D axes -> manual margins; no bbox_inches="tight"
+    # either (it clips the 3D z-axis label).
+    fig.subplots_adjust(left=0.05, right=0.95, bottom=0.16, top=0.88, wspace=0.12)
+
+    filename = f"pareto_{case_study}_{str(target_case_id).replace(':', '_')}_nsga2.jpg"
+    filepath = os.path.join(save_dir, filename)
+    fig.savefig(filepath, format="jpg", dpi=300)
+    plt.close(fig)
+    print(f"\nFigure saved to: {filepath}")
+
+
+# ---------------------------------------------------------------------------
+# method="exhaustive" plotting (confidence-as-KPI filter)
+# ---------------------------------------------------------------------------
+def _draw_2d_confidence(ax, fig, *, discarded_x, discarded_y, confident_x, confident_y,
+                         front_x, front_y, top_k_x, top_k_y, baseline_x, baseline_y,
+                         gamma_cls, gamma_reg):
+    """Single 2D view: outcome vs 1 - time, four colour-coded categories."""
+    ax.scatter(discarded_x, discarded_y, color="lightgrey", alpha=0.65, s=35, zorder=2)
+    ax.scatter(confident_x, confident_y, color="#4C72B0", alpha=0.8, s=45, zorder=3)
+    ax.plot(front_x, front_y, color="#DD8452", linestyle="--", alpha=0.5, zorder=4)
+    ax.scatter(front_x, front_y, color="#DD8452", s=90, edgecolors="black",
+               linewidths=1.2, zorder=5)
+    ax.scatter(top_k_x, top_k_y, facecolors="none", edgecolors="crimson", marker="P",
+               s=190, linewidths=1.9, zorder=8)
+    ax.scatter(1.0, 1.0, color="green", marker="X", s=110, zorder=10)
+    ax.scatter(baseline_x, baseline_y, color="black", marker="D", s=110,
+               edgecolors="white", linewidths=0.8, zorder=10)
+    ax.set_xlabel("Predicted Outcome (Probability, Maximize)")
+    ax.set_ylabel("1 - Predicted Time (Maximize)")
+    ax.set_title(
+        f"Confidence-as-KPI filtered Pareto front (exhaustive)\n"
+        f"gamma_cls={gamma_cls}   gamma_reg={gamma_reg}",
+        fontsize=11,
+    )
+    ax.grid(True, linestyle=":", alpha=0.7)
+
+    all_x = np.concatenate([discarded_x, confident_x, front_x, [baseline_x]])
+    all_y = np.concatenate([discarded_y, confident_y, front_y, [baseline_y]])
+    plot_x_min, plot_x_max = float(np.min(all_x)), float(np.max(all_x))
+    plot_y_min, plot_y_max = float(np.min(all_y)), float(np.max(all_y))
+    margin_x = (plot_x_max - plot_x_min) * 0.05 if plot_x_max != plot_x_min else 0.05
+    margin_y = (plot_y_max - plot_y_min) * 0.05 if plot_y_max != plot_y_min else 0.05
+    ax.set_xlim(min(plot_x_min - margin_x, -0.05), max(plot_x_max + margin_x, 1.05))
+    ax.set_ylim(min(plot_y_min - margin_y, -0.05), max(plot_y_max + margin_y, 1.05))
+
+
+def _run_and_plot_exhaustive(
+    *, case_study, target_case_id, query_instance, valid_pairs,
+    baseline_row, predictive_outcome_model, predictive_time_model,
+    gamma_cls, gamma_reg, k, save_dir,
+):
+    """Exhaustive branch: scores every valid pair on 2 objectives (outcome,
+    1 - time), filters by confidence against the baseline -- the real
+    transition one prefix step earlier for this same case, see
+    build_baseline_instances -- and plots ALL evaluated candidates in four
+    colour-coded categories: discarded by the confidence filter, confident
+    but not on the front, the Pareto front, and the top-k p-dispersion
+    selection -- the same _compute_confidence_probabilities /
+    _filter_by_confidence building blocks
+    utils.recommendation_functions.exhaustive_pareto_search() uses.
+
+    Returns early (printing a message) if this case has no baseline
+    available (fewer than 2 rows in test_log, see build_baseline_instances)."""
+    if baseline_row is None:
+        print("No confidence-as-KPI baseline available for this case (fewer than 2 "
+              "prefix rows in test_log). Nothing to plot.")
+        return
+
+    print("\nRunning method: EXHAUSTIVE...")
+    t_start = time.time()
+
+    all_evals = _evaluate_candidates(valid_pairs, query_instance, predictive_outcome_model, predictive_time_model)
+    all_x = all_evals[:, 0]
+    all_y = 1.0 - all_evals[:, 1]
+
+    baseline_row_df = _to_row_df(baseline_row)
+    baseline_x = float(predict_outcome_proba(predictive_outcome_model, baseline_row_df)[0])
+    baseline_time_arr, _ = predict_time_and_uncertainty(predictive_time_model, baseline_row_df)
+    baseline_y = 1.0 - float(baseline_time_arr[0])
+
+    prob_outcome_better, prob_time_better = _compute_confidence_probabilities(
+        valid_pairs, baseline_row, query_instance,
+        predictive_outcome_model, predictive_time_model,
+    )
+    keep_mask = _filter_by_confidence(prob_outcome_better, prob_time_better, gamma_cls, gamma_reg)
+    elapsed_time = time.time() - t_start
+    print(f"  (EXHAUSTIVE done in {elapsed_time:.4f}s)")
+
+    discarded_mask = ~keep_mask
+    survivors_idx = np.where(keep_mask)[0]
+
+    if survivors_idx.size == 0:
+        print("No candidate passed the confidence filter (gamma_cls / gamma_reg too strict). Nothing to plot.")
+        return
+
+    survivor_x = all_x[survivors_idx]
+    survivor_y = all_y[survivors_idx]
+
+    is_front = paretoset(np.column_stack([survivor_x, survivor_y]), sense=["max", "max"])
+    front_x = survivor_x[is_front]
+    front_y = survivor_y[is_front]
+    confident_x = survivor_x[~is_front]
+    confident_y = survivor_y[~is_front]
+
+    front_order = np.argsort(front_x)
+    front_x, front_y = front_x[front_order], front_y[front_order]
+
+    # Rebuild the (act, res, outcome, time, uncertainty, prob_outcome_better,
+    # prob_time_better) tuples select_top_k_pareto_actions expects, restricted
+    # to the confidence-filtered survivors -- same contract as
+    # exhaustive_pareto_search()'s return value.
+    survivor_tuples = [
+        (valid_pairs[i][0], valid_pairs[i][1], float(all_evals[i, 0]), float(all_evals[i, 1]),
+         float(all_evals[i, 2]), float(prob_outcome_better[i]), float(prob_time_better[i]))
+        for i in survivors_idx
+    ]
+    top_k_pairs = select_top_k_pareto_actions(survivor_tuples, k=k)
+    pair_to_xy = {
+        (act, res): (float(all_evals[i, 0]), 1.0 - float(all_evals[i, 1]))
+        for i, (act, res) in enumerate(valid_pairs)
+    }
+    top_k_x = np.array([pair_to_xy[p][0] for p in top_k_pairs], dtype=float)
+    top_k_y = np.array([pair_to_xy[p][1] for p in top_k_pairs], dtype=float)
+
+    fig, ax = plt.subplots(figsize=(11, 9.5))
+    _draw_2d_confidence(
+        ax, fig,
+        discarded_x=all_x[discarded_mask], discarded_y=all_y[discarded_mask],
+        confident_x=confident_x, confident_y=confident_y,
+        front_x=front_x, front_y=front_y,
+        top_k_x=top_k_x, top_k_y=top_k_y,
+        baseline_x=baseline_x, baseline_y=baseline_y,
+        gamma_cls=gamma_cls, gamma_reg=gamma_reg,
+    )
+
+    fig.suptitle(
+        f"Pareto Front Analysis  |  Dataset: {case_study}  |  Case ID: {target_case_id}  |  "
+        f"Method: EXHAUSTIVE  ({elapsed_time:.2f} s)",
+        fontsize=12, y=0.97,
+    )
+
+    legend_handles = [
+        mlines.Line2D([], [], marker="o", color="none", markerfacecolor="lightgrey",
+                      markersize=8, label="Discarded (below gamma_cls / gamma_reg)"),
+        mlines.Line2D([], [], marker="o", color="none", markerfacecolor="#4C72B0",
+                      markersize=8, label="Confident, not on Pareto front"),
+        mlines.Line2D([], [], marker="o", color="none", markerfacecolor="#DD8452",
+                      markeredgecolor="black", markersize=9, label="Pareto front"),
+        mlines.Line2D([], [], marker="P", color="none", markeredgecolor="crimson",
+                      markerfacecolor="none", markersize=13, label=f"Top-{k} selected (p-dispersion)"),
+        mlines.Line2D([], [], marker="X", color="none", markerfacecolor="green",
+                      markersize=11, label="Ideal point (1, 1)"),
+        mlines.Line2D([], [], marker="D", color="none", markerfacecolor="black",
+                      markeredgecolor="white", markersize=9,
+                      label="No recommendation (real transition, baseline)"),
+    ]
+    fig.legend(handles=legend_handles, loc="lower center", ncol=3,
+               frameon=True, fontsize=9, bbox_to_anchor=(0.5, 0.01))
+    fig.text(
+        0.5, 0.005,
+        f"{len(valid_pairs)} evaluated pairs: {int(discarded_mask.sum())} discarded, "
+        f"{len(confident_x)} confident (off-front), {len(front_x)} on the Pareto front, "
+        f"{len(top_k_pairs)} selected.",
+        ha="center", fontsize=8, style="italic",
+    )
+
+    fig.subplots_adjust(left=0.09, right=0.96, bottom=0.21, top=0.86)
+
+    filename = f"pareto_{case_study}_{str(target_case_id).replace(':', '_')}_exhaustive.jpg"
+    filepath = os.path.join(save_dir, filename)
+    fig.savefig(filepath, format="jpg", dpi=300)
+    plt.close(fig)
+    print(f"\nFigure saved to: {filepath}")
+
+
 def run_and_plot_comparison(
     case_study: str,
     target_case_id: str = None,
@@ -176,18 +447,22 @@ def run_and_plot_comparison(
     random_state: int = 1234,
     k: int = 5,
     method: str = "exhaustive",
+    gamma_cls: float = 0.5,
+    gamma_reg: float = 0.5,
     elev: float = 22.0,
     azim: float = 0,
     rebuild_cache: bool = False,
-    save_dir: str = "C:\\Users\\Utente\\Desktop\\tesi magistrale\\Code\\multi_obj\\pareto_front_images"
+    save_dir: str = None
 ):
-    """Run ONE Pareto search for one case and plot its front as a 2D + 3D pair.
+    """Run ONE Pareto search for one case and plot its result.
 
     For the chosen case the function evaluates every valid (activity, resource)
-    pair, computes the Pareto front with the requested ``method``, highlights
-    the top-k actions selected by p-dispersion, adds the "no recommendation"
-    baseline point, and saves a single figure to ``save_dir`` holding two views
-    of that same front: a 2D scatter (left) and a 3D scatter (right).
+    pair and saves a figure to ``save_dir``. method="exhaustive" (default)
+    additionally filters candidates by confidence against the real-transition
+    baseline (see build_baseline_instances) and plots a single 2D view with
+    four colour-coded categories (see _run_and_plot_exhaustive); method="nsga2"
+    plots the original 2D + 3D pair with confidence as colour/third axis and
+    no filter (see _run_and_plot_nsga2, unchanged).
 
     Input:
         case_study: dataset name (e.g. "BAC", "BPI12", "bpi17_before").
@@ -195,32 +470,40 @@ def run_and_plot_comparison(
             set, the case with the largest / most spread-out Pareto front is
             selected automatically.
         window_size: prefix window length used to build the transition system
-            and to look up the next possible activities.
+            (and, for method="exhaustive", the pair-frequency system) and to
+            look up the next possible activities / the baseline pair.
         pop_size: NSGA-II population size (only used when method="nsga2").
         n_generations: number of NSGA-II generations (only used when method="nsga2").
         random_state: seed for numpy / random and for NSGA-II reproducibility.
         k: number of Pareto points to highlight as the top-k selection.
         method: "exhaustive" (default) or "nsga2" -- the single search whose
-            front is plotted. In both subplots confidence = 1 - normalised
-            uncertainty (color in 2D, third axis in 3D).
-        elev, azim: elevation and azimuth (degrees) of the 3D camera in the
-            right subplot.
+            front is plotted.
+        gamma_cls, gamma_reg: confidence-as-KPI thresholds (method="exhaustive"
+            only) -- minimum required P(candidate beats baseline) on the
+            outcome / time objective respectively.
+        elev, azim: elevation and azimuth (degrees) of the 3D camera
+            (method="nsga2" only).
         save_dir: directory where the output .jpg figure is written (created
-            if missing).
+            if missing). Defaults to case_studies/<case_study>/pareto_front_images
+            so each case study's plots stay together instead of a single shared
+            folder outside case_studies/.
     Output:
-        None. The combined figure is written to disk and progress is printed
-        to stdout.
+        None. The figure is written to disk and progress is printed to stdout.
         The function returns early (printing a message) if the case has no
-        possible next activity, no valid action-resource pair, or an empty
-        Pareto set.
+        possible next activity, no valid action-resource pair, an empty
+        Pareto set, or (method="exhaustive") no candidate passes the
+        confidence filter.
     """
+    if save_dir is None:
+        save_dir = os.path.join("case_studies", case_study, "pareto_front_images")
+
     np.random.seed(random_state)
     random.seed(random_state)
 
     print(f"Loading data for {case_study}...")
     train_data, test_data, test_log = load_case_study(case_study)
 
-    if case_study in {"BPI12", "BPI12_sim"}:
+    if case_study in {"BPI12", "BPI12_sim", "BPI12_reordered", "BPI12_reordered_sim"}:
         train_data = convert_dtypes_bpi12(train_data, "experiment")
         test_data  = convert_dtypes_bpi12(test_data, "experiment")
         test_log  = convert_dtypes_bpi12(test_log, "experiment")
@@ -252,6 +535,13 @@ def run_and_plot_comparison(
     forbidden = set(forbidden_map.get(case_study, []))
 
     query_instances_by_case = build_query_instances(test_data, case_id_name)
+    # The "no recommendation" baseline for the confidence-as-KPI filter: the
+    # real transition one prefix step earlier for the same case, taken as-is
+    # (see build_baseline_instances). Built from test_log (NOT test_data,
+    # which is loaded from test_log_with_last_act.csv and has only ONE row
+    # per case) -- test_log has one row per prefix length per case, so its
+    # second-to-last row per case is the state right before e_k.
+    baseline_instances_by_case = build_baseline_instances(test_log, case_id_name)
     unique_cases = pd.unique(test_data[case_id_name])
 
     # Automatic selection of the case with the widest, most spread-out front
@@ -275,7 +565,7 @@ def run_and_plot_comparison(
             if n_solutions < 10:
                 continue
 
-            all_evals = evaluate_robust(valid_pairs, query_instance, predictive_outcome_model, predictive_time_model)
+            all_evals = _evaluate_candidates(valid_pairs, query_instance, predictive_outcome_model, predictive_time_model)
             all_x = all_evals[:, 0]
             all_y = 1.0 - all_evals[:, 1]
 
@@ -321,142 +611,31 @@ def run_and_plot_comparison(
         print("No valid action-resource pair.")
         return
 
-    # "No recommendation" point: evaluate the models on the query_instance as it
-    # is, i.e. with NEXT_ACTIVITY/NEXT_RESOURCE equal to what actually happened
-    # in the log (no recommended action applied).
-    baseline_row = _to_row_df(query_instance)
-    baseline_outcome = float(predict_outcome_proba(predictive_outcome_model, baseline_row)[0])
-    baseline_time_arr, baseline_unc_arr = predict_time_and_uncertainty(predictive_time_model, baseline_row)
-    baseline_time = float(baseline_time_arr[0])
-    baseline_unc = float(baseline_unc_arr[0])
-    baseline_x = baseline_outcome
-    baseline_y = 1.0 - baseline_time
-
-    # -------------------------------------------------------------------------
-    # Run the chosen search once, then draw its front twice (2D + 3D).
-    # -------------------------------------------------------------------------
     method = method.lower()
     if method not in {"exhaustive", "nsga2"}:
         raise ValueError("method must be either 'exhaustive' or 'nsga2'.")
 
-    print(f"\nRunning method: {method.upper()}...")
-    t_start = time.time()
-    all_evals = evaluate_robust(valid_pairs, query_instance, predictive_outcome_model, predictive_time_model)
+    os.makedirs(save_dir, exist_ok=True)
+
     if method == "exhaustive":
-        pareto_set = exhaustive_pareto_search(
-            query_instance, poss, predictive_outcome_model, predictive_time_model, act_with_res
-        )
-    else:  # nsga2
-        pareto_set = nsga2_pareto_search(
+        _run_and_plot_exhaustive(
+            case_study=case_study, target_case_id=target_case_id,
             query_instance=query_instance,
-            possible_actions=poss,
+            valid_pairs=valid_pairs, baseline_row=baseline_instances_by_case.get(target_case_id),
+            predictive_outcome_model=predictive_outcome_model,
+            predictive_time_model=predictive_time_model,
+            gamma_cls=gamma_cls, gamma_reg=gamma_reg, k=k, save_dir=save_dir,
+        )
+    else:
+        _run_and_plot_nsga2(
+            case_study=case_study, target_case_id=target_case_id,
+            query_instance=query_instance, poss=poss, valid_pairs=valid_pairs,
             act_with_res=act_with_res,
             predictive_outcome_model=predictive_outcome_model,
             predictive_time_model=predictive_time_model,
-            pop_size=pop_size,
-            n_generations=n_generations,
-            random_state=random_state,
+            pop_size=pop_size, n_generations=n_generations, random_state=random_state,
+            k=k, elev=elev, azim=azim, save_dir=save_dir,
         )
-    elapsed_time = time.time() - t_start
-    print(f"  ({method.upper()} done in {elapsed_time:.4f}s)")
-
-    if not pareto_set:
-        print(f"Empty Pareto set for {method}. Nothing to plot.")
-        return
-
-    all_x = all_evals[:, 0]
-    all_y = 1.0 - all_evals[:, 1]
-    all_unc = all_evals[:, 2]
-
-    # Confidence = 1 - uncertainty, min-max normalised over all evaluated points
-    # (baseline included): 0 = least reliable, 1 = most reliable. Only used for
-    # the point color (2D) / the third axis (3D).
-    unc_all = np.concatenate([all_unc, [baseline_unc]])
-    u_lo, u_hi = float(np.min(unc_all)), float(np.max(unc_all))
-    u_span = (u_hi - u_lo) or 1.0
-    to_conf = lambda u: 1.0 - (np.asarray(u, dtype=float) - u_lo) / u_span
-    all_conf = to_conf(all_unc)
-    baseline_conf = float(to_conf(baseline_unc))
-
-    front_x_raw = np.array([item[2] for item in pareto_set], dtype=float)
-    front_y_raw = np.array([1.0 - item[3] for item in pareto_set], dtype=float)
-    front_unc_raw = np.array([item[4] for item in pareto_set], dtype=float)
-
-    pareto_vals = np.column_stack((front_x_raw, front_y_raw, front_unc_raw))
-    is_pareto = paretoset(pareto_vals, sense=["max", "max", "min"])
-    front_x = front_x_raw[is_pareto]
-    front_y = front_y_raw[is_pareto]
-    front_conf = to_conf(front_unc_raw[is_pareto])
-    order = np.argsort(front_x)
-    front_x, front_y, front_conf = front_x[order], front_y[order], front_conf[order]
-
-    # Points selected by select_top_k_pareto_actions (p-dispersion over the 3
-    # normalised objectives): a subset of the front, marked separately.
-    top_k_pairs = select_top_k_pareto_actions(pareto_set, k=k)
-    pair_to_obj = {(item[0], item[1]): (item[2], 1.0 - item[3], item[4]) for item in pareto_set}
-    top_k_x = np.array([pair_to_obj[p][0] for p in top_k_pairs], dtype=float)
-    top_k_y = np.array([pair_to_obj[p][1] for p in top_k_pairs], dtype=float)
-    top_k_conf = to_conf(np.array([pair_to_obj[p][2] for p in top_k_pairs], dtype=float))
-
-    # -------------------------------------------------------------------------
-    # One figure, two subplots of the SAME front: 2D (left) + 3D (right).
-    # -------------------------------------------------------------------------
-    os.makedirs(save_dir, exist_ok=True)
-    fig = plt.figure(figsize=(20, 9))
-    ax2d = fig.add_subplot(1, 2, 1)
-    ax3d = fig.add_subplot(1, 2, 2, projection="3d")
-
-    _draw_2d(
-        ax2d, fig,
-        all_x=all_x, all_y=all_y, all_conf=all_conf,
-        front_x=front_x, front_y=front_y, front_conf=front_conf,
-        top_k_x=top_k_x, top_k_y=top_k_y,
-        baseline_x=baseline_x, baseline_y=baseline_y,
-    )
-    _draw_3d(
-        ax3d,
-        all_x=all_x, all_y=all_y, all_conf=all_conf,
-        front_x=front_x, front_y=front_y, front_conf=front_conf,
-        top_k_x=top_k_x, top_k_y=top_k_y, top_k_conf=top_k_conf,
-        baseline_x=baseline_x, baseline_y=baseline_y, baseline_conf=baseline_conf,
-        elev=elev, azim=azim,
-    )
-
-    fig.suptitle(
-        f"Pareto Front Analysis  |  Dataset: {case_study}  |  Case ID: {target_case_id}  |  "
-        f"Method: {method.upper()}  ({elapsed_time:.2f} s)",
-        fontsize=13, y=0.97,
-    )
-
-    # One shared legend for the whole figure, horizontal, under both subplots.
-    legend_handles = [
-        mlines.Line2D([], [], marker="o", color="none", markerfacecolor="grey",
-                      markersize=8, label="Evaluated pairs (2D: color = confidence / 3D: black)"),
-        mlines.Line2D([], [], marker="o", color="none", markerfacecolor="blue",
-                      markeredgecolor="black", markersize=9, label="Pareto front"),
-        mlines.Line2D([], [], marker="P", color="none", markeredgecolor="crimson",
-                      markerfacecolor="none", markersize=13, label=f"Top-{k} selected (p-dispersion)"),
-        mlines.Line2D([], [], marker="X", color="none", markerfacecolor="green",
-                      markersize=11, label="Ideal point (1, 1, 1)"),
-        mlines.Line2D([], [], marker="D", color="none", markerfacecolor="orange",
-                      markeredgecolor="black", markersize=9, label="No recommendation (baseline)"),
-    ]
-    fig.legend(handles=legend_handles, loc="lower center", ncol=len(legend_handles),
-               frameon=True, fontsize=9, bbox_to_anchor=(0.5, 0.02))
-    fig.text(0.5, 0.005,
-             "All axes are objectives to maximize: outcome probability, 1 - predicted time, "
-             "confidence = 1 - min-max-normalized uncertainty.",
-             ha="center", fontsize=8, style="italic")
-
-    # tight_layout misbehaves with 3D axes -> manual margins; no bbox_inches="tight"
-    # either (it clips the 3D z-axis label).
-    fig.subplots_adjust(left=0.05, right=0.95, bottom=0.16, top=0.88, wspace=0.12)
-
-    filename = f"pareto_{case_study}_{str(target_case_id).replace(':', '_')}_{method}.jpg"
-    filepath = os.path.join(save_dir, filename)
-    fig.savefig(filepath, format="jpg", dpi=300)
-    plt.close(fig)
-    print(f"\nFigure saved to: {filepath}")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Plot Pareto comparison with execution times.')
@@ -465,23 +644,29 @@ if __name__ == '__main__':
     parser.add_argument('--k', type=int, default=5, help='Number of top-k points to highlight (default: 5)')
     parser.add_argument('--method', type=str, default='exhaustive', choices=['exhaustive', 'nsga2'],
                         help="Search method whose front is plotted (default: exhaustive; nsga2 is parked)")
+    parser.add_argument('--gamma_cls', type=float, default=0.5,
+                        help="Confidence-as-KPI threshold (method='exhaustive' only): minimum "
+                             "required P(candidate outcome beats baseline) (default: 0.5)")
+    parser.add_argument('--gamma_reg', type=float, default=0.5,
+                        help="Confidence-as-KPI threshold (method='exhaustive' only): minimum "
+                             "required P(candidate time beats baseline) (default: 0.5)")
     parser.add_argument('--elev', type=float, default=22.0,
-                        help="3D camera elevation in degrees for the right subplot (default: 22)")
+                        help="3D camera elevation in degrees (method='nsga2' only, default: 22)")
     parser.add_argument('--azim', type=float, default=-45.0,
-                        help="3D camera azimuth in degrees for the right subplot (default: -45)")
+                        help="3D camera azimuth in degrees (method='nsga2' only, default: -45)")
     parser.add_argument('--rebuild-cache', dest='rebuild_cache', action='store_true',
                         help="Force recomputing the (cached) transition system instead of loading it")
 
     try:
         args = parser.parse_args()
         run_and_plot_comparison(case_study=args.case_study, target_case_id=args.case_id, k=args.k,
-                                method=args.method, elev=args.elev, azim=args.azim,
-                                rebuild_cache=args.rebuild_cache)
+                                method=args.method, gamma_cls=args.gamma_cls, gamma_reg=args.gamma_reg,
+                                elev=args.elev, azim=args.azim, rebuild_cache=args.rebuild_cache)
     except Exception as e:
         print(f"Error during execution: {e}")
 
 
 # example usage:
 # python 3_plot_pareto.py --case_study "BAC" --k 5
-# python 3_plot_pareto.py --case_study "BAC" --k 5 --method exhaustive
-# python 3_plot_pareto.py --case_study "BAC" --k 5 --elev 30 --azim 45
+# python 3_plot_pareto.py --case_study "BAC" --k 5 --method exhaustive --gamma_cls 0.5 --gamma_reg 0.5
+# python 3_plot_pareto.py --case_study "BAC" --k 5 --method nsga2 --elev 30 --azim 45

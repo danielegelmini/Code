@@ -25,20 +25,33 @@ start_date_name = "start:timestamp"
 resource_column_name = "org:resource"
 outcome_name = "outcome"
 
-# Pareto objectives:
+# Pareto objectives -- method "exhaustive" (the only one used in production;
+# "nsga2" below is untouched, see its own docstrings):
 #   #1  outcome probability, maximised -- the TEMPERATURE-CALIBRATED P(y=positive)
-#       (predict_outcome_proba); the classifier's confidence enters the front
-#       here, as a better-calibrated objective #1, not as a separate axis (its
-#       entropy is a deterministic function of P, so it would just mirror #1).
-#   #2  predicted remaining time, minimised.
-#   #3  the regressor's TOTAL predictive std of the time prediction (aleatoric +
-#       epistemic; UncertaintyRegressor exposes it as out["std"]), minimised --
-#       "prefer recommendations whose predicted duration the model is confident
-#       about".
-# The objectives are used ONLY to build the Pareto front and pick the
-# (activity, resource) pairs; they are never written to the recommendation CSVs
-# and never reach the simulation. The classifier's entropy decomposition stays
-# diagnostic-only and is not a Pareto objective.
+#       (predict_outcome_proba).
+#   #2  predicted remaining time, minimised (plotted/optimised as 1 - time).
+# Before these two objectives are turned into a Pareto front, every candidate
+# (activity, resource) pair is scored against a "no recommendation" BASELINE --
+# NOT a synthetic or statistical pair, but the real transition that already
+# happened one prefix step earlier for this same case (build_baseline_instances):
+# if the case's current prefix is e_1,...,e_k (what "metodo" evaluates candidate
+# e_{k+1} against), the baseline re-evaluates the model on prefix e_1,...,e_{k-1}
+# with its own real NEXT_ACTIVITY/NEXT_RESOURCE, which is exactly e_k -- with the
+# probability that the candidate beats that baseline on each objective
+# (_compute_confidence_probabilities, estimated empirically from the SAME fitted
+# models' virtual-ensemble members for baseline and candidate, so their
+# correlation is captured for free -- no independence/normality assumption).
+# Candidates whose probability falls below gamma_cls (outcome) or
+# gamma_reg (time) are dropped (_filter_by_confidence) BEFORE the Pareto front
+# is built, so predictive uncertainty acts as a pre-filter/confidence gate
+# rather than as a third Pareto axis. The two probabilities are carried
+# through as diagnostics (never written to the recommendation CSVs fed to the
+# simulation, only to the separate `_objectives.csv` sidecar).
+#
+# NSGA2 (nsga2_pareto_search / _ActivityResourceProblem) is NOT part of this
+# confidence-as-KPI change and keeps its original 3 objectives (outcome, time,
+# and the regressor's TOTAL predictive std, minimised) with no confidence
+# filter -- see those functions' own docstrings.
 
 _UNCERTAINTY_WARNED = False
 _CALIBRATION_WARNED = False
@@ -134,6 +147,80 @@ def predict_outcome_proba(predictive_outcome_model, rows_df):
         _CALIBRATION_WARNED = True
     return np.asarray(predictive_outcome_model.predict_proba(rows_df), dtype=float)[:, 1]
 
+
+def predict_time_members(predictive_time_model, rows_df):
+    """
+    Return the per-virtual-ensemble-member predicted mean time for rows_df,
+    as a 2-D numpy array of shape (n_rows, ve_count) -- see
+    UncertaintyRegressor.predict_members(). Used by
+    _compute_confidence_probabilities() to compare a baseline row and a
+    candidate row member-by-member.
+
+    Falls back to a single-column array of the raw point prediction (a
+    "1-member ensemble") for an older time model without uncertainty
+    support, reusing the same one-time warning as predict_time_and_uncertainty.
+    """
+    global _UNCERTAINTY_WARNED
+
+    predictor = predictive_time_model
+    predictor_input = rows_df
+    if hasattr(predictive_time_model, "named_steps"):
+        steps = predictive_time_model.named_steps
+        predictor = steps.get("prediction", predictive_time_model)
+        if "transformation" in steps:
+            predictor_input = steps["transformation"].transform(rows_df)
+
+    if hasattr(predictor, "predict_members"):
+        return np.asarray(predictor.predict_members(predictor_input), dtype=float)
+
+    if not _UNCERTAINTY_WARNED:
+        print(
+            "[recommendation_functions] time model exposes no uncertainty; the "
+            "confidence-as-KPI filter degrades to a single-member ensemble "
+            "(point prediction only). Retrain the time model with "
+            "loss_function='RMSEWithUncertainty'."
+        )
+        _UNCERTAINTY_WARNED = True
+    mean = np.asarray(predictive_time_model.predict(rows_df), dtype=float)
+    return mean.reshape(-1, 1)
+
+
+def predict_outcome_members(predictive_outcome_model, rows_df):
+    """
+    Return the per-virtual-ensemble-member CALIBRATED P(y=positive) for
+    rows_df, as a 2-D numpy array of shape (n_rows, ve_count) -- see
+    UncertaintyClassifier.predict_members(). Used by
+    _compute_confidence_probabilities() to compare a baseline row and a
+    candidate row member-by-member.
+
+    Falls back to a single-column array of the raw predict_proba point
+    prediction (a "1-member ensemble") for an older outcome model without
+    uncertainty support, reusing the same one-time warning as predict_outcome_proba.
+    """
+    global _CALIBRATION_WARNED
+
+    predictor = predictive_outcome_model
+    predictor_input = rows_df
+    if hasattr(predictive_outcome_model, "named_steps"):
+        steps = predictive_outcome_model.named_steps
+        predictor = steps.get("prediction", predictive_outcome_model)
+        if "transformation" in steps:
+            predictor_input = steps["transformation"].transform(rows_df)
+
+    if hasattr(predictor, "predict_members"):
+        return np.asarray(predictor.predict_members(predictor_input), dtype=float)
+
+    if not _CALIBRATION_WARNED:
+        print(
+            "[recommendation_functions] outcome model exposes no temperature "
+            "calibration; the confidence-as-KPI filter degrades to a "
+            "single-member ensemble (raw predict_proba only). Retrain the "
+            "outcome model with posterior_sampling=True to calibrate it."
+        )
+        _CALIBRATION_WARNED = True
+    proba = np.asarray(predictive_outcome_model.predict_proba(rows_df), dtype=float)[:, 1]
+    return proba.reshape(-1, 1)
+
 # ---------------------------------------------------------------------------
 # Utils for run_experiment.py
 # ---------------------------------------------------------------------------
@@ -177,6 +264,55 @@ def build_query_instances(test_df, case_id_name):
         for _, row in test_df.iterrows()
     }
     return query_instances_by_case
+
+
+def build_baseline_instances(test_df, case_id_name):
+    """
+    Creates the confidence-as-KPI "no recommendation" baseline instance for
+    each case: the query instance ONE prefix step shorter than
+    build_query_instances' (the second-to-last row for that case instead of
+    the last), used completely AS-IS -- including its own NEXT_ACTIVITY /
+    NEXT_RESOURCE, which are exactly the activity and resource that really
+    happened next (i.e. the last step of the "metodo" prefix, e_k, for a
+    case whose current prefix is e_1,...,e_k).
+
+    In other words: rather than asking the model to score a synthetic or
+    statistical "no recommendation" pair, this re-evaluates the model on the
+    real, already-observed transition e_{k-1} -> e_k, evaluated one prefix
+    step earlier than the candidate recommendations for e_1,...,e_k -> e_{k+1}.
+    This only works because test_df has one row per prefix length for every
+    case (not just the final one) -- confirmed rows are in chronological
+    order within each case, and that each row's own NEXT_ACTIVITY/
+    NEXT_RESOURCE already equal the following row's concept:name/org:resource
+    (see pre_processing_functions.add_next_act_res).
+
+    IMPORTANT: this is NOT the same dataframe passed to build_query_instances
+    (that one -- called `test_data` throughout this codebase -- is loaded
+    from test_log_with_last_act.csv and has only ONE row per case, the final
+    query instance). Pass `test_log` instead (load_case_study()'s third
+    return value, "all prefixes in test data") -- confirmed to have one row
+    per prefix length per case, the same feature columns, and its own
+    last row per case matching test_data's row for that case exactly.
+
+    Args:
+        test_df (pandas.DataFrame): test_log (NOT test_data) -- the
+            multi-row-per-case dataframe with one row per prefix length.
+        case_id_name (str): The name of the column containing case IDs.
+
+    Returns:
+        dict: {case_id: {"feature_name": value, ...}}. Cases with fewer than
+        2 rows in test_df (no earlier prefix to fall back to) are simply
+        absent from the returned dict -- callers must treat a missing case
+        as "no baseline available" rather than assuming every case has one.
+    """
+    drop_cols = {case_id_name, start_date_name, end_date_name, "total_time", "remaining_time", "label", "sigmoid_mm", 'time_from_midnight', outcome_name}
+    feature_columns = [c for c in test_df.columns if c not in drop_cols]
+    baseline_instances_by_case = {}
+    for cid, group in test_df.groupby(case_id_name, sort=False):
+        if len(group) < 2:
+            continue
+        baseline_instances_by_case[cid] = group.iloc[-2][feature_columns].to_dict()
+    return baseline_instances_by_case
 
 # ---------------------------------------------------------------------------
 # Utils for recommendation functions
@@ -302,15 +438,20 @@ def _build_valid_pairs(possible_actions: List[str], act_with_res: Dict[str, List
     return pairs
 
 
-def _evaluate_candidates(
+def _build_candidate_rows(
     candidate_pairs: List[Tuple[str, str]],
     query_instance,
     predictive_outcome_model,
     predictive_time_model,
-) -> np.ndarray:
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
-    Evaluates a list of candidate (activity, resource) pairs by passing them through 
-    the predictive models to estimate both the outcome and the required time.
+    Build the outcome-model and time-model input rows for a batch of
+    candidate (activity, resource) pairs applied to the same query_instance
+    (prefix state), one row per pair, in the same order as candidate_pairs.
+
+    Shared by _evaluate_candidates (point predictions) and
+    _compute_confidence_probabilities (per-ensemble-member predictions), so
+    both score candidates on exactly the same rows.
 
     Args:
         candidate_pairs (List[Tuple[str, str]]): The combinations of (activity, resource) to evaluate.
@@ -319,12 +460,7 @@ def _evaluate_candidates(
         predictive_time_model: The trained model used to predict the total or remaining time.
 
     Returns:
-        np.ndarray: A 2D numpy array where each row corresponds to a candidate pair,
-                    formatted as [predicted_outcome, predicted_total_time,
-                    predicted_uncertainty]. predicted_outcome is the
-                    temperature-calibrated P(y=positive) (predict_outcome_proba);
-                    predicted_uncertainty is the recalibrated total std of the
-                    time prediction.
+        (outcome_rows_df, time_rows_df): one row per candidate pair each.
     """
     base_outcome_row = align_query_instance_with_model(query_instance, predictive_outcome_model).iloc[0].to_dict()
     base_time_row = align_query_instance_with_model(query_instance, predictive_time_model).iloc[0].to_dict()
@@ -341,11 +477,126 @@ def _evaluate_candidates(
         t_row['NEXT_RESOURCE'] = next_res
         time_rows.append(t_row)
 
-    predicted_outcome = predict_outcome_proba(predictive_outcome_model, pd.DataFrame(outcome_rows))
+    return pd.DataFrame(outcome_rows), pd.DataFrame(time_rows)
+
+
+def _evaluate_candidates(
+    candidate_pairs: List[Tuple[str, str]],
+    query_instance,
+    predictive_outcome_model,
+    predictive_time_model,
+) -> np.ndarray:
+    """
+    Evaluates a list of candidate (activity, resource) pairs by passing them through
+    the predictive models to estimate both the outcome and the required time.
+
+    Args:
+        candidate_pairs (List[Tuple[str, str]]): The combinations of (activity, resource) to evaluate.
+        query_instance (pd.DataFrame, pd.Series, or dict): The current state features of the case.
+        predictive_outcome_model: The trained model used to predict the target outcome.
+        predictive_time_model: The trained model used to predict the total or remaining time.
+
+    Returns:
+        np.ndarray: A 2D numpy array where each row corresponds to a candidate pair,
+                    formatted as [predicted_outcome, predicted_total_time,
+                    predicted_uncertainty]. predicted_outcome is the
+                    temperature-calibrated P(y=positive) (predict_outcome_proba);
+                    predicted_uncertainty is the recalibrated total std of the
+                    time prediction.
+    """
+    outcome_rows_df, time_rows_df = _build_candidate_rows(
+        candidate_pairs, query_instance, predictive_outcome_model, predictive_time_model
+    )
+    predicted_outcome = predict_outcome_proba(predictive_outcome_model, outcome_rows_df)
     predicted_total_time, predicted_uncertainty = predict_time_and_uncertainty(
-        predictive_time_model, pd.DataFrame(time_rows)
+        predictive_time_model, time_rows_df
     )
     return np.column_stack([predicted_outcome, predicted_total_time, predicted_uncertainty])
+
+
+def _compute_confidence_probabilities(
+    candidate_pairs: List[Tuple[str, str]],
+    baseline_row,
+    query_instance,
+    predictive_outcome_model,
+    predictive_time_model,
+) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    For every candidate (activity, resource) pair, estimate the probability
+    that it beats the "no recommendation" baseline on each objective.
+
+    The baseline is NOT a synthetic or statistical pair: it is the model's
+    prediction on the real, already-observed transition that happened one
+    prefix step earlier for this same case (see build_baseline_instances) --
+    baseline_row already carries its own native NEXT_ACTIVITY/NEXT_RESOURCE,
+    so it is evaluated completely as-is, with no pair substitution.
+
+    Both the baseline and every candidate are scored member-by-member on the
+    SAME fitted models' virtual-ensemble members (predict_outcome_members /
+    predict_time_members), so the probability is the empirical fraction of
+    members for which the candidate wins. Because baseline and candidates
+    come from literally the same model, this captures whatever correlation
+    exists between them automatically -- no independence assumption, no
+    normality assumption.
+
+    Args:
+        candidate_pairs: list of (activity, resource) tuples to score.
+        baseline_row: this case's baseline instance (build_baseline_instances
+            output for one case) -- a dict-like row with its own
+            NEXT_ACTIVITY/NEXT_RESOURCE already set to the real e_k.
+        query_instance: the prefix/query instance for this case (e_1,...,e_k),
+            against which candidate_pairs are evaluated as e_{k+1}.
+        predictive_outcome_model, predictive_time_model: fitted pipelines.
+
+    Returns:
+        (prob_outcome_better, prob_time_better): two 1-D numpy arrays,
+        aligned with candidate_pairs. prob_outcome_better[i] is the fraction
+        of outcome-model members for which candidate i's calibrated outcome
+        probability exceeds the baseline's; prob_time_better[i] is the
+        fraction of time-model members for which candidate i's predicted
+        time is BELOW the baseline's (equivalently, 1 - time is above it).
+    """
+    baseline_outcome_row = align_query_instance_with_model(baseline_row, predictive_outcome_model)
+    baseline_time_row = align_query_instance_with_model(baseline_row, predictive_time_model)
+    candidate_outcome_rows, candidate_time_rows = _build_candidate_rows(
+        candidate_pairs, query_instance, predictive_outcome_model, predictive_time_model
+    )
+    outcome_rows_df = pd.concat([baseline_outcome_row, candidate_outcome_rows], ignore_index=True)
+    time_rows_df = pd.concat([baseline_time_row, candidate_time_rows], ignore_index=True)
+
+    outcome_members = predict_outcome_members(predictive_outcome_model, outcome_rows_df)
+    time_members = predict_time_members(predictive_time_model, time_rows_df)
+
+    baseline_outcome_members, candidate_outcome_members = outcome_members[0], outcome_members[1:]
+    baseline_time_members, candidate_time_members = time_members[0], time_members[1:]
+
+    prob_outcome_better = (candidate_outcome_members > baseline_outcome_members[None, :]).mean(axis=1)
+    prob_time_better = (candidate_time_members < baseline_time_members[None, :]).mean(axis=1)
+
+    return prob_outcome_better, prob_time_better
+
+
+def _filter_by_confidence(
+    prob_outcome_better: np.ndarray,
+    prob_time_better: np.ndarray,
+    gamma_cls: float,
+    gamma_reg: float,
+) -> np.ndarray:
+    """
+    Boolean mask selecting the candidates whose probability of beating the
+    baseline meets both confidence thresholds.
+
+    Args:
+        prob_outcome_better, prob_time_better: outputs of
+            _compute_confidence_probabilities(), aligned with the same
+            candidate_pairs.
+        gamma_cls: minimum required prob_outcome_better.
+        gamma_reg: minimum required prob_time_better.
+
+    Returns:
+        np.ndarray of bool.
+    """
+    return (np.asarray(prob_outcome_better) >= gamma_cls) & (np.asarray(prob_time_better) >= gamma_reg)
 
 # ---------------------------------------------------------------------------
 # Exhaustive research
@@ -356,10 +607,24 @@ def exhaustive_pareto_search(
     predictive_outcome_model,
     predictive_time_model,
     act_with_res,
+    baseline_row=None,
+    gamma_cls=0.5,
+    gamma_reg=0.5,
 ):
     """
-    Computes predictions for all valid combinations of possible next activities and resources 
-    to build the complete search space for evaluation.
+    Computes predictions for all valid combinations of possible next activities and resources,
+    filters them by confidence against a "no recommendation" baseline, and returns the
+    survivors for the caller to build a 2D Pareto front from (outcome, 1 - time).
+
+    The confidence filter (see _compute_confidence_probabilities /
+    _filter_by_confidence) is applied here, BEFORE the caller builds the
+    Pareto front, so predictive uncertainty acts as a pre-filter/confidence
+    gate rather than as a third Pareto objective. It is skipped entirely
+    (every valid pair is kept, prob_outcome_better = prob_time_better = 1.0)
+    when baseline_row is None -- lets this function still be called without
+    it (e.g. multi_obj/3_tune_nsga2_params.py's NSGA2-vs-exhaustive benchmark,
+    which is untouched by this change; or a case with no valid baseline, see
+    build_baseline_instances).
 
     Args:
         query_instance (pandas.DataFrame, pandas.Series, or dict): The current state features of the case.
@@ -367,20 +632,45 @@ def exhaustive_pareto_search(
         predictive_outcome_model (estimator): The predictive model for the primary outcome.
         predictive_time_model (estimator): The predictive model for total/remaining time.
         act_with_res (dict of str to list of str): Mapping of valid resources for each activity.
+        baseline_row (dict-like, optional): this case's confidence-filter baseline instance
+            (see build_baseline_instances) -- the real transition one prefix step earlier for
+            this case, used as-is with its own native NEXT_ACTIVITY/NEXT_RESOURCE. None disables
+            the confidence filter.
+        gamma_cls (float, optional): minimum required P(candidate outcome beats baseline). Defaults to 0.5.
+        gamma_reg (float, optional): minimum required P(candidate time beats baseline). Defaults to 0.5.
 
     Returns:
-        list of tuple: A list of tuples containing (activity, resource,
-        predicted_outcome, predicted_time, predicted_uncertainty) for all
-        evaluated valid pairs.
+        list of tuple: (activity, resource, predicted_outcome, predicted_time,
+        predicted_uncertainty, prob_outcome_better, prob_time_better) for
+        every valid pair that passed the confidence filter. When
+        baseline_row is None, no comparison was actually made -- every pair
+        is kept (keep_mask all True) but prob_outcome_better/prob_time_better
+        are NaN, not 1.0, so downstream diagnostics never read "no baseline"
+        as "100% confident" (see compute_recommendations_top_k's
+        "ok_no_baseline" status for the same distinction).
     """
     valid_pairs = _build_valid_pairs(possible_actions, act_with_res)
     if not valid_pairs:
         return []
 
     objs = _evaluate_candidates(valid_pairs, query_instance, predictive_outcome_model, predictive_time_model)
+
+    if baseline_row is not None:
+        prob_outcome_better, prob_time_better = _compute_confidence_probabilities(
+            valid_pairs, baseline_row, query_instance,
+            predictive_outcome_model, predictive_time_model,
+        )
+        keep_mask = _filter_by_confidence(prob_outcome_better, prob_time_better, gamma_cls, gamma_reg)
+    else:
+        prob_outcome_better = np.full(len(valid_pairs), np.nan, dtype=float)
+        prob_time_better = np.full(len(valid_pairs), np.nan, dtype=float)
+        keep_mask = np.ones(len(valid_pairs), dtype=bool)
+
     return [
-        (act, res, float(outcome), float(total_time), float(uncertainty))
-        for (act, res), (outcome, total_time, uncertainty) in zip(valid_pairs, objs)
+        (act, res, float(outcome), float(total_time), float(uncertainty), float(p_out), float(p_time))
+        for (act, res), (outcome, total_time, uncertainty), p_out, p_time, keep
+        in zip(valid_pairs, objs, prob_outcome_better, prob_time_better, keep_mask)
+        if keep
     ]
 
 
@@ -503,10 +793,22 @@ def nsga2_pareto_search(
 # Selection rules for the best action/resource pair from the Pareto set
 # ---------------------------------------------------------------------------
 def _front_objective_matrix(pareto_set):
-    """(..., outcome, time, uncertainty) tuples -> raw objective matrix
-    [outcome, 1 - time, uncertainty] plus the paretoset sense list."""
+    """(..., outcome, time, ...) tuples -> raw objective matrix plus the paretoset sense list.
+
+    Dispatches on tuple length: nsga2_pareto_search's 5-tuples (activity,
+    resource, outcome, time, uncertainty) keep the ORIGINAL 3-objective
+    [outcome, 1 - time, uncertainty] behaviour (senses max/max/min) -- NSGA2
+    is untouched by the confidence-as-KPI change. exhaustive_pareto_search's
+    7-tuples (..., prob_outcome_better, prob_time_better) use the new
+    2-objective [outcome, 1 - time] behaviour (senses max/max), since the
+    confidence filter has already been applied upstream and predictive
+    uncertainty is no longer a Pareto axis for that method."""
     outcome_vals = np.array([item[2] for item in pareto_set], dtype=float)
     inv_time_vals = 1.0 - np.array([item[3] for item in pareto_set], dtype=float)
+
+    if len(pareto_set[0]) >= 7:
+        return np.column_stack([outcome_vals, inv_time_vals]), ["max", "max"]
+
     uncertainty_vals = np.array([item[4] for item in pareto_set], dtype=float)
     return np.column_stack([outcome_vals, inv_time_vals, uncertainty_vals]), ["max", "max", "min"]
 
@@ -583,14 +885,25 @@ def compute_recommendations_top_k(
     mutation_rate: float = 0.3,
     random_state: Optional[int] = None,
     k: int = 5,
+    baseline_instances_by_case: Optional[Dict[Any, Any]] = None,
+    gamma_cls: float = 0.5,
+    gamma_reg: float = 0.5,
 ) -> Tuple[
     List[Dict[Any, Tuple[Optional[str], Optional[str]]]],
-    List[Dict[Any, Tuple[Optional[float], Optional[float], Optional[float]]]],
+    List[Dict[Any, Tuple[Optional[float], Optional[float], Optional[float], Optional[float], Optional[float]]]],
+    Dict[Any, str],
 ]:
     """
     Generates next-step recommendations (activity and resource) for all cases in a test dataset.
-    This unified function supports both 'exhaustive' search and 'nsga2' (genetic algorithm) 
+    This unified function supports both 'exhaustive' search and 'nsga2' (genetic algorithm)
     methods to find the optimal actions that maximize outcome and minimize time.
+
+    For method="exhaustive", candidates are additionally filtered by
+    confidence against a "no recommendation" baseline -- the real transition
+    that happened one prefix step earlier for this same case, see
+    build_baseline_instances -- before the Pareto front is built (see
+    exhaustive_pareto_search()). method="nsga2" is untouched by this filter
+    (baseline_instances_by_case/gamma_* are simply not passed to it).
 
     Args:
         test_log (pandas.DataFrame): The full event log for the test cases.
@@ -612,27 +925,49 @@ def compute_recommendations_top_k(
         mutation_rate (float, optional): The mutation probability (if using NSGA-II). Defaults to 0.3.
         random_state (int, optional): Seed for reproducibility. Defaults to None.
         k (int, optional): The number of top recommendations to return for each case. Defaults to 5.
+        baseline_instances_by_case (dict, optional): build_baseline_instances() output. Only used
+            for method="exhaustive"; None (or a missing case, see build_baseline_instances) disables
+            the confidence filter for that case (every valid pair is kept, as before this change).
+        gamma_cls (float, optional): minimum required P(candidate outcome beats baseline). Defaults to 0.5.
+        gamma_reg (float, optional): minimum required P(candidate time beats baseline). Defaults to 0.5.
 
     Returns:
-        tuple (rec_list, obj_list), each a list of length k:
+        tuple (rec_list, obj_list, status_by_case):
           - rec_list[j] is {case_id: (next_activity, next_resource)} for the
             j-th selected pair (this is what gets written to the recommendation
             CSVs and later fed to the simulation).
-          - obj_list[j] is {case_id: (pred_outcome, pred_time, pred_uncertainty)}
-            for that same pair -- diagnostic only (the confidence / uncertainty
-            KPI), never passed to the simulation.
-        Missing entries are (None, None) / (None, None, None).
+          - obj_list[j] is {case_id: (pred_outcome, pred_time, pred_uncertainty,
+            prob_outcome_better, prob_time_better)} for that same pair --
+            diagnostic only, never passed to the simulation. prob_outcome_better/
+            prob_time_better are None for method="nsga2" (it does not compute
+            them) and NaN (not 1.0 -- no comparison was made) for
+            method="exhaustive" cases with no baseline available (status
+            "ok_no_baseline" below). Missing entries are (None, None) /
+            (None, None, None, None, None).
+          - status_by_case is {case_id: status}, one entry per case (not per
+            rank j), with status one of: "ok" (confidence filter genuinely
+            applied); "ok_no_baseline" (method="exhaustive" only -- a valid
+            recommendation was produced, but no baseline was available for
+            this case, e.g. a trace of length 1, see build_baseline_instances,
+            so the confidence filter was skipped entirely rather than
+            producing a false "confident" result); "no_possible_actions" (no
+            legal next activity, or no valid (activity, resource) pair for
+            it); or "no_confident_recommendation" (valid pairs existed but
+            none passed the confidence filter -- only possible for
+            method="exhaustive" with a baseline available for that case).
     """
 
     method = method.lower()
     forbidden = set(forbidden_map.get(case_study, []))
     rec_list: List[Dict[Any, Tuple[Optional[str], Optional[str]]]] = [dict() for _ in range(k)]
-    obj_list: List[Dict[Any, Tuple[Optional[float], Optional[float], Optional[float]]]] = [dict() for _ in range(k)]
+    obj_list: List[Dict[Any, Tuple[Optional[float], Optional[float], Optional[float], Optional[float], Optional[float]]]] = [dict() for _ in range(k)]
+    status_by_case: Dict[Any, str] = {}
 
-    def _fill_empty(cid):
+    def _fill_empty(cid, status):
         for rec, obj in zip(rec_list, obj_list):
             rec[cid] = (None, None)
-            obj[cid] = (None, None, None)
+            obj[cid] = (None, None, None, None, None)
+        status_by_case[cid] = status
 
     for cid in tqdm.tqdm(pd.unique(test_data[case_id_name])):
         trace_df = test_log[test_log[case_id_name] == cid]
@@ -643,7 +978,7 @@ def compute_recommendations_top_k(
         poss = next_possible_activities(trace_history, transition_graph, window_size)
         poss = [a for a in poss if a not in forbidden]
         if not poss:
-            _fill_empty(cid)
+            _fill_empty(cid, "no_possible_actions")
             continue
 
         if method == "nsga2":
@@ -659,31 +994,66 @@ def compute_recommendations_top_k(
                 mutation_rate=mutation_rate,
                 random_state=random_state,
             )
+            if not pareto_front:
+                _fill_empty(cid, "no_possible_actions")
+                continue
         elif method == "exhaustive":
+            # Cheap precheck so an empty front below can be attributed correctly:
+            # no valid (activity, resource) pair at all vs. valid pairs that all
+            # failed the confidence filter.
+            if not _build_valid_pairs(poss, act_with_res):
+                _fill_empty(cid, "no_possible_actions")
+                continue
+
+            baseline_row = (
+                baseline_instances_by_case.get(cid) if baseline_instances_by_case is not None else None
+            )
             pareto_front = exhaustive_pareto_search(
                 query_instance,
                 poss,
                 predictive_outcome_model,
                 predictive_time_model,
                 act_with_res,
+                baseline_row=baseline_row,
+                gamma_cls=gamma_cls,
+                gamma_reg=gamma_reg,
             )
+            if not pareto_front:
+                status = "no_confident_recommendation" if baseline_row is not None else "no_possible_actions"
+                _fill_empty(cid, status)
+                continue
         else:
             raise ValueError("Unknown method for recommendations: %s" % method)
 
-        if not pareto_front:
-            _fill_empty(cid)
-            continue
-
+        if method == "exhaustive" and baseline_row is None:
+            # Confidence filter was skipped entirely for this case (no
+            # baseline available, e.g. a trace of length 1 -- see
+            # build_baseline_instances): the recommendation is still valid,
+            # but distinguish it from a genuinely confidence-filtered "ok"
+            # so this isn't silently read as "the model was confident".
+            status_by_case[cid] = "ok_no_baseline"
+        else:
+            status_by_case[cid] = "ok"
         top_k_pairs = select_top_k_pareto_actions(pareto_front, k=k)
-        # (act, res) -> (outcome, time, uncertainty), for the diagnostic file
-        obj_by_pair = {(t[0], t[1]): (float(t[2]), float(t[3]), float(t[4])) for t in pareto_front}
+        # (act, res) -> (outcome, time, uncertainty, prob_outcome_better, prob_time_better),
+        # for the diagnostic file. NSGA2's 5-tuples have no confidence probabilities.
+        if method == "exhaustive":
+            obj_by_pair = {
+                (t[0], t[1]): (float(t[2]), float(t[3]), float(t[4]), float(t[5]), float(t[6]))
+                for t in pareto_front
+            }
+        else:
+            obj_by_pair = {
+                (t[0], t[1]): (float(t[2]), float(t[3]), float(t[4]), None, None)
+                for t in pareto_front
+            }
         for j in range(k):
             if j < len(top_k_pairs):
                 pair = top_k_pairs[j]
                 rec_list[j][cid] = pair
-                obj_list[j][cid] = obj_by_pair.get(pair, (None, None, None))
+                obj_list[j][cid] = obj_by_pair.get(pair, (None, None, None, None, None))
             else:
                 rec_list[j][cid] = (None, None)
-                obj_list[j][cid] = (None, None, None)
+                obj_list[j][cid] = (None, None, None, None, None)
 
-    return rec_list, obj_list
+    return rec_list, obj_list, status_by_case

@@ -89,7 +89,7 @@ from utils.get_features import load_case_study, get_case_study_features
 # ---------------------------------------------------------------------------
 # Fixed configuration
 # ---------------------------------------------------------------------------
-CASE_STUDIES = ["BAC", "BPI12", "BPI12_sim", "bpi17_after", "bpi17_before"]
+CASE_STUDIES = ["BAC", "BPI12", "BPI12_sim", "BPI12_reordered", "BPI12_reordered_sim", "bpi17_after", "bpi17_before"]
 METHODS = ["exhaustive", "nsga2"]
 DEFAULT_METHOD = "exhaustive"
 BASELINE_FOLDER_NAME = "baseline"
@@ -102,11 +102,13 @@ OUTPUT_SUBDIR = "evaluation_tables"
 ENCODED_ACTIVITY_BY_CASE_STUDY = {
     "BPI12": "O_ACCEPTED",
     "BPI12_sim": "O_ACCEPTED",
+    "BPI12_reordered": "O_ACCEPTED",
+    "BPI12_reordered_sim": "O_ACCEPTED",
     "bpi17_after": "O_Accepted",
     "bpi17_before": "O_Accepted",
 }
 
-BPI12_DTYPE_CASE_STUDIES = {"BPI12", "BPI12_sim"}
+BPI12_DTYPE_CASE_STUDIES = {"BPI12", "BPI12_sim", "BPI12_reordered", "BPI12_reordered_sim"}
 
 _SIM_FILE_RE = re.compile(r"^sim_(\d+)\.csv$")
 _UNREACHABLE_FILE_RE = re.compile(r"^sim_(\d+)_unreachable_recommendations\.csv$")

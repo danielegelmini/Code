@@ -328,7 +328,7 @@ def preprocessing_activity_frequency(dataframe, activity_column_name, case_id_na
 def data_labelling(df, case_study):
     case_study = case_study.lower()
 
-    if case_study in ("bpi12", "bpi12_sim"):
+    if case_study in ("bpi12", "bpi12_sim", "bpi12_clean", "bpi12_clean_filtered", "bpi12_reordered"):
         df["label"] = (
             df.groupby("case:concept:name")["concept:name"]
             .transform(lambda x: x.eq("O_ACCEPTED").any())

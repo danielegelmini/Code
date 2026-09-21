@@ -27,7 +27,7 @@ def to_be_named(case_study, method, n_sim, folder_path, encoded_activity=None):
 
     for i in range(n_sim):
         sim = pd.read_csv(sim_path + "sim_{}.csv".format(i+1))
-        if case_study in {"BPI12", "BPI12_sim", "bpi12_time", "bpi12_status", "bpi12_025", "bpi12_075", "consulta", "bpi12_039"}:
+        if case_study in {"BPI12", "BPI12_sim", "BPI12_reordered", "BPI12_reordered_sim", "bpi12_time", "bpi12_status", "bpi12_025", "bpi12_075", "consulta", "bpi12_039"}:
             sim = convert_dtypes_bpi12(sim, 'simulation')
         sim = sim[[case_id_name, start_date_name, end_date_name, activity_column_name, resource_column_name]] 
         sim = getting_remaining_time(sim, "case:concept:name", "time:timestamp")
@@ -188,7 +188,7 @@ def preparing_data_for_simulation(result_df, test_log, case_id_name, end_date_na
     # Generating dataframe with repl_id, act_1, res_1, starting_time
     simu_df = pd.DataFrame(columns=["case:concept:name", "repl_id", "act_1", "res_1", "starting_time"])
     
-    if case_study in {"BPI12", "BPI12_sim", "bpi12_time", "bpi12_status", "bpi12_025", "bpi12_075", "consulta", "bpi12_0", "bpi12_039"}:
+    if case_study in {"BPI12", "BPI12_sim", "BPI12_reordered", "BPI12_reordered_sim", "bpi12_time", "bpi12_status", "bpi12_025", "bpi12_075", "consulta", "bpi12_0", "bpi12_039"}:
         result_df = convert_dtypes_bpi12(result_df, 'simulation_prep')
         test_log = convert_dtypes_bpi12(test_log, 'experiment')
         simu_df = convert_dtypes_bpi12(simu_df, 'simulation_')
@@ -281,7 +281,7 @@ def compute_res_and_status(case_study, rec_df, test_simu, n_sim,
       sim_<i>_unreachable_recommendations.csv. Those runs do not measure "the
       recommendation applied" and are excluded.
     """
-    if case_study in {"BPI12", "BPI12_sim", "BPI12_time", "BPI12_status", "BPI12_025", "BPI12_075", "consulta", "BPI12_0", "BPI12_039"}:
+    if case_study in {"BPI12", "BPI12_sim", "BPI12_reordered", "BPI12_reordered_sim", "BPI12_time", "BPI12_status", "BPI12_025", "BPI12_075", "consulta", "BPI12_0", "BPI12_039"}:
         test_simu = convert_dtypes_bpi12(test_simu, 'simulation')
         rec_df = convert_dtypes_bpi12(rec_df, 'simulation_')
 

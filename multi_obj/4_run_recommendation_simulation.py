@@ -168,7 +168,7 @@ def setup_simulator(case_dir: Path, case_study: str, force_rediscover: bool) -> 
 
         print(f"Discovering simulation parameters from the full event log "
               f"({len(log)} cases; this can take a few minutes)...")
-        params.discover_from_eventlog(log, max_depth_tree=0)
+        params.discover_from_eventlog(log, max_depth_tree=3)
         params_cache_path.parent.mkdir(parents=True, exist_ok=True)
         params.to_json(str(params_cache_path))
         print(f"Cached simulation parameters to {params_cache_path}\n")
@@ -387,7 +387,7 @@ def _simulate_recommendation_file(
         rec_df = rec_df.loc[~missing_mask].reset_index(drop=True)
 
     current_prev_log = clean_prev_log.copy()
-    if case_study.upper() in ("BPI12", "BPI12_SIM"):
+    if case_study.upper() in ("BPI12", "BPI12_SIM", "BPI12_REORDERED", "BPI12_REORDERED_SIM"):
         print(f"{prefix}Applying BPI12 specific data type conversions...")
         rec_df = convert_dtypes_bpi12(rec_df, "simulation_prep")
         current_prev_log = convert_dtypes_bpi12(current_prev_log, "simulation")

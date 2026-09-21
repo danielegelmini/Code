@@ -131,10 +131,9 @@ def return_fired_transition(transition_weights: dict, enabled_transitions: list)
     return list(enabled_transitions)[-1]
         
 
-def compute_transition_weights_from_model(models_t: dict, dict_x: dict) -> dict:
+def compute_transition_weights_from_model(models_t: dict, dict_x: dict, transitions_to_evaluate) -> dict:
     transition_weights = dict()
-    list_transitions = list(models_t.keys())
-    for t in list_transitions:
+    for t in transitions_to_evaluate:
         if type(models_t[t]) in [LogisticRegression, DecisionTreeClassifier, RandomForestClassifier]:
             X = pd.DataFrame({k: [dict_x[k]] for k in dict_x.keys()})
             transition_weights[t] = compute_proba(models_t, t, X)
