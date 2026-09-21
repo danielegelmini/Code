@@ -45,18 +45,7 @@ from pm4py.algo.discovery.split_miner import algorithm as split_miner
 from pm4py.algo.discovery.split_miner.variants import classic as split_miner_classic
 from pm4py.visualization.petri_net import visualizer as pn_visualizer
 
-# ---------------------------------------------------------------------------
-# Disable ALL tqdm progress bars globally.
-#
-# pm4py internally uses tqdm to show a progress bar while computing
-# alignment-based fitness/precision (pm4py.fitness_alignments /
-# pm4py.precision_alignments). Since these are called once per Optuna trial,
-# with 30+ trials per log you'd otherwise get dozens of progress bars
-# cluttering the output. Passing "show_progress_bar": False through pm4py's
-# `parameters` dict is version-dependent and easy to get wrong (same pitfall
-# as the epsilon/eta enum keys), so instead we monkeypatch tqdm itself to
-# force disable=True on every progress bar it creates, regardless of who
-# creates it or which parameter name they used.
+
 _original_tqdm_init = tqdm.tqdm.__init__
 
 

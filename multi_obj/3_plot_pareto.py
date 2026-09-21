@@ -5,18 +5,21 @@ valid (activity, resource) pair on two objectives -- outcome probability
 (max) and 1 - predicted time (max) -- filters them by confidence against a
 "no recommendation" baseline (gamma_cls/gamma_reg, the same confidence-as-KPI
 filter as utils/recommendation_functions.py's exhaustive_pareto_search) --
-the real transition that happened one prefix step earlier for the same case
-(see build_baseline_instances), NOT a synthetic or statistical pair -- and
+the same query instance with NEXT_ACTIVITY/NEXT_RESOURCE set to NO_NEXT_TOKEN
+(see build_no_recommendation_baseline_instances) -- and
 plots a single 2D scatter with four colour-coded categories: candidates
 discarded by the confidence filter, candidates confident enough but not on
 the Pareto front, the Pareto front itself, and the top-k pairs selected by
 p-dispersion.
 
-For method="nsga2" (parked, not used in production): UNCHANGED from before
-this filter existed -- three objectives (outcome, time, predictive
-uncertainty), no confidence filter, "no recommendation" baseline = the
-case's real historical continuation, plotted as a 2D + 3D pair with
-confidence (1 - normalised uncertainty) as point colour / third axis.
+For method="nsga2" (parked, not used in production): same as before this
+filter existed -- three objectives (outcome, time, predictive uncertainty),
+no confidence filter -- plotted as a 2D + 3D pair with confidence
+(1 - normalised uncertainty) as point colour / third axis. Its "no
+recommendation" point is the same NO_NEXT_TOKEN baseline.
+
+Both methods need models trained on the no-recommendation copy of the
+training set (2_training_predictive_model.py).
 
 For a given case study this script picks one test-set case (either a case id
 passed on the command line or, by default, the case whose front has the most
@@ -42,13 +45,13 @@ import random
 import time
 import tqdm
 
-from utils.pre_processing_functions import convert_dtypes_bpi12
+from utils.pre_processing_functions import convert_dtypes_bpi12, NO_NEXT_TOKEN
 from utils.get_features import load_case_study, get_case_study_features
 from utils.setup_cache import get_transition_graph
 from utils.recommendation_functions import (
     act_with_res_func,
     build_query_instances,
-    build_baseline_instances,
+    build_no_recommendation_baseline_instances,
     next_possible_activities,
     _to_row_df,
     nsga2_pareto_search,
@@ -143,15 +146,16 @@ def _run_and_plot_nsga2(
     predictive_outcome_model, predictive_time_model, pop_size, n_generations,
     random_state, k, elev, azim, save_dir,
 ):
-    """NSGA2 branch: UNCHANGED from before the confidence-as-KPI filter existed.
+    """NSGA2 branch: same as before the confidence-as-KPI filter existed.
     Three objectives (outcome, time, predictive uncertainty), no confidence
-    filter, baseline = the case's real historical continuation. Plotted as a
-    2D + 3D pair with confidence (1 - normalised uncertainty) as point
-    colour / third axis."""
-    # "No recommendation" point: evaluate the models on the query_instance as it
-    # is, i.e. with NEXT_ACTIVITY/NEXT_RESOURCE equal to what actually happened
-    # in the log (no recommended action applied).
-    baseline_row = _to_row_df(query_instance)
+    filter, baseline = the query instance with NEXT_ACTIVITY/NEXT_RESOURCE set
+    to NO_NEXT_TOKEN. Plotted as a 2D + 3D pair with confidence
+    (1 - normalised uncertainty) as point colour / third axis."""
+    # "No recommendation" point: evaluate the models on the query_instance with
+    # NEXT_ACTIVITY/NEXT_RESOURCE set to NO_NEXT_TOKEN (no next step given).
+    baseline_row = _to_row_df(query_instance).copy()
+    baseline_row["NEXT_ACTIVITY"] = NO_NEXT_TOKEN
+    baseline_row["NEXT_RESOURCE"] = NO_NEXT_TOKEN
     baseline_outcome = float(predict_outcome_proba(predictive_outcome_model, baseline_row)[0])
     baseline_time_arr, baseline_unc_arr = predict_time_and_uncertainty(predictive_time_model, baseline_row)
     baseline_time = float(baseline_time_arr[0])
@@ -315,22 +319,14 @@ def _run_and_plot_exhaustive(
     gamma_cls, gamma_reg, k, save_dir,
 ):
     """Exhaustive branch: scores every valid pair on 2 objectives (outcome,
-    1 - time), filters by confidence against the baseline -- the real
-    transition one prefix step earlier for this same case, see
-    build_baseline_instances -- and plots ALL evaluated candidates in four
+    1 - time), filters by confidence against the baseline -- the query
+    instance with NEXT_ACTIVITY/NEXT_RESOURCE set to NO_NEXT_TOKEN, see
+    build_no_recommendation_baseline_instances -- and plots ALL evaluated candidates in four
     colour-coded categories: discarded by the confidence filter, confident
     but not on the front, the Pareto front, and the top-k p-dispersion
     selection -- the same _compute_confidence_probabilities /
     _filter_by_confidence building blocks
-    utils.recommendation_functions.exhaustive_pareto_search() uses.
-
-    Returns early (printing a message) if this case has no baseline
-    available (fewer than 2 rows in test_log, see build_baseline_instances)."""
-    if baseline_row is None:
-        print("No confidence-as-KPI baseline available for this case (fewer than 2 "
-              "prefix rows in test_log). Nothing to plot.")
-        return
-
+    utils.recommendation_functions.exhaustive_pareto_search() uses."""
     print("\nRunning method: EXHAUSTIVE...")
     t_start = time.time()
 
@@ -417,7 +413,7 @@ def _run_and_plot_exhaustive(
                       markersize=11, label="Ideal point (1, 1)"),
         mlines.Line2D([], [], marker="D", color="none", markerfacecolor="black",
                       markeredgecolor="white", markersize=9,
-                      label="No recommendation (real transition, baseline)"),
+                      label="No recommendation (baseline)"),
     ]
     fig.legend(handles=legend_handles, loc="lower center", ncol=3,
                frameon=True, fontsize=9, bbox_to_anchor=(0.5, 0.01))
@@ -458,11 +454,11 @@ def run_and_plot_comparison(
 
     For the chosen case the function evaluates every valid (activity, resource)
     pair and saves a figure to ``save_dir``. method="exhaustive" (default)
-    additionally filters candidates by confidence against the real-transition
-    baseline (see build_baseline_instances) and plots a single 2D view with
-    four colour-coded categories (see _run_and_plot_exhaustive); method="nsga2"
-    plots the original 2D + 3D pair with confidence as colour/third axis and
-    no filter (see _run_and_plot_nsga2, unchanged).
+    additionally filters candidates by confidence against the no-recommendation
+    baseline (see build_no_recommendation_baseline_instances) and plots a single
+    2D view with four colour-coded categories (see _run_and_plot_exhaustive);
+    method="nsga2" plots the original 2D + 3D pair with confidence as
+    colour/third axis and no filter (see _run_and_plot_nsga2).
 
     Input:
         case_study: dataset name (e.g. "BAC", "BPI12", "bpi17_before").
@@ -471,7 +467,7 @@ def run_and_plot_comparison(
             selected automatically.
         window_size: prefix window length used to build the transition system
             (and, for method="exhaustive", the pair-frequency system) and to
-            look up the next possible activities / the baseline pair.
+            look up the next possible activities.
         pop_size: NSGA-II population size (only used when method="nsga2").
         n_generations: number of NSGA-II generations (only used when method="nsga2").
         random_state: seed for numpy / random and for NSGA-II reproducibility.
@@ -536,12 +532,10 @@ def run_and_plot_comparison(
 
     query_instances_by_case = build_query_instances(test_data, case_id_name)
     # The "no recommendation" baseline for the confidence-as-KPI filter: the
-    # real transition one prefix step earlier for the same case, taken as-is
-    # (see build_baseline_instances). Built from test_log (NOT test_data,
-    # which is loaded from test_log_with_last_act.csv and has only ONE row
-    # per case) -- test_log has one row per prefix length per case, so its
-    # second-to-last row per case is the state right before e_k.
-    baseline_instances_by_case = build_baseline_instances(test_log, case_id_name)
+    # SAME query instance the candidates are evaluated on, with NEXT_ACTIVITY/
+    # NEXT_RESOURCE set to NO_NEXT_TOKEN (see
+    # build_no_recommendation_baseline_instances). It exists for every case.
+    baseline_instances_by_case = build_no_recommendation_baseline_instances(query_instances_by_case)
     unique_cases = pd.unique(test_data[case_id_name])
 
     # Automatic selection of the case with the widest, most spread-out front

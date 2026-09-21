@@ -1,33 +1,35 @@
 CODICI DA RUNNARE
 
+
+python 1_data_preprocessing.py --case_study "BPI12_reordered" --split_time "2012-02-16 00:00:00" --lambda_value 0.5
+python 9_generate_simulated_training_set.py --source_case_study BPI12_reordered --target_case_study BPI12_reordered_sim --max_depth_tree 3 --force_rediscover
+
 python 2_training_predictive_model.py
 
-python 3_run_experiment.py --case_study "BAC" --method "exhaustive" --window_size 5 --reduced_threshold 0.05 --k 5
-python 3_run_experiment.py --case_study "BPI12" --method "exhaustive" --window_size 5 --reduced_threshold 0.05 --k 5
-python 3_run_experiment.py --case_study "BPI12_sim" --method "exhaustive" --window_size 5 --reduced_threshold 0.05 --k 5
-python 3_run_experiment.py --case_study "bpi17_before" --method "exhaustive" --window_size 5 --reduced_threshold 0.05 --k 5
-python 3_run_experiment.py --case_study "bpi17_after" --method "exhaustive" --window_size 5 --reduced_threshold 0.05 --k 5
+python 3_run_experiment.py --case_study "BAC" --method "exhaustive" --window_size 5 --k 5 --gamma_cls 0.5 --gamma_reg 0.5
+python 3_run_experiment.py --case_study "BPI12_reordered" --method "exhaustive" --window_size 5 --k 5 --gamma_cls 0.5 --gamma_reg 0.5
 
-python 3_plot_pareto.py --case_study "BAC" --method exhaustive --k 5
-python 3_plot_pareto.py --case_study "BPI12" --method exhaustive --k 5
-python 3_plot_pareto.py --case_study "BPI12_sim" --method exhaustive --k 5
-python 3_plot_pareto.py --case_study "bpi17_before" --method exhaustive --k 5
-python 3_plot_pareto.py --case_study "bpi17_after" --method exhaustive --k 5
+python 3_run_experiment.py --case_study "BPI12_reordered_sim" --method "exhaustive" --window_size 5 --k 5 --gamma_cls 0.5 --gamma_reg 0.5
+python 3_run_experiment.py --case_study "bpi17_before" --method "exhaustive" --window_size 5 --k 5 --gamma_cls 0.5 --gamma_reg 0.5
+python 3_run_experiment.py --case_study "bpi17_after" --method "exhaustive" --window_size 5 --k 5 --gamma_cls 0.5 --gamma_reg 0.5
+
+python 3_plot_pareto.py --case_study "BAC" --method exhaustive --k 5 --gamma_cls 0.5 --gamma_reg 0.5
+python 3_plot_pareto.py --case_study "BPI12_reordered" --method exhaustive --k 5 --gamma_cls 0.5 --gamma_reg 0.5
+python 3_plot_pareto.py --case_study "bpi17_before" --method exhaustive --k 5 --gamma_cls 0.5 --gamma_reg 0.5
+python 3_plot_pareto.py --case_study "bpi17_after" --method exhaustive --k 5 --gamma_cls 0.5 --gamma_reg 0.5
 
 python 4_run_recommendation_simulation.py --case_study BAC --n_sim 10 --k 5
-python 4_run_recommendation_simulation.py --case_study BPI12 --n_sim 10 --k 5
+python 4_run_recommendation_simulation.py --case_study BPI12_reordered --n_sim 10 --k 5
 python 4_run_recommendation_simulation.py --case_study bpi17_before --n_sim 10 --k 5
 python 4_run_recommendation_simulation.py --case_study bpi17_after --n_sim 10 --k 5
 
-python 5_result_computation.py --method exhaustive
+python 5_result_computation.py --case_studies "BAC,BPI12_reordered,bpi17_before,bpi17_after" --method exhaustive
+
+python 6_baseline_vs_real_validation.py
 
 python 8_plot_case_comparison.py --method exhaustive --case_study BAC --case_id 20191014423
 python 8_plot_case_comparison.py --method exhaustive --case_study BAC --case_id 20191013530
 python 8_plot_case_comparison.py --method exhaustive --case_study BAC --case_id 20191013012
-
-python 8_plot_case_comparison.py --method exhaustive --case_study BPI12 --case_id 208049
-python 8_plot_case_comparison.py --method exhaustive --case_study BPI12 --case_id 201373
-python 8_plot_case_comparison.py --method exhaustive --case_study BPI12 --case_id 198232
 
 python 8_plot_case_comparison.py --method exhaustive --case_study bpi17_before --case_id Application_1005586643
 python 8_plot_case_comparison.py --method exhaustive --case_study bpi17_before --case_id Application_1072363196
@@ -37,19 +39,15 @@ python 8_plot_case_comparison.py --method exhaustive --case_study bpi17_after --
 python 8_plot_case_comparison.py --method exhaustive --case_study bpi17_after --case_id Application_1013192848
 python 8_plot_case_comparison.py --method exhaustive --case_study bpi17_after --case_id Application_1867093856
 
+python 8c_find_full_data_cases.py --case_study BPI12_reordered --method exhaustive --top_n 8
 
-python 8b_plot_case_comparison_vs_sim_model.py --case_study BPI12 --sim_case_study BPI12_sim --case_id 208049 --method exhaustive
-python 8b_plot_case_comparison_vs_sim_model.py --case_study BPI12 --sim_case_study BPI12_sim --case_id 201373 --method exhaustive
-python 8b_plot_case_comparison_vs_sim_model.py --case_study BPI12 --sim_case_study BPI12_sim --case_id 198232 --method exhaustive
+# BPI12_reordered: sostituisci <CASE_ID_...> con gli id trovati da 8c (uno per fascia: prefisso corto / medio / lungo)
+python 8_plot_case_comparison.py --method exhaustive --case_study BPI12_reordered --case_id <CASE_ID_CORTO>
+python 8_plot_case_comparison.py --method exhaustive --case_study BPI12_reordered --case_id <CASE_ID_MEDIO>
+python 8_plot_case_comparison.py --method exhaustive --case_study BPI12_reordered --case_id <CASE_ID_LUNGO>
 
-python 8b_plot_case_comparison_vs_sim_model.py --case_study BPI12 --sim_case_study BPI12_sim --case_id 204475 --method exhaustive
-python 8b_plot_case_comparison_vs_sim_model.py --case_study BPI12 --sim_case_study BPI12_sim --case_id 204099 --method exhaustive
-python 8b_plot_case_comparison_vs_sim_model.py --case_study BPI12 --sim_case_study BPI12_sim --case_id 206123 --method exhaustive
-python 8b_plot_case_comparison_vs_sim_model.py --case_study BPI12 --sim_case_study BPI12_sim --case_id 207215 --method exhaustive
-python 8b_plot_case_comparison_vs_sim_model.py --case_study BPI12 --sim_case_study BPI12_sim --case_id 208550 --method exhaustive
-python 8b_plot_case_comparison_vs_sim_model.py --case_study BPI12 --sim_case_study BPI12_sim --case_id 204200 --method exhaustive
-python 8b_plot_case_comparison_vs_sim_model.py --case_study BPI12 --sim_case_study BPI12_sim --case_id 206856 --method exhaustive
-python 8b_plot_case_comparison_vs_sim_model.py --case_study BPI12 --sim_case_study BPI12_sim --case_id 208094 --method exhaustive
-python 8b_plot_case_comparison_vs_sim_model.py --case_study BPI12 --sim_case_study BPI12_sim --case_id 207140 --method exhaustive
-python 8b_plot_case_comparison_vs_sim_model.py --case_study BPI12 --sim_case_study BPI12_sim --case_id 206910 --method exhaustive
+# stessi id di 8_plot_case_comparison per BPI12_reordered (ripeti la riga con altri case_id se ne servono di piu)
+python 8b_plot_case_comparison_vs_sim_model.py --case_study BPI12_reordered --sim_case_study BPI12_reordered_sim --case_id <CASE_ID_CORTO> --method exhaustive
+python 8b_plot_case_comparison_vs_sim_model.py --case_study BPI12_reordered --sim_case_study BPI12_reordered_sim --case_id <CASE_ID_MEDIO> --method exhaustive
+python 8b_plot_case_comparison_vs_sim_model.py --case_study BPI12_reordered --sim_case_study BPI12_reordered_sim --case_id <CASE_ID_LUNGO> --method exhaustive
 

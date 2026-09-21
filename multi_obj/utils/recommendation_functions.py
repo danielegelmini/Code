@@ -16,7 +16,7 @@ from pymoo.optimize import minimize
 import pulp
 from spopt.locate import PDispersion
 
-from utils.pre_processing_functions import convert_dtypes_bpi12
+from utils.pre_processing_functions import convert_dtypes_bpi12, NO_NEXT_TOKEN
 
 case_id_name = "case:concept:name"
 activity_column_name = "concept:name"
@@ -24,34 +24,6 @@ end_date_name = "time:timestamp"
 start_date_name = "start:timestamp"
 resource_column_name = "org:resource"
 outcome_name = "outcome"
-
-# Pareto objectives -- method "exhaustive" (the only one used in production;
-# "nsga2" below is untouched, see its own docstrings):
-#   #1  outcome probability, maximised -- the TEMPERATURE-CALIBRATED P(y=positive)
-#       (predict_outcome_proba).
-#   #2  predicted remaining time, minimised (plotted/optimised as 1 - time).
-# Before these two objectives are turned into a Pareto front, every candidate
-# (activity, resource) pair is scored against a "no recommendation" BASELINE --
-# NOT a synthetic or statistical pair, but the real transition that already
-# happened one prefix step earlier for this same case (build_baseline_instances):
-# if the case's current prefix is e_1,...,e_k (what "metodo" evaluates candidate
-# e_{k+1} against), the baseline re-evaluates the model on prefix e_1,...,e_{k-1}
-# with its own real NEXT_ACTIVITY/NEXT_RESOURCE, which is exactly e_k -- with the
-# probability that the candidate beats that baseline on each objective
-# (_compute_confidence_probabilities, estimated empirically from the SAME fitted
-# models' virtual-ensemble members for baseline and candidate, so their
-# correlation is captured for free -- no independence/normality assumption).
-# Candidates whose probability falls below gamma_cls (outcome) or
-# gamma_reg (time) are dropped (_filter_by_confidence) BEFORE the Pareto front
-# is built, so predictive uncertainty acts as a pre-filter/confidence gate
-# rather than as a third Pareto axis. The two probabilities are carried
-# through as diagnostics (never written to the recommendation CSVs fed to the
-# simulation, only to the separate `_objectives.csv` sidecar).
-#
-# NSGA2 (nsga2_pareto_search / _ActivityResourceProblem) is NOT part of this
-# confidence-as-KPI change and keeps its original 3 objectives (outcome, time,
-# and the regressor's TOTAL predictive std, minimised) with no confidence
-# filter -- see those functions' own docstrings.
 
 _UNCERTAINTY_WARNED = False
 _CALIBRATION_WARNED = False
@@ -227,7 +199,8 @@ def predict_outcome_members(predictive_outcome_model, rows_df):
 def act_with_res_func(df, activity_column_name, resource_column_name):
     """
     Generates a dictionary mapping each unique activity to a list of its associated unique resources.
-    This mapping excludes 'missing' and 'NotDef' resources.
+    This mapping excludes 'missing' resources; 'NotDef' is kept as a valid
+    choice, like any other value of the original dataset.
 
     Args:
         df (pandas.DataFrame): The DataFrame containing the event log data.
@@ -238,7 +211,7 @@ def act_with_res_func(df, activity_column_name, resource_column_name):
         dict: A dictionary in the format {activity: [unique resources]}.
     """
     grouped = df.groupby(activity_column_name)[resource_column_name].unique()
-    forbidden = {"missing", "NotDef"}
+    forbidden = {"missing"}
     return {
         act: [res for res in resources if res not in forbidden]
         for act, resources in grouped.items()
@@ -265,54 +238,30 @@ def build_query_instances(test_df, case_id_name):
     }
     return query_instances_by_case
 
-
-def build_baseline_instances(test_df, case_id_name):
+def build_no_recommendation_baseline_instances(query_instances_by_case):
     """
-    Creates the confidence-as-KPI "no recommendation" baseline instance for
-    each case: the query instance ONE prefix step shorter than
-    build_query_instances' (the second-to-last row for that case instead of
-    the last), used completely AS-IS -- including its own NEXT_ACTIVITY /
-    NEXT_RESOURCE, which are exactly the activity and resource that really
-    happened next (i.e. the last step of the "metodo" prefix, e_k, for a
-    case whose current prefix is e_1,...,e_k).
+    Creates the confidence-as-KPI "no recommendation" baseline instance for each case:
+    the SAME query instance the candidates are evaluated on (same prefix e_1,...,e_k, same
+    features), with NEXT_ACTIVITY and NEXT_RESOURCE both set to NO_NEXT_TOKEN.
 
-    In other words: rather than asking the model to score a synthetic or
-    statistical "no recommendation" pair, this re-evaluates the model on the
-    real, already-observed transition e_{k-1} -> e_k, evaluated one prefix
-    step earlier than the candidate recommendations for e_1,...,e_k -> e_{k+1}.
-    This only works because test_df has one row per prefix length for every
-    case (not just the final one) -- confirmed rows are in chronological
-    order within each case, and that each row's own NEXT_ACTIVITY/
-    NEXT_RESOURCE already equal the following row's concept:name/org:resource
-    (see pre_processing_functions.add_next_act_res).
-
-    IMPORTANT: this is NOT the same dataframe passed to build_query_instances
-    (that one -- called `test_data` throughout this codebase -- is loaded
-    from test_log_with_last_act.csv and has only ONE row per case, the final
-    query instance). Pass `test_log` instead (load_case_study()'s third
-    return value, "all prefixes in test data") -- confirmed to have one row
-    per prefix length per case, the same feature columns, and its own
-    last row per case matching test_data's row for that case exactly.
+    This relies on the models having been trained with the no-recommendation copy of the
+    training set (see pre_processing_functions.add_no_recommendation_copy, applied in
+    2_training_predictive_model.py), so NO_NEXT_TOKEN is a value they have learned: the
+    expected outcome / remaining time from this state when no next step is specified.
+    Unlike build_baseline_instances, the baseline is evaluated at the same state as the
+    candidates and exists for every case, including traces with a single event.
 
     Args:
-        test_df (pandas.DataFrame): test_log (NOT test_data) -- the
-            multi-row-per-case dataframe with one row per prefix length.
-        case_id_name (str): The name of the column containing case IDs.
+        query_instances_by_case (dict): build_query_instances() output.
 
     Returns:
-        dict: {case_id: {"feature_name": value, ...}}. Cases with fewer than
-        2 rows in test_df (no earlier prefix to fall back to) are simply
-        absent from the returned dict -- callers must treat a missing case
-        as "no baseline available" rather than assuming every case has one.
+        dict: {case_id: {"feature_name": value, ...}}, one entry per case.
     """
-    drop_cols = {case_id_name, start_date_name, end_date_name, "total_time", "remaining_time", "label", "sigmoid_mm", 'time_from_midnight', outcome_name}
-    feature_columns = [c for c in test_df.columns if c not in drop_cols]
-    baseline_instances_by_case = {}
-    for cid, group in test_df.groupby(case_id_name, sort=False):
-        if len(group) < 2:
-            continue
-        baseline_instances_by_case[cid] = group.iloc[-2][feature_columns].to_dict()
-    return baseline_instances_by_case
+    return {
+        cid: {**instance, "NEXT_ACTIVITY": NO_NEXT_TOKEN, "NEXT_RESOURCE": NO_NEXT_TOKEN}
+        for cid, instance in query_instances_by_case.items()
+    }
+
 
 # ---------------------------------------------------------------------------
 # Utils for recommendation functions
@@ -525,11 +474,10 @@ def _compute_confidence_probabilities(
     For every candidate (activity, resource) pair, estimate the probability
     that it beats the "no recommendation" baseline on each objective.
 
-    The baseline is NOT a synthetic or statistical pair: it is the model's
-    prediction on the real, already-observed transition that happened one
-    prefix step earlier for this same case (see build_baseline_instances) --
-    baseline_row already carries its own native NEXT_ACTIVITY/NEXT_RESOURCE,
-    so it is evaluated completely as-is, with no pair substitution.
+    The baseline is the model's prediction on baseline_row, evaluated completely
+    as-is, with no pair substitution. With build_no_recommendation_baseline_instances
+    it is the query instance itself with NEXT_ACTIVITY/NEXT_RESOURCE set to
+    NO_NEXT_TOKEN, i.e. the same state as the candidates with no next step given.
 
     Both the baseline and every candidate are scored member-by-member on the
     SAME fitted models' virtual-ensemble members (predict_outcome_members /
@@ -541,9 +489,9 @@ def _compute_confidence_probabilities(
 
     Args:
         candidate_pairs: list of (activity, resource) tuples to score.
-        baseline_row: this case's baseline instance (build_baseline_instances
-            output for one case) -- a dict-like row with its own
-            NEXT_ACTIVITY/NEXT_RESOURCE already set to the real e_k.
+        baseline_row: this case's baseline instance
+            (build_no_recommendation_baseline_instances output for one case) -- a
+            dict-like row with NEXT_ACTIVITY/NEXT_RESOURCE already set.
         query_instance: the prefix/query instance for this case (e_1,...,e_k),
             against which candidate_pairs are evaluated as e_{k+1}.
         predictive_outcome_model, predictive_time_model: fitted pipelines.
@@ -623,8 +571,7 @@ def exhaustive_pareto_search(
     (every valid pair is kept, prob_outcome_better = prob_time_better = 1.0)
     when baseline_row is None -- lets this function still be called without
     it (e.g. multi_obj/3_tune_nsga2_params.py's NSGA2-vs-exhaustive benchmark,
-    which is untouched by this change; or a case with no valid baseline, see
-    build_baseline_instances).
+    which is untouched by this change).
 
     Args:
         query_instance (pandas.DataFrame, pandas.Series, or dict): The current state features of the case.
@@ -633,8 +580,8 @@ def exhaustive_pareto_search(
         predictive_time_model (estimator): The predictive model for total/remaining time.
         act_with_res (dict of str to list of str): Mapping of valid resources for each activity.
         baseline_row (dict-like, optional): this case's confidence-filter baseline instance
-            (see build_baseline_instances) -- the real transition one prefix step earlier for
-            this case, used as-is with its own native NEXT_ACTIVITY/NEXT_RESOURCE. None disables
+            (see build_no_recommendation_baseline_instances) -- the query instance with
+            NEXT_ACTIVITY/NEXT_RESOURCE set to NO_NEXT_TOKEN, used as-is. None disables
             the confidence filter.
         gamma_cls (float, optional): minimum required P(candidate outcome beats baseline). Defaults to 0.5.
         gamma_reg (float, optional): minimum required P(candidate time beats baseline). Defaults to 0.5.
@@ -646,9 +593,9 @@ def exhaustive_pareto_search(
         baseline_row is None, no comparison was actually made -- every pair
         is kept (keep_mask all True) but prob_outcome_better/prob_time_better
         are NaN, not 1.0, so downstream diagnostics never read "no baseline"
-        as "100% confident" (see compute_recommendations_top_k's
-        "ok_no_baseline" status for the same distinction).
+        as "100% confident".
     """
+    # creation of possible valid pairs from all the activity of possible actions using the transition system 
     valid_pairs = _build_valid_pairs(possible_actions, act_with_res)
     if not valid_pairs:
         return []
@@ -899,9 +846,9 @@ def compute_recommendations_top_k(
     methods to find the optimal actions that maximize outcome and minimize time.
 
     For method="exhaustive", candidates are additionally filtered by
-    confidence against a "no recommendation" baseline -- the real transition
-    that happened one prefix step earlier for this same case, see
-    build_baseline_instances -- before the Pareto front is built (see
+    confidence against a "no recommendation" baseline -- the same query instance
+    with NEXT_ACTIVITY/NEXT_RESOURCE set to NO_NEXT_TOKEN, see
+    build_no_recommendation_baseline_instances -- before the Pareto front is built (see
     exhaustive_pareto_search()). method="nsga2" is untouched by this filter
     (baseline_instances_by_case/gamma_* are simply not passed to it).
 
@@ -925,9 +872,9 @@ def compute_recommendations_top_k(
         mutation_rate (float, optional): The mutation probability (if using NSGA-II). Defaults to 0.3.
         random_state (int, optional): Seed for reproducibility. Defaults to None.
         k (int, optional): The number of top recommendations to return for each case. Defaults to 5.
-        baseline_instances_by_case (dict, optional): build_baseline_instances() output. Only used
-            for method="exhaustive"; None (or a missing case, see build_baseline_instances) disables
-            the confidence filter for that case (every valid pair is kept, as before this change).
+        baseline_instances_by_case (dict, optional): build_no_recommendation_baseline_instances() output.
+            Only used for method="exhaustive"; None (or a missing case) disables the confidence
+            filter for that case (every valid pair is kept, as before this change).
         gamma_cls (float, optional): minimum required P(candidate outcome beats baseline). Defaults to 0.5.
         gamma_reg (float, optional): minimum required P(candidate time beats baseline). Defaults to 0.5.
 
@@ -941,22 +888,17 @@ def compute_recommendations_top_k(
             diagnostic only, never passed to the simulation. prob_outcome_better/
             prob_time_better are None for method="nsga2" (it does not compute
             them) and NaN (not 1.0 -- no comparison was made) for
-            method="exhaustive" cases with no baseline available (status
-            "ok_no_baseline" below). Missing entries are (None, None) /
-            (None, None, None, None, None).
+            method="exhaustive" cases with no baseline passed. Missing
+            entries are (None, None) / (None, None, None, None, None).
           - status_by_case is {case_id: status}, one entry per case (not per
-            rank j), with status one of: "ok" (confidence filter genuinely
-            applied); "ok_no_baseline" (method="exhaustive" only -- a valid
-            recommendation was produced, but no baseline was available for
-            this case, e.g. a trace of length 1, see build_baseline_instances,
-            so the confidence filter was skipped entirely rather than
-            producing a false "confident" result); "no_possible_actions" (no
-            legal next activity, or no valid (activity, resource) pair for
-            it); or "no_confident_recommendation" (valid pairs existed but
-            none passed the confidence filter -- only possible for
+            rank j), with status one of: "ok" (a recommendation was
+            produced); "no_possible_actions" (no legal next activity, or no
+            valid (activity, resource) pair for it); or
+            "no_confident_recommendation" (valid pairs existed but none
+            passed the confidence filter -- only possible for
             method="exhaustive" with a baseline available for that case).
     """
-
+    # setup
     method = method.lower()
     forbidden = set(forbidden_map.get(case_study, []))
     rec_list: List[Dict[Any, Tuple[Optional[str], Optional[str]]]] = [dict() for _ in range(k)]
@@ -971,10 +913,10 @@ def compute_recommendations_top_k(
 
     for cid in tqdm.tqdm(pd.unique(test_data[case_id_name])):
         trace_df = test_log[test_log[case_id_name] == cid]
-        trace_history = trace_df[activity_column_name].tolist()
+        trace_history = trace_df[activity_column_name].tolist() #list of activity for case_id (cid) selected
 
         query_instance = _to_row_df(query_instances_by_case[cid])
-
+        # all possible activities given the trace history and transition graph
         poss = next_possible_activities(trace_history, transition_graph, window_size)
         poss = [a for a in poss if a not in forbidden]
         if not poss:
@@ -998,9 +940,6 @@ def compute_recommendations_top_k(
                 _fill_empty(cid, "no_possible_actions")
                 continue
         elif method == "exhaustive":
-            # Cheap precheck so an empty front below can be attributed correctly:
-            # no valid (activity, resource) pair at all vs. valid pairs that all
-            # failed the confidence filter.
             if not _build_valid_pairs(poss, act_with_res):
                 _fill_empty(cid, "no_possible_actions")
                 continue
@@ -1025,16 +964,9 @@ def compute_recommendations_top_k(
         else:
             raise ValueError("Unknown method for recommendations: %s" % method)
 
-        if method == "exhaustive" and baseline_row is None:
-            # Confidence filter was skipped entirely for this case (no
-            # baseline available, e.g. a trace of length 1 -- see
-            # build_baseline_instances): the recommendation is still valid,
-            # but distinguish it from a genuinely confidence-filtered "ok"
-            # so this isn't silently read as "the model was confident".
-            status_by_case[cid] = "ok_no_baseline"
-        else:
-            status_by_case[cid] = "ok"
+        status_by_case[cid] = "ok"
         top_k_pairs = select_top_k_pareto_actions(pareto_front, k=k)
+
         # (act, res) -> (outcome, time, uncertainty, prob_outcome_better, prob_time_better),
         # for the diagnostic file. NSGA2's 5-tuples have no confidence probabilities.
         if method == "exhaustive":

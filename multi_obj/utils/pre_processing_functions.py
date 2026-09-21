@@ -13,6 +13,34 @@ from datetime import datetime
 import pm4py
 
 
+# Placeholder written in NEXT_ACTIVITY / NEXT_RESOURCE to mean "no next step given".
+# It is a string on purpose (both columns are categorical and one-hot encoded) and it
+# must differ from 'end', which is the real value of the last event of every trace.
+NO_NEXT_TOKEN = "__NO_NEXT__"
+
+
+def add_no_recommendation_copy(df, next_activity_name="NEXT_ACTIVITY", next_resource_name="NEXT_RESOURCE"):
+    """
+    Returns df followed by a copy of itself in which NEXT_ACTIVITY and NEXT_RESOURCE
+    are both replaced by NO_NEXT_TOKEN, all other columns (features and targets) unchanged.
+
+    Training on the doubled set teaches the models, besides the real next step, what
+    happens from the same case state when no next step is specified: this is the
+    "no recommendation" baseline, and it exists for every prefix length, including k=1.
+    At recommendation time the baseline is the query instance with both columns set to
+    NO_NEXT_TOKEN.
+
+    The copy keeps the same case id, so the case-based internal validation split
+    (extract_internal_running_validation) puts each row and its copy on the same side.
+    Apply it to the training set only, after the dtype conversions (NEXT_RESOURCE must
+    already be a string column), and never to the file that transition_system reads.
+    """
+    baseline_copy = df.copy()
+    baseline_copy[next_activity_name] = NO_NEXT_TOKEN
+    baseline_copy[next_resource_name] = NO_NEXT_TOKEN
+    return pd.concat([df, baseline_copy], ignore_index=True)
+
+
 def linear_combination(df, lambda_weight):
     # Compute linear combination for normalized remaining time and case outcome
     df['outcome'] = lambda_weight * (1 - df['label']) + (1 - lambda_weight) * df['sigmoid_mm']

@@ -14,7 +14,7 @@ from utils.recommendation_functions import (
     act_with_res_func,
     next_possible_activities,
     build_query_instances,
-    build_baseline_instances)
+    build_no_recommendation_baseline_instances)
 
 from utils.get_features import load_case_study, get_case_study_features
 from utils.setup_cache import get_transition_graph
@@ -51,7 +51,6 @@ def run_experiment_top_k(
     case_study: str,
     method: Optional[str] = None,
     window_size: int = 5,
-    reduced_threshold: float = 0.05,
     pop_size: int = 20,
     n_generations: int = 15,
     crossover_rate: float = 0.9,
@@ -96,7 +95,6 @@ def run_experiment_top_k(
     """
 
     np.random.seed(random_state if random_state is not None else 1234)
-    reduced_percentage = 1 - reduced_threshold
 
     if method is None:
         methods_to_run = ["exhaustive"]
@@ -172,15 +170,11 @@ def run_experiment_top_k(
         )  # Using test data with last row only
 
     # The "no recommendation" baseline for the confidence-as-KPI filter (only
-    # used for method="exhaustive"): the real transition one prefix step
-    # earlier for the same case, taken as-is (see build_baseline_instances).
-    # Built from test_log (NOT test_data, which is loaded from
-    # test_log_with_last_act.csv and has only ONE row per case): test_log
-    # has one row per prefix length per case, with the same feature columns,
-    # so its second-to-last row per case is the state right before e_k.
-    # A case missing here (fewer than 2 rows in test_log) simply has the
-    # confidence filter disabled for it.
-    baseline_instances_by_case = build_baseline_instances(test_log, case_id_name)
+    # used for method="exhaustive"): the SAME query instance the candidates are
+    # evaluated on, with NEXT_ACTIVITY/NEXT_RESOURCE set to NO_NEXT_TOKEN (see
+    # build_no_recommendation_baseline_instances). It exists for every case,
+    # including traces with a single event.
+    baseline_instances_by_case = build_no_recommendation_baseline_instances(query_instances_by_case)
 
     print(f"Setup done in {time.time() - t0:.2f}s. Running: {', '.join(methods_to_run)}\n")
 
@@ -196,8 +190,7 @@ def run_experiment_top_k(
         print(
             f"Running top-{k} {current_method} approach | "
             f"case study: {case_study} | "
-            f"WINDOW_SIZE: {window_size} | "
-            f"Reduced threshold: {reduced_threshold}"
+            f"WINDOW_SIZE: {window_size}"
             + (f" | pop_size: {pop_size} | n_generations: {n_generations}" if current_method == "nsga2" else "")
         )
         print(f"Generating top-{k} recommendations...")
@@ -237,13 +230,6 @@ def run_experiment_top_k(
             ).reset_index().rename(columns={"index": "case:concept:name"})
             rec_df.to_csv(filename, index=False)
 
-            # Diagnostic sidecar: the predicted objective values (incl. the
-            # confidence / uncertainty KPI) behind each chosen pair. The
-            # simulation only ever reads the file above -- this one is for
-            # Pareto-front analysis and is deliberately kept separate so it is
-            # never picked up by 4_run_recommendation_simulation.py /
-            # 5_result_computation.py (their filename patterns require the name
-            # to end in `top{rank}of{k}.csv`).
             obj_filename = os.path.join(
                 save_path,
                 f"recommendations_{case_study}_{current_method}_top{rank}of{k}_objectives.csv",
@@ -254,9 +240,7 @@ def run_experiment_top_k(
                 columns=["pred_outcome", "pred_sigmoid_mm_time", "pred_uncertainty",
                          "prob_outcome_better", "prob_time_better"],
             ).reset_index().rename(columns={"index": "case:concept:name"})
-            # status is per-case (not per-rank): "ok", "no_possible_actions", or
-            # "no_confident_recommendation" (valid pairs existed but none passed
-            # the gamma_cls/gamma_reg confidence filter -- exhaustive method only).
+
             obj_df["status"] = obj_df["case:concept:name"].map(status_by_case)
             obj_df.to_csv(obj_filename, index=False)
             print(f"Saved rank {rank}/{k} results to {filename}")
@@ -285,19 +269,13 @@ if __name__ == "__main__":
         default=None,
         choices=["nsga2", "exhaustive"],
         help="Specify the method: 'nsga2' (NSGA-II, pymoo) or 'exhaustive'. "
-             "If omitted, only 'exhaustive' runs (NSGA-II is parked).",
+             "If omitted, only 'exhaustive' runs.",
     )
     parser.add_argument(
         "--window_size",
         type=int,
         default=5,
         help="Window size for the transition system (default: 5).",
-    )
-    parser.add_argument(
-        "--reduced_threshold",
-        type=float,
-        default=0.05,
-        help="Reduced threshold for predicted outcome (default: 0.05).",
     )
     parser.add_argument(
         "--pop_size",
@@ -346,7 +324,7 @@ if __name__ == "__main__":
         type=float,
         default=0.5,
         help="Confidence-as-KPI threshold (method='exhaustive' only): minimum "
-             "required P(candidate outcome beats the real-transition baseline) "
+             "required P(candidate outcome beats the no-recommendation baseline) "
              "for a candidate to survive the pre-Pareto filter (default: 0.5).",
     )
     parser.add_argument(
@@ -354,7 +332,7 @@ if __name__ == "__main__":
         type=float,
         default=0.5,
         help="Confidence-as-KPI threshold (method='exhaustive' only): minimum "
-             "required P(candidate remaining time beats the real-transition "
+             "required P(candidate remaining time beats the no-recommendation "
              "baseline) for a candidate to survive the pre-Pareto filter (default: 0.5).",
     )
 
@@ -364,7 +342,6 @@ if __name__ == "__main__":
         case_study=args.case_study,
         method=args.method,
         window_size=args.window_size,
-        reduced_threshold=args.reduced_threshold,
         pop_size=args.pop_size,
         n_generations=args.n_generations,
         crossover_rate=args.crossover_rate,
@@ -380,10 +357,10 @@ if __name__ == "__main__":
 # case_study: "BAC", "BPI12", "bpi17_before", "bpi17_after"
 
 # default: only "exhaustive" (NSGA-II parked until further notice)
-# python 3_run_experiment.py --case_study "BAC" --window_size 5 --reduced_threshold 0.05 --k 5
+# python 3_run_experiment.py --case_study "BAC" --window_size 5 --k 5
 
 # example method: only "nsga2"
-# python 3_run_experiment.py --case_study "BAC" --method "nsga2" --window_size 5 --reduced_threshold 0.05 --pop_size 50 --n_generations 10 --k 5
+# python 3_run_experiment.py --case_study "BAC" --method "nsga2" --window_size 5 --pop_size 50 --n_generations 10 --k 5
 
 # example method: only "exhaustive"
-# python 3_run_experiment.py --case_study "BPI12" --method "exhaustive" --window_size 5 --reduced_threshold 0.05 --k 5
+# python 3_run_experiment.py --case_study "BPI12" --method "exhaustive" --window_size 5 --k 5

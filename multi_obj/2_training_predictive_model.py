@@ -6,15 +6,15 @@ from pathlib import Path
 from datetime import datetime
 
 from utils.get_features import get_features
-from utils.pre_processing_functions import convert_dtypes_bpi12
+from utils.pre_processing_functions import convert_dtypes_bpi12, add_no_recommendation_copy
 from utils.predictive_models_functions import train_ml_model
 
 end_date_name = 'time:timestamp'
 start_date_name = 'start:timestamp'
 
 params = {
-    "case_study" : ["BPI12_reordered", "BPI12_reordered_sim"],
-    #"case_study": ["BAC", "BPI12", "BPI12_sim", "bpi17_before", "bpi17_after"],
+    #"case_study" : ["BPI12_reordered", "BPI12_reordered_sim"],
+    "case_study": ["BAC", "BPI12_reordered", "BPI12_reordered_sim", "bpi17_before", "bpi17_after"],
     "optuna_trials": 80,
     "optuna_timeout": None,  # None/0 -> no wall-clock cap, run all optuna_trials
     "early_stopping_rounds": 50,
@@ -54,6 +54,13 @@ def run_for_case_study(case_study, runtime_params):
         print("\nApplying BPI12 specific data type conversions...")
         train_data = convert_dtypes_bpi12(train_data, "experiment")
         test_data  = convert_dtypes_bpi12(test_data, "experiment")
+
+    # Add the "no recommendation" baseline: a copy of every training row with NEXT_ACTIVITY /
+    # NEXT_RESOURCE replaced by NO_NEXT_TOKEN. Training set only, in memory only: train_data.csv on
+    # disk is untouched, because the transition system and case counts are built from it.
+    n_train_rows = len(train_data)
+    train_data = add_no_recommendation_copy(train_data)
+    print(f"\nAdded no-recommendation baseline copy to the training set: {n_train_rows} -> {len(train_data)} rows.")
 
     record = {
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -161,7 +168,7 @@ def write_training_report(all_results, runtime_params, output_path):
                     f"  - Optuna trials completed: {res['n_trials_complete']}"
                     f" / {res.get('n_trials_run', '?')} run"
                 )
-            lines.append(f"  - Best Optuna trial: #{res['best_trial_number']} ({res['metric_name']} validation = {res['best_validation_score']:.5f})")
+            lines.append(f"  - Best Optuna trial: #{res['best_trial_number']} ({res.get('selection_metric_name', res['metric_name'])} validation = {res['best_validation_score']:.5f})")
             lines.append(f"  - Best hyperparameters: {_format_best_params(res['best_params'])}")
             lines.append(f"  - Trees in final model (refit on 100% training data): {res['n_trees_final_model']}")
             lines.append(f"  - {res['metric_name']} score of training set: {res['train_score']:.5f}")
@@ -175,7 +182,7 @@ def write_training_report(all_results, runtime_params, output_path):
                 )
                 lines.append(
                     f"    epistemic share of variance = {unc['epistemic_var_fraction'] * 100:.1f}% "
-                    f"(rest is irreducible noise); median total std / sharpness = {unc['median_std']:.5f}"
+                    f"(rest is irreducible noise)"
                 )
                 lines.append(
                     f"  - Calibration: sigma-scaling factor s = {unc.get('sigma_scale', 1.0):.3f} "

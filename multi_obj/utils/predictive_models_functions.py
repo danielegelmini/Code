@@ -723,8 +723,9 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
 
     Returns:
         dict: {"label": {...}, "sigmoid_mm": {...}}, one entry per target with
-        the metric name used (Logloss/RMSE), the winning Optuna trial number
-        and validation score, the best hyperparameters, the number of trees
+        the metric name used for the train/test scores (Logloss/RMSE), the
+        Optuna selection metric (Logloss/RMSEWithUncertainty), the winning
+        Optuna trial number and its validation score on the selection metric, the best hyperparameters, the number of trees
         used for the final refit, and the train/test scores of the final
         model -- everything needed to write a training report without having
         to re-parse any file.
@@ -754,6 +755,7 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
     ##########################################
     numeric_transformer = Pipeline(steps=[('scaler', StandardScaler())])
     categorical_transformer = Pipeline(steps=[('onehot', OneHotEncoder(handle_unknown='ignore', sparse_output=False))])
+    #drop all the features that we do not want 
     transformations = ColumnTransformer(
         transformers=[
             ('num', numeric_transformer, continuous_features),
@@ -801,7 +803,7 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
         else:
             const_params.update({
                 "loss_function": "RMSEWithUncertainty",
-                "eval_metric": "RMSE",
+                "eval_metric": "RMSEWithUncertainty",
                 "posterior_sampling": True,
             })
         
@@ -816,7 +818,7 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
                 trial (optuna.trial.Trial): An Optuna trial object used to sample hyperparameters.
 
             Returns:
-                float: The eval_metric score (Logloss for classification, RMSE for regression) at the best iteration, which Optuna will attempt to minimize.
+                float: The eval_metric score (Logloss for classification, Gaussian NLL i.e. RMSEWithUncertainty for regression) at the best iteration, which Optuna will attempt to minimize.
             """
             ##########################################
             # DEFINITION OF PARAMETER'S SEARCH
@@ -898,7 +900,7 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
         # OPTUNA 
         ##########################################
         study = optuna.create_study(
-            pruner=optuna.pruners.MedianPruner(n_warmup_steps=30),
+            pruner=optuna.pruners.MedianPruner(n_warmup_steps=100),
             direction="minimize"
         )
         study.optimize(objective, n_trials=optuna_trials, timeout=optuna_timeout if optuna_timeout else None)
@@ -1019,8 +1021,7 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
                 f"Uncertainty (test avg): data/aleatoric std = {uncertainty_report['mean_data_std']:.5f}, "
                 f"knowledge/epistemic std = {uncertainty_report['mean_knowledge_std']:.5f}, "
                 f"total std = {uncertainty_report['mean_std']:.5f} "
-                f"(epistemic share {uncertainty_report['epistemic_var_fraction'] * 100:.1f}%) | "
-                f"median (sharpness) = {uncertainty_report['median_std']:.5f}"
+                f"(epistemic share {uncertainty_report['epistemic_var_fraction'] * 100:.1f}%)"
             )
             print(
                 f"Calibration: sigma_scale = {sigma_scale:.3f} | "
@@ -1044,6 +1045,7 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
 
         results[y_train.name] = {
             "metric_name": metric_name,
+            "selection_metric_name": const_params["eval_metric"],
             "n_trials_run": n_trials_run,
             "n_trials_complete": n_trials_complete,
             "best_trial_number": study.best_trial.number,
