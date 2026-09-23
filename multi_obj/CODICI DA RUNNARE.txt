@@ -8,10 +8,10 @@ python 2_training_predictive_model.py
 
 python 3_run_experiment.py --case_study "BAC" --method "exhaustive" --window_size 5 --k 5 --gamma_cls 0.5 --gamma_reg 0.5
 python 3_run_experiment.py --case_study "BPI12_reordered" --method "exhaustive" --window_size 5 --k 5 --gamma_cls 0.5 --gamma_reg 0.5
-
-python 3_run_experiment.py --case_study "BPI12_reordered_sim" --method "exhaustive" --window_size 5 --k 5 --gamma_cls 0.5 --gamma_reg 0.5
 python 3_run_experiment.py --case_study "bpi17_before" --method "exhaustive" --window_size 5 --k 5 --gamma_cls 0.5 --gamma_reg 0.5
 python 3_run_experiment.py --case_study "bpi17_after" --method "exhaustive" --window_size 5 --k 5 --gamma_cls 0.5 --gamma_reg 0.5
+
+python 3_run_experiment.py --case_study "BPI12_reordered_sim" --method "exhaustive" --window_size 5 --k 5 --gamma_cls 0.5 --gamma_reg 0.5
 
 python 3_plot_pareto.py --case_study "BAC" --method exhaustive --k 5 --gamma_cls 0.5 --gamma_reg 0.5
 python 3_plot_pareto.py --case_study "BPI12_reordered" --method exhaustive --k 5 --gamma_cls 0.5 --gamma_reg 0.5

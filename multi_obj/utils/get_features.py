@@ -137,20 +137,6 @@ def get_features(case_study: str) -> Tuple[str, str, str, List[str], List[str], 
         },
     }
 
-    # BPI12_sim is the fully-simulated stand-in for BPI12 (see
-    # 9_generate_simulated_training_set.py); it shares BPI12's activity/resource
-    # schema, so it reuses BPI12's feature configuration verbatim.
-    CONFIG["BPI12_sim"] = CONFIG["BPI12"]
-
-    # BPI12_reordered/BPI12_reordered_sim are rebuilt from the "clean" BPI12 raw log
-    # (see 0_prepare_bpi12_clean_log.py), which uses different, more granular English
-    # names for the 6 W_ activities instead of BPI12's original Dutch ones -- same
-    # underlying process step, different label. Everything else (A_/O_ activities,
-    # AMOUNT_REQ, resource/time features) is identical to BPI12, so this copies
-    # BPI12's continuous-feature list and only swaps those 6 names (mapping verified
-    # during the reordering investigation: same activity, same position in the net,
-    # in most cases confirmed by matching real COMPLETE timestamps 1:1 between the
-    # two logs).
     _BPI12_TO_REORDERED_ACTIVITY = {
         "# ACTIVITY=W_Completeren aanvraag": "# ACTIVITY=W_Complete_preaccepted_appl",
         "# ACTIVITY=W_Nabellen offertes": "# ACTIVITY=W_Call_after_offer",

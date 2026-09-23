@@ -2,6 +2,7 @@ import tqdm
 import pandas as pd
 from typing import Dict, Tuple, Any, List, Optional
 import numpy as np
+from scipy.stats import t as student_t
 from paretoset import paretoset
 
 from pymoo.core.problem import Problem
@@ -157,17 +158,47 @@ def predict_time_members(predictive_time_model, rows_df):
     return mean.reshape(-1, 1)
 
 
-def predict_outcome_members(predictive_outcome_model, rows_df):
+def predict_time_members_var(predictive_time_model, rows_df):
     """
-    Return the per-virtual-ensemble-member CALIBRATED P(y=positive) for
+    Return each virtual-ensemble member's own (aleatoric) variance for
     rows_df, as a 2-D numpy array of shape (n_rows, ve_count) -- see
-    UncertaintyClassifier.predict_members(). Used by
-    _compute_confidence_probabilities() to compare a baseline row and a
-    candidate row member-by-member.
+    UncertaintyRegressor.predict_members_var(). Paired with
+    predict_time_members()'s per-member means so
+    _paired_gaussian_prob_greater() can compare on the FULL predictive
+    variance (aleatoric + epistemic) instead of only the across-member
+    (epistemic) spread.
 
-    Falls back to a single-column array of the raw predict_proba point
-    prediction (a "1-member ensemble") for an older outcome model without
-    uncertainty support, reusing the same one-time warning as predict_outcome_proba.
+    Falls back to zeros (no aleatoric variance to report) for an older time
+    model without uncertainty support; predict_time_members(), always
+    called alongside this one, already prints the one-time warning for
+    that case.
+    """
+    predictor = predictive_time_model
+    predictor_input = rows_df
+    if hasattr(predictive_time_model, "named_steps"):
+        steps = predictive_time_model.named_steps
+        predictor = steps.get("prediction", predictive_time_model)
+        if "transformation" in steps:
+            predictor_input = steps["transformation"].transform(rows_df)
+
+    if hasattr(predictor, "predict_members_var"):
+        return np.asarray(predictor.predict_members_var(predictor_input), dtype=float)
+
+    return np.zeros((len(rows_df), 1))
+
+
+def predict_outcome_members_logit(predictive_outcome_model, rows_df):
+    """
+    Return the per-virtual-ensemble-member CALIBRATED logit (pre-sigmoid) for
+    rows_df, as a 2-D numpy array of shape (n_rows, ve_count) -- see
+    UncertaintyClassifier.predict_members_logit(). Used by
+    _compute_confidence_probabilities(), which models the baseline/candidate
+    comparison as two correlated Gaussians: a probability is bounded to
+    [0, 1] and a poor fit for that, while the logit is unbounded.
+
+    Falls back to the raw predict_proba-derived logit (a "1-member
+    ensemble") for an older outcome model without uncertainty support,
+    reusing the same one-time warning as predict_outcome_proba.
     """
     global _CALIBRATION_WARNED
 
@@ -179,8 +210,8 @@ def predict_outcome_members(predictive_outcome_model, rows_df):
         if "transformation" in steps:
             predictor_input = steps["transformation"].transform(rows_df)
 
-    if hasattr(predictor, "predict_members"):
-        return np.asarray(predictor.predict_members(predictor_input), dtype=float)
+    if hasattr(predictor, "predict_members_logit"):
+        return np.asarray(predictor.predict_members_logit(predictor_input), dtype=float)
 
     if not _CALIBRATION_WARNED:
         print(
@@ -191,7 +222,87 @@ def predict_outcome_members(predictive_outcome_model, rows_df):
         )
         _CALIBRATION_WARNED = True
     proba = np.asarray(predictive_outcome_model.predict_proba(rows_df), dtype=float)[:, 1]
-    return proba.reshape(-1, 1)
+    p = np.clip(proba, 1e-7, 1.0 - 1e-7)
+    logit = np.log(p / (1.0 - p))
+    return logit.reshape(-1, 1)
+
+
+def _paired_gaussian_prob_greater(a_members, b_members, a_var=None, b_var=None):
+    """
+    Estimate P(A > B) for two paired ensembles of M values each (A: one or
+    more cases, B: a single baseline), modelling A and B as correlated
+    Gaussians whose mean, variance and covariance are ESTIMATED -- not known
+    -- from those same M virtual-ensemble members.
+
+    Why paired, not independent: a_members and b_members come from the same
+    fitted model's virtual ensemble, with the same member index m giving both
+    A's and B's value, so Cov(A, B) can be estimated directly from the M
+    pairs instead of assumed to be zero. Treating them as independent would
+    drop a real, positive correlation (both share whatever quirks member m
+    has) and bias the comparison.
+
+    Why Student's t, not the normal (z) CDF: mean_diff and var_diff are
+    themselves estimates from only M samples, not the true population
+    values. Plugging point estimates into the normal CDF understates how
+    uncertain the comparison really is, especially for small M -- exactly
+    the situation Student's t-distribution was built to correct for. This
+    uses the standard posterior-predictive result for a NEW draw from a
+    normal population with unknown mean/variance (e.g. Gelman et al., BDA3
+    ch. 3): given M observed pairs, a new difference D_new = A_new - B_new
+    follows a location-scale Student-t with M-1 degrees of freedom,
+        D_new ~ t_(M-1)( mean_diff, var_diff * (1 + 1/M) ),
+    so
+        P(A > B) = P(D_new > 0) = T_(M-1)( mean_diff / (std_diff * sqrt(1 + 1/M)) ),
+    T_(M-1) being the standard Student-t CDF. Both the (1 + 1/M) inflation
+    and t's fatter-than-normal tails shrink as M grows, so this converges to
+    the plain z-test as M -> infinity -- a strict generalisation of it, not a
+    different method.
+
+    Args:
+        a_members (numpy.ndarray): Shape (n, M) -- one row per case to score.
+        b_members (numpy.ndarray): Shape (M,) -- the single baseline, paired
+            with a_members on the member axis.
+        a_var, b_var (numpy.ndarray, optional): Same shapes as a_members/
+            b_members -- each member's own (aleatoric) variance, e.g. from
+            UncertaintyRegressor.predict_members_var(). When given, their
+            per-case mean is added to var_a/var_b so the comparison uses the
+            FULL predictive variance (aleatoric + epistemic, law of total
+            variance) instead of only the across-member (epistemic) spread
+            that a_members/b_members alone give. The covariance term is left
+            untouched: aleatoric noise on the baseline row and on the
+            candidate row is independent even when it comes from the same
+            member, so it inflates each side's own variance but not their
+            covariance. Omit both (the default) to use the epistemic-only
+            comparison.
+
+    Returns:
+        numpy.ndarray: Shape (n,), each in [0, 1]. Degrades to a step
+        function (0, 0.5 or 1, by the sign of mean_diff) when M < 2 -- too
+        few members to estimate a variance at all.
+    """
+    M = b_members.shape[-1]
+    mean_b = b_members.mean() #baseline
+    mean_a = a_members.mean(axis=1) #method
+    mean_diff = mean_a - mean_b
+
+    if M < 2:
+        return np.where(mean_diff > 0, 1.0, np.where(mean_diff < 0, 0.0, 0.5))
+
+    var_b = b_members.var(ddof=1)
+    var_a = a_members.var(axis=1, ddof=1)
+    if b_var is not None:
+        var_b = var_b + b_var.mean()
+    if a_var is not None:
+        var_a = var_a + a_var.mean(axis=1)
+    cov_ab = ((a_members - mean_a[:, None]) * (b_members - mean_b)[None, :]).sum(axis=1) / (M - 1)
+    var_diff = np.clip(var_a + var_b - 2.0 * cov_ab, 0.0, None)
+    std_diff = np.sqrt(var_diff * (1.0 + 1.0 / M))
+
+    degenerate = std_diff == 0
+    z = np.divide(mean_diff, std_diff, out=np.zeros_like(mean_diff), where=~degenerate)
+    prob = student_t.cdf(z, df=M - 1)
+    #false condition: mean > 0 -> 1; mean < 0 -> 0; mean == 0 -> 0.5
+    return np.where(degenerate, np.where(mean_diff > 0, 1.0, np.where(mean_diff < 0, 0.0, 0.5)), prob)
 
 # ---------------------------------------------------------------------------
 # Utils for run_experiment.py
@@ -480,12 +591,28 @@ def _compute_confidence_probabilities(
     NO_NEXT_TOKEN, i.e. the same state as the candidates with no next step given.
 
     Both the baseline and every candidate are scored member-by-member on the
-    SAME fitted models' virtual-ensemble members (predict_outcome_members /
-    predict_time_members), so the probability is the empirical fraction of
-    members for which the candidate wins. Because baseline and candidates
-    come from literally the same model, this captures whatever correlation
-    exists between them automatically -- no independence assumption, no
-    normality assumption.
+    SAME fitted models' virtual-ensemble members (predict_outcome_members_logit /
+    predict_time_members): each is modelled as a Gaussian whose mean,
+    variance and cross-covariance with the baseline are estimated from those
+    M paired members (see _paired_gaussian_prob_greater), so the correlation
+    between baseline and candidate -- both come from the same fitted model --
+    is captured automatically instead of assumed away. The outcome
+    comparison runs on the LOGIT scale (predict_outcome_members_logit, not
+    the raw [0, 1] probability) because a Gaussian fits an unbounded
+    quantity, not one clipped to [0, 1] -- the standard treatment for a
+    Bernoulli parameter's uncertainty. Because that mean/variance/covariance
+    are themselves estimated from only M members, the comparison uses
+    Student's t-distribution (M-1 degrees of freedom) rather than the normal
+    -- see _paired_gaussian_prob_greater's docstring for the derivation.
+
+    The time comparison additionally folds in each member's own (aleatoric)
+    variance (predict_time_members_var), so it compares on the FULL
+    predictive variance rather than only the across-member (epistemic)
+    spread -- see _paired_gaussian_prob_greater's a_var/b_var. The outcome
+    comparison does NOT do this: a classification member's own variance is
+    Bernoulli, p_m * (1 - p_m), fixed by its mean rather than a separate
+    quantity CatBoost reports, and mapping that onto the logit scale needs a
+    delta-method approximation that hasn't been added here.
 
     Args:
         candidate_pairs: list of (activity, resource) tuples to score.
@@ -498,11 +625,11 @@ def _compute_confidence_probabilities(
 
     Returns:
         (prob_outcome_better, prob_time_better): two 1-D numpy arrays,
-        aligned with candidate_pairs. prob_outcome_better[i] is the fraction
-        of outcome-model members for which candidate i's calibrated outcome
-        probability exceeds the baseline's; prob_time_better[i] is the
-        fraction of time-model members for which candidate i's predicted
-        time is BELOW the baseline's (equivalently, 1 - time is above it).
+        aligned with candidate_pairs. prob_outcome_better[i] is P(candidate
+        i's calibrated outcome logit > baseline's), equivalently P(candidate
+        i's calibrated outcome probability > baseline's), since the logit is
+        a monotonic transform of the probability; prob_time_better[i] is
+        P(candidate i's predicted time < baseline's).
     """
     baseline_outcome_row = align_query_instance_with_model(baseline_row, predictive_outcome_model)
     baseline_time_row = align_query_instance_with_model(baseline_row, predictive_time_model)
@@ -512,14 +639,19 @@ def _compute_confidence_probabilities(
     outcome_rows_df = pd.concat([baseline_outcome_row, candidate_outcome_rows], ignore_index=True)
     time_rows_df = pd.concat([baseline_time_row, candidate_time_rows], ignore_index=True)
 
-    outcome_members = predict_outcome_members(predictive_outcome_model, outcome_rows_df)
+    outcome_members = predict_outcome_members_logit(predictive_outcome_model, outcome_rows_df)
     time_members = predict_time_members(predictive_time_model, time_rows_df)
+    time_members_var = predict_time_members_var(predictive_time_model, time_rows_df)
 
     baseline_outcome_members, candidate_outcome_members = outcome_members[0], outcome_members[1:]
     baseline_time_members, candidate_time_members = time_members[0], time_members[1:]
+    baseline_time_var, candidate_time_var = time_members_var[0], time_members_var[1:]
 
-    prob_outcome_better = (candidate_outcome_members > baseline_outcome_members[None, :]).mean(axis=1)
-    prob_time_better = (candidate_time_members < baseline_time_members[None, :]).mean(axis=1)
+    prob_outcome_better = _paired_gaussian_prob_greater(candidate_outcome_members, baseline_outcome_members)
+    prob_time_better = 1.0 - _paired_gaussian_prob_greater(
+        candidate_time_members, baseline_time_members,
+        a_var=candidate_time_var, b_var=baseline_time_var,
+    )
 
     return prob_outcome_better, prob_time_better
 

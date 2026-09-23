@@ -19,7 +19,7 @@ from scipy.optimize import minimize_scalar
 
 from utils.train_test_split import extract_internal_running_validation
 
-DEFAULT_VIRTUAL_ENSEMBLES_COUNT = 10
+DEFAULT_VIRTUAL_ENSEMBLES_COUNT = 50
 DEFAULT_CALIB_BINS = 15
 
 # Classification
@@ -201,9 +201,6 @@ class UncertaintyRegressor:
     <1 shrinks), fitted on a held-out slice at training time. It rescales every
     std component by the same amount, so it does not change any ranking of cases
     by uncertainty; only the interval width moves.
-
-    The target is NOT transformed here: 'sigmoid_mm' is already bounded in
-    [0, 1] and an ablation showed a log1p transform did not help.
     """
 
     def __init__(self, fitted_model, sigma_scale=1.0, virtual_ensembles_count=DEFAULT_VIRTUAL_ENSEMBLES_COUNT):
@@ -290,7 +287,7 @@ class UncertaintyRegressor:
 
     def predict_uncertainty(self, X):
         """Predicts the mean and its aleatoric/epistemic/total uncertainty via the
-        virtual-ensemble decomposition (law of total variance).
+        virtual-ensemble decomposition (law of total variance). Obtain the mean of the predictions over the virtual ensembles.
 
         Args:
             X: Feature matrix, already preprocessed.
@@ -341,7 +338,7 @@ class UncertaintyRegressor:
 
     def predict_members(self, X):
         """Returns each virtual-ensemble member's predicted mean separately (not
-        aggregated), so two rows can be compared member-by-member elsewhere.
+        aggregated), so two rows can be compared member-by-member elsewhere. 
 
         Used by the confidence-as-KPI filter (see
         utils/recommendation_functions.py) to compare a baseline row and a
@@ -352,7 +349,8 @@ class UncertaintyRegressor:
 
         CatBoost's prediction_type="VirtEnsembles" (not "VirtualEnsembles")
         returns, for regression, one (mean, var) pair per member; only the
-        per-member mean is needed here, so the variance column is dropped.
+        per-member mean is needed here, so the variance column is dropped
+        (see predict_members_var() for that dropped column).
 
         Args:
             X: Feature matrix, already preprocessed.
@@ -377,6 +375,47 @@ class UncertaintyRegressor:
             dtype=float,
         ) # out => (n_row, ve_count, 2), the third dimension is mean and variance
         return out[:, :, 0] #mean for all row of X for all  ve
+
+    def predict_members_var(self, X):
+        """Returns each virtual-ensemble member's own (aleatoric) variance
+        separately (not aggregated) -- the column predict_members() drops.
+
+        A comparison built only from predict_members()'s M means (as
+        _paired_gaussian_prob_greater() in utils/recommendation_functions.py
+        does) captures only the EPISTEMIC part of the uncertainty (how much
+        the members disagree with each other). Adding the mean of this
+        method's output to that comparison's variance terms recovers the
+        FULL predictive variance (aleatoric + epistemic) via the law of
+        total variance -- the same decomposition predict_uncertainty()
+        already reports as data_std/knowledge_std/total_std, just supplied
+        per-member instead of pre-aggregated. The covariance between two
+        rows is left untouched by this: aleatoric noise on one row and on
+        another is independent even when both come from the same member, so
+        it inflates each row's own variance but not their covariance.
+
+        Args:
+            X: Feature matrix, already preprocessed.
+
+        Returns:
+            numpy.ndarray: Shape (n_rows, ve_count) -- one column per virtual
+            ensemble member, each holding that member's own predictive
+            variance. Degrades to shape (n_rows, 1) of zeros (a bare point
+            prediction carries no aleatoric variance to report) when there
+            are too few trees for even one virtual ensemble.
+        """
+        ve_count = self._ve_count()
+        if ve_count < 1:
+            mean = self.predict(X)
+            return np.zeros_like(mean).reshape(-1, 1)
+
+        out = np.asarray(
+            self.fitted_model.virtual_ensembles_predict(
+                X, prediction_type="VirtEnsembles",
+                virtual_ensembles_count=ve_count,
+            ),
+            dtype=float,
+        )
+        return np.clip(out[:, :, 1], 0.0, None)
 
     def get_params(self, deep=True):
         """Exposes this wrapper's constructor arguments, scikit-learn style.
@@ -574,42 +613,42 @@ class UncertaintyClassifier:
             "total_entropy": total_entropy,
         }
 
-    def predict_members(self, X):
-        """Returns each virtual-ensemble member's CALIBRATED P(y=positive)
-        separately (not aggregated), so two rows can be compared member-by-member
-        elsewhere.
+    def predict_members_logit(self, X):
+        """Returns each virtual-ensemble member's CALIBRATED logit (pre-sigmoid),
+        the Bernoulli-appropriate counterpart of
+        UncertaintyRegressor.predict_members() for the paired
+        baseline-vs-candidate comparison in
+        utils/recommendation_functions.py._compute_confidence_probabilities().
 
-        Used by the confidence-as-KPI filter (see
-        utils/recommendation_functions.py) to compare a baseline row and a
-        candidate row member-by-member, the same way
-        UncertaintyRegressor.predict_members() does for the time model.
-
-        CatBoost's prediction_type="VirtEnsembles" returns, for
-        classification, one RAW LOGIT per member (verified empirically:
-        sigmoid(member_logit) matches predict_proba()'s raw probability) --
-        not a probability. Applying the temperature transform directly to
-        that logit, sigmoid(logit / T), gives the same per-member calibrated
-        probability predict_uncertainty()["proba_calibrated"] would give for
-        a single-member "ensemble", without needing to round-trip through
-        log-odds of an already-clipped probability.
+        That comparison models a baseline/candidate pair as two correlated
+        Gaussians and reads off P(candidate > baseline) from their
+        difference. A raw probability is bounded to [0, 1], so a Gaussian is
+        a poor fit near 0 or 1 -- the standard fix (as in Bayesian logistic
+        regression) is to model the Gaussian on the unbounded LOGIT
+        (log-odds) scale instead, which is exactly the scale the temperature
+        calibration itself already operates on (p_cal = sigmoid(logit(p) / T)).
+        Since sigmoid is monotonic, comparing logits picks the same winner as
+        comparing probabilities -- only the distributional assumption behind
+        the resulting win-probability changes, not which candidate looks
+        better.
 
         Args:
             X: Feature matrix, already preprocessed.
 
         Returns:
             numpy.ndarray: Shape (n_rows, ve_count) -- one column per virtual
-            ensemble member, each holding that member's temperature-calibrated
-            P(y=1). Degrades to shape (n_rows, 1) (the plain calibrated point
-            prediction, repeated) when there are too few trees for even one
-            virtual ensemble (mirrors predict_uncertainty()'s degradation).
+            ensemble member, each holding that member's calibrated logit
+            (member_logit / temperature). Degrades to shape (n_rows, 1) (the
+            plain calibrated point logit, repeated) when there are too few
+            trees for even one virtual ensemble (mirrors predict_members()'s
+            degradation).
         """
         ve_count = self._ve_count()
         if ve_count < 1:
             proba = np.asarray(self.fitted_model.predict_proba(X), dtype=float)[:, 1]
             p = np.clip(proba, 1e-7, 1.0 - 1e-7)
             logit = np.log(p / (1.0 - p))
-            proba_cal = 1.0 / (1.0 + np.exp(-logit / self.temperature))
-            return proba_cal.reshape(-1, 1)
+            return (logit / self.temperature).reshape(-1, 1)
 
         out = np.asarray(
             self.fitted_model.virtual_ensembles_predict(
@@ -619,7 +658,7 @@ class UncertaintyClassifier:
             dtype=float,
         )
         member_logits = out[:, :, 0]
-        return 1.0 / (1.0 + np.exp(-member_logits / self.temperature))
+        return member_logits / self.temperature
 
     def get_params(self, deep=True):
         """Exposes this wrapper's constructor arguments, scikit-learn style.
@@ -975,7 +1014,7 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
                 f"ECE {uncertainty_report['ece_raw']:.4f} -> {uncertainty_report['ece_calibrated']:.4f}"
             )
         else:
-            metric_name = "RMSE"
+            metric_name = "RMSEWithUncertainty"
             y_train_pred = prediction_step.predict(X_train_trans)
             y_test_pred = prediction_step.predict(X_test_trans)
             train_score = float(np.sqrt(mean_squared_error(y_train, y_train_pred)))
