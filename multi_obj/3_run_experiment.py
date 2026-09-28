@@ -194,7 +194,7 @@ def run_experiment_top_k(
             + (f" | pop_size: {pop_size} | n_generations: {n_generations}" if current_method == "nsga2" else "")
         )
         print(f"Generating top-{k} recommendations...")
-        recommendations_list, objectives_list, status_by_case = compute_recommendations_top_k(
+        recommendations_list, _, _ = compute_recommendations_top_k(
             test_log=test_log,
             test_data=test_data,
             case_study=case_study,
@@ -219,9 +219,7 @@ def run_experiment_top_k(
             gamma_reg=gamma_reg,
         )
 
-        for rank, (recommendations, objectives) in enumerate(
-            zip(recommendations_list, objectives_list), start=1
-        ):
+        for rank, recommendations in enumerate(recommendations_list, start=1):
             filename = os.path.join(
                 save_path, f"recommendations_{case_study}_{current_method}_top{rank}of{k}.csv"
             )
@@ -229,20 +227,6 @@ def run_experiment_top_k(
                 recommendations, orient="index", columns=["Next_activity", "Next_resource"]
             ).reset_index().rename(columns={"index": "case:concept:name"})
             rec_df.to_csv(filename, index=False)
-
-            obj_filename = os.path.join(
-                save_path,
-                f"recommendations_{case_study}_{current_method}_top{rank}of{k}_objectives.csv",
-            )
-            obj_df = pd.DataFrame.from_dict(
-                objectives,
-                orient="index",
-                columns=["pred_outcome", "pred_sigmoid_mm_time", "pred_uncertainty",
-                         "prob_outcome_better", "prob_time_better"],
-            ).reset_index().rename(columns={"index": "case:concept:name"})
-
-            obj_df["status"] = obj_df["case:concept:name"].map(status_by_case)
-            obj_df.to_csv(obj_filename, index=False)
             print(f"Saved rank {rank}/{k} results to {filename}")
 
         results_by_method[current_method] = recommendations_list
