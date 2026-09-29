@@ -2,10 +2,16 @@
 """
 6_baseline_vs_real_validation.py  (rewritten)
 
-Validates the ProSiT simulator's BASELINE runs against the ENTIRE REAL log
-(not just the test set), mirroring the paper's own simulator-validation
-methodology (Table 2: rate of positive outcome, real vs simulated log;
-Figure 5: trace-duration distributions).
+Validates the ProSiT simulator's BASELINE runs against the REAL traces of the
+SAME test cases (the cases running at t_split, whose prefixes the baseline
+continues), in the spirit of the paper's own simulator-validation methodology
+(Table 2: rate of positive outcome, real vs simulated log; Figure 5:
+trace-duration distributions). The baseline only ever simulates test cases, so
+comparing it with the whole real log would mix two different populations: test
+cases are, by construction, the ones still running at t_split, and their outcome
+and duration distributions differ from the log-wide ones. The whole-log figures
+are still reported (real_* columns) as context and as the reference for the fully
+simulated dataset below.
 
 No delta_CO / delta_RT computation here on purpose: this script answers a
 single question -- "does the baseline simulation reproduce what really
@@ -68,6 +74,9 @@ BPI12_DTYPE_CASE_STUDIES = {"BPI12_not_reordered", "BPI12_not_reordered_sim", "B
 # and friends): a fully-simulated case study is named "<source_case_study>_sim".
 FULLY_SIMULATED_SUFFIX = "_sim"
 TRAIN_DATA_FILENAME = "train_data.csv"
+# Prefixes the baseline simulation continues (written by 1_data_preprocessing.py): its case
+# ids are exactly the test cases the baseline runs contain.
+TEST_LOG_FILENAME = "test_log.csv"
 
 
 # ---------------------------------------------------------------------------
@@ -128,7 +137,7 @@ def case_level_stats(df: pd.DataFrame, case_id_col: str = case_id_name) -> pd.Da
 
 
 # ---------------------------------------------------------------------------
-# Real log loading (entire dataset, no longer restricted to test set)
+# Real log loading (entire dataset; restricted to the test cases in compare_case_study)
 # ---------------------------------------------------------------------------
 def load_real_log(case_dir: Path, case_study: str, encoded_activity):
     log_path = case_dir / f"log_{case_study}.xes"
@@ -158,6 +167,14 @@ def load_real_log(case_dir: Path, case_study: str, encoded_activity):
     return real_df
 
 
+def load_test_case_ids(case_dir: Path) -> set:
+    """Case ids of the test cases, i.e. the cases whose prefixes the baseline simulation continues."""
+    test_log_path = case_dir / TEST_LOG_FILENAME
+    if not test_log_path.exists():
+        raise FileNotFoundError(f"Test prefixes not found: {test_log_path}")
+    return set(pd.read_csv(test_log_path, usecols=[case_id_name], dtype={case_id_name: str})[case_id_name])
+
+
 # ---------------------------------------------------------------------------
 # Comparison
 # ---------------------------------------------------------------------------
@@ -172,6 +189,8 @@ def compare_case_study(base_dir: Path, case_study: str, n_sim: int) -> dict:
     print(f"  Loading entire real log dataset...")
     real_df = load_real_log(case_dir, case_study, encoded_activity)
     real_stats = case_level_stats(real_df)
+    test_case_ids = load_test_case_ids(case_dir)
+    real_test_stats = real_stats[real_stats.index.isin(test_case_ids)]
 
     def summarize(stats: pd.DataFrame, label: str) -> dict:
         return {
@@ -184,6 +203,7 @@ def compare_case_study(base_dir: Path, case_study: str, n_sim: int) -> dict:
 
     result = {"case_study": case_study}
     result.update(summarize(real_stats, "real"))
+    result.update(summarize(real_test_stats, "real_test"))
     result.update(summarize(sim_stats, "sim_baseline"))
 
     sim_full_case_study = case_study + FULLY_SIMULATED_SUFFIX
@@ -202,7 +222,7 @@ def compare_case_study(base_dir: Path, case_study: str, n_sim: int) -> dict:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Validate baseline simulations against the ENTIRE real log "
+        description="Validate baseline simulations against the real traces of the same test cases "
                      "(paper Table 2 / Figure 5 style check). No delta_CO/delta_RT here."
     )
     parser.add_argument("--base_dir", type=str, default=".")
@@ -226,22 +246,29 @@ def main():
             res = compare_case_study(base_dir, case_study, args.n_sim)
             results.append(res)
             print(
-                f"  Real:     n={res['real_n_traces']:5d}  "
+                f"  Real (whole log):  n={res['real_n_traces']:5d}  "
                 f"%positive={res['real_pct_positive']:.1f}%  "
                 f"duration(days) mean={res['real_mean_duration_days']:.2f} "
                 f"median={res['real_median_duration_days']:.2f} "
                 f"std={res['real_std_duration_days']:.2f}"
             )
             print(
-                f"  Baseline: n={res['sim_baseline_n_traces']:5d}  "
+                f"  Real (test cases): n={res['real_test_n_traces']:5d}  "
+                f"%positive={res['real_test_pct_positive']:.1f}%  "
+                f"duration(days) mean={res['real_test_mean_duration_days']:.2f} "
+                f"median={res['real_test_median_duration_days']:.2f} "
+                f"std={res['real_test_std_duration_days']:.2f}"
+            )
+            print(
+                f"  Baseline:          n={res['sim_baseline_n_traces']:5d}  "
                 f"%positive={res['sim_baseline_pct_positive']:.1f}%  "
                 f"duration(days) mean={res['sim_baseline_mean_duration_days']:.2f} "
                 f"median={res['sim_baseline_median_duration_days']:.2f} "
                 f"std={res['sim_baseline_std_duration_days']:.2f}"
             )
-            gap_pct = res['sim_baseline_pct_positive'] - res['real_pct_positive']
-            gap_dur = res['sim_baseline_mean_duration_days'] - res['real_mean_duration_days']
-            print(f"  --> gap: %positive {gap_pct:+.1f} pt | mean duration {gap_dur:+.2f} days")
+            gap_pct = res['sim_baseline_pct_positive'] - res['real_test_pct_positive']
+            gap_dur = res['sim_baseline_mean_duration_days'] - res['real_test_mean_duration_days']
+            print(f"  --> gap vs real test cases: %positive {gap_pct:+.1f} pt | mean duration {gap_dur:+.2f} days")
         except (FileNotFoundError, ValueError) as e:
             print(f"  [SKIPPED] {e}")
 

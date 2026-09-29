@@ -1234,7 +1234,10 @@ class SimulatorEngine:
                 # reconstruct state of prefix c using alignment 
                 prefix_state = self._reconstruct_prefix_state(case_id_c, prefix_log_c_sorted)
                 current_marking_c = prefix_state["marking"]
-                history_c = prefix_state["history"] #how many times each activity has been visited
+                # how many times each activity has been visited; copied because the simulation increments
+                # case["history"] in place, which would otherwise leak into the cached prefix state and
+                # inflate the history counts of every later apply() call on the same prefix
+                history_c = dict(prefix_state["history"])
 
                 # if is_fit = false for prefix c we save the log moves and save the case_id 
                 if not prefix_state["is_fit"]:

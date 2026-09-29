@@ -21,12 +21,11 @@ python 1_data_preprocessing.py --case_study "bpi17_after" --lambda_value 0.5
 python 9_generate_simulated_training_set.py --source_case_study BPI12 --target_case_study BPI12_sim --max_depth_tree 3 --force_rediscover
 
 
-# --- 2. Training dei modelli (case study nella lista params["case_study"] dentro lo script:
-#        ["BAC", "BPI12", "BPI12_sim", "bpi17_before", "bpi17_after"])
+# --- 2. Training dei modelli 
 python 2_training_predictive_model.py
 
 
-# --- 3. Raccomandazioni (--rebuild-cache: il transition system in cache/ e' stato costruito sui dati vecchi)
+# --- 3. Raccomandazioni 
 python 3_run_experiment.py --case_study "BAC" --method "exhaustive" --window_size 5 --k 5 --gamma_cls 0.5 --gamma_reg 0.5 --rebuild-cache
 python 3_run_experiment.py --case_study "BPI12" --method "exhaustive" --window_size 5 --k 5 --gamma_cls 0.5 --gamma_reg 0.5 --rebuild-cache
 python 3_run_experiment.py --case_study "bpi17_before" --method "exhaustive" --window_size 5 --k 5 --gamma_cls 0.5 --gamma_reg 0.5 --rebuild-cache
@@ -38,14 +37,11 @@ python 3_plot_pareto.py --case_study "BPI12" --method exhaustive --k 5 --gamma_c
 python 3_plot_pareto.py --case_study "bpi17_before" --method exhaustive --k 5 --gamma_cls 0.5 --gamma_reg 0.5
 python 3_plot_pareto.py --case_study "bpi17_after" --method exhaustive --k 5 --gamma_cls 0.5 --gamma_reg 0.5
 
-
-# --- 4. Simulazioni (--force_rediscover: i parametri del simulatore in discovery_output/ vengono dai log vecchi;
-#        per BAC il log non cambia, ma rigenerarli non fa danni)
+# --- 4. Simulazioni 
 python 4_run_recommendation_simulation.py --case_study BAC --n_sim 10 --k 5  --force_rediscover
 python 4_run_recommendation_simulation.py --case_study BPI12 --n_sim 10 --k 5 --force_rediscover
 python 4_run_recommendation_simulation.py --case_study bpi17_before --n_sim 10 --k 5 --force_rediscover
 python 4_run_recommendation_simulation.py --case_study bpi17_after --n_sim 10 --k 5 --force_rediscover
-
 
 # --- 5-6. Risultati e validazione
 python 5_result_computation.py --case_studies "BAC,BPI12,bpi17_before,bpi17_after" --method exhaustive
