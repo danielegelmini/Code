@@ -4,7 +4,40 @@
             "A_SUBMITTED": 1.0,
             "A_PARTLYSUBMITTED": 1.0,
             "A_PREACCEPTED": 1.0,
-            "sfl_b33e4f96-26bf-4910-8608-3a931f6f2954": {
+            "sfl_275d2e7f-119f-4f6e-860a-ef2d8c8baee4": 0.0,
+            "sfl_bc0ce74d-1665-4d44-9275-7037c90c2223": {
+                "0": {
+                    "feature": "AMOUNT_REQ = 20000",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 1,
+                        "false": 2
+                    }
+                },
+                "1": {
+                    "value": 0.1588233730533884
+                },
+                "2": {
+                    "value": 0.11661391822765245
+                }
+            },
+            "sfl_36a52448-e970-4088-ab0b-af82d272f81f": {
+                "0": {
+                    "feature": "AMOUNT_REQ = 8000",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 1,
+                        "false": 2
+                    }
+                },
+                "1": {
+                    "value": 0.47458140188309894
+                },
+                "2": {
+                    "value": 0.42664136922408
+                }
+            },
+            "sfl_6c4a09b7-2047-4f2f-9a5c-c7300f287dd2": {
                 "0": {
                     "feature": "AMOUNT_REQ = 7000",
                     "threshold": 0.5,
@@ -20,73 +53,9 @@
                     "value": 0.4173085374039609
                 }
             },
-            "sfl_ae0f4d65-e9e1-4364-80f1-371ab2880659": {
-                "0": {
-                    "feature": "AMOUNT_REQ = 8000",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.35586684874041885
-                },
-                "2": {
-                    "value": 0.3086129886556781
-                }
-            },
-            "sfl_1b276a34-5a74-47b7-891e-623473161626": {
-                "0": {
-                    "feature": "AMOUNT_REQ = 5000",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.2771553155712184
-                },
-                "2": {
-                    "value": 0.25852336145657817
-                }
-            },
             "A_ACCEPTED": 1.0,
-            "sfl_1c0c56c0-4ac9-4340-883c-769a3e01ce01": {
-                "0": {
-                    "feature": "AMOUNT_REQ = 10000",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.5808453501408515
-                },
-                "2": {
-                    "value": 0.6123525866204621
-                }
-            },
-            "sfl_c7f1c412-1dc7-4c14-a122-20d8b362b1df": {
-                "0": {
-                    "feature": "AMOUNT_REQ = 10000",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.4191546498591486
-                },
-                "2": {
-                    "value": 0.38764741337953795
-                }
-            },
             "O_SELECTED": 1.0,
-            "sfl_47882f82-e18b-43c5-8ed7-2bad9fcf2530": {
+            "A_FINALIZED": {
                 "0": {
                     "feature": "O_SENT",
                     "threshold": 0.5,
@@ -96,13 +65,13 @@
                     }
                 },
                 "1": {
-                    "value": 0.008491461026059067
+                    "value": 0.9946772629362293
                 },
                 "2": {
-                    "value": 0.9212930752598957
+                    "value": 0.04381581607869302
                 }
             },
-            "sfl_6df72386-9f89-44d3-9d5b-35c0a7e07a1f": {
+            "sfl_7023f11f-6e4d-4abd-8de4-fdb72930d969": {
                 "0": {
                     "feature": "O_SENT",
                     "threshold": 0.5,
@@ -112,18 +81,17 @@
                     }
                 },
                 "1": {
-                    "value": 0.9915085389739409
+                    "value": 0.005322737063770778
                 },
                 "2": {
-                    "value": 0.07870692474010438
+                    "value": 0.956184183921307
                 }
             },
-            "A_FINALIZED": 1.0,
             "O_CREATED": 1.0,
             "O_SENT": 1.0,
-            "sfl_fb506d34-b448-4922-aae0-363961409ff9": {
+            "sfl_e18b1857-81d4-4f73-a720-4dd526924257": {
                 "0": {
-                    "feature": "O_CREATED",
+                    "feature": "O_SENT",
                     "threshold": 1.5,
                     "children": {
                         "true": 1,
@@ -131,15 +99,15 @@
                     }
                 },
                 "1": {
-                    "value": 0.9946698328656975
+                    "value": 0.005322737063770778
                 },
                 "2": {
-                    "value": 0.04371781118683266
+                    "value": 0.956184183921307
                 }
             },
-            "sfl_e3a8cc97-67c2-4e23-be6c-a6ce1e2a8731": {
+            "sfl_d4fedf5c-a305-4261-b584-8c70638f8852": {
                 "0": {
-                    "feature": "O_CREATED",
+                    "feature": "O_SENT",
                     "threshold": 1.5,
                     "children": {
                         "true": 1,
@@ -147,16 +115,16 @@
                     }
                 },
                 "1": {
-                    "value": 0.005330167134302433
+                    "value": 0.9946772629362293
                 },
                 "2": {
-                    "value": 0.9562821888131674
+                    "value": 0.04381581607869302
                 }
             },
-            "W_Completeren aanvraag": 1.0,
-            "sfl_0d707829-1a05-4287-b175-a945d3b46306": {
+            "W_Complete_preaccepted_appl": 1.0,
+            "sfl_67bfb56b-eae6-4285-9e00-c5d93979f386": {
                 "0": {
-                    "feature": "A_FINALIZED",
+                    "feature": "O_SENT",
                     "threshold": 0.5,
                     "children": {
                         "true": 1,
@@ -164,15 +132,47 @@
                     }
                 },
                 "1": {
-                    "value": 0.38293777272715585
+                    "value": 0.3845507662299994
                 },
                 "2": {
-                    "value": 0.008396058288723564
+                    "value": 0.06363106095766459
+                }
+            },
+            "sfl_2ffc43eb-f93c-4b92-8ccb-4c2f976d5e2c": {
+                "0": {
+                    "feature": "O_SENT",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 1,
+                        "false": 2
+                    }
+                },
+                "1": {
+                    "value": 0.004408638703285338
+                },
+                "2": {
+                    "value": 0.6678417258206301
+                }
+            },
+            "sfl_f3fa1746-9f22-49b3-9102-725ba8abd6d3": {
+                "0": {
+                    "feature": "O_SENT",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 1,
+                        "false": 2
+                    }
+                },
+                "1": {
+                    "value": 0.6093456044555496
+                },
+                "2": {
+                    "value": 0.011761909644644481
                 }
             },
             "O_SENT_BACK": {
                 "0": {
-                    "feature": "A_FINALIZED",
+                    "feature": "O_SENT",
                     "threshold": 0.5,
                     "children": {
                         "true": 1,
@@ -180,46 +180,14 @@
                     }
                 },
                 "1": {
-                    "value": 0.0017003791511826846
+                    "value": 0.0016949906111656612
                 },
                 "2": {
-                    "value": 0.25676798976184345
+                    "value": 0.25676530357706084
                 }
             },
-            "sfl_47d6a111-dd4b-4698-a26d-413e0e6b0e71": {
-                "0": {
-                    "feature": "A_FINALIZED",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.004788312180435949
-                },
-                "2": {
-                    "value": 0.723065377546843
-                }
-            },
-            "sfl_1a0709d7-a113-4371-8c1c-2d6990d8a206": {
-                "0": {
-                    "feature": "A_FINALIZED",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.6105735359412255
-                },
-                "2": {
-                    "value": 0.011770574402590037
-                }
-            },
-            "W_Nabellen offertes": 1.0,
-            "sfl_8e29bfef-c6d9-4285-9de6-ac200ac55816": {
+            "W_Call_after_offer": 1.0,
+            "A_DECLINED": {
                 "0": {
                     "feature": "O_SENT_BACK",
                     "threshold": 0.5,
@@ -229,13 +197,13 @@
                     }
                 },
                 "1": {
-                    "value": 0.07868414291310376
+                    "value": 0.020462943045337256
                 },
                 "2": {
-                    "value": 0.7783325671912131
+                    "value": 0.16065604740465805
                 }
             },
-            "sfl_389fad15-6706-4aaa-97ad-68e19553a55e": {
+            "sfl_e92af7ff-6d52-4996-af78-f5912c2e8ec1": {
                 "0": {
                     "feature": "O_SENT_BACK",
                     "threshold": 0.5,
@@ -245,47 +213,15 @@
                     }
                 },
                 "1": {
-                    "value": 0.7531266474175222
+                    "value": 0.07785559360034032
                 },
                 "2": {
-                    "value": 0.0526585406173403
+                    "value": 0.7604523982598714
                 }
             },
-            "sfl_809b4ff4-6667-4a27-8df9-defc7077e259": {
+            "sfl_ddf8f806-c56f-469b-9a8d-0c9d822eb024": {
                 "0": {
-                    "feature": "W_Nabellen offertes",
-                    "threshold": 1.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.18941243796017965
-                },
-                "2": {
-                    "value": 0.040778675964025346
-                }
-            },
-            "O_DECLINED": {
-                "0": {
-                    "feature": "O_SENT_BACK",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.009643592366155716
-                },
-                "2": {
-                    "value": 0.0714736455348743
-                }
-            },
-            "sfl_ee378cc7-3664-44e1-a4ca-8731631d8db0": {
-                "0": {
-                    "feature": "W_Nabellen offertes",
+                    "feature": "W_Call_after_offer",
                     "threshold": 7.5,
                     "children": {
                         "true": 1,
@@ -293,14 +229,13 @@
                     }
                 },
                 "1": {
-                    "value": 0.05385696756328823
+                    "value": 0.053488863238938436
                 },
                 "2": {
-                    "value": 0.15091780129817808
+                    "value": 0.15247685837810995
                 }
             },
-            "A_CANCELLED": 0.0,
-            "sfl_bfc8df7a-4882-470f-a6f1-466dc66846e0": {
+            "sfl_e2764518-d929-4eea-89d1-2572452b7ff6": {
                 "0": {
                     "feature": "O_SENT_BACK",
                     "threshold": 0.5,
@@ -310,16 +245,32 @@
                     }
                 },
                 "1": {
-                    "value": 0.007482395831117482
+                    "value": 0.7626660350608664
                 },
                 "2": {
-                    "value": 0.06759625243916036
+                    "value": 0.053450834444362556
                 }
             },
-            "W_Valideren aanvraag": 1.0,
-            "sfl_9ce01979-4356-46fe-b6f4-7984e2a37fc6": {
+            "A_CANCELLED": {
                 "0": {
-                    "feature": "O_ACCEPTED",
+                    "feature": "W_Call_after_offer",
+                    "threshold": 1.5,
+                    "children": {
+                        "true": 1,
+                        "false": 2
+                    }
+                },
+                "1": {
+                    "value": 0.13922476458155109
+                },
+                "2": {
+                    "value": 0.03980108128347006
+                }
+            },
+            "W_Assess_application": 1.0,
+            "sfl_db62b5b4-5b5b-427b-870e-732950d92ab1": {
+                "0": {
+                    "feature": "A_REGISTERED",
                     "threshold": 0.5,
                     "children": {
                         "true": 1,
@@ -327,7 +278,77 @@
                     }
                 },
                 "1": {
-                    "feature": "A_DECLINED",
+                    "feature": "W_Assess_application",
+                    "threshold": 1.5,
+                    "children": {
+                        "true": 2,
+                        "false": 3
+                    }
+                },
+                "2": {
+                    "value": 0.22943532900710192
+                },
+                "3": {
+                    "value": 0.5050802344500487
+                },
+                "4": {
+                    "feature": "W_Assess_application",
+                    "threshold": 4.5,
+                    "children": {
+                        "true": 5,
+                        "false": 6
+                    }
+                },
+                "5": {
+                    "value": 0.045743830179788
+                },
+                "6": {
+                    "value": 0.30746161074966727
+                }
+            },
+            "sfl_b995e089-6c3c-4226-8ec1-00ba603b6a35": {
+                "0": {
+                    "feature": "A_REGISTERED",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 1,
+                        "false": 2
+                    }
+                },
+                "1": {
+                    "value": 0.27789318029090126
+                },
+                "2": {
+                    "value": 0.009242726567497027
+                }
+            },
+            "sfl_83fe1968-3a04-440c-bb58-f8c0b1a06279": {
+                "0": {
+                    "feature": "W_Assess_application",
+                    "threshold": 1.5,
+                    "children": {
+                        "true": 1,
+                        "false": 2
+                    }
+                },
+                "1": {
+                    "value": 0.2889175083303148
+                },
+                "2": {
+                    "value": 0.044487517624887424
+                }
+            },
+            "sfl_42c8f251-8dd5-4b69-bda5-ee7e05fd90ba": {
+                "0": {
+                    "feature": "A_REGISTERED",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 1,
+                        "false": 4
+                    }
+                },
+                "1": {
+                    "feature": "O_DECLINED",
                     "threshold": 0.5,
                     "children": {
                         "true": 2,
@@ -335,266 +356,37 @@
                     }
                 },
                 "2": {
-                    "value": 0.05980443282356914
+                    "value": 0.044365922293917344
                 },
                 "3": {
-                    "value": 0.9083715711856551
+                    "value": 0.9218118553268806
                 },
                 "4": {
-                    "feature": "W_Valideren aanvraag",
-                    "threshold": 3.5,
+                    "feature": "W_Assess_application",
+                    "threshold": 5.5,
                     "children": {
                         "true": 5,
                         "false": 6
                     }
                 },
                 "5": {
-                    "value": 0.8999567215803004
+                    "value": 0.9351988859398718
                 },
                 "6": {
-                    "value": 0.528060209898622
-                }
-            },
-            "sfl_8c31b3fe-3498-4202-ad82-66889f9c8c65": {
-                "0": {
-                    "feature": "W_Valideren aanvraag",
-                    "threshold": 1.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.2631537568937683
-                },
-                "2": {
-                    "value": 0.04982938045337088
-                }
-            },
-            "sfl_784d596f-4a26-460f-9215-09df6bc95210": {
-                "0": {
-                    "feature": "A_APPROVED",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.2978060754655625
-                },
-                "2": {
-                    "value": 0.019359500395677295
-                }
-            },
-            "sfl_970b3aaf-1fa4-4124-a237-f48df21b3939": {
-                "0": {
-                    "feature": "W_Valideren aanvraag",
-                    "threshold": 1.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.0027945450571354993
-                },
-                "2": {
-                    "value": 0.0002530889936801815
-                }
-            },
-            "sfl_b95538c2-8928-4720-b75b-9e9a46b2e569": {
-                "0": {
-                    "feature": "O_ACCEPTED",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.3019527226424735
-                },
-                "2": {
-                    "value": 0.02032405512741442
+                    "value": 0.49809342230695897
                 }
             },
             "O_ACCEPTED": 1.0,
-            "sfl_64408705-ae6c-42c2-aaab-8b9105ac74d1": {
-                "0": {
-                    "feature": "W_Nabellen incomplete dossiers",
-                    "threshold": 2.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.22159889292296983
-                },
-                "2": {
-                    "value": 0.13154210720724582
-                }
-            },
-            "sfl_aff1c446-5bab-4b81-a89f-77b3c227dc34": {
-                "0": {
-                    "feature": "W_Nabellen incomplete dossiers",
-                    "threshold": 3.5,
-                    "children": {
-                        "true": 1,
-                        "false": 4
-                    }
-                },
-                "1": {
-                    "feature": "W_Nabellen incomplete dossiers",
-                    "threshold": 2.5,
-                    "children": {
-                        "true": 2,
-                        "false": 3
-                    }
-                },
-                "2": {
-                    "value": 0.185204564206798
-                },
-                "3": {
-                    "value": 0.297892231854496
-                },
-                "4": {
-                    "feature": "W_Nabellen incomplete dossiers",
-                    "threshold": 16.5,
-                    "children": {
-                        "true": 5,
-                        "false": 6
-                    }
-                },
-                "5": {
-                    "value": 0.41133307220263743
-                },
-                "6": {
-                    "value": 0.4442260442260442
-                }
-            },
-            "A_APPROVED": {
-                "0": {
-                    "feature": "W_Nabellen incomplete dossiers",
-                    "threshold": 3.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.5872280314380024
-                },
-                "2": {
-                    "value": 0.44472983296512714
-                }
-            },
-            "A_ACTIVATED": 1.0,
-            "xor_18": 1.0,
-            "O_CANCELLED": 1.0,
-            "sfl_11e11697-db4b-4274-915b-42a98a356249": {
-                "0": {
-                    "feature": "W_Afhandelen leads",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.5244632212390866
-                },
-                "2": {
-                    "value": 0.5537753286462023
-                }
-            },
-            "sfl_3a57302a-4ffd-4ff8-bfb8-8096c2acad4c": {
-                "0": {
-                    "feature": "W_Afhandelen leads",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.4755367787609134
-                },
-                "2": {
-                    "value": 0.4462246713537978
-                }
-            },
-            "sfl_b8173912-bb72-477d-aa37-f9c282ac03d0": {
-                "0": {
-                    "feature": "W_Nabellen incomplete dossiers",
-                    "threshold": 2.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.4513547348654207
-                },
-                "2": {
-                    "value": 0.4022663674396697
-                }
-            },
-            "sfl_95d94e25-a29b-4b1c-9ab0-81dd1366fa77": {
-                "0": {
-                    "feature": "W_Nabellen incomplete dossiers",
-                    "threshold": 2.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.5486452651345793
-                },
-                "2": {
-                    "value": 0.5977336325603303
-                }
-            },
+            "A_APPROVED": 1.0,
             "A_REGISTERED": 1.0,
-            "sfl_4dc320e1-66dc-4371-9349-d61f55c4f0d9": {
+            "A_ACTIVATED": 1.0,
+            "or_13": 1.0,
+            "O_CANCELLED": 1.0,
+            "O_DECLINED": 1.0,
+            "W_Call_missing_information": 1.0,
+            "sfl_05ae6972-2a84-41f9-9277-ad3ecfe5e8b6": {
                 "0": {
-                    "feature": "A_APPROVED",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.744436922673771
-                },
-                "2": {
-                    "value": 0.5593860224392492
-                }
-            },
-            "sfl_025e71a4-e09d-43d1-b46b-8b8fa96dc06f": {
-                "0": {
-                    "feature": "A_APPROVED",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.2555630773262289
-                },
-                "2": {
-                    "value": 0.4406139775607508
-                }
-            },
-            "A_DECLINED": 1.0,
-            "W_Nabellen incomplete dossiers": 1.0,
-            "sfl_c313f6d2-7836-4a61-8e25-820afbf85f7f": {
-                "0": {
-                    "feature": "W_Nabellen incomplete dossiers",
+                    "feature": "W_Call_missing_information",
                     "threshold": 1.5,
                     "children": {
                         "true": 1,
@@ -602,15 +394,15 @@
                     }
                 },
                 "1": {
-                    "value": 0.9458016536743827
+                    "value": 0.05781690308771074
                 },
                 "2": {
-                    "value": 0.8463372676664467
+                    "value": 0.14485318325495194
                 }
             },
-            "sfl_4cba6236-cc52-4e2e-800a-2dedd463ecf4": {
+            "sfl_b0f3904b-114b-428e-b1ce-15071b123f6a": {
                 "0": {
-                    "feature": "W_Nabellen incomplete dossiers",
+                    "feature": "W_Call_missing_information",
                     "threshold": 1.5,
                     "children": {
                         "true": 1,
@@ -618,16 +410,16 @@
                     }
                 },
                 "1": {
-                    "value": 0.054198346325617305
+                    "value": 0.9421830969122893
                 },
                 "2": {
-                    "value": 0.15366273233355332
+                    "value": 0.855146816745048
                 }
             },
-            "W_Afhandelen leads": 1.0,
-            "sfl_ba05c218-9caa-45c3-b526-2298d101b6ef": {
+            "W_Fix_incoplete_submission": 1.0,
+            "sfl_68ce6676-6425-4f90-9e5c-43aa053a9af0": {
                 "0": {
-                    "feature": "W_Afhandelen leads",
+                    "feature": "W_Fix_incoplete_submission",
                     "threshold": 1.5,
                     "children": {
                         "true": 1,
@@ -635,15 +427,15 @@
                     }
                 },
                 "1": {
-                    "value": 0.43016739836527823
+                    "value": 0.051828267669046385
                 },
                 "2": {
-                    "value": 0.23236687394880184
+                    "value": 0.5066264723375917
                 }
             },
-            "sfl_62046ad7-c4ac-4747-b68f-0715dd41b276": {
+            "sfl_f6045871-86a3-43d8-8889-98d97c7dd7d8": {
                 "0": {
-                    "feature": "W_Afhandelen leads",
+                    "feature": "W_Fix_incoplete_submission",
                     "threshold": 1.5,
                     "children": {
                         "true": 1,
@@ -651,50 +443,15 @@
                     }
                 },
                 "1": {
-                    "value": 0.026779659288493213
+                    "value": 0.9481717323309535
                 },
                 "2": {
-                    "value": 0.48085854923079296
+                    "value": 0.49337352766240833
                 }
             },
-            "sfl_e1018747-72de-445c-a181-66bdd8258182": {
-                "0": {
-                    "feature": "W_Afhandelen leads",
-                    "threshold": 1.5,
-                    "children": {
-                        "true": 1,
-                        "false": 4
-                    }
-                },
-                "1": {
-                    "feature": "AMOUNT_REQ = 15000",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 2,
-                        "false": 3
-                    }
-                },
-                "2": {
-                    "value": 0.5386298140271635
-                },
-                "3": {
-                    "value": 0.5509262681668318
-                },
-                "4": {
-                    "value": 0.28677457682040514
-                }
-            },
-            "W_Beoordelen fraude": 1.0,
-            "sfl_55ca8bc7-5439-4cb0-a726-f03b6a9cc469": {
-                "0": {
-                    "value": 0.5882352941176471
-                }
-            },
-            "sfl_db47c64d-9f03-464d-9700-8b5c640c7da4": {
-                "0": {
-                    "value": 0.4117647058823529
-                }
-            }
+            "W_Assess_fraud": 0,
+            "sfl_57414911-4c76-4c5a-984f-9a9dab447878": 0,
+            "sfl_7b326fb0-bef1-4053-a89f-ff16586aa6f5": 0
         }
     },
     "resource_params": {
@@ -1114,7 +871,7 @@
                 "10779": 0.0004585753592173647,
                 "11111": 0.0006114338122898196
             },
-            "W_Completeren aanvraag": {
+            "W_Complete_preaccepted_appl": {
                 "0": 0.15657563780093425,
                 "10138": 0.0008983111749910168,
                 "10972": 0.0007186489399928135,
@@ -1164,7 +921,7 @@
                 "11001": 0.001976284584980237,
                 "10779": 0.00026949335249730504
             },
-            "W_Nabellen offertes": {
+            "W_Call_after_offer": {
                 "0": 0.14886686211550096,
                 "10138": 0.0013029922285820652,
                 "10972": 0.0014891339755223603,
@@ -1246,7 +1003,7 @@
                 "10228": 0.00029850746268656717,
                 "11339": 0.00029850746268656717
             },
-            "A_REGISTERED": {
+            "O_ACCEPTED": {
                 "10138": 0.3036112349531877,
                 "10972": 0.2309407044137316,
                 "10609": 0.14935354436023182,
@@ -1266,7 +1023,7 @@
                 "11339": 0.004012483281319661,
                 "10779": 0.0008916629514043691
             },
-            "O_ACCEPTED": {
+            "A_REGISTERED": {
                 "10138": 0.3036112349531877,
                 "10972": 0.2309407044137316,
                 "10609": 0.14935354436023182,
@@ -1286,7 +1043,7 @@
                 "11339": 0.004012483281319661,
                 "10779": 0.0008916629514043691
             },
-            "W_Valideren aanvraag": {
+            "W_Assess_application": {
                 "0": 0.005699481865284974,
                 "10138": 0.21813471502590673,
                 "10972": 0.18082901554404146,
@@ -1492,7 +1249,7 @@
                 "11339": 0.0012468827930174563,
                 "11111": 0.0012468827930174563
             },
-            "W_Nabellen incomplete dossiers": {
+            "W_Call_missing_information": {
                 "0": 0.08864011745274362,
                 "10138": 0.013396953569462286,
                 "10972": 0.015140392732611488,
@@ -1546,7 +1303,7 @@
                 "11079": 0.00036703982382088455,
                 "11269": 9.175995595522114e-05
             },
-            "W_Afhandelen leads": {
+            "W_Fix_incoplete_submission": {
                 "0": 0.13763174209547427,
                 "10138": 0.0018598884066955983,
                 "10972": 0.0043397396156230625,
@@ -1648,7 +1405,7 @@
                 "10228": 0.0006097560975609756,
                 "10779": 0.0012195121951219512
             },
-            "W_Beoordelen fraude": {
+            "W_Assess_fraud": {
                 "10809": 0.46,
                 "10779": 0.06,
                 "10188": 0.48
@@ -1687,10 +1444,10 @@
             "10982",
             "11000",
             "11111",
+            "11001",
             "10228",
             "11202",
             "10789",
-            "11001",
             "10881",
             "10971",
             "10909",
@@ -1713,11 +1470,11 @@
             "11003",
             "11269",
             "11289",
-            "10124",
             "11299",
+            "10124",
+            "11309",
             "11300",
             "11302",
-            "11309",
             "11319",
             "11339"
         ],
@@ -14315,155 +14072,6 @@
     },
     "execution_time_params": {
         "execution_time_distributions": {
-            "A_ACCEPTED": {
-                "0": {
-                    "feature": "W_Completeren aanvraag",
-                    "threshold": 5.5,
-                    "children": {
-                        "true": 1,
-                        "false": 4
-                    }
-                },
-                "1": {
-                    "feature": "W_Completeren aanvraag",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 2,
-                        "false": 3
-                    }
-                },
-                "2": {
-                    "value": 70.384,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            67.09264386322464
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 438.4490666666668
-                    }
-                },
-                "3": {
-                    "value": 128.419,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            111.58928912712895
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 955.3790999999999
-                    }
-                },
-                "4": {
-                    "feature": "W_Completeren aanvraag",
-                    "threshold": 7.5,
-                    "children": {
-                        "true": 5,
-                        "false": 6
-                    }
-                },
-                "5": {
-                    "value": 283.924,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.2170166666666667,
-                            283.7068190909091
-                        ],
-                        "min_value": 0.2170166666666667,
-                        "max_value": 2348.5741
-                    }
-                },
-                "6": {
-                    "value": 428.492,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            268.08408723118276
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 1853.9307666666673
-                    }
-                }
-            },
-            "A_APPROVED": {
-                "0": {
-                    "feature": "W_Nabellen incomplete dossiers",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 1,
-                        "false": 4
-                    }
-                },
-                "1": {
-                    "feature": "resource = 10138",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 2,
-                        "false": 3
-                    }
-                },
-                "2": {
-                    "value": 545.31,
-                    "dist": {
-                        "dist_name": "lognorm",
-                        "params": [
-                            202.4237856344182,
-                            -5e-324,
-                            9.343812528272435e-27
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 691.8570333333337
-                    }
-                },
-                "3": {
-                    "value": 749.316,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            749.3155047619049
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 2936.0871000000006
-                    }
-                },
-                "4": {
-                    "feature": "W_Nabellen offertes",
-                    "threshold": 5.5,
-                    "children": {
-                        "true": 5,
-                        "false": 6
-                    }
-                },
-                "5": {
-                    "value": 228.022,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            167.77357445620225
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 1522.4728
-                    }
-                },
-                "6": {
-                    "value": 399.588,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            316.21438202380955
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 2364.26415
-                    }
-                }
-            },
             "A_SUBMITTED": {
                 "0": {
                     "value": 0.0,
@@ -14477,9 +14085,9 @@
                     }
                 }
             },
-            "W_Completeren aanvraag": {
+            "A_APPROVED": {
                 "0": {
-                    "feature": "A_ACCEPTED",
+                    "feature": "W_Call_missing_information",
                     "threshold": 0.5,
                     "children": {
                         "true": 1,
@@ -14487,184 +14095,156 @@
                     }
                 },
                 "1": {
-                    "feature": "W_Completeren aanvraag",
-                    "threshold": 2.5,
+                    "feature": "W_Assess_application",
+                    "threshold": 1.5,
                     "children": {
                         "true": 2,
                         "false": 3
                     }
                 },
                 "2": {
-                    "value": 140.611,
+                    "value": 670.179,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            136.55325387638828
+                            662.7482227872946
                         ],
                         "min_value": 0.0,
-                        "max_value": 1357.875516666667
+                        "max_value": 2936.3920333333335
                     }
                 },
                 "3": {
-                    "value": 276.224,
+                    "value": 115.994,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            258.27570051516886
+                            63.07656069182389
                         ],
                         "min_value": 0.0,
-                        "max_value": 3027.01425
+                        "max_value": 469.51026666666667
                     }
                 },
                 "4": {
-                    "feature": "W_Completeren aanvraag",
-                    "threshold": 8.5,
+                    "feature": "W_Call_missing_information",
+                    "threshold": 7.5,
                     "children": {
                         "true": 5,
                         "false": 6
                     }
                 },
                 "5": {
-                    "value": 0.106,
+                    "value": 165.18,
                     "dist": {
-                        "dist_name": "norm",
+                        "dist_name": "expon",
                         "params": [
-                            0.017296089547899404,
-                            0.016287234847180778
+                            0.0,
+                            127.95861833544572
                         ],
                         "min_value": 0.0,
-                        "max_value": 0.22445
+                        "max_value": 1255.1547833333334
                     }
                 },
                 "6": {
-                    "value": 30.98,
+                    "value": 298.4,
                     "dist": {
-                        "dist_name": "norm",
+                        "dist_name": "expon",
                         "params": [
-                            0.017904040404040405,
-                            0.016507183772848745
+                            0.0,
+                            207.22572687500002
                         ],
                         "min_value": 0.0,
-                        "max_value": 0.05355
+                        "max_value": 1561.6809999999996
                     }
                 }
             },
-            "A_PARTLYSUBMITTED": {
+            "O_CANCELLED": {
                 "0": {
-                    "feature": "AMOUNT_REQ = 15000",
-                    "threshold": 0.5,
+                    "feature": "W_Call_after_offer",
+                    "threshold": 1.5,
                     "children": {
                         "true": 1,
-                        "false": 2
+                        "false": 4
                     }
                 },
                 "1": {
-                    "value": 0.009,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            0.006915940971377605
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 0.0485
+                    "feature": "W_Complete_preaccepted_appl",
+                    "threshold": 3.5,
+                    "children": {
+                        "true": 2,
+                        "false": 3
                     }
                 },
                 "2": {
-                    "value": 0.008,
+                    "value": 492.539,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.006556618156618156
+                            2.5587474811083117
                         ],
                         "min_value": 0.0,
-                        "max_value": 0.04293333333333334
+                        "max_value": 35.80521666666667
+                    }
+                },
+                "3": {
+                    "value": 378.968,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            2.067543564356436
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 15.702516666666666
+                    }
+                },
+                "4": {
+                    "feature": "O_CANCELLED",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 5,
+                        "false": 6
+                    }
+                },
+                "5": {
+                    "value": 1108.594,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            1058.1565495071684
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 7731.7666833333315
+                    }
+                },
+                "6": {
+                    "value": 608.829,
+                    "dist": {
+                        "dist_name": "lognorm",
+                        "params": [
+                            55.44882794197556,
+                            -5e-324,
+                            0.004496515989854112
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 49.74861666666666
                     }
                 }
             },
             "O_SELECTED": {
                 "0": {
-                    "feature": "W_Nabellen offertes",
-                    "threshold": 1.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 37.895,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            3.3323783562960587
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 32.25098333333333
-                    }
-                },
-                "2": {
-                    "value": 566.825,
-                    "dist": {
-                        "dist_name": "lognorm",
-                        "params": [
-                            364.6361127422702,
-                            -5e-324,
-                            1.4679637939007076e-133
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 19.816666666666666
-                    }
-                }
-            },
-            "O_SENT_BACK": {
-                "0": {
-                    "feature": "O_SELECTED",
+                    "feature": "A_FINALIZED",
                     "threshold": 0.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.03,
-                    "dist": {
-                        "dist_name": "norm",
-                        "params": [
-                            0.028544434079601985,
-                            0.011107487315880096
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 0.07790000000000001
-                    }
-                },
-                "2": {
-                    "value": 1818.386,
-                    "dist": {
-                        "dist_name": "norm",
-                        "params": [
-                            1818.3855074101068,
-                            1532.5464062067242
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 6667.758533333334
-                    }
-                }
-            },
-            "O_SENT": {
-                "0": {
-                    "feature": "O_CREATED",
-                    "threshold": 2.5,
                     "children": {
                         "true": 1,
                         "false": 4
                     }
                 },
                 "1": {
-                    "feature": "W_Nabellen offertes",
+                    "feature": "W_Complete_preaccepted_appl",
                     "threshold": 0.5,
                     "children": {
                         "true": 2,
@@ -14672,31 +14252,31 @@
                     }
                 },
                 "2": {
-                    "value": 0.153,
+                    "value": 19.709,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.001331666081666082
+                            4.423048284191236
                         ],
                         "min_value": 0.0,
-                        "max_value": 0.013983333333333332
+                        "max_value": 39.81755
                     }
                 },
                 "3": {
-                    "value": 21.391,
+                    "value": 8.808,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.010298949082297216
+                            3.83992534606866
                         ],
                         "min_value": 0.0,
-                        "max_value": 0.0454
+                        "max_value": 31.003783333333335
                     }
                 },
                 "4": {
-                    "feature": "O_SELECTED",
+                    "feature": "O_SENT",
                     "threshold": 1.5,
                     "children": {
                         "true": 5,
@@ -14704,28 +14284,29 @@
                     }
                 },
                 "5": {
-                    "value": 307.566,
+                    "value": 167.596,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            312.64680657851164,
+                            358.04684332580086,
                             -5e-324,
-                            2.742401449308222e-249
+                            1.638366637876985e-205
                         ],
                         "min_value": 0.0,
-                        "max_value": 0.05648333333333334
+                        "max_value": 17.81055
                     }
                 },
                 "6": {
-                    "value": 69.407,
+                    "value": 373.146,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            0.013639302325581392
+                            360.29786458681,
+                            -5e-324,
+                            2.4931604766545865e-200
                         ],
                         "min_value": 0.0,
-                        "max_value": 0.0718
+                        "max_value": 0.7575500000000001
                     }
                 }
             },
@@ -14803,9 +14384,9 @@
                     }
                 }
             },
-            "A_ACTIVATED": {
+            "W_Complete_preaccepted_appl": {
                 "0": {
-                    "feature": "W_Nabellen incomplete dossiers",
+                    "feature": "A_FINALIZED",
                     "threshold": 0.5,
                     "children": {
                         "true": 1,
@@ -14813,75 +14394,224 @@
                     }
                 },
                 "1": {
-                    "feature": "O_SELECTED",
-                    "threshold": 0.5,
+                    "feature": "W_Complete_preaccepted_appl",
+                    "threshold": 2.5,
                     "children": {
                         "true": 2,
                         "false": 3
                     }
                 },
                 "2": {
-                    "value": 542.913,
+                    "value": 140.611,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            326.4490868308736,
-                            -5e-324,
-                            1.5909882588756312e-84
+                            0.0,
+                            136.55325387638828
                         ],
                         "min_value": 0.0,
-                        "max_value": 769.06305
+                        "max_value": 1357.875516666667
                     }
                 },
                 "3": {
-                    "value": 233.093,
+                    "value": 276.224,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            322.34914530204264,
-                            -5e-324,
-                            1.0165706116513691e-240
+                            0.0,
+                            258.27570051516886
                         ],
                         "min_value": 0.0,
-                        "max_value": 0.00016666666666666666
+                        "max_value": 3027.01425
                     }
                 },
                 "4": {
-                    "feature": "W_Nabellen incomplete dossiers",
-                    "threshold": 9.5,
+                    "feature": "W_Complete_preaccepted_appl",
+                    "threshold": 8.5,
                     "children": {
                         "true": 5,
                         "false": 6
                     }
                 },
                 "5": {
-                    "value": 127.235,
+                    "value": 0.13,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "norm",
                         "params": [
-                            0.0,
-                            70.28950778097982
+                            0.025302160157102335,
+                            0.01338438566332789
                         ],
                         "min_value": 0.0,
-                        "max_value": 523.8417666666667
+                        "max_value": 0.13303333333333334
                     }
                 },
                 "6": {
-                    "value": 253.812,
+                    "value": 31.073,
+                    "dist": {
+                        "dist_name": "norm",
+                        "params": [
+                            0.029002356902356904,
+                            0.011963165270487856
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.05355
+                    }
+                }
+            },
+            "W_Assess_application": {
+                "0": {
+                    "feature": "A_APPROVED",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 1,
+                        "false": 4
+                    }
+                },
+                "1": {
+                    "feature": "A_ACCEPTED",
+                    "threshold": 1.5,
+                    "children": {
+                        "true": 2,
+                        "false": 3
+                    }
+                },
+                "2": {
+                    "value": 414.499,
+                    "dist": {
+                        "dist_name": "lognorm",
+                        "params": [
+                            246.01018997025434,
+                            -5e-324,
+                            7.452607601173198e-42
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 95.68741666666666
+                    }
+                },
+                "3": {
+                    "value": 806.828,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            209.764158
+                            784.039096969697
                         ],
                         "min_value": 0.0,
-                        "max_value": 1501.8325166666664
+                        "max_value": 3869.1598833333337
+                    }
+                },
+                "4": {
+                    "feature": "W_Call_missing_information",
+                    "threshold": 4.5,
+                    "children": {
+                        "true": 5,
+                        "false": 6
+                    }
+                },
+                "5": {
+                    "value": 10.007,
+                    "dist": {
+                        "dist_name": "lognorm",
+                        "params": [
+                            330.1713639222001,
+                            -5e-324,
+                            1.2378101094135588e-235
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 14.564666666666666
+                    }
+                },
+                "6": {
+                    "value": 166.088,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            20.73999692767808
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 144.79061666666666
                     }
                 }
             },
-            "W_Afhandelen leads": {
+            "W_Call_after_offer": {
                 "0": {
-                    "feature": "W_Afhandelen leads",
+                    "feature": "resource = 11203",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 1,
+                        "false": 4
+                    }
+                },
+                "1": {
+                    "feature": "O_CREATED",
+                    "threshold": 1.5,
+                    "children": {
+                        "true": 2,
+                        "false": 3
+                    }
+                },
+                "2": {
+                    "value": 1403.197,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            1395.4798326807456
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 15006.778766666666
+                    }
+                },
+                "3": {
+                    "value": 964.078,
+                    "dist": {
+                        "dist_name": "lognorm",
+                        "params": [
+                            90.76249880071272,
+                            -5e-324,
+                            4.591128821233021e-06
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 458.4629
+                    }
+                },
+                "4": {
+                    "feature": "W_Call_after_offer",
+                    "threshold": 2.5,
+                    "children": {
+                        "true": 5,
+                        "false": 6
+                    }
+                },
+                "5": {
+                    "value": 2743.592,
+                    "dist": {
+                        "dist_name": "norm",
+                        "params": [
+                            2743.591717929293,
+                            1942.0289601784204
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 10299.210933333332
+                    }
+                },
+                "6": {
+                    "value": 2039.942,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            2039.9422754996774
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 10955.648916666669
+                    }
+                }
+            },
+            "A_PARTLYSUBMITTED": {
+                "0": {
+                    "feature": "AMOUNT_REQ = 15000",
                     "threshold": 0.5,
                     "children": {
                         "true": 1,
@@ -14889,15 +14619,268 @@
                     }
                 },
                 "1": {
-                    "value": 5.135,
+                    "value": 0.009,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            0.006915940971377605
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.0485
+                    }
+                },
+                "2": {
+                    "value": 0.008,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            0.006556618156618156
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.04293333333333334
+                    }
+                }
+            },
+            "W_Assess_fraud": {
+                "0": {
+                    "value": 0.0,
+                    "dist": {
+                        "dist_name": "fixed",
+                        "params": [
+                            0
+                        ],
+                        "min_value": 0,
+                        "max_value": 0
+                    }
+                }
+            },
+            "A_ACTIVATED": {
+                "0": {
+                    "feature": "W_Call_missing_information",
+                    "threshold": 5.5,
+                    "children": {
+                        "true": 1,
+                        "false": 4
+                    }
+                },
+                "1": {
+                    "feature": "W_Call_missing_information",
+                    "threshold": 2.5,
+                    "children": {
+                        "true": 2,
+                        "false": 3
+                    }
+                },
+                "2": {
+                    "value": 13.323,
+                    "dist": {
+                        "dist_name": "lognorm",
+                        "params": [
+                            316.62909799061873,
+                            -5e-324,
+                            1.8284602687369932e-245
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 16.067416666666666
+                    }
+                },
+                "3": {
+                    "value": 42.647,
+                    "dist": {
+                        "dist_name": "lognorm",
+                        "params": [
+                            352.9893290418544,
+                            -5e-324,
+                            3.124624749516328e-210
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 19.21291666666667
+                    }
+                },
+                "4": {
+                    "feature": "W_Call_missing_information",
+                    "threshold": 12.5,
+                    "children": {
+                        "true": 5,
+                        "false": 6
+                    }
+                },
+                "5": {
+                    "value": 94.407,
+                    "dist": {
+                        "dist_name": "lognorm",
+                        "params": [
+                            311.45990786059133,
+                            -5e-324,
+                            6.159801108800848e-249
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.0010166666666666666
+                    }
+                },
+                "6": {
+                    "value": 203.452,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            103.9043131884058
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 749.8372333333332
+                    }
+                }
+            },
+            "O_SENT": {
+                "0": {
+                    "feature": "O_CREATED",
+                    "threshold": 2.5,
+                    "children": {
+                        "true": 1,
+                        "false": 4
+                    }
+                },
+                "1": {
+                    "feature": "A_ACCEPTED",
+                    "threshold": 1.5,
+                    "children": {
+                        "true": 2,
+                        "false": 3
+                    }
+                },
+                "2": {
+                    "value": 0.509,
                     "dist": {
                         "dist_name": "norm",
                         "params": [
-                            0.022695033212560375,
-                            0.008765912333623003
+                            0.0006951808510638296,
+                            0.000495351562632627
                         ],
                         "min_value": 0.0,
-                        "max_value": 0.09826666666666667
+                        "max_value": 0.004266666666666667
+                    }
+                },
+                "3": {
+                    "value": 7.33,
+                    "dist": {
+                        "dist_name": "norm",
+                        "params": [
+                            0.019484577114427862,
+                            0.010351131784295907
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.07205
+                    }
+                },
+                "4": {
+                    "feature": "A_CANCELLED",
+                    "threshold": 1.5,
+                    "children": {
+                        "true": 5,
+                        "false": 6
+                    }
+                },
+                "5": {
+                    "value": 100.388,
+                    "dist": {
+                        "dist_name": "norm",
+                        "params": [
+                            0.016486315789473682,
+                            0.012945999399879504
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.05293333333333334
+                    }
+                },
+                "6": {
+                    "value": 20.716,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            0.0030709967320261436
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.018516666666666667
+                    }
+                }
+            },
+            "A_REGISTERED": {
+                "0": {
+                    "feature": "A_ACCEPTED",
+                    "threshold": 1.5,
+                    "children": {
+                        "true": 1,
+                        "false": 4
+                    }
+                },
+                "1": {
+                    "feature": "W_Call_missing_information",
+                    "threshold": 5.5,
+                    "children": {
+                        "true": 2,
+                        "false": 3
+                    }
+                },
+                "2": {
+                    "value": 72.572,
+                    "dist": {
+                        "dist_name": "lognorm",
+                        "params": [
+                            335.7979409460415,
+                            -5e-324,
+                            7.3527999163601465e-230
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 19.944916666666664
+                    }
+                },
+                "3": {
+                    "value": 220.612,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            75.67450567545963
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 598.840466666667
+                    }
+                },
+                "4": {
+                    "value": 384.586,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            222.48848119918702
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 1543.6941333333334
+                    }
+                }
+            },
+            "W_Fix_incoplete_submission": {
+                "0": {
+                    "feature": "W_Fix_incoplete_submission",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 1,
+                        "false": 2
+                    }
+                },
+                "1": {
+                    "value": 5.859,
+                    "dist": {
+                        "dist_name": "norm",
+                        "params": [
+                            0.0227279771615008,
+                            0.008833221030251595
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.08606666666666667
                     }
                 },
                 "2": {
@@ -14913,17 +14896,126 @@
                     }
                 }
             },
-            "A_FINALIZED": {
+            "W_Call_missing_information": {
                 "0": {
-                    "feature": "W_Completeren aanvraag",
-                    "threshold": 7.5,
+                    "feature": "W_Call_missing_information",
+                    "threshold": 0.5,
                     "children": {
                         "true": 1,
                         "false": 4
                     }
                 },
                 "1": {
-                    "feature": "O_SELECTED",
+                    "feature": "W_Assess_application",
+                    "threshold": 1.5,
+                    "children": {
+                        "true": 2,
+                        "false": 3
+                    }
+                },
+                "2": {
+                    "value": 760.472,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            760.4716308919647
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 5580.4493
+                    }
+                },
+                "3": {
+                    "value": 263.768,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            113.69100918699185
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 932.2267166666668
+                    }
+                },
+                "4": {
+                    "feature": "resource = 11049",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 5,
+                        "false": 6
+                    }
+                },
+                "5": {
+                    "value": 258.234,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            193.80177805170138
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 1668.8888500000003
+                    }
+                },
+                "6": {
+                    "value": 562.24,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            562.2399356321839
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 3130.2163
+                    }
+                }
+            },
+            "A_DECLINED": {
+                "0": {
+                    "feature": "W_Call_after_offer",
+                    "threshold": 2.5,
+                    "children": {
+                        "true": 1,
+                        "false": 2
+                    }
+                },
+                "1": {
+                    "value": 642.358,
+                    "dist": {
+                        "dist_name": "lognorm",
+                        "params": [
+                            0.6842866485506904,
+                            0.016167206696108306,
+                            0.01008320005878318
+                        ],
+                        "min_value": 0.01815,
+                        "max_value": 0.05301666666666667
+                    }
+                },
+                "2": {
+                    "value": 346.587,
+                    "dist": {
+                        "dist_name": "norm",
+                        "params": [
+                            0.03027936507936508,
+                            0.014588829612221318
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.21336666666666665
+                    }
+                }
+            },
+            "A_ACCEPTED": {
+                "0": {
+                    "feature": "W_Complete_preaccepted_appl",
+                    "threshold": 5.5,
+                    "children": {
+                        "true": 1,
+                        "false": 4
+                    }
+                },
+                "1": {
+                    "feature": "W_Complete_preaccepted_appl",
                     "threshold": 0.5,
                     "children": {
                         "true": 2,
@@ -14931,41 +15023,114 @@
                     }
                 },
                 "2": {
-                    "value": 7.238,
+                    "value": 54.764,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            3.731540890324897
+                            36.1157997740113
                         ],
                         "min_value": 0.0,
-                        "max_value": 31.003783333333335
+                        "max_value": 229.78636666666668
                     }
                 },
                 "3": {
-                    "value": 1.186,
+                    "value": 127.669,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            329.7011592327748,
-                            -5e-324,
-                            5.154683659559808e-235
+                            0.0,
+                            110.54838581367211
                         ],
                         "min_value": 0.0,
-                        "max_value": 17.370816666666666
+                        "max_value": 934.2922000000001
                     }
                 },
                 "4": {
-                    "value": 27.306,
+                    "feature": "W_Complete_preaccepted_appl",
+                    "threshold": 7.5,
+                    "children": {
+                        "true": 5,
+                        "false": 6
+                    }
+                },
+                "5": {
+                    "value": 283.924,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.2170166666666667,
+                            283.7068190909091
+                        ],
+                        "min_value": 0.2170166666666667,
+                        "max_value": 2348.5741
+                    }
+                },
+                "6": {
+                    "value": 428.492,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            268.08408723118276
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 1853.9307666666673
+                    }
+                }
+            },
+            "O_SENT_BACK": {
+                "0": {
+                    "feature": "resource = 11049",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 1,
+                        "false": 4
+                    }
+                },
+                "1": {
+                    "feature": "resource = 10899",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 2,
+                        "false": 3
+                    }
+                },
+                "2": {
+                    "value": 1371.833,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            255.30640700464977,
+                            96.12631197578632,
                             -5e-324,
-                            4.173746033965498e-279
+                            1.5983724707859448e-06
                         ],
                         "min_value": 0.0,
-                        "max_value": 5e-05
+                        "max_value": 317.4221166666667
+                    }
+                },
+                "3": {
+                    "value": 2634.911,
+                    "dist": {
+                        "dist_name": "norm",
+                        "params": [
+                            2634.9108955974843,
+                            744.3191465695076
+                        ],
+                        "min_value": 1026.4987499999997,
+                        "max_value": 4739.334066666666
+                    }
+                },
+                "4": {
+                    "value": 2708.898,
+                    "dist": {
+                        "dist_name": "norm",
+                        "params": [
+                            2708.898150143678,
+                            615.0652559035246
+                        ],
+                        "min_value": 1218.7021166666664,
+                        "max_value": 4564.364816666666
                     }
                 }
             },
@@ -14982,486 +15147,45 @@
                     }
                 }
             },
-            "O_CREATED": {
+            "A_FINALIZED": {
                 "0": {
-                    "feature": "W_Nabellen offertes",
-                    "threshold": 2.5,
-                    "children": {
-                        "true": 1,
-                        "false": 4
-                    }
-                },
-                "1": {
-                    "feature": "O_SENT",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 2,
-                        "false": 3
-                    }
-                },
-                "2": {
-                    "value": 0.728,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            0.012705339548279522
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 0.32608333333333334
-                    }
-                },
-                "3": {
-                    "value": 125.867,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            0.00907177452177452
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 0.20546666666666666
-                    }
-                },
-                "4": {
-                    "feature": "O_SELECTED",
-                    "threshold": 1.5,
-                    "children": {
-                        "true": 5,
-                        "false": 6
-                    }
-                },
-                "5": {
-                    "value": 595.223,
-                    "dist": {
-                        "dist_name": "lognorm",
-                        "params": [
-                            370.15262514966514,
-                            -5e-324,
-                            2.331247395286686e-151
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 19.728650000000002
-                    }
-                },
-                "6": {
-                    "value": 273.292,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            0.0157675
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 0.4478666666666667
-                    }
-                }
-            },
-            "W_Valideren aanvraag": {
-                "0": {
-                    "feature": "O_ACCEPTED",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 1,
-                        "false": 4
-                    }
-                },
-                "1": {
-                    "feature": "O_SELECTED",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 2,
-                        "false": 3
-                    }
-                },
-                "2": {
-                    "value": 880.175,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            837.6109157455813
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 4688.448883333333
-                    }
-                },
-                "3": {
-                    "value": 504.465,
-                    "dist": {
-                        "dist_name": "lognorm",
-                        "params": [
-                            211.16018806198252,
-                            -5e-324,
-                            9.83815874126042e-30
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 232.88728333333333
-                    }
-                },
-                "4": {
-                    "feature": "A_APPROVED",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 5,
-                        "false": 6
-                    }
-                },
-                "5": {
-                    "value": 210.796,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            65.75144783021426
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 501.4227833333332
-                    }
-                },
-                "6": {
-                    "value": 78.196,
-                    "dist": {
-                        "dist_name": "lognorm",
-                        "params": [
-                            338.28646037431537,
-                            -5e-324,
-                            1.3513839293064103e-227
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 19.9574
-                    }
-                }
-            },
-            "A_REGISTERED": {
-                "0": {
-                    "feature": "W_Nabellen incomplete dossiers",
-                    "threshold": 0.5,
+                    "feature": "W_Complete_preaccepted_appl",
+                    "threshold": 4.5,
                     "children": {
                         "true": 1,
                         "false": 2
                     }
                 },
                 "1": {
-                    "value": 368.098,
+                    "value": 2.765,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            365.6797535474996,
+                            327.3638191698726,
                             -5e-324,
-                            1.589868450519873e-142
+                            3.099535106730214e-238
                         ],
                         "min_value": 0.0,
-                        "max_value": 1.40065
+                        "max_value": 19.5821
                     }
                 },
                 "2": {
-                    "value": 208.022,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            102.34963082811412
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 802.6210166666667
-                    }
-                }
-            },
-            "W_Nabellen offertes": {
-                "0": {
-                    "feature": "O_CREATED",
-                    "threshold": 1.5,
-                    "children": {
-                        "true": 1,
-                        "false": 4
-                    }
-                },
-                "1": {
-                    "feature": "resource = 11203",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 2,
-                        "false": 3
-                    }
-                },
-                "2": {
-                    "value": 1312.368,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            1309.4701050285412
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 12804.077666666664
-                    }
-                },
-                "3": {
-                    "value": 2348.639,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            2348.639044628514
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 10299.210933333332
-                    }
-                },
-                "4": {
-                    "feature": "W_Nabellen offertes",
-                    "threshold": 2.5,
-                    "children": {
-                        "true": 5,
-                        "false": 6
-                    }
-                },
-                "5": {
-                    "value": 106.428,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            0.018419825840421223
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 0.4305
-                    }
-                },
-                "6": {
-                    "value": 1084.523,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            473.7136320584201
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 2939.542033333333
-                    }
-                }
-            },
-            "O_CANCELLED": {
-                "0": {
-                    "feature": "W_Nabellen offertes",
-                    "threshold": 1.5,
-                    "children": {
-                        "true": 1,
-                        "false": 4
-                    }
-                },
-                "1": {
-                    "feature": "O_SELECTED",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 2,
-                        "false": 3
-                    }
-                },
-                "2": {
-                    "value": 126.853,
-                    "dist": {
-                        "dist_name": "norm",
-                        "params": [
-                            0.028416947250280582,
-                            0.018490822308598703
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 0.20946666666666666
-                    }
-                },
-                "3": {
-                    "value": 446.008,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            2.3783493316624895
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 26.515233333333335
-                    }
-                },
-                "4": {
-                    "feature": "O_CANCELLED",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 5,
-                        "false": 6
-                    }
-                },
-                "5": {
-                    "value": 1187.473,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            1187.4726504444443
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 10622.569033333333
-                    }
-                },
-                "6": {
-                    "value": 518.044,
+                    "value": 7.342,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            120.59490226588214,
+                            286.9397681637076,
                             -5e-324,
-                            1.6812608630071318e-10
+                            1.8016176624360483e-264
                         ],
                         "min_value": 0.0,
-                        "max_value": 21.85578333333333
-                    }
-                }
-            },
-            "W_Nabellen incomplete dossiers": {
-                "0": {
-                    "feature": "W_Nabellen incomplete dossiers",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 1,
-                        "false": 4
-                    }
-                },
-                "1": {
-                    "feature": "resource = 10609",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 2,
-                        "false": 3
-                    }
-                },
-                "2": {
-                    "value": 486.652,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            121.83636684921503
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 1020.1947333333333
-                    }
-                },
-                "3": {
-                    "value": 848.824,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            848.824405806011
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 3267.043833333333
-                    }
-                },
-                "4": {
-                    "feature": "resource = 11049",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 5,
-                        "false": 6
-                    }
-                },
-                "5": {
-                    "value": 276.364,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            200.0614545691801
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 1638.4514333333336
-                    }
-                },
-                "6": {
-                    "value": 529.851,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            529.8514155495978
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 3130.2163
-                    }
-                }
-            },
-            "O_ACCEPTED": {
-                "0": {
-                    "feature": "W_Nabellen incomplete dossiers",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 674.425,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            108.4571449094469
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 896.65605
-                    }
-                },
-                "2": {
-                    "value": 255.315,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            218.63929395294895
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 1810.7250166666663
-                    }
-                }
-            },
-            "A_DECLINED": {
-                "0": {
-                    "feature": "O_CANCELLED",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 735.706,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            632.1262920812604
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 2780.5577166666662
-                    }
-                },
-                "2": {
-                    "value": 1040.098,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            1040.097809913793
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 4951.097249999999
+                        "max_value": 18.189733333333333
                     }
                 }
             },
             "O_DECLINED": {
                 "0": {
-                    "feature": "O_SELECTED",
+                    "feature": "resource = 10609",
                     "threshold": 0.5,
                     "children": {
                         "true": 1,
@@ -15469,42 +15193,178 @@
                     }
                 },
                 "1": {
-                    "value": 1200.188,
+                    "value": 786.587,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
-                            0.018983333333333335,
-                            1200.168713015873
+                            0.0,
+                            786.5867103696098
                         ],
-                        "min_value": 0.018983333333333335,
-                        "max_value": 5195.0417
+                        "min_value": 0.0,
+                        "max_value": 4632.490783333335
                     }
                 },
                 "2": {
-                    "value": 403.602,
+                    "value": 1048.734,
                     "dist": {
-                        "dist_name": "norm",
+                        "dist_name": "expon",
                         "params": [
-                            0.02910139949109415,
-                            0.008911907016787185
+                            0.0,
+                            1048.734362254902
                         ],
                         "min_value": 0.0,
-                        "max_value": 0.0698
+                        "max_value": 2750.4914333333327
                     }
                 }
             },
-            "W_Beoordelen fraude": {
+            "O_ACCEPTED": {
                 "0": {
-                    "value": 436.571,
+                    "feature": "W_Call_missing_information",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 1,
+                        "false": 4
+                    }
+                },
+                "1": {
+                    "feature": "resource = 10138",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 2,
+                        "false": 3
+                    }
+                },
+                "2": {
+                    "value": 448.168,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            11.982307960073745,
-                            0.021783333333333328,
-                            0.02168912203334915
+                            103.93113896720364,
+                            -5e-324,
+                            9.967353516159102e-09
                         ],
-                        "min_value": 0.02178333333333333,
-                        "max_value": 105.32454999999993
+                        "min_value": 0.0,
+                        "max_value": 0.8956999999999999
+                    }
+                },
+                "3": {
+                    "value": 810.476,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            810.4756841825902
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 3487.3031666666666
+                    }
+                },
+                "4": {
+                    "feature": "W_Call_missing_information",
+                    "threshold": 9.5,
+                    "children": {
+                        "true": 5,
+                        "false": 6
+                    }
+                },
+                "5": {
+                    "value": 232.337,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            216.9556565972222
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 1939.6036833333337
+                    }
+                },
+                "6": {
+                    "value": 343.496,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            264.29890864485986
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 1939.2776166666672
+                    }
+                }
+            },
+            "O_CREATED": {
+                "0": {
+                    "feature": "A_ACCEPTED",
+                    "threshold": 1.5,
+                    "children": {
+                        "true": 1,
+                        "false": 4
+                    }
+                },
+                "1": {
+                    "feature": "W_Call_after_offer",
+                    "threshold": 1.5,
+                    "children": {
+                        "true": 2,
+                        "false": 3
+                    }
+                },
+                "2": {
+                    "value": 3.044,
+                    "dist": {
+                        "dist_name": "norm",
+                        "params": [
+                            0.019129052767577856,
+                            0.011923033803387863
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.10590000000000001
+                    }
+                },
+                "3": {
+                    "value": 65.507,
+                    "dist": {
+                        "dist_name": "norm",
+                        "params": [
+                            0.017892487770789656,
+                            0.014248597302699001
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.08969999999999999
+                    }
+                },
+                "4": {
+                    "feature": "W_Call_after_offer",
+                    "threshold": 1.5,
+                    "children": {
+                        "true": 5,
+                        "false": 6
+                    }
+                },
+                "5": {
+                    "value": 61.317,
+                    "dist": {
+                        "dist_name": "lognorm",
+                        "params": [
+                            276.09266701623994,
+                            -5e-324,
+                            2.0689460832755155e-270
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 8.609933333333334
+                    }
+                },
+                "6": {
+                    "value": 493.989,
+                    "dist": {
+                        "dist_name": "lognorm",
+                        "params": [
+                            294.5861227550195,
+                            -5e-324,
+                            1.4662461398121455e-260
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 18.556233333333335
                     }
                 }
             }
@@ -15527,7 +15387,7 @@
             },
             "0": {
                 "0": {
-                    "feature": "W_Nabellen offertes",
+                    "feature": "W_Call_after_offer",
                     "threshold": 2.5,
                     "children": {
                         "true": 1,
@@ -15535,70 +15395,52 @@
                     }
                 },
                 "1": {
-                    "value": 7.17,
+                    "value": 6.289,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.02399498719356019
+                            0.014816919191919192
                         ],
                         "min_value": 0.0,
                         "max_value": 11.282466666666666
                     }
                 },
                 "2": {
-                    "value": 30.634,
+                    "value": 75.427,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
-                            0.0
+                            1.677366255144033e-05
                         ],
                         "min_value": 0.0,
-                        "max_value": 0.0
+                        "max_value": 0.033966666666666666
                     }
                 }
             },
             "10138": {
                 "0": {
-                    "feature": "W_Completeren aanvraag",
-                    "threshold": 6.5,
+                    "feature": "W_Complete_preaccepted_appl",
+                    "threshold": 8.5,
                     "children": {
                         "true": 1,
-                        "false": 4
+                        "false": 2
                     }
                 },
                 "1": {
-                    "feature": "W_Valideren aanvraag",
-                    "threshold": 3.5,
-                    "children": {
-                        "true": 2,
-                        "false": 3
-                    }
-                },
-                "2": {
-                    "value": 0.002,
+                    "value": 1.519,
                     "dist": {
-                        "dist_name": "fixed",
+                        "dist_name": "expon",
                         "params": [
-                            0.002353779994217982
+                            0.0,
+                            0.0014948544937115579
                         ],
                         "min_value": 0.0,
                         "max_value": 5.427816666666667
                     }
                 },
-                "3": {
-                    "value": 20.67,
-                    "dist": {
-                        "dist_name": "fixed",
-                        "params": [
-                            0.0
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 0.0
-                    }
-                },
-                "4": {
-                    "value": 50.324,
+                "2": {
+                    "value": 58.197,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -15611,7 +15453,7 @@
             },
             "10972": {
                 "0": {
-                    "feature": "AMOUNT_REQ = 50000",
+                    "feature": "W_Assess_application",
                     "threshold": 0.5,
                     "children": {
                         "true": 1,
@@ -15619,18 +15461,19 @@
                     }
                 },
                 "1": {
-                    "value": 5.641,
+                    "value": 57.605,
                     "dist": {
-                        "dist_name": "fixed",
+                        "dist_name": "expon",
                         "params": [
-                            0.0
+                            0.0,
+                            0.04188400537634408
                         ],
                         "min_value": 0.0,
-                        "max_value": 0.0
+                        "max_value": 10.583033333333333
                     }
                 },
                 "2": {
-                    "value": 97.975,
+                    "value": 0.0,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -15643,26 +15486,27 @@
             },
             "10609": {
                 "0": {
-                    "feature": "W_Valideren aanvraag",
-                    "threshold": 3.5,
+                    "feature": "W_Call_after_offer",
+                    "threshold": 9.5,
                     "children": {
                         "true": 1,
                         "false": 2
                     }
                 },
                 "1": {
-                    "value": 7.348,
+                    "value": 10.029,
                     "dist": {
-                        "dist_name": "fixed",
+                        "dist_name": "expon",
                         "params": [
-                            0.0
+                            0.0,
+                            0.001510008466376391
                         ],
                         "min_value": 0.0,
-                        "max_value": 0.0
+                        "max_value": 4.161583333333334
                     }
                 },
                 "2": {
-                    "value": 74.501,
+                    "value": 162.751,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -15675,60 +15519,61 @@
             },
             "11181": {
                 "0": {
-                    "feature": "AMOUNT_REQ = 8000",
-                    "threshold": 0.5,
+                    "feature": "workload",
+                    "threshold": 15.5,
                     "children": {
                         "true": 1,
                         "false": 2
                     }
                 },
                 "1": {
-                    "value": 2.174,
+                    "value": 7.255,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.021642327306444137
+                            0.022014934210526315
                         ],
                         "min_value": 0.0,
-                        "max_value": 18.842883333333337
+                        "max_value": 8.796833333333332
                     }
                 },
                 "2": {
-                    "value": 32.203,
+                    "value": 0.823,
                     "dist": {
-                        "dist_name": "fixed",
+                        "dist_name": "expon",
                         "params": [
-                            0.0
+                            0.0,
+                            0.015952169197396966
                         ],
                         "min_value": 0.0,
-                        "max_value": 0.0
+                        "max_value": 18.882183333333334
                     }
                 }
             },
             "11189": {
                 "0": {
-                    "feature": "W_Completeren aanvraag",
-                    "threshold": 7.5,
+                    "feature": "W_Call_after_offer",
+                    "threshold": 8.5,
                     "children": {
                         "true": 1,
                         "false": 2
                     }
                 },
                 "1": {
-                    "value": 1.583,
+                    "value": 1.703,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.001357706382520719
+                            0.00653301957030419
                         ],
                         "min_value": 0.0,
-                        "max_value": 4.204816666666667
+                        "max_value": 16.269666666666666
                     }
                 },
                 "2": {
-                    "value": 24.596,
+                    "value": 153.393,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -15741,78 +15586,7 @@
             },
             "11169": {
                 "0": {
-                    "feature": "W_Completeren aanvraag",
-                    "threshold": 4.5,
-                    "children": {
-                        "true": 1,
-                        "false": 4
-                    }
-                },
-                "1": {
-                    "feature": "W_Completeren aanvraag",
-                    "threshold": 1.5,
-                    "children": {
-                        "true": 2,
-                        "false": 3
-                    }
-                },
-                "2": {
-                    "value": 0.0,
-                    "dist": {
-                        "dist_name": "fixed",
-                        "params": [
-                            0.0
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 0.0
-                    }
-                },
-                "3": {
-                    "value": 3.025,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            0.035827115009746585
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 15.894716666666666
-                    }
-                },
-                "4": {
-                    "feature": "O_SELECTED",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 5,
-                        "false": 6
-                    }
-                },
-                "5": {
-                    "value": 20.319,
-                    "dist": {
-                        "dist_name": "fixed",
-                        "params": [
-                            0.0
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 0.0
-                    }
-                },
-                "6": {
-                    "value": 0.0,
-                    "dist": {
-                        "dist_name": "fixed",
-                        "params": [
-                            0.0
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 0.0
-                    }
-                }
-            },
-            "10629": {
-                "0": {
-                    "feature": "O_CANCELLED",
+                    "feature": "W_Complete_preaccepted_appl",
                     "threshold": 1.5,
                     "children": {
                         "true": 1,
@@ -15820,19 +15594,52 @@
                     }
                 },
                 "1": {
-                    "value": 2.487,
+                    "value": 0.0,
+                    "dist": {
+                        "dist_name": "fixed",
+                        "params": [
+                            0.0
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.0
+                    }
+                },
+                "2": {
+                    "value": 1.603,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.02088145315487572
+                            0.025463237565647206
                         ],
                         "min_value": 0.0,
-                        "max_value": 16.022650000000002
+                        "max_value": 15.930116666666667
+                    }
+                }
+            },
+            "10629": {
+                "0": {
+                    "feature": "W_Assess_application",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 1,
+                        "false": 2
+                    }
+                },
+                "1": {
+                    "value": 29.27,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            0.0678771911663216
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 16.044333333333334
                     }
                 },
                 "2": {
-                    "value": 74.766,
+                    "value": 0.0,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -15845,7 +15652,7 @@
             },
             "10861": {
                 "0": {
-                    "feature": "AMOUNT_REQ = 15000",
+                    "feature": "AMOUNT_REQ = 25000",
                     "threshold": 0.5,
                     "children": {
                         "true": 1,
@@ -15853,19 +15660,19 @@
                     }
                 },
                 "1": {
-                    "value": 1.067,
+                    "value": 0.85,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.005265222788448974
+                            0.002307281731474688
                         ],
                         "min_value": 0.0,
-                        "max_value": 7.162483333333333
+                        "max_value": 3.2224833333333334
                     }
                 },
                 "2": {
-                    "value": 17.074,
+                    "value": 7.228,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -15878,27 +15685,27 @@
             },
             "10913": {
                 "0": {
-                    "feature": "W_Completeren aanvraag",
-                    "threshold": 6.5,
+                    "feature": "A_ACCEPTED",
+                    "threshold": 1.5,
                     "children": {
                         "true": 1,
                         "false": 2
                     }
                 },
                 "1": {
-                    "value": 1.121,
+                    "value": 1.683,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.01645506567824164
+                            0.010712218068535825
                         ],
                         "min_value": 0.0,
-                        "max_value": 16.472716666666667
+                        "max_value": 11.206383333333333
                     }
                 },
                 "2": {
-                    "value": 90.662,
+                    "value": 36.719,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -15911,7 +15718,7 @@
             },
             "11119": {
                 "0": {
-                    "feature": "W_Completeren aanvraag",
+                    "feature": "W_Complete_preaccepted_appl",
                     "threshold": 7.5,
                     "children": {
                         "true": 1,
@@ -15919,19 +15726,18 @@
                     }
                 },
                 "1": {
-                    "value": 2.126,
+                    "value": 2.043,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "fixed",
                         "params": [
-                            0.0,
-                            0.018514303813505637
+                            0.01726322940145254
                         ],
                         "min_value": 0.0,
                         "max_value": 19.618016666666666
                     }
                 },
                 "2": {
-                    "value": 59.545,
+                    "value": 60.112,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -15944,15 +15750,15 @@
             },
             "11180": {
                 "0": {
-                    "feature": "workload",
-                    "threshold": 9.5,
+                    "feature": "AMOUNT_REQ = 25000",
+                    "threshold": 0.5,
                     "children": {
                         "true": 1,
                         "false": 2
                     }
                 },
                 "1": {
-                    "value": 20.617,
+                    "value": 1.283,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -15963,60 +15769,40 @@
                     }
                 },
                 "2": {
-                    "value": 1.622,
+                    "value": 48.512,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "fixed",
                         "params": [
-                            0.0,
-                            0.00607530950170226
+                            0.0
                         ],
                         "min_value": 0.0,
-                        "max_value": 13.086216666666667
+                        "max_value": 0.0
                     }
                 }
             },
             "10909": {
                 "0": {
-                    "feature": "W_Nabellen offertes",
+                    "feature": "W_Complete_preaccepted_appl",
                     "threshold": 7.5,
                     "children": {
                         "true": 1,
-                        "false": 4
+                        "false": 2
                     }
                 },
                 "1": {
-                    "feature": "AMOUNT_REQ = 8000",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 2,
-                        "false": 3
-                    }
-                },
-                "2": {
-                    "value": 2.478,
+                    "value": 2.889,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.008020873180873182
+                            0.017628597622660596
                         ],
                         "min_value": 0.0,
-                        "max_value": 15.714550000000001
+                        "max_value": 16.500983333333334
                     }
                 },
-                "3": {
-                    "value": 62.949,
-                    "dist": {
-                        "dist_name": "fixed",
-                        "params": [
-                            0.0
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 0.0
-                    }
-                },
-                "4": {
-                    "value": 142.97,
+                "2": {
+                    "value": 87.074,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -16029,15 +15815,15 @@
             },
             "10809": {
                 "0": {
-                    "feature": "W_Valideren aanvraag",
-                    "threshold": 4.5,
+                    "feature": "W_Call_after_offer",
+                    "threshold": 10.5,
                     "children": {
                         "true": 1,
                         "false": 2
                     }
                 },
                 "1": {
-                    "value": 0.023,
+                    "value": 1.665,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -16048,7 +15834,7 @@
                     }
                 },
                 "2": {
-                    "value": 35.458,
+                    "value": 80.956,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -16061,88 +15847,27 @@
             },
             "11201": {
                 "0": {
-                    "feature": "W_Completeren aanvraag",
-                    "threshold": 3.5,
+                    "feature": "W_Complete_preaccepted_appl",
+                    "threshold": 4.5,
                     "children": {
                         "true": 1,
                         "false": 2
                     }
                 },
                 "1": {
-                    "value": 2.734,
+                    "value": 1.909,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.02356776713709677
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 14.454366666666665
-                    }
-                },
-                "2": {
-                    "value": 15.997,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            0.03990632062146892
+                            0.024753797180536607
                         ],
                         "min_value": 0.0,
                         "max_value": 18.83578333333333
                     }
-                }
-            },
-            "11122": {
-                "0": {
-                    "feature": "W_Completeren aanvraag",
-                    "threshold": 3.5,
-                    "children": {
-                        "true": 1,
-                        "false": 4
-                    }
-                },
-                "1": {
-                    "feature": "W_Completeren aanvraag",
-                    "threshold": 2.5,
-                    "children": {
-                        "true": 2,
-                        "false": 3
-                    }
                 },
                 "2": {
-                    "value": 0.066,
-                    "dist": {
-                        "dist_name": "fixed",
-                        "params": [
-                            0.005022420046158918
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 5.289416666666667
-                    }
-                },
-                "3": {
-                    "value": 1.898,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            0.09829315476190477
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 14.725366666666668
-                    }
-                },
-                "4": {
-                    "feature": "W_Nabellen offertes",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 5,
-                        "false": 6
-                    }
-                },
-                "5": {
-                    "value": 26.437,
+                    "value": 11.434,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -16151,42 +15876,65 @@
                         "min_value": 0.0,
                         "max_value": 0.0
                     }
-                },
-                "6": {
-                    "value": 0.036,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            0.03596688311688312
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 5.5389
-                    }
                 }
             },
-            "10982": {
+            "11122": {
                 "0": {
-                    "feature": "W_Valideren aanvraag",
-                    "threshold": 1.5,
+                    "feature": "W_Complete_preaccepted_appl",
+                    "threshold": 2.5,
                     "children": {
                         "true": 1,
                         "false": 2
                     }
                 },
                 "1": {
-                    "value": 6.412,
+                    "value": 0.019,
                     "dist": {
-                        "dist_name": "fixed",
+                        "dist_name": "expon",
                         "params": [
-                            0.011364078171091446
+                            0.0,
+                            0.007621226260641782
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 5.33425
+                    }
+                },
+                "2": {
+                    "value": 7.162,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            0.04318558382257012
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 14.725366666666668
+                    }
+                }
+            },
+            "10982": {
+                "0": {
+                    "feature": "W_Complete_preaccepted_appl",
+                    "threshold": 3.5,
+                    "children": {
+                        "true": 1,
+                        "false": 2
+                    }
+                },
+                "1": {
+                    "value": 1.484,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            0.008512231723675386
                         ],
                         "min_value": 0.0,
                         "max_value": 15.290066666666666
                     }
                 },
                 "2": {
-                    "value": 242.488,
+                    "value": 40.084,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -16199,15 +15947,15 @@
             },
             "11049": {
                 "0": {
-                    "feature": "W_Valideren aanvraag",
-                    "threshold": 0.5,
+                    "feature": "W_Call_after_offer",
+                    "threshold": 5.5,
                     "children": {
                         "true": 1,
                         "false": 4
                     }
                 },
                 "1": {
-                    "feature": "W_Nabellen offertes",
+                    "feature": "W_Call_after_offer",
                     "threshold": 2.5,
                     "children": {
                         "true": 2,
@@ -16215,31 +15963,30 @@
                     }
                 },
                 "2": {
-                    "value": 10.602,
+                    "value": 11.686,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.1411848850574713
+                            0.12338340074148972
                         ],
                         "min_value": 0.0,
                         "max_value": 19.6524
                     }
                 },
                 "3": {
-                    "value": 302.532,
+                    "value": 244.388,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "fixed",
                         "params": [
-                            0.0,
-                            0.015731855072463767
+                            0.0
                         ],
                         "min_value": 0.0,
-                        "max_value": 9.045816666666667
+                        "max_value": 0.0
                     }
                 },
                 "4": {
-                    "feature": "AMOUNT_REQ = 15000",
+                    "feature": "W_Assess_application",
                     "threshold": 0.5,
                     "children": {
                         "true": 5,
@@ -16247,7 +15994,7 @@
                     }
                 },
                 "5": {
-                    "value": 0.0,
+                    "value": 1167.348,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -16258,7 +16005,7 @@
                     }
                 },
                 "6": {
-                    "value": 1.983,
+                    "value": 0.0,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -16271,46 +16018,46 @@
             },
             "11203": {
                 "0": {
-                    "feature": "W_Nabellen offertes",
-                    "threshold": 8.5,
+                    "feature": "W_Complete_preaccepted_appl",
+                    "threshold": 7.5,
                     "children": {
                         "true": 1,
                         "false": 4
                     }
                 },
                 "1": {
-                    "feature": "W_Completeren aanvraag",
-                    "threshold": 4.5,
+                    "feature": "W_Fix_incoplete_submission",
+                    "threshold": 0.5,
                     "children": {
                         "true": 2,
                         "false": 3
                     }
                 },
                 "2": {
-                    "value": 0.718,
+                    "value": 0.537,
+                    "dist": {
+                        "dist_name": "fixed",
+                        "params": [
+                            0.0016894362186788154
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 2.96665
+                    }
+                },
+                "3": {
+                    "value": 4.551,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.007626034063260341
+                            0.028157338638373122
                         ],
                         "min_value": 0.0,
                         "max_value": 10.615316666666667
                     }
                 },
-                "3": {
-                    "value": 21.578,
-                    "dist": {
-                        "dist_name": "fixed",
-                        "params": [
-                            0.0
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 0.0
-                    }
-                },
                 "4": {
-                    "value": 157.32,
+                    "value": 50.035,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -16323,7 +16070,7 @@
             },
             "11259": {
                 "0": {
-                    "feature": "W_Nabellen offertes",
+                    "feature": "W_Call_after_offer",
                     "threshold": 4.5,
                     "children": {
                         "true": 1,
@@ -16331,38 +16078,38 @@
                     }
                 },
                 "1": {
-                    "feature": "W_Completeren aanvraag",
-                    "threshold": 5.5,
+                    "feature": "W_Call_after_offer",
+                    "threshold": 2.5,
                     "children": {
                         "true": 2,
                         "false": 3
                     }
                 },
                 "2": {
-                    "value": 35.752,
+                    "value": 20.212,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.03913371969091394
+                            0.03817769607843137
                         ],
                         "min_value": 0.0,
                         "max_value": 15.174116666666666
                     }
                 },
                 "3": {
-                    "value": 204.88,
+                    "value": 264.617,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
-                            0.0
+                            0.008579849012775843
                         ],
                         "min_value": 0.0,
-                        "max_value": 0.0
+                        "max_value": 4.924833333333334
                     }
                 },
                 "4": {
-                    "feature": "W_Valideren aanvraag",
+                    "feature": "W_Assess_application",
                     "threshold": 0.5,
                     "children": {
                         "true": 5,
@@ -16370,14 +16117,15 @@
                     }
                 },
                 "5": {
-                    "value": 461.434,
+                    "value": 1074.986,
                     "dist": {
-                        "dist_name": "fixed",
+                        "dist_name": "expon",
                         "params": [
-                            0.0
+                            0.0,
+                            0.025505411877394635
                         ],
                         "min_value": 0.0,
-                        "max_value": 0.0
+                        "max_value": 8.875883333333332
                     }
                 },
                 "6": {
@@ -16394,27 +16142,27 @@
             },
             "10910": {
                 "0": {
-                    "feature": "W_Completeren aanvraag",
-                    "threshold": 2.5,
+                    "feature": "AMOUNT_REQ = 25000",
+                    "threshold": 0.5,
                     "children": {
                         "true": 1,
                         "false": 2
                     }
                 },
                 "1": {
-                    "value": 0.175,
+                    "value": 0.567,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.0003665737298636927
+                            2.21301247771836e-05
                         ],
                         "min_value": 0.0,
-                        "max_value": 0.59165
+                        "max_value": 0.041383333333333334
                     }
                 },
                 "2": {
-                    "value": 8.154,
+                    "value": 10.107,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -16427,15 +16175,15 @@
             },
             "10899": {
                 "0": {
-                    "feature": "W_Valideren aanvraag",
-                    "threshold": 0.5,
+                    "feature": "W_Call_after_offer",
+                    "threshold": 8.5,
                     "children": {
                         "true": 1,
                         "false": 4
                     }
                 },
                 "1": {
-                    "feature": "W_Nabellen offertes",
+                    "feature": "W_Call_after_offer",
                     "threshold": 3.5,
                     "children": {
                         "true": 2,
@@ -16443,19 +16191,19 @@
                     }
                 },
                 "2": {
-                    "value": 66.754,
+                    "value": 62.87,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.17188709126403123
+                            0.1096109238451935
                         ],
                         "min_value": 0.0,
                         "max_value": 14.818666666666667
                     }
                 },
                 "3": {
-                    "value": 422.035,
+                    "value": 357.559,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -16466,26 +16214,7 @@
                     }
                 },
                 "4": {
-                    "feature": "W_Valideren aanvraag",
-                    "threshold": 1.5,
-                    "children": {
-                        "true": 5,
-                        "false": 6
-                    }
-                },
-                "5": {
-                    "value": 0.0,
-                    "dist": {
-                        "dist_name": "fixed",
-                        "params": [
-                            0.0
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 0.0
-                    }
-                },
-                "6": {
-                    "value": 53.744,
+                    "value": 1045.695,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -16498,27 +16227,15 @@
             },
             "11000": {
                 "0": {
-                    "feature": "W_Nabellen offertes",
-                    "threshold": 7.5,
+                    "feature": "workload",
+                    "threshold": 3.5,
                     "children": {
                         "true": 1,
                         "false": 2
                     }
                 },
                 "1": {
-                    "value": 2.963,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            0.0013046689628779182
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 2.2727333333333335
-                    }
-                },
-                "2": {
-                    "value": 148.204,
+                    "value": 54.361,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -16527,31 +16244,62 @@
                         "min_value": 0.0,
                         "max_value": 0.0
                     }
+                },
+                "2": {
+                    "value": 0.601,
+                    "dist": {
+                        "dist_name": "fixed",
+                        "params": [
+                            0.0013009349360809006
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 2.2727333333333335
+                    }
                 }
             },
             "10932": {
                 "0": {
-                    "feature": "W_Nabellen offertes",
+                    "feature": "W_Call_after_offer",
                     "threshold": 5.5,
                     "children": {
                         "true": 1,
-                        "false": 2
+                        "false": 4
                     }
                 },
                 "1": {
-                    "value": 2.717,
+                    "feature": "workload",
+                    "threshold": 2.5,
+                    "children": {
+                        "true": 2,
+                        "false": 3
+                    }
+                },
+                "2": {
+                    "value": 30.624,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.0050338312829525484
+                            0.068742
                         ],
                         "min_value": 0.0,
                         "max_value": 8.59275
                     }
                 },
-                "2": {
-                    "value": 52.219,
+                "3": {
+                    "value": 0.679,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            2.5885643256681167e-05
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.04165
+                    }
+                },
+                "4": {
+                    "value": 118.326,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -16564,7 +16312,7 @@
             },
             "10929": {
                 "0": {
-                    "feature": "W_Completeren aanvraag",
+                    "feature": "W_Complete_preaccepted_appl",
                     "threshold": 4.5,
                     "children": {
                         "true": 1,
@@ -16572,7 +16320,7 @@
                     }
                 },
                 "1": {
-                    "value": 0.394,
+                    "value": 0.115,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -16583,7 +16331,7 @@
                     }
                 },
                 "2": {
-                    "value": 24.023,
+                    "value": 23.826,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -16596,61 +16344,78 @@
             },
             "11121": {
                 "0": {
-                    "feature": "workload",
-                    "threshold": 3.5,
+                    "feature": "W_Complete_preaccepted_appl",
+                    "threshold": 2.5,
                     "children": {
                         "true": 1,
                         "false": 2
                     }
                 },
                 "1": {
-                    "value": 23.953,
+                    "value": 0.158,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "fixed",
                         "params": [
-                            0.0,
-                            0.015774969696969694
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 4.338116666666666
-                    }
-                },
-                "2": {
-                    "value": 1.237,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            0.003189120536784088
+                            0.007302734051367025
                         ],
                         "min_value": 0.0,
                         "max_value": 4.436066666666666
+                    }
+                },
+                "2": {
+                    "value": 3.823,
+                    "dist": {
+                        "dist_name": "fixed",
+                        "params": [
+                            0.0
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.0
                     }
                 }
             },
             "10881": {
                 "0": {
-                    "feature": "W_Nabellen offertes",
-                    "threshold": 6.5,
+                    "feature": "A_ACCEPTED",
+                    "threshold": 1.5,
                     "children": {
                         "true": 1,
-                        "false": 2
+                        "false": 4
                     }
                 },
                 "1": {
-                    "value": 1.099,
+                    "feature": "AMOUNT_REQ = 5000",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 2,
+                        "false": 3
+                    }
+                },
+                "2": {
+                    "value": 0.78,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.014636014760147602
+                            0.01983314307458143
                         ],
                         "min_value": 0.0,
-                        "max_value": 6.5004
+                        "max_value": 8.8073
                     }
                 },
-                "2": {
-                    "value": 88.217,
+                "3": {
+                    "value": 33.398,
+                    "dist": {
+                        "dist_name": "fixed",
+                        "params": [
+                            0.0
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.0
+                    }
+                },
+                "4": {
+                    "value": 79.44,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -16663,15 +16428,81 @@
             },
             "11179": {
                 "0": {
-                    "feature": "W_Completeren aanvraag",
+                    "feature": "W_Complete_preaccepted_appl",
                     "threshold": 4.5,
+                    "children": {
+                        "true": 1,
+                        "false": 2
+                    }
+                },
+                "1": {
+                    "value": 0.935,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            0.019358886607346564
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 16.839766666666666
+                    }
+                },
+                "2": {
+                    "value": 93.752,
+                    "dist": {
+                        "dist_name": "fixed",
+                        "params": [
+                            0.0
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.0
+                    }
+                }
+            },
+            "10889": {
+                "0": {
+                    "feature": "workload",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 1,
+                        "false": 2
+                    }
+                },
+                "1": {
+                    "value": 184.824,
+                    "dist": {
+                        "dist_name": "fixed",
+                        "params": [
+                            0.0
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.0
+                    }
+                },
+                "2": {
+                    "value": 2.693,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            0.01192109375
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 16.7849
+                    }
+                }
+            },
+            "11009": {
+                "0": {
+                    "feature": "W_Complete_preaccepted_appl",
+                    "threshold": 3.5,
                     "children": {
                         "true": 1,
                         "false": 4
                     }
                 },
                 "1": {
-                    "feature": "W_Completeren aanvraag",
+                    "feature": "W_Complete_preaccepted_appl",
                     "threshold": 1.5,
                     "children": {
                         "true": 2,
@@ -16690,19 +16521,18 @@
                     }
                 },
                 "3": {
-                    "value": 4.412,
+                    "value": 1.483,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "fixed",
                         "params": [
-                            0.0,
-                            0.055259616858237555
+                            0.0
                         ],
                         "min_value": 0.0,
-                        "max_value": 16.839766666666666
+                        "max_value": 0.0
                     }
                 },
                 "4": {
-                    "value": 92.189,
+                    "value": 7.142,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -16713,28 +16543,28 @@
                     }
                 }
             },
-            "10889": {
+            "11202": {
                 "0": {
-                    "feature": "W_Completeren aanvraag",
-                    "threshold": 5.5,
+                    "feature": "W_Call_after_offer",
+                    "threshold": 3.5,
                     "children": {
                         "true": 1,
                         "false": 2
                     }
                 },
                 "1": {
-                    "value": 1.926,
+                    "value": 0.993,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
-                            0.01201496062992126
+                            0.0
                         ],
                         "min_value": 0.0,
-                        "max_value": 16.7849
+                        "max_value": 0.0
                     }
                 },
                 "2": {
-                    "value": 61.362,
+                    "value": 60.912,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -16745,9 +16575,9 @@
                     }
                 }
             },
-            "11009": {
+            "11200": {
                 "0": {
-                    "feature": "W_Completeren aanvraag",
+                    "feature": "O_CREATED",
                     "threshold": 1.5,
                     "children": {
                         "true": 1,
@@ -16766,90 +16596,7 @@
                     }
                 },
                 "2": {
-                    "feature": "W_Nabellen offertes",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 3,
-                        "false": 4
-                    }
-                },
-                "3": {
-                    "value": 16.838,
-                    "dist": {
-                        "dist_name": "fixed",
-                        "params": [
-                            0.0
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 0.0
-                    }
-                },
-                "4": {
-                    "value": 0.0,
-                    "dist": {
-                        "dist_name": "fixed",
-                        "params": [
-                            0.0
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 0.0
-                    }
-                }
-            },
-            "11202": {
-                "0": {
-                    "feature": "W_Nabellen offertes",
-                    "threshold": 2.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.0,
-                    "dist": {
-                        "dist_name": "fixed",
-                        "params": [
-                            0.0
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 0.0
-                    }
-                },
-                "2": {
-                    "value": 10.197,
-                    "dist": {
-                        "dist_name": "fixed",
-                        "params": [
-                            0.0
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 0.0
-                    }
-                }
-            },
-            "11200": {
-                "0": {
-                    "feature": "W_Completeren aanvraag",
-                    "threshold": 3.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.0,
-                    "dist": {
-                        "dist_name": "fixed",
-                        "params": [
-                            0.0
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 0.0
-                    }
-                },
-                "2": {
-                    "value": 1.707,
+                    "value": 0.398,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -16862,27 +16609,46 @@
             },
             "11003": {
                 "0": {
-                    "feature": "W_Completeren aanvraag",
-                    "threshold": 3.5,
+                    "feature": "workload",
+                    "threshold": 4.5,
                     "children": {
                         "true": 1,
                         "false": 2
                     }
                 },
                 "1": {
-                    "value": 5.13,
+                    "value": 116.655,
+                    "dist": {
+                        "dist_name": "fixed",
+                        "params": [
+                            0.0
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.0
+                    }
+                },
+                "2": {
+                    "feature": "W_Complete_preaccepted_appl",
+                    "threshold": 4.5,
+                    "children": {
+                        "true": 3,
+                        "false": 4
+                    }
+                },
+                "3": {
+                    "value": 1.484,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.005344077134986224
+                            0.0016746711581649022
                         ],
                         "min_value": 0.0,
-                        "max_value": 5.819699999999997
+                        "max_value": 1.7399833333333334
                     }
                 },
-                "2": {
-                    "value": 59.058,
+                "4": {
+                    "value": 12.394,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -16903,52 +16669,69 @@
                     }
                 },
                 "1": {
-                    "value": 1.3,
+                    "value": 0.857,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "fixed",
                         "params": [
-                            0.0,
-                            0.04003745062291097
+                            0.017511669685990338
                         ],
                         "min_value": 0.0,
                         "max_value": 19.33288333333333
                     }
                 },
                 "2": {
-                    "value": 31.899,
+                    "value": 31.863,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
-                            0.03625419501133787
+                            0.0
                         ],
                         "min_value": 0.0,
-                        "max_value": 5.329366666666667
+                        "max_value": 0.0
                     }
                 }
             },
             "10863": {
                 "0": {
-                    "feature": "W_Completeren aanvraag",
-                    "threshold": 5.5,
+                    "feature": "workload",
+                    "threshold": 0.5,
                     "children": {
                         "true": 1,
                         "false": 2
                     }
                 },
                 "1": {
-                    "value": 2.537,
+                    "value": 76.291,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "fixed",
                         "params": [
-                            0.0,
-                            0.005399383333333333
+                            0.0
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.0
+                    }
+                },
+                "2": {
+                    "feature": "W_Complete_preaccepted_appl",
+                    "threshold": 2.5,
+                    "children": {
+                        "true": 3,
+                        "false": 4
+                    }
+                },
+                "3": {
+                    "value": 0.399,
+                    "dist": {
+                        "dist_name": "fixed",
+                        "params": [
+                            0.008281262781186093
                         ],
                         "min_value": 0.0,
                         "max_value": 5.399383333333333
                     }
                 },
-                "2": {
-                    "value": 63.178,
+                "4": {
+                    "value": 5.896,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -16961,26 +16744,7 @@
             },
             "11289": {
                 "0": {
-                    "feature": "W_Nabellen incomplete dossiers",
-                    "threshold": 4.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
                     "value": 0.0,
-                    "dist": {
-                        "dist_name": "fixed",
-                        "params": [
-                            0.0
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 0.0
-                    }
-                },
-                "2": {
-                    "value": 32.122,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -16993,27 +16757,26 @@
             },
             "10912": {
                 "0": {
-                    "feature": "W_Completeren aanvraag",
-                    "threshold": 3.5,
+                    "feature": "W_Call_after_offer",
+                    "threshold": 2.5,
                     "children": {
                         "true": 1,
                         "false": 2
                     }
                 },
                 "1": {
-                    "value": 0.729,
+                    "value": 0.644,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "fixed",
                         "params": [
-                            0.0,
-                            0.01942043795620438
+                            0.0
                         ],
                         "min_value": 0.0,
-                        "max_value": 16.243533333333332
+                        "max_value": 0.0
                     }
                 },
                 "2": {
-                    "value": 12.248,
+                    "value": 38.234,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -17026,41 +16789,8 @@
             },
             "11002": {
                 "0": {
-                    "feature": "workload",
-                    "threshold": 26.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.06,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            0.014111822222222223
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 10.583866666666667
-                    }
-                },
-                "2": {
-                    "value": 2.358,
-                    "dist": {
-                        "dist_name": "fixed",
-                        "params": [
-                            0.0
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 0.0
-                    }
-                }
-            },
-            "11019": {
-                "0": {
-                    "feature": "W_Completeren aanvraag",
-                    "threshold": 1.5,
+                    "feature": "W_Complete_preaccepted_appl",
+                    "threshold": 2.5,
                     "children": {
                         "true": 1,
                         "false": 2
@@ -17078,14 +16808,46 @@
                     }
                 },
                 "2": {
-                    "value": 3.404,
+                    "value": 1.684,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
-                            0.05572733077905492
+                            0.0
                         ],
                         "min_value": 0.0,
-                        "max_value": 14.544833333333335
+                        "max_value": 0.0
+                    }
+                }
+            },
+            "11019": {
+                "0": {
+                    "feature": "W_Call_after_offer",
+                    "threshold": 1.5,
+                    "children": {
+                        "true": 1,
+                        "false": 2
+                    }
+                },
+                "1": {
+                    "value": 0.471,
+                    "dist": {
+                        "dist_name": "fixed",
+                        "params": [
+                            0.0
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.0
+                    }
+                },
+                "2": {
+                    "value": 94.709,
+                    "dist": {
+                        "dist_name": "fixed",
+                        "params": [
+                            0.0
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.0
                     }
                 }
             },
@@ -17110,7 +16872,7 @@
                     }
                 },
                 "2": {
-                    "value": 5.094,
+                    "value": 5.004,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -17123,8 +16885,8 @@
             },
             "10789": {
                 "0": {
-                    "feature": "W_Valideren aanvraag",
-                    "threshold": 0.5,
+                    "feature": "W_Call_after_offer",
+                    "threshold": 3.5,
                     "children": {
                         "true": 1,
                         "false": 4
@@ -17139,11 +16901,12 @@
                     }
                 },
                 "2": {
-                    "value": 98.819,
+                    "value": 87.237,
                     "dist": {
-                        "dist_name": "fixed",
+                        "dist_name": "expon",
                         "params": [
-                            0.07667833333333333
+                            0.0,
+                            0.3327501082251082
                         ],
                         "min_value": 0.0,
                         "max_value": 16.10245
@@ -17161,6 +16924,25 @@
                     }
                 },
                 "4": {
+                    "feature": "W_Assess_application",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 5,
+                        "false": 6
+                    }
+                },
+                "5": {
+                    "value": 774.322,
+                    "dist": {
+                        "dist_name": "fixed",
+                        "params": [
+                            0.0
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.0
+                    }
+                },
+                "6": {
                     "value": 0.0,
                     "dist": {
                         "dist_name": "fixed",
@@ -17174,26 +16956,45 @@
             },
             "10933": {
                 "0": {
-                    "feature": "W_Completeren aanvraag",
+                    "feature": "W_Complete_preaccepted_appl",
                     "threshold": 3.5,
                     "children": {
                         "true": 1,
-                        "false": 2
+                        "false": 4
                     }
                 },
                 "1": {
-                    "value": 1.218,
-                    "dist": {
-                        "dist_name": "fixed",
-                        "params": [
-                            0.02819598765432099
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 13.70325
+                    "feature": "W_Fix_incoplete_submission",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 2,
+                        "false": 3
                     }
                 },
                 "2": {
-                    "value": 21.596,
+                    "value": 0.12,
+                    "dist": {
+                        "dist_name": "fixed",
+                        "params": [
+                            0.0
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.0
+                    }
+                },
+                "3": {
+                    "value": 3.729,
+                    "dist": {
+                        "dist_name": "fixed",
+                        "params": [
+                            0.13205016025641025
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 13.733216666666667
+                    }
+                },
+                "4": {
+                    "value": 21.957,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -17206,7 +17007,26 @@
             },
             "10880": {
                 "0": {
+                    "feature": "O_CANCELLED",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 1,
+                        "false": 2
+                    }
+                },
+                "1": {
                     "value": 0.0,
+                    "dist": {
+                        "dist_name": "fixed",
+                        "params": [
+                            0.0
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.0
+                    }
+                },
+                "2": {
+                    "value": 31.011,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -17283,15 +17103,15 @@
                     }
                 },
                 "2": {
-                    "value": 0.216,
+                    "value": 0.26,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.01678669467787115
+                            0.06740867208672087
                         ],
                         "min_value": 0.0,
-                        "max_value": 1.9976166666666666
+                        "max_value": 6.29365
                     }
                 }
             },
@@ -17310,42 +17130,41 @@
             },
             "11029": {
                 "0": {
-                    "feature": "workload",
-                    "threshold": 25.5,
+                    "feature": "W_Call_after_offer",
+                    "threshold": 2.5,
                     "children": {
                         "true": 1,
                         "false": 2
                     }
                 },
                 "1": {
-                    "value": 231.739,
+                    "value": 27.604,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.22881685606060612
+                            0.2283829166666667
                         ],
                         "min_value": 0.0,
                         "max_value": 11.784400000000005
                     }
                 },
                 "2": {
-                    "value": 20.78,
+                    "value": 192.699,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "fixed",
                         "params": [
-                            0.0,
-                            0.09894905533063426
+                            0.0
                         ],
                         "min_value": 0.0,
-                        "max_value": 9.43515
+                        "max_value": 0.0
                     }
                 }
             },
             "11302": {
                 "0": {
-                    "feature": "W_Completeren aanvraag",
-                    "threshold": 1.5,
+                    "feature": "workload",
+                    "threshold": 11.5,
                     "children": {
                         "true": 1,
                         "false": 2
@@ -17363,12 +17182,12 @@
                     }
                 },
                 "2": {
-                    "value": 2.433,
+                    "value": 0.067,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.06682046783625731
+                            0.0674117994100295
                         ],
                         "min_value": 0.0,
                         "max_value": 7.617533333333333
@@ -17409,12 +17228,11 @@
                     }
                 },
                 "2": {
-                    "value": 8.857,
+                    "value": 5.904,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "fixed",
                         "params": [
-                            0.0,
-                            0.09192212121212122
+                            0.09276544342507646
                         ],
                         "min_value": 0.0,
                         "max_value": 6.07495
@@ -17423,7 +17241,7 @@
             },
             "11299": {
                 "0": {
-                    "value": 31.363,
+                    "value": 2.734,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -17436,7 +17254,7 @@
             },
             "10914": {
                 "0": {
-                    "value": 11.269,
+                    "value": 1.751,
                     "dist": {
                         "dist_name": "fixed",
                         "params": [
@@ -17449,29 +17267,27 @@
             },
             "11309": {
                 "0": {
-                    "value": 9.469,
+                    "value": 1.314,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "fixed",
                         "params": [
-                            0.0,
-                            0.07880349794238684
+                            0.03131903353057199
                         ],
                         "min_value": 0.0,
-                        "max_value": 7.473249999999999
+                        "max_value": 5.292916666666667
                     }
                 }
             },
             "11319": {
                 "0": {
-                    "value": 1.521,
+                    "value": 0.0,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "fixed",
                         "params": [
-                            0.0,
-                            0.03927824074074074
+                            0.0
                         ],
                         "min_value": 0.0,
-                        "max_value": 5.656066666666666
+                        "max_value": 0.0
                     }
                 }
             },

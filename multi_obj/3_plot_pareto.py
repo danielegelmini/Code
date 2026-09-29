@@ -83,10 +83,10 @@ def _default_forbidden_map():
     return {
         "bpi17_before": bpi17_forbidden,
         "bpi17_after": bpi17_forbidden,
+        "BPI12_not_reordered": ["O_ACCEPTED"],
+        "BPI12_not_reordered_sim": ["O_ACCEPTED"],
         "BPI12": ["O_ACCEPTED"],
         "BPI12_sim": ["O_ACCEPTED"],
-        "BPI12_reordered": ["O_ACCEPTED"],
-        "BPI12_reordered_sim": ["O_ACCEPTED"],
         "BAC": bac_forbidden,
     }
 
@@ -463,8 +463,9 @@ def run_and_plot_comparison(
     Input:
         case_study: dataset name (e.g. "BAC", "BPI12", "bpi17_before").
         target_case_id: case id to analyse; if None or not present in the test
-            set, the case with the largest / most spread-out Pareto front is
-            selected automatically.
+            set, the case whose Pareto front -- built on the confidence-filtered
+            candidates, as in the plot (method="exhaustive") -- spans the
+            largest area is selected automatically.
         window_size: prefix window length used to build the transition system
             (and, for method="exhaustive", the pair-frequency system) and to
             look up the next possible activities.
@@ -499,7 +500,7 @@ def run_and_plot_comparison(
     print(f"Loading data for {case_study}...")
     train_data, test_data, test_log = load_case_study(case_study)
 
-    if case_study in {"BPI12", "BPI12_sim", "BPI12_reordered", "BPI12_reordered_sim"}:
+    if case_study in {"BPI12_not_reordered", "BPI12_not_reordered_sim", "BPI12", "BPI12_sim"}:
         train_data = convert_dtypes_bpi12(train_data, "experiment")
         test_data  = convert_dtypes_bpi12(test_data, "experiment")
         test_log  = convert_dtypes_bpi12(test_log, "experiment")
@@ -538,10 +539,12 @@ def run_and_plot_comparison(
     baseline_instances_by_case = build_no_recommendation_baseline_instances(query_instances_by_case)
     unique_cases = pd.unique(test_data[case_id_name])
 
-    # Automatic selection of the case with the widest, most spread-out front
+    # Automatic selection of the case whose Pareto front -- built, like the plot,
+    # only on the candidates that pass the confidence filter -- spans the largest
+    # area (outcome range x (1 - time) range); ties broken by the number of front points.
     if target_case_id is None or target_case_id not in unique_cases:
-        print("Searching for the case with the most solutions and the most spread-out Pareto curve...")
-        best_score = -1
+        print("Searching for the case whose confidence-filtered Pareto front spans the largest area...")
+        best_score = (-1.0, -1)
         best_case_id = None
 
         for cid in tqdm.tqdm(unique_cases, desc="Evaluating cases"):
@@ -563,16 +566,23 @@ def run_and_plot_comparison(
             all_x = all_evals[:, 0]
             all_y = 1.0 - all_evals[:, 1]
 
-            pareto_vals = np.column_stack((all_x, all_y))
             try:
-                is_pareto = paretoset(pareto_vals, sense=["max", "max"])
+                if method == "exhaustive":
+                    prob_out, prob_time = _compute_confidence_probabilities(
+                        valid_pairs, baseline_instances_by_case[cid], query_instance,
+                        predictive_outcome_model, predictive_time_model,
+                    )
+                    keep = _filter_by_confidence(prob_out, prob_time, gamma_cls, gamma_reg)
+                    if not keep.any():
+                        continue
+                    all_x, all_y = all_x[keep], all_y[keep]
+
+                is_pareto = paretoset(np.column_stack((all_x, all_y)), sense=["max", "max"])
                 front_x = all_x[is_pareto]
                 front_y = all_y[is_pareto]
 
-                spread_x = np.max(front_x) - np.min(front_x)
-                spread_y = np.max(front_y) - np.min(front_y)
-                spread_area = spread_x * spread_y
-                score = n_solutions * spread_area
+                spread_area = (np.max(front_x) - np.min(front_x)) * (np.max(front_y) - np.min(front_y))
+                score = (spread_area, len(front_x))
 
                 if score > best_score:
                     best_score = score

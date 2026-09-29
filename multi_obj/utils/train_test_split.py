@@ -26,6 +26,21 @@ def extract_data_after_tsplit(df, data_with_trace_status, t_split, case_id_name)
     train_data = df.loc[df[case_id_name].isin(train_id)].reset_index(drop=True)
     return train_data, train_id, future_id
 
+def compute_split_time(df, case_id_name, train_ratio=0.8):
+    """Earliest time t_split at which `train_ratio` of the traces in `df` are completed.
+
+    Each trace is completed at the end (time:timestamp) of its last event. Sorting
+    the traces by completion time, t_split is the completion time of the
+    ceil(train_ratio * n_traces)-th trace: at that instant (at least) that share of
+    the traces has ended, and at no earlier instant does it. train_test_split() then
+    puts the traces completed by t_split in the training set, the traces still
+    running at t_split in the test set, and drops the traces starting after it.
+    """
+    ends = pd.to_datetime(df['time:timestamp']).groupby(df[case_id_name]).max().sort_values()
+    n_needed = int(np.ceil(train_ratio * len(ends)))
+    return ends.iloc[n_needed - 1]
+
+
 def train_test_split(df, case_study, t_split, case_id_name, output_suffix=""):
     df = df.sort_values(by=['case:concept:name', 'time:timestamp'])
 

@@ -166,7 +166,8 @@ def predict_time_members_var(predictive_time_model, rows_df):
     predict_time_members()'s per-member means so
     _paired_gaussian_prob_greater() can compare on the FULL predictive
     variance (aleatoric + epistemic) instead of only the across-member
-    (epistemic) spread.
+    (epistemic) spread. These are RAW variances: the sigma-scaling
+    calibration factor is applied afterwards (see time_sigma_scale).
 
     Falls back to zeros (no aleatoric variance to report) for an older time
     model without uncertainty support; predict_time_members(), always
@@ -185,6 +186,15 @@ def predict_time_members_var(predictive_time_model, rows_df):
         return np.asarray(predictor.predict_members_var(predictor_input), dtype=float)
 
     return np.zeros((len(rows_df), 1))
+
+
+def time_sigma_scale(predictive_time_model):
+    """The time model's post-hoc sigma-scaling calibration factor s
+    (UncertaintyRegressor.sigma_scale), or 1.0 for a model without one."""
+    predictor = predictive_time_model
+    if hasattr(predictive_time_model, "named_steps"):
+        predictor = predictive_time_model.named_steps.get("prediction", predictive_time_model)
+    return float(getattr(predictor, "sigma_scale", 1.0))
 
 
 def predict_outcome_members_logit(predictive_outcome_model, rows_df):
@@ -227,7 +237,7 @@ def predict_outcome_members_logit(predictive_outcome_model, rows_df):
     return logit.reshape(-1, 1)
 
 
-def _paired_gaussian_prob_greater(a_members, b_members, a_var=None, b_var=None):
+def _paired_gaussian_prob_greater(a_members, b_members, a_var=None, b_var=None, std_scale=1.0):
     """
     Estimate P(A > B) for two paired ensembles of M values each (A: one or
     more cases, B: a single baseline), modelling A and B as correlated
@@ -274,6 +284,11 @@ def _paired_gaussian_prob_greater(a_members, b_members, a_var=None, b_var=None):
             member, so it inflates each side's own variance but not their
             covariance. Omit both (the default) to use the epistemic-only
             comparison.
+        std_scale (float, optional): Post-hoc calibration factor applied to the
+            standard deviation of the difference (the whole of it, epistemic and
+            aleatoric), e.g. UncertaintyRegressor.sigma_scale -- the same factor
+            the sigma-scaling calibration applies to the total predictive std.
+            Defaults to 1.0 (no recalibration).
 
     Returns:
         numpy.ndarray: Shape (n,), each in [0, 1]. Degrades to a step
@@ -295,7 +310,7 @@ def _paired_gaussian_prob_greater(a_members, b_members, a_var=None, b_var=None):
     if a_var is not None:
         var_a = var_a + a_var.mean(axis=1)
     cov_ab = ((a_members - mean_a[:, None]) * (b_members - mean_b)[None, :]).sum(axis=1) / (M - 1)
-    var_diff = np.clip(var_a + var_b - 2.0 * cov_ab, 0.0, None)
+    var_diff = np.clip(var_a + var_b - 2.0 * cov_ab, 0.0, None) * std_scale ** 2
     std_diff = np.sqrt(var_diff * (1.0 + 1.0 / M))
 
     degenerate = std_diff == 0
@@ -605,14 +620,18 @@ def _compute_confidence_probabilities(
     Student's t-distribution (M-1 degrees of freedom) rather than the normal
     -- see _paired_gaussian_prob_greater's docstring for the derivation.
 
-    The time comparison additionally folds in each member's own (aleatoric)
-    variance (predict_time_members_var), so it compares on the FULL
-    predictive variance rather than only the across-member (epistemic)
-    spread -- see _paired_gaussian_prob_greater's a_var/b_var. The outcome
-    comparison does NOT do this: a classification member's own variance is
-    Bernoulli, p_m * (1 - p_m), fixed by its mean rather than a separate
-    quantity CatBoost reports, and mapping that onto the logit scale needs a
-    delta-method approximation that hasn't been added here.
+    Both comparisons run on CALIBRATED quantities:
+      * time: the full predictive variance -- across-member (epistemic) spread
+        plus each member's own (aleatoric) variance (predict_time_members_var)
+        -- with the whole std of the difference multiplied by the regressor's
+        sigma-scaling factor s (time_sigma_scale), i.e. the same calibrated
+        total std that predict_uncertainty() reports;
+      * outcome: the temperature-calibrated member logits
+        (predict_outcome_members_logit, logit / T). Only the across-member
+        spread is used: a classification member's own variance is the Bernoulli
+        noise of the 0/1 result, not uncertainty about the probability. Note
+        that dividing every member logit by the same T scales the mean
+        difference and its std alike, so p_out is invariant to T.
 
     Args:
         candidate_pairs: list of (activity, resource) tuples to score.
@@ -629,7 +648,8 @@ def _compute_confidence_probabilities(
         i's calibrated outcome logit > baseline's), equivalently P(candidate
         i's calibrated outcome probability > baseline's), since the logit is
         a monotonic transform of the probability; prob_time_better[i] is
-        P(candidate i's predicted time < baseline's).
+        P(candidate i's remaining time < baseline's) under the calibrated
+        predictive distribution.
     """
     baseline_outcome_row = align_query_instance_with_model(baseline_row, predictive_outcome_model)
     baseline_time_row = align_query_instance_with_model(baseline_row, predictive_time_model)
@@ -651,6 +671,7 @@ def _compute_confidence_probabilities(
     prob_time_better = 1.0 - _paired_gaussian_prob_greater(
         candidate_time_members, baseline_time_members,
         a_var=candidate_time_var, b_var=baseline_time_var,
+        std_scale=time_sigma_scale(predictive_time_model),
     )
 
     return prob_outcome_better, prob_time_better

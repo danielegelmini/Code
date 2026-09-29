@@ -90,92 +90,10 @@ def data_pre_processing(case_study, case_id_position, start_date_position, date_
     output_dir = Path(f"./case_studies/{case_study}")
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Reproduce a previously generated preprocessed_data.csv byte-for-byte when one
-    # exists: its '# ACTIVITY=' columns were produced by an older, non-deterministic
-    # implementation, so their exact values (and left-to-right order) cannot be
-    # recomputed. If every other column and the row order match, reinstate the
-    # stored '# ACTIVITY=' columns verbatim; otherwise keep the freshly computed
-    # (alphabetically ordered) ones.
-    df = _reconcile_activity_columns(df, output_dir / "preprocessed_data.csv")
-
     df.to_csv(output_dir / f"preprocessed_data{output_suffix}.csv", index=False)
 
     return df
 
-
-def _reconcile_activity_columns(df, reference_csv):
-    activity_cols = [c for c in df.columns if c.startswith("# ACTIVITY=")]
-    if not activity_cols or not Path(reference_csv).exists():
-        return df
-
-    first_pos = min(i for i, c in enumerate(df.columns) if c.startswith("# ACTIVITY="))
-    tail = [c for c in list(df.columns)[first_pos + len(activity_cols):] if not c.startswith("# ACTIVITY=")]
-
-    ref = pd.read_csv(reference_csv)
-    ref_activity_cols = [c for c in ref.columns if c.startswith("# ACTIVITY=")]
-    key = ["case:concept:name", "start:timestamp", "time:timestamp", "concept:name"]
-
-    aligned = (
-        len(ref) == len(df)
-        and set(ref_activity_cols) == set(activity_cols)
-        and all(k in ref.columns for k in key)
-        and ref[key].astype(str).reset_index(drop=True).equals(
-            df[key].astype(str).reset_index(drop=True)
-        )
-    )
-
-    if aligned:
-        for c in ref_activity_cols:
-            df[c] = ref[c].to_numpy()
-        ordered_activity = ref_activity_cols
-        print(f"Reused '# ACTIVITY=' columns (values and order) from {reference_csv.name}.")
-    else:
-        ordered_activity = sorted(activity_cols)
-        if len(ref):
-            print(f"NOTE: {reference_csv.name} does not align with the regenerated data; "
-                  f"using freshly computed '# ACTIVITY=' columns.")
-
-    return df[list(df.columns)[:first_pos] + list(ordered_activity) + tail]
-
-
-def reinstate_reference_columns(df, reference_csv, columns):
-    """Overwrite `columns` in `df` with the values stored in an existing
-    `reference_csv`, when that file lines up row-for-row with `df` (same length,
-    same case/timestamp/activity keys).
-
-    Used to keep values that are not bit-reproducible across library versions --
-    e.g. 'sigmoid_mm' (a StandardScaler -> sigmoid -> MinMaxScaler chain, which
-    differs in the last float64 digit between numpy/scikit-learn builds) and the
-    'outcome' linear combination derived from it -- identical to the datasets the
-    downstream models were trained on. The reference values are copied in as the
-    original text (object dtype) so ``to_csv`` reproduces them character for
-    character, since pandas' float repr also changed between versions. A fresh
-    run with no reference file keeps the freshly computed values.
-    """
-    reference_csv = Path(reference_csv)
-    columns = [c for c in columns if c in df.columns]
-    if not columns or not reference_csv.exists():
-        return df
-
-    ref = pd.read_csv(reference_csv, dtype={c: str for c in columns})
-    key = [c for c in ["case:concept:name", "start:timestamp", "time:timestamp", "concept:name"]
-           if c in df.columns and c in ref.columns]
-    aligned = (
-        len(ref) == len(df)
-        and all(c in ref.columns for c in columns)
-        and bool(key)
-        and ref[key].astype(str).reset_index(drop=True).equals(
-            df[key].astype(str).reset_index(drop=True)
-        )
-    )
-    if aligned:
-        for c in columns:
-            df[c] = ref[c].to_numpy()
-        print(f"Reused columns {columns} from {reference_csv.name}.")
-    elif len(ref):
-        print(f"NOTE: {reference_csv.name} does not align with the regenerated data; "
-              f"keeping freshly computed {columns}.")
-    return df
 
 def convert_dtypes_bpi12(df, mode):
     if mode == 'experiment':
@@ -356,7 +274,7 @@ def preprocessing_activity_frequency(dataframe, activity_column_name, case_id_na
 def data_labelling(df, case_study):
     case_study = case_study.lower()
 
-    if case_study in ("bpi12", "bpi12_sim", "bpi12_clean", "bpi12_clean_filtered", "bpi12_reordered"):
+    if case_study in ("bpi12_not_reordered", "bpi12_not_reordered_sim", "bpi12", "bpi12_sim", "bpi12_clean", "bpi12_clean_filtered"):
         df["label"] = (
             df.groupby("case:concept:name")["concept:name"]
             .transform(lambda x: x.eq("O_ACCEPTED").any())

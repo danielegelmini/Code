@@ -1,4 +1,3 @@
 case:concept:name,recommendation:act,recommendation:res,reason
-201812004921,Pending Liquidation Request,BOCSER,not_reachable_from_replayed_prefix_marking
-20191011892,Service closure Request with BO responsibility,BOC,not_reachable_from_replayed_prefix_marking
-20191011463,Service closure Request with BO responsibility,BOC,not_reachable_from_replayed_prefix_marking
+201812004921,Pending Liquidation Request,BOC,not_reachable_from_replayed_prefix_marking
+20191008138,Pending Liquidation Request,BOC,not_reachable_from_replayed_prefix_marking

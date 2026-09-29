@@ -13,8 +13,8 @@ end_date_name = 'time:timestamp'
 start_date_name = 'start:timestamp'
 
 params = {
-    #"case_study" : ["BPI12_reordered", "BPI12_reordered_sim"],
-    "case_study": ["BAC", "BPI12_reordered", "BPI12_reordered_sim", "bpi17_before", "bpi17_after"],
+    #"case_study" : ["BPI12", "BPI12_sim"],
+    "case_study": ["BAC", "BPI12", "BPI12_sim", "bpi17_before", "bpi17_after"],
     "optuna_trials": 80,
     "optuna_timeout": None,  # None/0 -> no wall-clock cap, run all optuna_trials
     "early_stopping_rounds": 50,
@@ -50,7 +50,7 @@ def run_for_case_study(case_study, runtime_params):
     train_data = pd.read_csv(data_dir / "train_data.csv", parse_dates=[end_date_name, start_date_name])
     test_data = pd.read_csv(data_dir / "test_data.csv", parse_dates=[end_date_name, start_date_name])
 
-    if case_study in ("BPI12", "BPI12_sim", "BPI12_reordered", "BPI12_reordered_sim"):
+    if case_study in ("BPI12_not_reordered", "BPI12_not_reordered_sim", "BPI12", "BPI12_sim"):
         print("\nApplying BPI12 specific data type conversions...")
         train_data = convert_dtypes_bpi12(train_data, "experiment")
         test_data  = convert_dtypes_bpi12(test_data, "experiment")

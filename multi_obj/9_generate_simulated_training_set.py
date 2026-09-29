@@ -35,7 +35,7 @@ What it produces (under case_studies/<target_case_study>/)
 
 It does NOT create the case-study folder skeleton (discovery_output/, model/,
 recommendations/, ...) or touch scripts 1-8's per-case-study configuration
-(get_features, data_labelling, SPLIT_TIMES). The folder and the Petri
+(get_features, data_labelling). The folder and the Petri
 net / params cache under discovery_output/ are expected to be in place already
 -- copy them from the source case study.
 
@@ -110,7 +110,7 @@ def parse_args():
                              "few traces for any reason, it randomly subsamples whatever remains down "
                              "to n_train_traces, and warns instead of failing if fewer survived than "
                              "the target. Raise this above 1.0 only if you've observed real losses for "
-                             "a given case study/net; empirically (BPI12_reordered_sim) the '>3 events' "
+                             "a given case study/net; empirically (BPI12_sim) the '>3 events' "
                              "filter alone drops ~0 traces, so oversampling was pure surplus there.")
     parser.add_argument("--seed", type=int, default=42,
                         help="Seed for the simulator's RNG and the final trim (default: 42). "

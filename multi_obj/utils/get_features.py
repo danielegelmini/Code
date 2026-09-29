@@ -89,8 +89,8 @@ def get_features(case_study: str) -> Tuple[str, str, str, List[str], List[str], 
             ],
         },
         
-        # --- BPI 2012 ---
-        "BPI12": {
+        # --- BPI 2012 (not reordered: original Dutch W_ labels) ---
+        "BPI12_not_reordered": {
             "continuous": [
                 "AMOUNT_REQ",
                 "# ACTIVITY=A_REGISTERED", "# ACTIVITY=O_CREATED",
@@ -147,12 +147,13 @@ def get_features(case_study: str) -> Tuple[str, str, str, List[str], List[str], 
     }
     _reordered_config = {
         "continuous": [
-            _BPI12_TO_REORDERED_ACTIVITY.get(f, f) for f in CONFIG["BPI12"]["continuous"]
+            _BPI12_TO_REORDERED_ACTIVITY.get(f, f) for f in CONFIG["BPI12_not_reordered"]["continuous"]
         ],
-        "categorical": list(CONFIG["BPI12"]["categorical"]),
+        "categorical": list(CONFIG["BPI12_not_reordered"]["categorical"]),
     }
-    CONFIG["BPI12_reordered"] = _reordered_config
-    CONFIG["BPI12_reordered_sim"] = _reordered_config
+    CONFIG["BPI12_not_reordered_sim"] = CONFIG["BPI12_not_reordered"]
+    CONFIG["BPI12"] = _reordered_config
+    CONFIG["BPI12_sim"] = _reordered_config
 
     if key not in CONFIG:
         raise ValueError(f"Unknown case_study: {case_study!r}")

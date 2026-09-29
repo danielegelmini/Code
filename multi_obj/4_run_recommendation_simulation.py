@@ -235,6 +235,20 @@ def load_inputs(case_dir: Path, case_study: str, case_ids_path: Optional[str]) -
     return clean_prev_log, case_ids
 
 
+def reset_output_folder(folder: Path) -> None:
+    """Create `folder` and delete the CSVs a previous run left in it.
+
+    The diagnostic CSVs (sim_<i>_unreachable_recommendations.csv,
+    excluded_no_recommendation.csv, ...) are written only when there is something
+    to report, so without this a stale one from an earlier run would survive next
+    to the fresh sim_<i>.csv files -- and 5_result_computation.py reads every
+    sim_*_unreachable_recommendations.csv it finds to exclude runs.
+    """
+    folder.mkdir(parents=True, exist_ok=True)
+    for f in folder.glob("*.csv"):
+        f.unlink()
+
+
 def save_engine_diagnostics(sim_engine, sim_folder: Path, run_index: int) -> None:
     """Persist the SimulatorEngine's post-run diagnostics as CSVs next to sim_<run_index>.csv
     (when non-empty), and print a terse case-count summary.
@@ -303,7 +317,7 @@ def run_baseline_simulation(sim_engine: SimulatorEngine, clean_prev_log: pd.Data
     """
     print("=== STARTING BASELINE SIMULATION ===")
     baseline_folder = case_dir / "prosit_simulation_results" / "baseline"
-    baseline_folder.mkdir(parents=True, exist_ok=True)
+    reset_output_folder(baseline_folder)
 
     sentinel_act = f"__NO_RECOMMENDATION__{uuid.uuid4().hex}"
     baseline_recommendations = {
@@ -387,7 +401,7 @@ def _simulate_recommendation_file(
         rec_df = rec_df.loc[~missing_mask].reset_index(drop=True)
 
     current_prev_log = clean_prev_log.copy()
-    if case_study.upper() in ("BPI12", "BPI12_SIM", "BPI12_REORDERED", "BPI12_REORDERED_SIM"):
+    if case_study.upper() in ("BPI12_NOT_REORDERED", "BPI12_NOT_REORDERED_SIM", "BPI12", "BPI12_SIM"):
         print(f"{prefix}Applying BPI12 specific data type conversions...")
         rec_df = convert_dtypes_bpi12(rec_df, "simulation_prep")
         current_prev_log = convert_dtypes_bpi12(current_prev_log, "simulation")
@@ -474,6 +488,7 @@ def run_recommendation_simulations(
                 print("-" * 50)
                 continue
 
+            reset_output_folder(sim_folder)
             _simulate_recommendation_file(
                 sim_engine, csv_path, sim_folder, case_study, clean_prev_log, case_ids, n_sim,
                 label=rank_label,

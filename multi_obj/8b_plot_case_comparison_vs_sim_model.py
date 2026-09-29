@@ -55,7 +55,7 @@ PLOTS_SUBDIR = "plots"
 # Case studies whose resource ids are numeric-looking and must be forced to string --
 # otherwise a query instance built from test_data (read back as int64) mismatches the
 # str categories the model's OneHotEncoder was fit on. Mirrors 5_result_computation.py.
-BPI12_DTYPE_CASE_STUDIES = {"BPI12", "BPI12_sim", "BPI12_reordered", "BPI12_reordered_sim"}
+BPI12_DTYPE_CASE_STUDIES = {"BPI12_not_reordered", "BPI12_not_reordered_sim", "BPI12", "BPI12_sim"}
 
 # BPI12_sim is currently the only fully-simulated training set (see
 # 9_generate_simulated_training_set.py), so the comparison defaults to it.

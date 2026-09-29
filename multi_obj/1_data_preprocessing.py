@@ -15,12 +15,11 @@ from utils.pre_processing_functions import (
     data_labelling,
     data_pre_processing,
     linear_combination,
-    reinstate_reference_columns,
 )
 from datetime import datetime
 from pathlib import Path
 
-from utils.train_test_split import train_test_split
+from utils.train_test_split import train_test_split, compute_split_time
 
 date_format = "%Y-%m-%d %H:%M:%S.%f"
 case_id_name = "case:concept:name"
@@ -29,37 +28,16 @@ end_date_name = "time:timestamp"
 activity_column_name = "concept:name"
 resource_column_name = "org:resource"
 
-# Train/test split timestamp used for each case study (80/20 trace split, aligned
-# to midnight). These reproduce the datasets already stored under case_studies/.
-# Pass --split_time explicitly to override.
-SPLIT_TIMES = {
-    "BAC": "2019-01-31 00:00:00",
-    "BPI12": "2012-02-16 00:00:00",
-    # BPI12_sim's dataset is normally built by 9_generate_simulated_training_set.py
-    # (whole simulated log = train, real BPI12 test set reused), NOT by this script.
-    # This entry only keeps a bare `1_data_preprocessing.py --case_study BPI12_sim`
-    # run from crashing; it would overwrite that purpose-built split.
-    "BPI12_sim": "2012-02-16 00:00:00",
-    # Same underlying 2011-2012 BPIC12 loan-application process as "BPI12" (see
-    # 0_prepare_bpi12_clean_log.py), so the same split date applies.
-    "BPI12_clean": "2012-02-16 00:00:00",
-    "BPI12_clean_filtered": "2012-02-16 00:00:00",
-    # Same 4685 cases as BPI12, only event order/labels corrected within same-instant
-    # ties (see discovery/reorder_bpi12_ties_from_clean_log.py) -- same split date.
-    "BPI12_reordered": "2012-02-16 00:00:00",
-    "bpi17_before": "2016-05-28 00:00:00",
-    "bpi17_after": "2016-11-01 00:00:00",
-}
-
 
 def main():
 
     # Setup argument parser
     parser = argparse.ArgumentParser(description="Process process-mining data for a case study.")
     parser.add_argument("--case_study", type=str, required=True, help="Name of the case study folder/file")
-    parser.add_argument("--split_time", type=str, default=None,
-                        help="Timestamp to split train and test data (e.g., '2012-02-16 00:00:00'). "
-                             "Defaults to the value stored in SPLIT_TIMES for the case study.")
+    parser.add_argument("--train_ratio", type=float, default=0.8,
+                        help="The split time t_split is the earliest time at which this share of the traces is "
+                             "completed (default: 0.8). Traces completed by t_split -> train; traces running at "
+                             "t_split -> test; traces starting after t_split -> excluded.")
     parser.add_argument("--lambda_value", type=float, default=0.5, help="Weight for linear combination of normalized remaining time and case outcome (default: 0.5)")
     parser.add_argument("--output_suffix", type=str, default="",
                         help="Suffix appended to every output CSV file name (e.g. '_new'). "
@@ -67,15 +45,8 @@ def main():
 
     args = parser.parse_args()
     case_study = args.case_study
-    split_time = args.split_time or SPLIT_TIMES.get(case_study)
     lambda_value = args.lambda_value
     output_suffix = args.output_suffix
-
-    if split_time is None:
-        raise SystemExit(
-            f"No --split_time given and no default known for case study '{case_study}'. "
-            f"Known defaults: {sorted(SPLIT_TIMES)}"
-        )
 
     # ==========================================
     # [ STEP 1: PREPROCESSING ]
@@ -95,6 +66,8 @@ def main():
     print("\n" + "="*50)
     print(" >>> SPLITTING TRAIN & TEST DATA <<< ")
     print("="*50)
+    split_time = compute_split_time(df, case_id_name, args.train_ratio)
+    print(f"Split time (earliest time at which {args.train_ratio:.0%} of the traces are completed): {split_time}")
     train_data, test_data = train_test_split(df, case_study, split_time, "case:concept:name",
                                              output_suffix=output_suffix)
 
@@ -157,16 +130,6 @@ def main():
     output_dir = Path(f"./case_studies/{case_study}")
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Keep 'sigmoid_mm' (a training target) and the derived 'outcome' identical to
-    # any dataset already on disk -- they only differ in the last float64 digit
-    # across numpy/scikit-learn versions, not in a meaningful way.
-    noise_cols = ["sigmoid_mm", "outcome"]
-    train_data = reinstate_reference_columns(train_data, output_dir / "train_data.csv", noise_cols)
-    test_data = reinstate_reference_columns(test_data, output_dir / "test_data.csv", noise_cols)
-    test_log = reinstate_reference_columns(test_log, output_dir / "test_log.csv", noise_cols)
-    test_log_with_last_act = reinstate_reference_columns(
-        test_log_with_last_act, output_dir / "test_log_with_last_act.csv", noise_cols)
-
     train_data.to_csv(output_dir / f"train_data{output_suffix}.csv", index=False)
     test_data.to_csv(output_dir / f"test_data{output_suffix}.csv", index=False)
     test_log.to_csv(output_dir / f"test_log{output_suffix}.csv", index=False)
@@ -181,7 +144,7 @@ if __name__ == "__main__":
     main()
 
 # Running commands:
-# python 1_data_preprocessing.py --case_study "BPI12"        --split_time "2012-02-16 00:00:00" --lambda_value 0.5
-# python 1_data_preprocessing.py --case_study "BAC"          --split_time "2019-01-31 00:00:00" --lambda_value 0.5
-# python 1_data_preprocessing.py --case_study "bpi17_before" --split_time "2016-05-28 00:00:00" --lambda_value 0.5
-# python 1_data_preprocessing.py --case_study "bpi17_after"  --split_time "2016-11-01 00:00:00" --lambda_value 0.5
+# python 1_data_preprocessing.py --case_study "BPI12"        --lambda_value 0.5
+# python 1_data_preprocessing.py --case_study "BAC"          --lambda_value 0.5
+# python 1_data_preprocessing.py --case_study "bpi17_before" --lambda_value 0.5
+# python 1_data_preprocessing.py --case_study "bpi17_after"  --lambda_value 0.5

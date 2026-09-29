@@ -9,7 +9,7 @@ Pre-processing helper: re-estimate the activity start times of a case-study even
 
 Motivation
 ----------
-In BPI12_reordered, bpi17_before and bpi17_after the recorded ``start:timestamp`` of
+In BPI12, bpi17_before and bpi17_after the recorded ``start:timestamp`` of
 every event is not a real start: it is a copy of the ``time:timestamp`` (completion)
 of the previous event of the same case (and the first event of each case is
 instantaneous). So every activity "starts" the instant its predecessor ends, the
@@ -52,8 +52,8 @@ What it produces (under case_studies/<case_study>/)
 Default configuration (see DEFAULT_* below for the sources)
 -----------------------------------------------------------
   * concurrency oracle: Heuristics Miner, thresholds 0.9 (the paper's proposal, sec. III.ii)
-  * system accounts (start = end): 112 (BPI12_reordered), User_1 (bpi17_before/after)
-  * unknown resource (start = enabled time): "0" (BPI12_reordered)
+  * system accounts (start = end): 112 (BPI12), User_1 (bpi17_before/after)
+  * unknown resource (start = enabled time): "0" (BPI12)
   * instantaneous activities (start = end): every A_ and O_ activity
   * outlier threshold: off
 
@@ -95,9 +95,9 @@ RESOURCE_COLUMN_NAME = "org:resource"
 START_DATE_NAME = "start:timestamp"
 END_DATE_NAME = "time:timestamp"
 
-DEFAULT_CASE_STUDIES = ["BPI12_reordered", "bpi17_before", "bpi17_after"]
-DEFAULT_BOT_RESOURCES = "BPI12_reordered=112;bpi17_before=User_1;bpi17_after=User_1"
-DEFAULT_MISSING_RESOURCE = "BPI12_reordered=0"
+DEFAULT_CASE_STUDIES = ["BPI12", "bpi17_before", "bpi17_after"]
+DEFAULT_BOT_RESOURCES = "BPI12=112;bpi17_before=User_1;bpi17_after=User_1"
+DEFAULT_MISSING_RESOURCE = "BPI12=0"
 DEFAULT_INSTANT_ACTIVITY_PREFIXES = "A_,O_"
 
 LOG_IDS = EventLogIDs(
@@ -147,11 +147,11 @@ def parse_args():
     parser.add_argument("--l1l_threshold", type=float, default=0.9, help="Heuristics oracle: length-1-loop threshold.")
     parser.add_argument("--bot_resources", default=DEFAULT_BOT_RESOURCES,
                         help="Resources executing instantaneously, per case study, e.g. "
-                             "\"BPI12_reordered=112;bpi17_before=User_1\". Their events get start = end. "
+                             "\"BPI12=112;bpi17_before=User_1\". Their events get start = end. "
                              "Pass \"\" to disable.")
     parser.add_argument("--missing_resource", default=DEFAULT_MISSING_RESOURCE,
                         help="Placeholder resource id meaning 'unknown resource', per case study, e.g. "
-                             "\"BPI12_reordered=0\". Its events get start = enabled time. Pass \"\" to disable.")
+                             "\"BPI12=0\". Its events get start = enabled time. Pass \"\" to disable.")
     parser.add_argument("--instant_activities", default="",
                         help="Activities forced to be instantaneous, per case study, e.g. \"bpi17_before=A_Submitted,A_Complete\".")
     parser.add_argument("--instant_activity_prefixes", default=DEFAULT_INSTANT_ACTIVITY_PREFIXES,
@@ -253,7 +253,9 @@ def process_case_study(base_dir: Path, cs: str, args) -> None:
     earlier = (est["estimated_start"] < est[START_DATE_NAME]).mean()
     print(f"  start changed for {later + earlier:.1%} of events (later: {later:.1%}, earlier: {earlier:.1%}); "
           f"events with waiting > 0: {(waiting > pd.Timedelta(0)).mean():.1%}")
-    kept = (est[END_DATE_NAME] - est["estimated_start"]).sum() / (est[END_DATE_NAME] - est[START_DATE_NAME]).sum()
+    # Sum in float seconds: summing int64-ns timedeltas overflows past ~292 years (bpi17's fake durations do).
+    kept = ((est[END_DATE_NAME] - est["estimated_start"]).dt.total_seconds().sum()
+            / (est[END_DATE_NAME] - est[START_DATE_NAME]).dt.total_seconds().sum())
     print(f"  total processing time kept: {kept:.1%} of the original")
 
 

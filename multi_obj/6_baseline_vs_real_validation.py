@@ -15,7 +15,7 @@ deltas come from the simulator itself or from something upstream
 
 ALSO validates, separately, the FULLY SIMULATED dataset (an entire training
 set simulated from scratch by 9_generate_simulated_training_set.py, e.g.
-case_studies/BPI12_reordered_sim/simulated_event_log.csv) against the same
+case_studies/BPI12_sim/simulated_event_log.csv) against the same
 real log -- a different comparison from the baseline one above: the baseline
 runs replay each real case's own PREFIX and simulate only its continuation,
 while the fully simulated dataset has no real prefix at all, every trace is
@@ -50,19 +50,19 @@ from utils.simulation_functions import (
 )
 from utils.pre_processing_functions import convert_dtypes_bpi12
 
-CASE_STUDIES = ["BAC", "BPI12_reordered", "bpi17_after", "bpi17_before"]
+CASE_STUDIES = ["BAC", "BPI12", "bpi17_after", "bpi17_before"]
 SIM_SUBDIR = "prosit_simulation_results"
 BASELINE_FOLDER_NAME = "baseline"
 
 ENCODED_ACTIVITY_BY_CASE_STUDY = {
+    "BPI12_not_reordered": "O_ACCEPTED",
+    "BPI12_not_reordered_sim": "O_ACCEPTED",
     "BPI12": "O_ACCEPTED",
     "BPI12_sim": "O_ACCEPTED",
-    "BPI12_reordered": "O_ACCEPTED",
-    "BPI12_reordered_sim": "O_ACCEPTED",
     "bpi17_after": "O_Accepted",
     "bpi17_before": "O_Accepted",
 }
-BPI12_DTYPE_CASE_STUDIES = {"BPI12", "BPI12_sim", "BPI12_reordered", "BPI12_reordered_sim"}
+BPI12_DTYPE_CASE_STUDIES = {"BPI12_not_reordered", "BPI12_not_reordered_sim", "BPI12", "BPI12_sim"}
 
 # Naming convention already used across the pipeline (9_generate_simulated_training_set.py
 # and friends): a fully-simulated case study is named "<source_case_study>_sim".

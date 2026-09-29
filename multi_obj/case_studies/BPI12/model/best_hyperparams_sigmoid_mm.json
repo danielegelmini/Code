@@ -1,9 +1,10 @@
 {
-    "learning_rate": 0.20502274789356525,
-    "depth": 10,
-    "l2_leaf_reg": 1.1906017190200622,
-    "colsample_bylevel": 0.6020374087447005,
-    "bootstrap_type": "Bernoulli",
-    "grow_policy": "SymmetricTree",
-    "subsample": 0.5077402384242027
+    "learning_rate": 0.16443441585072144,
+    "depth": 6,
+    "l2_leaf_reg": 3.1072901876383416,
+    "colsample_bylevel": 0.9839726773808422,
+    "bootstrap_type": "Bayesian",
+    "grow_policy": "Depthwise",
+    "bagging_temperature": 0.5019038320222098,
+    "min_data_in_leaf": 1
 }
