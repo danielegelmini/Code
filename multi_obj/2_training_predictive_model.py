@@ -26,6 +26,7 @@ params = {
             "l2_leaf_reg": {"type": "float", "min": 1.0, "max": 50.0, "log": True},
             "colsample_bylevel": {"type": "float", "min": 0.6, "max": 1.0},
             "bootstrap_type": {"type": "categorical", "choices": ["Bayesian", "Bernoulli", "MVS"]},
+            "grow_policy": {"type": "categorical", "choices": ["SymmetricTree", "Depthwise"]},
         },
 
         "sigmoid_mm": {

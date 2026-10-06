@@ -5,7 +5,7 @@ import heapq
 import bisect
 import time
 from collections import deque
-from datetime import datetime
+from datetime import datetime, timedelta
 from tqdm import tqdm
 
 from typing import Union, List, Dict, Optional
@@ -16,6 +16,9 @@ from pm4py.objects.log.obj import EventLog, Trace, Event
 from pm4py.algo.conformance.alignments.petri_net import algorithm as alignments
 
 from prosit.discovery.cf_discovery import discover_weight_transitions
+from prosit.discovery.time_first_discovery import (
+    discover_time_first_models, feature_vector, sample_wait_days, route_probabilities,
+)
 from prosit.discovery.time_discovery import discover_execution_time_distributions, discover_arrival_time, discover_waiting_time
 from prosit.discovery.calendar_discovery import discover_res_calendars, discover_arrival_calendar
 from prosit.discovery.resource_discovery import discover_resources_list, return_multitasking_resources, discover_resource_acts_prob, discover_resources_per_act, discover_weight_resources
@@ -37,6 +40,7 @@ from prosit.utils.distribution_utils import sampling_from_dist
 from prosit.utils.save_and_load_utils import decision_rules_to_dict, transition_to_name, convert_calendar_names, dict_to_decrules, name_to_transition, fromstr_to_scipy
 
 import json
+import joblib
 import os
 
 
@@ -93,6 +97,11 @@ class SimulatorParameters:
         self.waiting_time_distributions: dict = {'auto': ('fixed', 1, 1, 1, 1)}
 
         self.rules_mode: bool = False
+
+        # "time first, then route" models (see prosit/discovery/time_first_discovery.py):
+        # {"features": [...], "time": {place: ...}, "route": {decision place: ...}}, or None
+        # when not discovered (the engine then uses transition_weights + waiting_time_distributions).
+        self.time_first_models: Optional[dict] = None
 
     @staticmethod
     def _sanitize_for_json(value):
@@ -201,7 +210,8 @@ class SimulatorParameters:
             max_depth_tree: int = 3,
             incremental_discovery: bool = False,
             grace_period: int = 1000,
-            verbose: bool = True
+            verbose: bool = True,
+            time_first: bool = True
         ):
         """
         Fits every simulation parameter of this SimulatorParameters instance from a real
@@ -238,6 +248,9 @@ class SimulatorParameters:
                 incremental_discovery=True). Defaults to 1000.
             verbose (bool, optional): if True, print a progress message before each
                 discovery stage. Defaults to True.
+            time_first (bool, optional): if True, also fit the "time first, then route"
+                models (self.time_first_models, see time_first_discovery.py) the engine uses
+                instead of transition_weights + waiting_time_distributions. Defaults to True.
 
         Returns:
             None (mutates self in place: transition_weights, execution_time_distributions,
@@ -382,6 +395,14 @@ class SimulatorParameters:
         else:
             self.arrival_time_distribution = discover_arrival_time(log, self.arrival_calendar, max_depths=max_depth_cv)
 
+        if time_first:
+            if verbose:
+                print("Time-first routing discovery (time model per place, route model per decision place)...")
+            self.time_first_models = discover_time_first_models(
+                df_features, self.net, self.label_data_attributes, self.label_data_attributes_categorical,
+                self.attribute_values_label_categorical, self.net_transition_labels,
+            )
+
 
     def to_dict(self) ->  dict:
         """
@@ -456,6 +477,20 @@ class SimulatorParameters:
         with open(temp_path, "w", encoding="utf-8") as json_file:
             json.dump(dict_params, json_file, indent=4)
         os.replace(temp_path, path)
+
+        # The time-first models hold scikit-learn trees, which JSON cannot store: they go to a
+        # companion joblib file next to the JSON (removed if stale, so the two always match).
+        models_path = self.time_first_models_path(path)
+        if self.time_first_models is not None:
+            joblib.dump(self.time_first_models, f"{models_path}.tmp")
+            os.replace(f"{models_path}.tmp", models_path)
+        elif os.path.exists(models_path):
+            os.remove(models_path)
+
+    @staticmethod
+    def time_first_models_path(json_path: str) -> str:
+        """Companion file of a parameters JSON holding its time-first models."""
+        return f"{os.path.splitext(str(json_path))[0]}_time_first.joblib"
 
 
     def from_dict(self, dict_params):
@@ -561,7 +596,23 @@ class SimulatorParameters:
                 "Remove the file and rerun discovery."
             ) from exc
         self.from_dict(dict_params)
+        models_path = self.time_first_models_path(path)
+        self.time_first_models = joblib.load(models_path) if os.path.exists(models_path) else None
 
+
+
+def resource_free_time(schedule: list, t):
+    """First instant >= t at which no (start, end) interval in `schedule` is still open.
+
+    The schedule is not in chronological order (prefix rows are appended case by case,
+    simulated events in the order their cases are popped), so its last entry is not the
+    resource's latest commitment: follow the chain of intervals covering t instead.
+    """
+    while True:
+        covering_ends = [end for start, end in schedule if start <= t < end]
+        if not covering_ends:
+            return t
+        t = max(covering_ends)
 
 
 class SimulatorEngine:
@@ -613,6 +664,10 @@ class SimulatorEngine:
         # counts used for probabilistic weighting of subsequent simulated events -- see
         # _reconstruct_prefix_state.
         self.last_model_inserted_activities = []
+        # Historical prefixes the net replays exactly but that leave more than one marking
+        # consistent with them (ambiguous silent routing): the first one in a deterministic
+        # order is used -- see _reconstruct_prefix_state.
+        self.last_ambiguous_prefixes = []
         # Cache of _reconstruct_prefix_state results, keyed by (case id, prefix activity
         # sequence). Alignment computation is not free, and the same historical prefix is
         # replayed identically every time apply() is called with it -- e.g. across the N
@@ -625,6 +680,12 @@ class SimulatorEngine:
         # max_reachability_search_nodes / max_reachability_search_seconds.
         self._reachability_search_max_nodes = 30000
         self._reachability_search_max_seconds = 5.0
+        # "Time first, then route" (see time_first_discovery.py): used whenever the parameters
+        # carry the models; set to False to simulate with the per-transition routing weights and
+        # per-resource waiting times instead (the previous behaviour).
+        self.use_time_first = simulation_parameters.time_first_models is not None
+        # Per-run counts of how the time-first steps were taken (reset by apply()).
+        self.last_time_first_stats = {}
 
     def _build_transition_rank(self) -> dict:
         """
@@ -775,13 +836,64 @@ class SimulatorEngine:
 
         return None, "exhausted"
 
+    def _replay_prefix_exactly(self, labels, max_closure_markings=20000):
+        """
+        Replays a sequence of activity labels on the net, allowing any silent transitions
+        between them, and returns every marking reachable right after the last label (no
+        trailing silent transitions), in a deterministic order. Returns [] if some label
+        cannot fire from any marking consistent with the labels before it, i.e. the net
+        cannot replay the sequence exactly.
+
+        Args:
+            labels (iterable of str): the activity labels, in order.
+            max_closure_markings (int, optional): cap on the markings explored through
+                silent transitions before each label, against a state-space blow-up.
+
+        Returns:
+            list of Marking: the markings consistent with the whole sequence.
+        """
+        key = lambda m: frozenset((p.name, n) for p, n in m.items())
+        states = [self.initial_marking]
+        for label in labels:
+            closure = {key(m): m for m in states}
+            stack = list(states)
+            while stack:
+                m = stack.pop()
+                for t in self._get_enabled_transitions_sorted(m):
+                    if t.label is None:
+                        m2 = update_current_marking(m, t)
+                        if key(m2) not in closure and len(closure) < max_closure_markings:
+                            closure[key(m2)] = m2
+                            stack.append(m2)
+            fired = {}
+            for m in closure.values():
+                for t in self._get_enabled_transitions_sorted(m):
+                    if t.label == label:
+                        m2 = update_current_marking(m, t)
+                        fired[key(m2)] = m2
+            if not fired:
+                return []
+            states = [fired[k] for k in sorted(fired, key=sorted)]
+        return states
+
     def _reconstruct_prefix_state(self, case_id_c, prefix_log_c_sorted):
         """
         Reconstructs the Petri net marking and per-activity firing counts after replaying a
-        case's historical prefix, using cost-based alignment instead of naive token-based
-        replay.
+        case's historical prefix.
 
-        Why: token-based replay, when a trace does not perfectly fit the model, patches over
+        First choice -- exact replay (_replay_prefix_exactly): if the net can fire the prefix's
+        activities in order (silent transitions allowed in between), the marking it reaches
+        is the true state after the prefix. When several markings are consistent with the
+        prefix (ambiguous silent routing), the first in a deterministic order is used and
+        their number is returned as "n_consistent_markings".
+
+        Fallback -- alignment, only for prefixes the net cannot replay exactly. The alignment
+        targets the net's final marking, so for such a prefix it may also drop trailing
+        events (log moves) instead of inserting the whole missing future; that is why it is
+        not used when an exact replay exists: on BAC it dropped the last prefix event(s) of
+        ~54% of the test prefixes, all of which the net replays exactly.
+
+        Why not token-based replay: token-based replay, when a trace does not perfectly fit the model, patches over
         the mismatch by inserting "missing tokens" wherever a logged activity is not
         structurally enabled. The resulting marking can then contain tokens that are not
         actually reachable from the initial marking via any legal firing sequence -- observed
@@ -795,7 +907,7 @@ class SimulatorEngine:
         0 cases where the final marking became unreachable after this change (was 1 case
         hitting the max_events_per_case safety valve under token-based replay).
 
-        How: pm4py's alignment always targets the net's actual final marking, which for a
+        How (fallback): pm4py's alignment always targets the net's actual final marking, which for a
         partial prefix means it also inserts "model moves" to force completion of the whole
         remaining process -- not what we want here, we only want the state after the prefix.
         So the alignment is truncated right after its last move that corresponds to a real
@@ -830,11 +942,31 @@ class SimulatorEngine:
                     fired against the net to explain the prefix but which are NOT present in
                     the historical log itself (see the inline comment above where this list
                     is built) -- affects "history" but is never written to the output log.
+                    Always empty for an exactly replayed prefix.
+                "n_consistent_markings" (int): how many markings the exact replay found
+                    consistent with the prefix (1 = unambiguous; always 1 for the fallback).
         """
         cache_key = (case_id_c, tuple(prefix_log_c_sorted["concept:name"]))
         cached = self._prefix_state_cache.get(cache_key)
         if cached is not None:
             return cached
+
+        # A prefix the net can replay exactly needs no alignment: the marking it reaches is
+        # the true state after the prefix, and nothing is dropped or inserted.
+        consistent_markings = self._replay_prefix_exactly(prefix_log_c_sorted["concept:name"])
+        if consistent_markings:
+            history = {t: 0 for t in self.simulation_parameters.net_transition_labels}
+            for label in prefix_log_c_sorted["concept:name"]:
+                history[label] += 1
+            result = {
+                "marking": consistent_markings[0],
+                "history": history,
+                "is_fit": True,
+                "inserted_activities": [],
+                "n_consistent_markings": len(consistent_markings),
+            }
+            self._prefix_state_cache[cache_key] = result
+            return result
 
         trace = Trace()
         for act in prefix_log_c_sorted["concept:name"]:
@@ -892,6 +1024,7 @@ class SimulatorEngine:
             "history": history,
             "is_fit": is_fit,
             "inserted_activities": inserted_activities,
+            "n_consistent_markings": 1,
         }
         self._prefix_state_cache[cache_key] = result
         return result
@@ -907,10 +1040,9 @@ class SimulatorEngine:
         3. Otherwise, search for a legal path using ONLY invisible/silent transitions
            (_bfs_path_to_activity, only_invisible=True) to reach it "for free"; if found,
            queue the rest of the path and start consuming it.
-        4. Otherwise (and only if step 3's search was not itself capped, since a wider
-           search would almost certainly hit the same cap too), search a broader path that
-           may also fire visible transitions along the way.
-        5. If no path is found at all: in strict mode (case["strict_recommendation"]),
+        4. Otherwise the recommendation is not reachable as the next visible activity:
+           paths through other visible transitions are never taken (they would fire those
+           activities without any event, time or history). In strict mode (case["strict_recommendation"]),
            record the failure in self.last_unreachable_recommendations (and raise if
            self.raise_on_unreachable_recommendation is set); either way, give up on the
            recommendation (clear rec_act/rec_res) so the caller falls back to normal
@@ -965,26 +1097,15 @@ class SimulatorEngine:
             case["pending_invisible_path"] = invisible_path[1:]
             return chosen_transition, None, case["enabled"].get(chosen_transition, self._get_case_enabled_time(case)), True
 
-        # If invisible-only path does not exist, walk the deterministic shortest
-        # path until recommendation becomes enabled while still emitting the
-        # recommendation as the first post-prefix visible activity. Skipped when
-        # the invisible-only search already hit the node/time cap: the full search
-        # (which allows strictly more transitions per step, so branches even wider)
-        # would almost certainly hit the same cap too, for no benefit.
-        reach_path, reach_status = (None, invisible_status)
-        if invisible_status != "capped":
-            reach_path, reach_status = self._bfs_path_to_activity(case["marking"], case["rec_act"], only_invisible=False)
-            if reach_path is not None:
-                chosen_transition = reach_path[0]
-                case["pending_invisible_path"] = reach_path[1:]
-                return chosen_transition, None, case["enabled"].get(chosen_transition, self._get_case_enabled_time(case)), True
-
-        # In strict mode, never consume other visible activities before recommendation.
+        # No invisible-only path: the recommendation cannot be the next visible activity.
+        # Reaching it through other visible transitions is deliberately not attempted --
+        # those activities would fire with no event, time or history, so the next real step
+        # would no longer be the recommendation.
         if case.get("strict_recommendation", False):
             case_external_id = case.get("case_external_id", case.get("case_id"))
             rec_act = case.get("rec_act")
             rec_res = case.get("rec_res")
-            if "capped" in (invisible_status, reach_status):
+            if invisible_status == "capped":
                 reason = (
                     "reachability_search_aborted: the search space explored while looking for a "
                     "legal path to the recommended activity exceeded the node/time safety cap "
@@ -1040,6 +1161,99 @@ class SimulatorEngine:
             return enabled_time
         return max(enabled_time, lock_until)
 
+    # ------------------------------------------------------------------ time first, then route
+    def _marked_place_with_time_model(self, case, transition):
+        """A marked input place of `transition` that has a time model, or None."""
+        models = self.simulation_parameters.time_first_models
+        for arc in transition.in_arcs:
+            if case["marking"].get(arc.source, 0) > 0 and arc.source.name in models["time"]:
+                return arc.source
+        return None
+
+    def _active_place(self, case, enabled_transitions):
+        """The single place every enabled transition leaves from, when it has a time model.
+
+        None when the enabled transitions come from different places (parallel branches) or the
+        place has too little data for a model: those steps keep the per-transition routing weights
+        and per-resource waiting times.
+        """
+        for t in enabled_transitions:
+            place = self._marked_place_with_time_model(case, t)
+            if place is not None:
+                outs = {a.target for a in place.out_arcs}
+                if all(e in outs for e in enabled_transitions):
+                    return place
+        return None
+
+    def _fix_next_event_time(self, case, place, enabled_transitions):
+        """Draws, once per visible event, how long after the case arrived in `place` its next visible
+        event starts, and stores it as case["forced_start"] (consumed when that event is executed).
+
+        The first step after the train/test split of a case that is idle at the split (no activity in
+        progress) is measured from its last logged event and must be at least the idle time already
+        observed up to the split: the case is known to have done nothing in between.
+        """
+        if "pending_wait_days" in case:
+            return
+        models = self.simulation_parameters.time_first_models
+        t_arrival = min(case["enabled"][t] for t in enabled_transitions)
+        t0, min_days = t_arrival, 0.0
+        last_end = case.get("last_logged_end")
+        if (case.get("sim_event_count", 0) == 0 and not case.get("had_running_activity")
+                and last_end is not None and last_end < t_arrival):
+            t0, min_days = last_end, (t_arrival - last_end).total_seconds() / 86400
+            self.last_time_first_stats["idle_conditioned"] += 1
+        start = case.get("first_start") or case["arrival_time"]
+        x = feature_vector(models, case["attributes"], case["history"], max((t0 - start).total_seconds() / 86400, 0.0))
+        wait = sample_wait_days(models, place.name, x, min_days, random)
+        case["pending_wait_days"], case["pending_features"] = wait, x
+        case["forced_start"] = t0 + timedelta(days=wait)
+
+    def _choose_transition_time_first(self, case, enabled_transitions):
+        """Time first, then route: the next event's time is drawn from the time model of the active
+        place, then the branch from its route model given that time. Returns None when the step has
+        to fall back to the per-transition routing weights (see _active_place)."""
+        models = self.simulation_parameters.time_first_models
+        place = self._active_place(case, enabled_transitions)
+        if place is None:
+            self.last_time_first_stats["fallback_steps"] += 1
+            return None
+        self._fix_next_event_time(case, place, enabled_transitions)
+        self.last_time_first_stats["time_first_steps"] += 1
+        if len(enabled_transitions) == 1:
+            return enabled_transitions[0]
+        if place.name not in models["route"]:
+            return None
+        probs = route_probabilities(models, place.name, case["pending_features"], case["pending_wait_days"])
+        weights = [probs.get(t.name, 0.0) for t in enabled_transitions]
+        if sum(weights) <= 0:
+            return None
+        return random.choices(enabled_transitions, weights=weights)[0]
+
+    def _step_running_activity(self, case, enabled_transitions):
+        """First steps of a case with an activity in progress at the split: execute that activity
+        first, with its logged start and resource and a duration that ends after the split (the
+        silent transitions needed to enable it are fired first). Returns None if the activity cannot
+        be reached from the replayed prefix marking."""
+        activity, resource, start = case["running_activity"]
+        if case.get("running_path"):
+            return case["running_path"].pop(0)
+        labels = [t.label for t in enabled_transitions]
+        if activity in labels:
+            case["running_activity"] = None
+            case["exact_start"], case["must_end_after"] = start, case["resume_time"]
+            if resource in self.simulation_parameters.calendars:
+                case["forced_resource"] = resource
+            self.last_time_first_stats["running_completed"] += 1
+            return enabled_transitions[labels.index(activity)]
+        path, _ = self._bfs_path_to_activity(case["marking"], activity, only_invisible=True)
+        if path:
+            case["running_path"] = list(path[1:])
+            return path[0]
+        case["running_activity"] = None
+        self.last_time_first_stats["running_unreachable"] += 1
+        return None
+
     def apply(
         self,
         n_traces: int = 1,
@@ -1049,6 +1263,8 @@ class SimulatorEngine:
         max_events_per_case: Optional[int] = 300,
         max_reachability_search_nodes: int = 30000,
         max_reachability_search_seconds: float = 5.0,
+        resume_time: Optional[datetime] = None,
+        running_activities: Optional[dict] = None,
     ) -> pd.DataFrame:
         """
         Runs the discrete-event simulation itself and returns the resulting event log.
@@ -1078,12 +1294,12 @@ class SimulatorEngine:
           contains the original prev_log rows concatenated with the newly simulated
           continuation events.
 
-        Every call resets and repopulates four diagnostic lists on self, which the caller
+        Every call resets and repopulates five diagnostic lists on self, which the caller
         can inspect afterwards: self.last_unreachable_recommendations (recommendations that
         could not be honored at all), self.last_runaway_cases (cases force-truncated by
-        max_events_per_case), self.last_non_fitting_prefixes and
-        self.last_model_inserted_activities (informational, from prefix reconstruction --
-        see _reconstruct_prefix_state).
+        max_events_per_case), self.last_non_fitting_prefixes,
+        self.last_model_inserted_activities and self.last_ambiguous_prefixes (informational,
+        from prefix reconstruction -- see _reconstruct_prefix_state).
 
         Args:
             n_traces (int, optional): number of brand-new cases to generate. Ignored (forced
@@ -1118,6 +1334,21 @@ class SimulatorEngine:
             reported as unreachable with a reason that makes clear it is undetermined (search
             aborted) rather than proven impossible -- see self.last_unreachable_recommendations.
 
+        resume_time (datetime, optional): the instant the historical prefixes were cut at
+            (the train/test split time). A prefix holds every event completed by then, so a
+            case whose last logged event ended earlier is known to have completed nothing in
+            between: its continuation is simulated from max(prefix end, resume_time), never
+            from inside that already-observed idle stretch. None (default) continues each
+            case right after its own last logged event. Ignored in pure-generation mode.
+            With the time-first models, the first event after the split of a case idle at the
+            split is also drawn knowing how long the case has already been idle.
+
+        running_activities (dict, optional): {case id (str): (activity, resource, start)} of the
+            activities in progress at resume_time (started by then, not completed by then; their
+            end is not used). With the time-first models, such a case first completes that
+            activity, keeping its logged start and resource, with a duration that ends after
+            resume_time. Defaults to None (no activity in progress).
+
         Returns:
             pd.DataFrame: the resulting event log, with columns "case:concept:name",
             "concept:name", "org:resource", "start:timestamp", "time:timestamp" (plus any
@@ -1132,6 +1363,11 @@ class SimulatorEngine:
         self.last_runaway_cases = []
         self.last_non_fitting_prefixes = []
         self.last_model_inserted_activities = []
+        self.last_ambiguous_prefixes = []
+        self.last_time_first_stats = {"time_first_steps": 0, "fallback_steps": 0, "idle_conditioned": 0,
+                                      "running_completed": 0, "running_unreachable": 0}
+        time_first = self.use_time_first and self.simulation_parameters.time_first_models is not None
+        running_activities = {str(k): v for k, v in (running_activities or {}).items()}
         self._reachability_search_max_nodes = max_reachability_search_nodes
         self._reachability_search_max_seconds = max_reachability_search_seconds
 
@@ -1228,6 +1464,11 @@ class SimulatorEngine:
                 prefix_log_c = prefixes_log[prefixes_log['case:concept:name'] == case_id_c]
                 prefix_log_c_sorted = prefix_log_c.sort_values('time:timestamp')
                 prefix_end_c = prefix_log_c_sorted['time:timestamp'].iloc[-1]
+                last_logged_end_c = prefix_end_c
+                if resume_time is not None:
+                    # the continuation starts at the cut instant, not inside the stretch between
+                    # the last logged event and the cut, which is known to hold no completed event
+                    prefix_end_c = max(prefix_end_c, resume_time)
                 rec_act_c = prefix_log_c_sorted['recommendation:act'].iloc[-1]
                 rec_res_c = prefix_log_c_sorted['recommendation:res'].iloc[-1]
 
@@ -1248,6 +1489,11 @@ class SimulatorEngine:
                                    "(a genuine deviation). Informational only: unlike the old token-based "
                                    "replay, the reconstructed marking is always legally reachable, so this "
                                    "does not by itself put the case at risk of an unrecoverable loop."),
+                    })
+                if prefix_state["n_consistent_markings"] > 1:
+                    self.last_ambiguous_prefixes.append({
+                        "case:concept:name": str(case_id_c),
+                        "n_consistent_markings": prefix_state["n_consistent_markings"],
                     })
                 if prefix_state["inserted_activities"]:
                     self.last_model_inserted_activities.append({
@@ -1274,7 +1520,7 @@ class SimulatorEngine:
 
                 #case creation
                 case = {
-                        "arrival_time": prefix_end_c,                   #end of the prefix
+                        "arrival_time": prefix_end_c,                   #end of the prefix, or the cut instant if later
                         "case_id": c,                                   #index that represent the case id
                         "case_external_id": case_id_c,                  #real case id 
                         "marking": current_marking_c,                   #current marking at the end of the prefix
@@ -1289,6 +1535,17 @@ class SimulatorEngine:
                         "strict_recommendation": pd.notna(rec_act_c),   #true only if the recommendation is something real, false for the baseline 
                         "sim_event_count": 0,                           #how many events are generated for this case
                     }
+
+                # state at the split, used by the time-first routing: real case start, last logged
+                # event, and the activity in progress at the split if any
+                running_c = running_activities.get(str(case_id_c))
+                case.update({
+                    "first_start": prefix_log_c_sorted['start:timestamp'].min(),
+                    "last_logged_end": last_logged_end_c,
+                    "running_activity": running_c,
+                    "had_running_activity": running_c is not None,
+                    "resume_time": resume_time,
+                })
 
                 #place token time is used to compute when a transition is enabled, we need to have all input's token to fire, the time will be the max between those
                 for place in self.net.places:
@@ -1373,6 +1630,11 @@ class SimulatorEngine:
                 "recommendation_lock_until": None,
                 "strict_recommendation": False,
                 "sim_event_count": 0,
+                "first_start": current_arr_ts,
+                "last_logged_end": None,
+                "running_activity": None,
+                "had_running_activity": False,
+                "resume_time": None,
             }
             for place in self.net.places:
                 case["place_token_time"][place] = None
@@ -1411,26 +1673,48 @@ class SimulatorEngine:
 
             enabled_transitions = self._sort_transitions(case["enabled"].keys())
             flag_rec = False
-            chosen_transition, activity, t_enabled, flag_rec = self._resolve_recommended_transition(case, enabled_transitions) #look if there is recommendation, flag_reg true if the rec is possible 
-
-
-            #flag_rec true if we have the rec (possible) or an invisible transition needed to get to the rec 
-            if not flag_rec: #if the next activity is not the rec or the baseline 
-                if not self.simulation_parameters.rules_mode: #if rules_mode false 
-                    transition_weights = self.simulation_parameters.transition_weights
-                else: #if rules mode true
-                    transition_weights = compute_transition_weights_from_model(self.simulation_parameters.transition_weights, case["attributes"] | case["history"], enabled_transitions)
-                chosen_transition = return_fired_transition(transition_weights, enabled_transitions) #given the transition available it extract the chosen one 
+            # a case with an activity in progress at the split completes it first, before anything else
+            # (a recommendation included)
+            running_transition = None
+            if time_first and case.get("running_activity") is not None:
+                running_transition = self._step_running_activity(case, enabled_transitions)
+            if running_transition is not None:
+                chosen_transition = running_transition
                 activity = chosen_transition.label
                 t_enabled = case["enabled"][chosen_transition]
-            elif activity is not None: #rec executed
-                case["rec_act"] = None #set to none so that the model understand that there are no more constraints
+            else:
+                chosen_transition, activity, t_enabled, flag_rec = self._resolve_recommended_transition(case, enabled_transitions) #look if there is recommendation, flag_reg true if the rec is possible
+                if flag_rec and time_first and chosen_transition is not None:
+                    # a recommendation changes WHAT happens next, not WHEN: the next event time is drawn
+                    # exactly as for the baseline (same time model, same idle-time condition)
+                    place = self._marked_place_with_time_model(case, chosen_transition)
+                    if place is not None:
+                        self._fix_next_event_time(case, place, enabled_transitions)
+
+                #flag_rec true if we have the rec (possible) or an invisible transition needed to get to the rec
+                if not flag_rec: #if the next activity is not the rec or the baseline
+                    chosen_transition = self._choose_transition_time_first(case, enabled_transitions) if time_first else None
+                    if chosen_transition is None:
+                        if not self.simulation_parameters.rules_mode: #if rules_mode false
+                            transition_weights = self.simulation_parameters.transition_weights
+                        else: #if rules mode true
+                            transition_weights = compute_transition_weights_from_model(self.simulation_parameters.transition_weights, case["attributes"] | case["history"], enabled_transitions)
+                        chosen_transition = return_fired_transition(transition_weights, enabled_transitions) #given the transition available it extract the chosen one
+                    activity = chosen_transition.label
+                    t_enabled = case["enabled"][chosen_transition]
+                elif activity is not None: #rec executed
+                    case["rec_act"] = None #set to none so that the model understand that there are no more constraints
 
             if activity is not None: 
                 #chosen transition correspond to a real one (no invisible transition)
 
                 #resource 
-                if flag_rec and case["rec_res"] is not None:
+                # an activity already running at the split keeps its logged resource
+                if case.get("forced_resource") is not None:
+                    resource = case.pop("forced_resource")
+                    t_enabled_waited = t_enabled
+                    r_workload = count_concurrent_events_fast(resource_starts.get(resource, []), resource_ends.get(resource, []), t_enabled)
+                elif flag_rec and case["rec_res"] is not None:
                     #rec and resource to use -> we force it
                     resource = case["rec_res"]
                     t_enabled_waited = t_enabled
@@ -1455,7 +1739,7 @@ class SimulatorEngine:
 
                     if not enabled_resources:
                         # if there are no available resources we chose the one that becomes free first, so we have a waiting time for the resource
-                        t_enabled_enabled_resources = [resource_schedule[r][-1][-1] for r in enabled_resources_act]
+                        t_enabled_enabled_resources = [resource_free_time(resource_schedule[r], t_enabled) for r in enabled_resources_act]
                         index_res, t_enabled_waited = min(enumerate(t_enabled_enabled_resources), key=lambda x: x[1])
                         resource = enabled_resources_act[index_res]
                     else:
@@ -1465,37 +1749,48 @@ class SimulatorEngine:
                         t_enabled_waited = t_enabled
                     r_workload = workloads[resource]
 
-                #waiting time
-                if sum(case["history"].values()) == 0: #it the activity if the first one 
-                    waiting_time = 0
+                exact_start = case.pop("exact_start", None)
+                forced_start = case.pop("forced_start", None)
+                if exact_start is not None:
+                    # activity already running at the split: it started when the log says it did
+                    t_start_exec = exact_start
+                elif forced_start is not None:
+                    # time-first routing: the next visible event starts at the drawn time, or later if the
+                    # resource is still busy (no extra per-resource waiting time on top)
+                    case.pop("pending_wait_days", None); case.pop("pending_features", None)
+                    t_start_exec = max(forced_start, t_enabled_waited)
                 else:
-                    if not self.simulation_parameters.rules_mode:
-                        if deterministic_time:
-                            waiting_time = sampled_waiting_times[resource]
-                            try:
-                                int(waiting_time)
-                            except:
-                                waiting_time = 0
-                        else:
-                            candidate_waiting_times = list(sampled_waiting_times[resource])
-                            if candidate_waiting_times:
-                                waiting_time = random.choice(candidate_waiting_times)
+                    #waiting time
+                    if sum(case["history"].values()) == 0: #it the activity if the first one 
+                        waiting_time = 0
+                    else:
+                        if not self.simulation_parameters.rules_mode:
+                            if deterministic_time:
+                                waiting_time = sampled_waiting_times[resource]
+                                try:
+                                    int(waiting_time)
+                                except:
+                                    waiting_time = 0
                             else:
-                                waiting_time = 0
-                    else: #rules_mode = TRUE
-                        if deterministic_time:
-                            waiting_time = self.simulation_parameters.waiting_time_distributions[resource].apply({'workload': r_workload} | case["history"] | case["attributes"])
-                            try:
-                                int(waiting_time)
-                            except:
-                                waiting_time = 0
-                        else: #sample waiting time 
-                            waiting_time = self.simulation_parameters.waiting_time_distributions[resource].apply_distribution({'workload': r_workload} | case["history"] | case["attributes"])
+                                candidate_waiting_times = list(sampled_waiting_times[resource])
+                                if candidate_waiting_times:
+                                    waiting_time = random.choice(candidate_waiting_times)
+                                else:
+                                    waiting_time = 0
+                        else: #rules_mode = TRUE
+                            if deterministic_time:
+                                waiting_time = self.simulation_parameters.waiting_time_distributions[resource].apply({'workload': r_workload} | case["history"] | case["attributes"])
+                                try:
+                                    int(waiting_time)
+                                except:
+                                    waiting_time = 0
+                            else: #sample waiting time 
+                                waiting_time = self.simulation_parameters.waiting_time_distributions[resource].apply_distribution({'workload': r_workload} | case["history"] | case["attributes"])
 
-                #t_enabled_waited - t_enabled = time used for the resource to free itself, we subtract in order to not count it twice
-                waiting_time -= (t_enabled_waited - t_enabled).total_seconds() / 60
-                waiting_time = max(0, waiting_time)
-                t_start_exec = add_minutes_with_calendar(t_enabled_waited, int(waiting_time), self.simulation_parameters.calendars[resource]) #time when the next activity starts but it must respect the resource calendar (otherwise it will be postponed)
+                    #t_enabled_waited - t_enabled = time used for the resource to free itself, we subtract in order to not count it twice
+                    waiting_time -= (t_enabled_waited - t_enabled).total_seconds() / 60
+                    waiting_time = max(0, waiting_time)
+                    t_start_exec = add_minutes_with_calendar(t_enabled_waited, int(waiting_time), self.simulation_parameters.calendars[resource]) #time when the next activity starts but it must respect the resource calendar (otherwise it will be postponed)
 
                 #execution time
                 if not self.simulation_parameters.rules_mode:
@@ -1520,6 +1815,29 @@ class SimulatorEngine:
                             ex_time = 0
                     else: #extraction from trees
                         ex_time = self.simulation_parameters.execution_time_distributions[activity].apply_distribution({'resource = '+res: (res == resource)*1 for res in self.simulation_parameters.resources} | case["history"] | case["attributes"])
+
+                must_end_after = case.pop("must_end_after", None)
+                if must_end_after is not None:
+                    # activity already running at the split: redraw its duration until it ends after the split
+                    calendar_r = self.simulation_parameters.calendars[resource]
+                    x_exec = {"resource = " + res: (res == resource) * 1 for res in self.simulation_parameters.resources} | case["history"] | case["attributes"]
+                    for _ in range(200):
+                        if add_minutes_with_calendar(t_start_exec, int(ex_time), calendar_r) > must_end_after:
+                            break
+                        ex_time = self.simulation_parameters.execution_time_distributions[activity].apply_distribution(x_exec)
+                    else:
+                        # no drawn duration reaches the split (activity running for longer than usual): shortest
+                        # duration, in working minutes of the resource calendar, that ends after it (bisection)
+                        lo, hi = 0, max(1, int((must_end_after - t_start_exec).total_seconds() / 60) + 1)
+                        while add_minutes_with_calendar(t_start_exec, hi, calendar_r) <= must_end_after:
+                            hi *= 2
+                        while lo < hi:
+                            mid = (lo + hi) // 2
+                            if add_minutes_with_calendar(t_start_exec, mid, calendar_r) > must_end_after:
+                                hi = mid
+                            else:
+                                lo = mid + 1
+                        ex_time = lo
 
                 # end time for the execution of the activity considering the resource calendar
                 t_end = add_minutes_with_calendar(t_start_exec, int(ex_time), self.simulation_parameters.calendars[resource])

@@ -202,7 +202,12 @@ def load_simulator(source_dir: Path, source_case_study: str, force_rediscover: b
     if params_cache_path.exists() and not force_rediscover:
         print(f"Loading cached simulation parameters: {params_cache_path}")
         params.from_json(str(params_cache_path))
-    else:
+    if params.time_first_models is None:
+        if params_cache_path.exists() and not force_rediscover:
+            # cache written before the time-first models existed: rediscover, so the generated
+            # traces come from the same simulator used for the recommendations
+            print("WARNING: the cached parameters have no time-first models; rediscovering them.")
+        params = SimulatorParameters(net, im, fm)
         log_path = _find_xes_log(source_dir, source_case_study)
         print(f"Discovering simulation parameters (max_depth_tree={max_depth_tree}) from the "
               f"full event log: {log_path}")

@@ -16,6 +16,11 @@ directory (overwriting any previous Petri net there, since that is where
     - <dataset>_best_petri_net.pnml   -> the discovered Petri net (PNML format)
     - <dataset>_best_petri_net.jpg    -> a rendered image of the Petri net
 
+and records the net's quality (alignment-based fitness, share of perfectly
+fitting traces, precision, F-score, epsilon/eta, size) as one row of
+`discovery/petri_net_quality.csv` (next to this script), replacing that
+dataset's previous row.
+
 Usage
 -----
     python petri_net_discovery.py
@@ -35,10 +40,12 @@ import io
 import os
 import re
 import warnings
+from datetime import datetime
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import optuna
+import pandas as pd
 import pm4py
 import tqdm
 from pm4py.algo.discovery.split_miner import algorithm as split_miner
@@ -63,6 +70,10 @@ tqdm.tqdm.__init__ = _silent_tqdm_init
 # Name pattern of the XES file expected inside each case-study folder, e.g.
 # "case_studies/BAC/log_BAC.xes".
 LOG_FILE_NAME_TEMPLATE = "log_{dataset}.xes"
+
+# Summary CSV (one row per discovered net: fitness, precision, ...), kept next to
+# this script whatever the working directory or the logs processed.
+QUALITY_CSV_PATH = Path(__file__).resolve().parent / "petri_net_quality.csv"
 
 # Fallback project path used during development, in case the "case_studies"
 # folder is not found relative to the current working directory.
@@ -199,11 +210,15 @@ def discover_petri_net(log, epsilon: float, eta: float):
 
 
 def evaluate_petri_net(log, net, initial_marking, final_marking):
-    """Compute (fitness, precision) using alignment-based metrics."""
+    """Compute (fitness, precision, fitting_traces_pct) using alignment-based metrics.
+
+    fitting_traces_pct is the percentage of traces the net replays with no deviation at all.
+    """
     fitness_res = pm4py.fitness_alignments(log, net, initial_marking, final_marking)
     fitness = fitness_res.get("log_fitness", fitness_res.get("averageFitness", 0.0))
+    fitting_traces_pct = fitness_res.get("percentage_of_fitting_traces", float("nan"))
     precision = pm4py.precision_alignments(log, net, initial_marking, final_marking)
-    return fitness, precision
+    return fitness, precision, fitting_traces_pct
 
 
 # ---------------------------------------------------------------------------
@@ -220,18 +235,20 @@ def optimize_hyperparameters(log, n_trials: int, dataset_name: str):
 
         try:
             net, im, fm = discover_petri_net(log, eps, eta)
-            fitness, precision = evaluate_petri_net(log, net, im, fm)
+            fitness, precision, fitting_traces_pct = evaluate_petri_net(log, net, im, fm)
             print(f"  [Trial] epsilon={eps:.1f}, eta={eta:.1f} | Fitness={fitness:.4f}, Precision={precision:.4f}, F-score={2 * (fitness * precision) / (fitness + precision) if fitness + precision > 0 else 0.0:.4f}")
         except Exception as exc:
             print(f"  [!] Trial with epsilon={eps:.1f}, eta={eta:.1f} failed "
                   f"({type(exc).__name__}: {exc}). Scoring as 0.0.")
             trial.set_user_attr("fitness", 0.0)
             trial.set_user_attr("precision", 0.0)
+            trial.set_user_attr("fitting_traces_pct", 0.0)
             trial.set_user_attr("failed", True)
             return 0.0
 
         trial.set_user_attr("fitness", fitness)
         trial.set_user_attr("precision", precision)
+        trial.set_user_attr("fitting_traces_pct", fitting_traces_pct)
 
         if fitness + precision == 0:
             return 0.0
@@ -252,12 +269,35 @@ def optimize_hyperparameters(log, n_trials: int, dataset_name: str):
     print(f"  [✓] Fitness={best_fitness:.4f}  Precision={best_precision:.4f}  "
           f"F-score={best_f_score:.4f}")
 
-    return best_eps, best_eta
+    best_metrics = {
+        "fitness": best_fitness,
+        "fitting_traces_pct": study.best_trial.user_attrs["fitting_traces_pct"],
+        "precision": best_precision,
+        "f_score": best_f_score,
+    }
+    return best_eps, best_eta, best_metrics
 
 
 # ---------------------------------------------------------------------------
 # Main pipeline
 # ---------------------------------------------------------------------------
+
+
+def save_quality_row(csv_path: Path, row: dict):
+    """Write one net's quality metrics into the summary CSV shared by all case studies.
+
+    The row replaces any previous row for the same dataset (a rediscovered net
+    overwrites its .pnml too), while the other datasets' rows are kept, so the
+    file always describes the nets currently saved in each discovery_output/.
+    """
+    csv_path = Path(csv_path)
+    new_row = pd.DataFrame([row])
+    if csv_path.exists():
+        table = pd.read_csv(csv_path)
+        table = table[table["dataset"] != row["dataset"]]
+        new_row = pd.concat([table, new_row], ignore_index=True)
+    new_row.sort_values("dataset").to_csv(csv_path, index=False)
+    print(f"  [✓] Quality metrics saved to: {csv_path}")
 
 
 def process_log_file(xes_path: str, n_trials: int, dataset_name: str = None):
@@ -272,7 +312,7 @@ def process_log_file(xes_path: str, n_trials: int, dataset_name: str = None):
     print(f"=== Processing '{dataset_name}' ({xes_path}) ===")
     log = load_event_log(str(xes_path))
 
-    best_eps, best_eta = optimize_hyperparameters(log, n_trials, dataset_name)
+    best_eps, best_eta, best_metrics = optimize_hyperparameters(log, n_trials, dataset_name)
 
     print("  [...] Generating final Petri net with the best hyperparameters...")
     net, initial_marking, final_marking = discover_petri_net(log, best_eps, best_eta)
@@ -288,7 +328,29 @@ def process_log_file(xes_path: str, n_trials: int, dataset_name: str = None):
     save_petri_net_image(net, initial_marking, final_marking, jpg_path)
 
     print(f"  [✓] Saved: {pnml_path}")
-    print(f"  [✓] Saved: {jpg_path}\n")
+    print(f"  [✓] Saved: {jpg_path}")
+
+    # The metrics are the best trial's: Split Miner is deterministic, so the final net
+    # rediscovered above with the same (epsilon, eta) is that trial's net.
+    n_silent = sum(t.label is None for t in net.transitions)
+    save_quality_row(QUALITY_CSV_PATH, {
+        "dataset": dataset_name,
+        "miner": "split_miner",
+        "epsilon": best_eps,
+        "eta": best_eta,
+        "fitness": best_metrics["fitness"],
+        "fitting_traces_pct": best_metrics["fitting_traces_pct"],
+        "precision": best_metrics["precision"],
+        "f_score": best_metrics["f_score"],
+        "n_places": len(net.places),
+        "n_visible_transitions": len(net.transitions) - n_silent,
+        "n_silent_transitions": n_silent,
+        # pm4py.read_xes returns a DataFrame in pm4py 2.x, an EventLog in older versions
+        "n_traces": log["case:concept:name"].nunique() if hasattr(log, "columns") else len(log),
+        "pnml": str(pnml_path),
+        "discovered_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    })
+    print()
 
 
 def main():

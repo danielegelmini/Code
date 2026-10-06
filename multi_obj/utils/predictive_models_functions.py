@@ -816,13 +816,9 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
         is_regression_target = (y_train.name == "sigmoid_mm")
         search_spaces_config = all_search_spaces.get(y_train.name, {})
 
-        # class balancing 
-        if y_train.name == "label":
-            n_pos = np.sum(y_train == 1)
-            n_neg = np.sum(y_train == 0)
-            calculated_balance = float(n_neg / n_pos) if n_pos > 0 else 1.0
-        else:
-            calculated_balance = 1.0
+        # No class weighting (scale_pos_weight) for the classifier: a weight w on the positive class
+        # shifts every predicted logit by ln(w), an additive bias that temperature scaling (which only
+        # rescales the logit, sigmoid(logit / T)) cannot undo.
 
         # catboost parameters
         const_params = {
@@ -881,13 +877,6 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
 
             if (trial_params.get("grow_policy") in ("Depthwise", "Lossguide") and "min_data_in_leaf" not in search_spaces_config):
                 trial_params["min_data_in_leaf"] = trial.suggest_int("min_data_in_leaf", 1, 200, log=True)
-
-            if y_train.name == "label":
-                scale_low = max(0.1, calculated_balance * 0.5)
-                scale_high = max(scale_low, calculated_balance * 1.5)
-                trial_params["scale_pos_weight"] = trial.suggest_float(
-                    "scale_pos_weight", scale_low, scale_high
-                )
 
             ##########################################
             # VALIDATION set

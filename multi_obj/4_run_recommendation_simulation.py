@@ -84,6 +84,12 @@ def parse_args():
         help="Ignore any cached simulation parameters and re-run discovery from "
              "the event log, overwriting the cache.",
     )
+    parser.add_argument(
+        "--legacy_routing", action="store_true",
+        help="Simulate with the previous routing (one weight model per transition, waiting time "
+             "per resource) instead of 'time first, then route', and ignore the activities in "
+             "progress at the split.",
+    )
     return parser.parse_args()
 
 
@@ -117,7 +123,7 @@ def _find_xes_log(case_dir: Path, case_study: str) -> Path:
     )
 
 
-def setup_simulator(case_dir: Path, case_study: str, force_rediscover: bool) -> SimulatorEngine:
+def setup_simulator(case_dir: Path, case_study: str, force_rediscover: bool, legacy_routing: bool = False) -> SimulatorEngine:
     """Load the Petri net for this case study and build a SimulatorEngine for it, loading its simulation parameters from cache when possible, discovering them from the .xes log otherwise.
 
     discover_from_eventlog is the expensive step (resource discovery, feature building/alignment, transition weights, calendars, execution/waiting/arrival time discovery -- typically 3-5 minutes). Since it depends only on the log (not on n_sim, case_ids, or the method being simulated), the discovered parameters are cached to disk the first time and reused on every subsequent run; when the cache hits, the .xes log isn't even parsed.
@@ -126,6 +132,9 @@ def setup_simulator(case_dir: Path, case_study: str, force_rediscover: bool) -> 
         case_dir: case_studies/<case_study>/ directory.
         case_study: name of the case study (e.g. "BPI12", "bac").
         force_rediscover: if True, ignore any existing parameters cache and regenerate it.
+        legacy_routing: if True, simulate with the previous routing (per-transition weights and
+            per-resource waiting times) instead of "time first, then route". A cache without the
+            time-first models is otherwise rediscovered.
 
     Returns:
         A ready-to-use SimulatorEngine.
@@ -156,6 +165,10 @@ def setup_simulator(case_dir: Path, case_study: str, force_rediscover: bool) -> 
             params.from_json(str(params_cache_path))
             cache_valid = True
             print("Simulation parameters loaded from cache successfully.\n")
+            if params.time_first_models is None and not legacy_routing:
+                # cache written before the time-first models existed
+                print("WARNING: the cached parameters have no time-first models; rediscovering them.\n")
+                cache_valid = False
         except ValueError as exc:
             print(f"WARNING: Cached simulator parameters are invalid: {exc}")
             print("Regenerating simulation parameters from the event log...\n")
@@ -173,7 +186,10 @@ def setup_simulator(case_dir: Path, case_study: str, force_rediscover: bool) -> 
         params.to_json(str(params_cache_path))
         print(f"Cached simulation parameters to {params_cache_path}\n")
 
-    return SimulatorEngine(params)
+    engine = SimulatorEngine(params)
+    engine.use_time_first = not legacy_routing
+    print(f"Routing: {'previous (per-transition weights)' if legacy_routing else 'time first, then route'}\n")
+    return engine
 
 
 def load_inputs(case_dir: Path, case_study: str, case_ids_path: Optional[str]) -> tuple[pd.DataFrame, Optional[List[str]]]:
@@ -255,8 +271,9 @@ def save_engine_diagnostics(sim_engine, sim_folder: Path, run_index: int) -> Non
 
     - last_unreachable_recommendations: a requested recommendation could not legally be reached from the replayed prefix marking (exhaustive/nsga2 runs only). This should be 0 for baseline, since baseline never resolves a recommendation.
     - last_runaway_cases: a case fired >= max_events_per_case simulated events without reaching the final marking and was force-truncated by SimulatorEngine.apply()'s safety valve. Should be 0: every prefix marking is now reconstructed via alignment, which is always legally reachable, and the net is a sound workflow net -- so every case is structurally guaranteed to be able to complete.
-    - last_non_fitting_prefixes: the historical prefix for a case needed at least one "log move" during alignment (a logged activity the model could not explain at all). Saved for reference only, not printed -- it does not affect completability.
+    - last_non_fitting_prefixes: the net cannot replay the historical prefix for a case exactly, and the alignment used instead needed at least one "log move" (a logged activity the model could not explain at all). Saved for reference only, not printed -- it does not affect completability.
     - last_model_inserted_activities: the historical prefix for a case needed at least one visible activity inserted by the model that is not actually present in the log (the model considers it a necessary step the log just didn't record). Never written to the output log; does affect that case's activity-history counts going forward.
+    - last_ambiguous_prefixes: the net replays the historical prefix exactly, but more than one marking is consistent with it; the first in a deterministic order was used.
 
     Args:
         sim_engine: the SimulatorEngine instance that just completed a run.
@@ -268,6 +285,7 @@ def save_engine_diagnostics(sim_engine, sim_folder: Path, run_index: int) -> Non
         ("last_runaway_cases", "runaway_cases"),
         ("last_non_fitting_prefixes", "non_fitting_prefixes"),
         ("last_model_inserted_activities", "model_inserted_activities"),
+        ("last_ambiguous_prefixes", "ambiguous_prefixes"),
     ]
     for attr_name, file_suffix in diagnostics:
         records = getattr(sim_engine, attr_name, [])
@@ -278,9 +296,54 @@ def save_engine_diagnostics(sim_engine, sim_folder: Path, run_index: int) -> Non
     print(f"Unreachable recommendations: {len(sim_engine.last_unreachable_recommendations)}")
     print(f"Interrupted cases: {len(sim_engine.last_runaway_cases)}")
     print(f"Cases with model-inserted activities: {len(sim_engine.last_model_inserted_activities)}")
+    if sim_engine.last_time_first_stats:
+        st = sim_engine.last_time_first_stats
+        print(f"Time-first steps: {st['time_first_steps']} (fallback to per-transition weights: {st['fallback_steps']}) | "
+              f"first events conditioned on the idle time: {st['idle_conditioned']} | "
+              f"activities in progress completed first: {st['running_completed']} (not reachable: {st['running_unreachable']})")
 
 
-def run_simulation_batch(sim_engine: SimulatorEngine, log_input: pd.DataFrame, out_folder: Path, n_sim: int, label: str = "") -> None:
+def load_split_time(case_dir: Path) -> pd.Timestamp:
+    """The train/test split time t_split the test prefixes were cut at.
+
+    Not stored by 1_data_preprocessing.py, but recoverable exactly: t_split is the completion
+    time of one training trace and every training trace completes by t_split, so it is the
+    latest time:timestamp in train_data.csv. Checked against the prefixes it must bound.
+    """
+    train_ends = pd.read_csv(case_dir / "train_data.csv", usecols=[END_DATE_NAME])[END_DATE_NAME]
+    split_time = pd.to_datetime(train_ends, format="mixed").max()
+    prefix_ends = pd.to_datetime(pd.read_csv(case_dir / "test_log.csv", usecols=[END_DATE_NAME])[END_DATE_NAME], format="mixed")
+    if prefix_ends.max() > split_time:
+        raise ValueError(f"test_log.csv has events after the split time {split_time} recovered from train_data.csv.")
+    print(f"Split time (continuations are simulated from here): {split_time}")
+    return split_time
+
+
+def load_running_activities(case_dir: Path, split_time: pd.Timestamp) -> dict:
+    """Activities in progress at the split: started by split_time and not completed by then.
+
+    Only what is known at the split is returned -- activity, resource and start; the end of the
+    activity (in test_data.csv) is used only to tell that it had not ended yet. A case with an
+    activity in progress is not idle at the split: the simulator completes that activity first.
+
+    Returns:
+        {case id (str): (activity, resource, start)}, the earliest-started one if several.
+    """
+    cols = [CASE_ID_NAME, ACTIVITY_COLUMN_NAME, RESOURCE_COLUMN_NAME, START_DATE_NAME, END_DATE_NAME]
+    df = pd.read_csv(case_dir / "test_data.csv", usecols=cols, dtype={CASE_ID_NAME: str, RESOURCE_COLUMN_NAME: str})
+    df[START_DATE_NAME] = pd.to_datetime(df[START_DATE_NAME], format="mixed")
+    df[END_DATE_NAME] = pd.to_datetime(df[END_DATE_NAME], format="mixed")
+    # only the cases that have a prefix (a test case with no event completed by the split is not simulated)
+    prefix_ids = set(pd.read_csv(case_dir / "test_log.csv", usecols=[CASE_ID_NAME], dtype={CASE_ID_NAME: str})[CASE_ID_NAME])
+    df = df[df[CASE_ID_NAME].isin(prefix_ids)
+            & (df[START_DATE_NAME] <= split_time) & (df[END_DATE_NAME] > split_time)].sort_values([CASE_ID_NAME, START_DATE_NAME])
+    first = df.groupby(CASE_ID_NAME).first()
+    running = {cid: (r[ACTIVITY_COLUMN_NAME], r[RESOURCE_COLUMN_NAME], r[START_DATE_NAME]) for cid, r in first.iterrows()}
+    print(f"Activities in progress at the split: {len(running)} of {len(prefix_ids)} test cases")
+    return running
+
+
+def run_simulation_batch(sim_engine: SimulatorEngine, log_input: pd.DataFrame, out_folder: Path, n_sim: int, label: str = "", resume_time: Optional[pd.Timestamp] = None, running_activities: Optional[dict] = None) -> None:
     """Run SimulatorEngine.apply() n_sim times against the same input log, saving each run's result and diagnostics. Shared by the baseline and the exhaustive/nsga2 methods.
 
     Args:
@@ -291,19 +354,22 @@ def run_simulation_batch(sim_engine: SimulatorEngine, log_input: pd.DataFrame, o
         label: short prefix identifying which scenario is running (e.g.
             "BASELINE" or "EXHAUSTIVE rank 2/5"), printed with every run so
             it's obvious which rank a given log line belongs to. Optional.
+        resume_time: the split time the prefixes were cut at; each continuation starts
+            no earlier than this (see SimulatorEngine.apply). Optional.
+        running_activities: activities in progress at the split ({case id: (activity, resource, start)}); passed through to SimulatorEngine.apply. Optional.
     """
     prefix = f"[{label}] " if label else ""
     for i in range(n_sim):
         run_start = datetime.now()
         print(f"{prefix}Starting run {i + 1}/{n_sim} at {run_start.strftime('%Y-%m-%d %H:%M:%S')}")
-        sim_log = sim_engine.apply(prev_log=log_input)
+        sim_log = sim_engine.apply(prev_log=log_input, resume_time=resume_time, running_activities=running_activities)
         sim_log = sim_log.sort_values(by=["case:concept:name", "time:timestamp"])
         out_path = out_folder / f"sim_{i + 1}.csv"
         sim_log.to_csv(out_path, index=False)
         save_engine_diagnostics(sim_engine, out_folder, i + 1)
 
 
-def run_baseline_simulation(sim_engine: SimulatorEngine, clean_prev_log: pd.DataFrame, case_ids: Optional[List[str]], case_dir: Path, n_sim: int) -> None:
+def run_baseline_simulation(sim_engine: SimulatorEngine, clean_prev_log: pd.DataFrame, case_ids: Optional[List[str]], case_dir: Path, n_sim: int, resume_time: Optional[pd.Timestamp] = None, running_activities: Optional[dict] = None) -> None:
     """Run the baseline scenario (no recommendations applied) n_sim times and save the results under case_dir/prosit_simulation_results/baseline/.
 
     Every case is given a sentinel "no recommendation" value, so the simulator never resolves an actual recommendation and simply continues each case probabilistically.
@@ -314,6 +380,8 @@ def run_baseline_simulation(sim_engine: SimulatorEngine, clean_prev_log: pd.Data
         case_ids: optional case id filter.
         case_dir: case_studies/<case_study>/ directory.
         n_sim: number of simulation runs to perform.
+        resume_time: the split time; passed through to run_simulation_batch. Optional.
+        running_activities: activities in progress at the split ({case id: (activity, resource, start)}); passed through to SimulatorEngine.apply. Optional.
     """
     print("=== STARTING BASELINE SIMULATION ===")
     baseline_folder = case_dir / "prosit_simulation_results" / "baseline"
@@ -330,7 +398,7 @@ def run_baseline_simulation(sim_engine: SimulatorEngine, clean_prev_log: pd.Data
     if case_ids:
         log_baseline = log_baseline[log_baseline["case:concept:name"].isin(case_ids)]
 
-    run_simulation_batch(sim_engine, log_baseline, baseline_folder, n_sim, label="BASELINE")
+    run_simulation_batch(sim_engine, log_baseline, baseline_folder, n_sim, label="BASELINE", resume_time=resume_time, running_activities=running_activities)
 
     print("Baseline simulation finished successfully!\n")
 
@@ -344,6 +412,8 @@ def _simulate_recommendation_file(
     case_ids: Optional[List[str]],
     n_sim: int,
     label: str = "",
+    resume_time: Optional[pd.Timestamp] = None,
+    running_activities: Optional[dict] = None,
 ) -> None:
     """Load one recommendations CSV, merge it with the test log, and run n_sim simulations, saving the results under sim_folder.
 
@@ -372,6 +442,8 @@ def _simulate_recommendation_file(
         label: short prefix identifying which scenario is running (e.g.
             "EXHAUSTIVE rank 2/5"), printed on every log line and passed
             through to run_simulation_batch. Optional.
+        resume_time: the split time; passed through to run_simulation_batch. Optional.
+        running_activities: activities in progress at the split ({case id: (activity, resource, start)}); passed through to SimulatorEngine.apply. Optional.
 
     Raises:
         ValueError: if case_ids filtering leaves no matching rows.
@@ -429,7 +501,7 @@ def _simulate_recommendation_file(
             )
 
     sim_folder.mkdir(parents=True, exist_ok=True)
-    run_simulation_batch(sim_engine, log_rec, sim_folder, n_sim, label=label)
+    run_simulation_batch(sim_engine, log_rec, sim_folder, n_sim, label=label, resume_time=resume_time, running_activities=running_activities)
 
 
 def run_recommendation_simulations(
@@ -440,6 +512,8 @@ def run_recommendation_simulations(
     case_ids: Optional[List[str]],
     n_sim: int,
     k: int = 1,
+    resume_time: Optional[pd.Timestamp] = None,
+    running_activities: Optional[dict] = None,
 ) -> None:
     """Run the 'exhaustive' and 'nsga2' recommendation methods (whichever have recommendation files available) n_sim times each per rank, saving the results under case_dir/prosit_simulation_results/<method>/<rank>/.
 
@@ -464,6 +538,8 @@ def run_recommendation_simulations(
         case_ids: optional case id filter.
         n_sim: number of simulation runs to perform per method/rank.
         k: number of recommendation ranks to simulate per method. Defaults to 1.
+        resume_time: the split time; passed through to run_simulation_batch. Optional.
+        running_activities: activities in progress at the split ({case id: (activity, resource, start)}); passed through to SimulatorEngine.apply. Optional.
 
     Raises:
         ValueError: if k < 1, or if case_ids filtering leaves no matching
@@ -491,7 +567,7 @@ def run_recommendation_simulations(
             reset_output_folder(sim_folder)
             _simulate_recommendation_file(
                 sim_engine, csv_path, sim_folder, case_study, clean_prev_log, case_ids, n_sim,
-                label=rank_label,
+                label=rank_label, resume_time=resume_time, running_activities=running_activities,
             )
 
             print(f"{rank_label} simulation finished successfully!\n")
@@ -503,11 +579,13 @@ def main():
 
     case_dir = Path(args.base_dir) / "case_studies" / args.case_study
 
-    sim_engine = setup_simulator(case_dir, args.case_study, args.force_rediscover)
+    sim_engine = setup_simulator(case_dir, args.case_study, args.force_rediscover, args.legacy_routing)
     clean_prev_log, case_ids = load_inputs(case_dir, args.case_study, args.case_ids)
+    split_time = load_split_time(case_dir)
+    running = None if args.legacy_routing else load_running_activities(case_dir, split_time)
 
-    run_baseline_simulation(sim_engine, clean_prev_log, case_ids, case_dir, args.n_sim)
-    run_recommendation_simulations(sim_engine, case_dir, args.case_study, clean_prev_log, case_ids, args.n_sim, args.k)
+    run_baseline_simulation(sim_engine, clean_prev_log, case_ids, case_dir, args.n_sim, resume_time=split_time, running_activities=running)
+    run_recommendation_simulations(sim_engine, case_dir, args.case_study, clean_prev_log, case_ids, args.n_sim, args.k, resume_time=split_time, running_activities=running)
 
 
 if __name__ == "__main__":

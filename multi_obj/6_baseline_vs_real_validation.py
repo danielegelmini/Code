@@ -39,6 +39,7 @@ Usage:
 """
 
 import argparse
+import importlib
 from pathlib import Path
 
 import numpy as np
@@ -129,11 +130,41 @@ def load_fully_simulated_log(sim_case_dir: Path, sim_case_study: str, encoded_ac
 
 
 def case_level_stats(df: pd.DataFrame, case_id_col: str = case_id_name) -> pd.DataFrame:
-    """One row per case: duration_days, status (0/1)."""
+    """One row per case: duration_days, status (0/1), end (last completion time)."""
     g = df.groupby(case_id_col)
     duration = (g[end_date_name].max() - g[start_date_name].min()).dt.total_seconds() / 86400.0
     status = g["status"].first()
-    return pd.DataFrame({"duration_days": duration, "status": status})
+    return pd.DataFrame({"duration_days": duration, "status": status,
+                         "end": pd.to_datetime(g[end_date_name].max(), utc=True)})
+
+
+AGE_BINS = [0, 7, 14, 21, 28, float("inf")]
+AGE_LABELS = ["0-7d", "7-14d", "14-21d", "21-28d", ">28d"]
+
+
+def by_case_age(case_dir: Path, real_test_stats: pd.DataFrame, sim_stats: pd.DataFrame) -> dict:
+    """Positive rate and median remaining days after the split, real vs baseline, for test cases
+    grouped by their age at the split (days since their first event). The simulator's main
+    failure mode was ignoring how long a case had already been open, which only shows up here."""
+    split_time = importlib.import_module("4_run_recommendation_simulation").load_split_time(case_dir)
+    split_time = pd.Timestamp(split_time).tz_convert("UTC") if pd.Timestamp(split_time).tzinfo else pd.Timestamp(split_time).tz_localize("UTC")
+    prefix = pd.read_csv(case_dir / TEST_LOG_FILENAME, usecols=[case_id_name, start_date_name], dtype={case_id_name: str})
+    first_start = pd.to_datetime(prefix[start_date_name], format="mixed", utc=True).groupby(prefix[case_id_name]).min()
+    age_bin = pd.cut((split_time - first_start).dt.total_seconds() / 86400, AGE_BINS, labels=AGE_LABELS)
+
+    out = {}
+    sim = sim_stats.copy()
+    sim.index = [str(i).rsplit("_", 1)[0] for i in sim.index]  # "<case>_<run>" -> "<case>"
+    print("  By case age at the split:      " + "  ".join(f"{b:>15s}" for b in AGE_LABELS))
+    for label, stats in (("real_test", real_test_stats), ("sim_baseline", sim)):
+        groups = stats.assign(age=age_bin.reindex(stats.index).values,
+                              remaining=(stats["end"] - split_time).dt.total_seconds() / 86400).groupby("age", observed=False)
+        pos, rem = groups["status"].mean() * 100, groups["remaining"].median()
+        print(f"    {label:13s} %pos / rem.days  " + "  ".join(f"{pos.get(b, float('nan')):5.1f}% /{rem.get(b, float('nan')):5.1f}d" for b in AGE_LABELS))
+        for b in AGE_LABELS:
+            out[f"{label}_pct_positive_age_{b}"] = pos.get(b)
+            out[f"{label}_median_remaining_days_age_{b}"] = rem.get(b)
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -205,6 +236,7 @@ def compare_case_study(base_dir: Path, case_study: str, n_sim: int) -> dict:
     result.update(summarize(real_stats, "real"))
     result.update(summarize(real_test_stats, "real_test"))
     result.update(summarize(sim_stats, "sim_baseline"))
+    result.update(by_case_age(case_dir, real_test_stats, sim_stats))
 
     sim_full_case_study = case_study + FULLY_SIMULATED_SUFFIX
     sim_full_case_dir = base_dir / "case_studies" / sim_full_case_study

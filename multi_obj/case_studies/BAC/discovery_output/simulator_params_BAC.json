@@ -116,22 +116,6 @@
                     "value": 0.003897914169669571
                 }
             },
-            "sfl_09764c31-790d-483d-9026-492057f4b81f": {
-                "0": {
-                    "feature": "Request deleted",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.05440243639966871
-                },
-                "2": {
-                    "value": 0.9485202111260139
-                }
-            },
             "Evaluating Request (WITH registered letter)": {
                 "0": {
                     "feature": "CLOSURE_REASON = 1 - Client lost",
@@ -146,6 +130,22 @@
                 },
                 "2": {
                     "value": 0.06890696292916722
+                }
+            },
+            "sfl_09764c31-790d-483d-9026-492057f4b81f": {
+                "0": {
+                    "feature": "Request deleted",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 1,
+                        "false": 2
+                    }
+                },
+                "1": {
+                    "value": 0.05440243639966871
+                },
+                "2": {
+                    "value": 0.9485202111260139
                 }
             },
             "sfl_2385128d-2d6a-4b6e-a870-6aeeaf50e74c": {
@@ -356,10 +356,10 @@
                     }
                 },
                 "1": {
-                    "value": 0.9529634375324377
+                    "value": 0.9566507477930802
                 },
                 "2": {
-                    "value": 0.7423844615511921
+                    "value": 0.7440638606709704
                 }
             },
             "Network Adjustment Requested": {
@@ -372,10 +372,10 @@
                     }
                 },
                 "1": {
-                    "value": 0.04703656246756231
+                    "value": 0.043349252206919785
                 },
                 "2": {
-                    "value": 0.2576155384488079
+                    "value": 0.2559361393290295
                 }
             },
             "Pending Request for Reservation Closure": 1.0,
@@ -412,47 +412,42 @@
                 }
             },
             "Pending Liquidation Request": 1.0,
-            "Pending Request for acquittance of heirs": {
+            "sfl_49a6b433-a2f1-4829-b81d-92347fd231bb": {
                 "0": {
-                    "feature": "CLOSURE_TYPE = Inheritance",
+                    "feature": "CLOSURE_REASON = NotDef",
                     "threshold": 0.5,
                     "children": {
                         "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.0002750401984083446
-                },
-                "2": {
-                    "feature": "Authorization Requested",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 3,
                         "false": 4
                     }
                 },
-                "3": {
-                    "value": 0.07542265417344202
-                },
-                "4": {
-                    "value": 0.7919878992508333
-                }
-            },
-            "sfl_951added-7f50-48b4-a7d9-5d1b8aaf7ba4": {
-                "0": {
-                    "feature": "CLOSURE_REASON = 2 - Keep bank account. Same dip",
+                "1": {
+                    "feature": "CLOSURE_TYPE = Bank Recess",
                     "threshold": 0.5,
                     "children": {
-                        "true": 1,
-                        "false": 2
+                        "true": 2,
+                        "false": 3
                     }
                 },
-                "1": {
-                    "value": 1.3915780748636163e-07
-                },
                 "2": {
-                    "value": 0.00022418335843755972
+                    "value": 0.9682678550892503
+                },
+                "3": {
+                    "value": 0.8835510936504732
+                },
+                "4": {
+                    "feature": "CLOSURE_TYPE = Bank Recess",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 5,
+                        "false": 6
+                    }
+                },
+                "5": {
+                    "value": 0.206514645368197
+                },
+                "6": {
+                    "value": 0.8646606381798082
                 }
             },
             "Back-Office Adjustment Requested": {
@@ -523,56 +518,61 @@
                     "value": 0.03846436557305699
                 },
                 "12": {
-                    "feature": "Network Adjustment Requested",
-                    "threshold": 0.5,
+                    "feature": "Service closure Request with BO responsibility",
+                    "threshold": 1.5,
                     "children": {
                         "true": 13,
                         "false": 14
                     }
                 },
                 "13": {
-                    "value": 0.11512973568785344
+                    "value": 0.11356816693957712
                 },
                 "14": {
-                    "value": 0.11659650401749592
+                    "value": 0.14475069500710774
                 }
             },
-            "sfl_49a6b433-a2f1-4829-b81d-92347fd231bb": {
+            "Pending Request for acquittance of heirs": {
                 "0": {
-                    "feature": "CLOSURE_REASON = NotDef",
+                    "feature": "CLOSURE_TYPE = Inheritance",
                     "threshold": 0.5,
                     "children": {
                         "true": 1,
-                        "false": 4
+                        "false": 2
                     }
                 },
                 "1": {
-                    "feature": "CLOSURE_TYPE = Client Recess",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 2,
-                        "false": 3
-                    }
+                    "value": 0.0002750401984083446
                 },
                 "2": {
-                    "value": 0.8835510936504732
-                },
-                "3": {
-                    "value": 0.9682678550892503
-                },
-                "4": {
-                    "feature": "CLOSURE_TYPE = Bank Recess",
+                    "feature": "Authorization Requested",
                     "threshold": 0.5,
                     "children": {
-                        "true": 5,
-                        "false": 6
+                        "true": 3,
+                        "false": 4
                     }
                 },
-                "5": {
-                    "value": 0.206514645368197
+                "3": {
+                    "value": 0.07542265417344202
                 },
-                "6": {
-                    "value": 0.8646606381798082
+                "4": {
+                    "value": 0.7919878992508333
+                }
+            },
+            "sfl_951added-7f50-48b4-a7d9-5d1b8aaf7ba4": {
+                "0": {
+                    "feature": "CLOSURE_REASON = 2 - Keep bank account. Same dip",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 1,
+                        "false": 2
+                    }
+                },
+                "1": {
+                    "value": 1.3915780748636163e-07
+                },
+                "2": {
+                    "value": 0.00022418335843755972
                 }
             },
             "Request completed with account closure": 1.0,
@@ -125859,213 +125859,6 @@
     },
     "execution_time_params": {
         "execution_time_distributions": {
-            "Pending Liquidation Request": {
-                "0": {
-                    "feature": "Evaluating Request (NO registered letter)",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 1,
-                        "false": 8
-                    }
-                },
-                "1": {
-                    "feature": "Service closure Request with network responsibility",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 2,
-                        "false": 5
-                    }
-                },
-                "2": {
-                    "feature": "CLOSURE_REASON = NotDef",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 3,
-                        "false": 4
-                    }
-                },
-                "3": {
-                    "value": 69.227,
-                    "dist": {
-                        "dist_name": "norm",
-                        "params": [
-                            2.000135685210312,
-                            1.4565134604796195
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 18.516666666666666
-                    }
-                },
-                "4": {
-                    "value": 946.986,
-                    "dist": {
-                        "dist_name": "norm",
-                        "params": [
-                            907.629353773098,
-                            327.363267794783
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 3545.9500000000007
-                    }
-                },
-                "5": {
-                    "feature": "Evaluating Request (WITH registered letter)",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 6,
-                        "false": 7
-                    }
-                },
-                "6": {
-                    "value": 1001.428,
-                    "dist": {
-                        "dist_name": "norm",
-                        "params": [
-                            928.0667037861915,
-                            259.55824086627746
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 3343.7666666666664
-                    }
-                },
-                "7": {
-                    "value": 1179.054,
-                    "dist": {
-                        "dist_name": "lognorm",
-                        "params": [
-                            0.13258074355711214,
-                            -449.0583400833514,
-                            1362.8111401918852
-                        ],
-                        "min_value": 0.75,
-                        "max_value": 2456.1000000000004
-                    }
-                },
-                "8": {
-                    "feature": "CLOSURE_REASON = 1 - Client lost",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 9,
-                        "false": 12
-                    }
-                },
-                "9": {
-                    "feature": "CLOSURE_REASON = 7 - Keep other relationships. Same dip",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 10,
-                        "false": 11
-                    }
-                },
-                "10": {
-                    "value": 1210.135,
-                    "dist": {
-                        "dist_name": "norm",
-                        "params": [
-                            890.8566666666667,
-                            167.69269904213795
-                        ],
-                        "min_value": 599.5,
-                        "max_value": 1256.6333333333332
-                    }
-                },
-                "11": {
-                    "value": 1132.16,
-                    "dist": {
-                        "dist_name": "norm",
-                        "params": [
-                            928.9902494331066,
-                            184.4193057054196
-                        ],
-                        "min_value": 514.6500000000001,
-                        "max_value": 2436.166666666667
-                    }
-                },
-                "12": {
-                    "feature": "Service closure Request with BO responsibility",
-                    "threshold": 1.5,
-                    "children": {
-                        "true": 13,
-                        "false": 14
-                    }
-                },
-                "13": {
-                    "value": 1307.93,
-                    "dist": {
-                        "dist_name": "lognorm",
-                        "params": [
-                            0.1290496043433656,
-                            -501.8028414482466,
-                            1410.6710789110043
-                        ],
-                        "min_value": 0.4166666666666667,
-                        "max_value": 3476.1499999999996
-                    }
-                },
-                "14": {
-                    "value": 1569.32,
-                    "dist": {
-                        "dist_name": "lognorm",
-                        "params": [
-                            0.03269855889662772,
-                            -6073.412511871314,
-                            6988.1125528111
-                        ],
-                        "min_value": 0.08333333333333333,
-                        "max_value": 2414.583333333333
-                    }
-                }
-            },
-            "Request completed with customer recovery": {
-                "0": {
-                    "value": 2415.175,
-                    "dist": {
-                        "dist_name": "lognorm",
-                        "params": [
-                            304.6412745997812,
-                            -5e-324,
-                            1.6717489842459246e-255
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 14.583333333333334
-                    }
-                }
-            },
-            "Authorization Requested": {
-                "0": {
-                    "feature": "resource = 00870",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 1175.14,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            86.69860403131767
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 833.7833333333333
-                    }
-                },
-                "2": {
-                    "value": 5378.557,
-                    "dist": {
-                        "dist_name": "lognorm",
-                        "params": [
-                            1.6153644758403642,
-                            -6.211414611878693,
-                            260.3584212641501
-                        ],
-                        "min_value": 0.3,
-                        "max_value": 5492.049999999999
-                    }
-                }
-            },
             "Pending Request for Network Information": {
                 "0": {
                     "feature": "resource = SDCTCC",
@@ -126102,6 +125895,157 @@
                     }
                 }
             },
+            "Evaluating Request (NO registered letter)": {
+                "0": {
+                    "feature": "resource = 00594",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 1,
+                        "false": 2
+                    }
+                },
+                "1": {
+                    "value": 1130.819,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            62.096026261230136
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 540.6833333333334
+                    }
+                },
+                "2": {
+                    "value": 222.594,
+                    "dist": {
+                        "dist_name": "lognorm",
+                        "params": [
+                            2.413652789183342,
+                            0.5360185436050295,
+                            19.702344397742674
+                        ],
+                        "min_value": 0.55,
+                        "max_value": 682.5333333333338
+                    }
+                }
+            },
+            "Back-Office Adjustment Requested": {
+                "0": {
+                    "feature": "resource = BOC",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 1,
+                        "false": 6
+                    }
+                },
+                "1": {
+                    "feature": "resource = SDCTCC",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 2,
+                        "false": 5
+                    }
+                },
+                "2": {
+                    "feature": "CLOSURE_TYPE = Bank Recess",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 3,
+                        "false": 4
+                    }
+                },
+                "3": {
+                    "value": 400.834,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            189.6125100887813
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 1324.4833333333336
+                    }
+                },
+                "4": {
+                    "value": 467.784,
+                    "dist": {
+                        "dist_name": "lognorm",
+                        "params": [
+                            1.0357841723192482,
+                            -10.87088857923714,
+                            209.7546057212451
+                        ],
+                        "min_value": 0.8166666666666667,
+                        "max_value": 2235.2333333333336
+                    }
+                },
+                "5": {
+                    "value": 350.854,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            143.4410843373494
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 734.0666666666666
+                    }
+                },
+                "6": {
+                    "feature": "Evaluating Request (NO registered letter)",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 7,
+                        "false": 10
+                    }
+                },
+                "7": {
+                    "feature": "Service closure Request with network responsibility",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 8,
+                        "false": 9
+                    }
+                },
+                "8": {
+                    "value": 830.375,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.35,
+                            812.4509581881533
+                        ],
+                        "min_value": 0.35,
+                        "max_value": 4950.3499999999985
+                    }
+                },
+                "9": {
+                    "value": 791.07,
+                    "dist": {
+                        "dist_name": "lognorm",
+                        "params": [
+                            1.3162147371575912,
+                            -9.570580126372167,
+                            311.45192645281196
+                        ],
+                        "min_value": 0.38333333333333336,
+                        "max_value": 4046.966666666667
+                    }
+                },
+                "10": {
+                    "value": 648.946,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            648.9462139917696
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 5389.633333333335
+                    }
+                }
+            },
             "Evaluating Request (WITH registered letter)": {
                 "0": {
                     "value": 822.774,
@@ -126122,7 +126066,7 @@
                     "threshold": 0.5,
                     "children": {
                         "true": 1,
-                        "false": 8
+                        "false": 4
                     }
                 },
                 "1": {
@@ -126130,74 +126074,34 @@
                     "threshold": 0.5,
                     "children": {
                         "true": 2,
-                        "false": 5
+                        "false": 3
                     }
                 },
                 "2": {
-                    "feature": "Service closure Request with network responsibility",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 3,
-                        "false": 4
-                    }
-                },
-                "3": {
-                    "value": 266.804,
-                    "dist": {
-                        "dist_name": "norm",
-                        "params": [
-                            2.122878259425345,
-                            1.5839977200169528
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 26.816666666666663
-                    }
-                },
-                "4": {
-                    "value": 4142.42,
+                    "value": 498.696,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
-                            0.2833333333333333,
-                            2254.790330788804
+                            0.0,
+                            2.3210706877293763
                         ],
-                        "min_value": 0.2833333333333333,
-                        "max_value": 28622.75
+                        "min_value": 0.0,
+                        "max_value": 31.233333333333334
                     }
                 },
-                "5": {
-                    "feature": "Network Adjustment Requested",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 6,
-                        "false": 7
-                    }
-                },
-                "6": {
-                    "value": 20.136,
+                "3": {
+                    "value": 29.285,
                     "dist": {
                         "dist_name": "norm",
                         "params": [
-                            2.1048003756335363,
-                            1.3049656848977433
+                            2.1003340988413584,
+                            1.3107263013160964
                         ],
                         "min_value": 0.0,
                         "max_value": 23.0
                     }
                 },
-                "7": {
-                    "value": 257.359,
-                    "dist": {
-                        "dist_name": "norm",
-                        "params": [
-                            2.0592237150778416,
-                            1.51732479171849
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 21.05
-                    }
-                },
-                "8": {
+                "4": {
                     "value": 2610.107,
                     "dist": {
                         "dist_name": "lognorm",
@@ -126211,37 +126115,18 @@
                     }
                 }
             },
-            "Service closure Request with network responsibility": {
+            "Request completed with customer recovery": {
                 "0": {
-                    "feature": "CLOSURE_REASON = 1 - Client lost",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 1535.033,
+                    "value": 2415.175,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            4.590175995383728
+                            304.6412745997812,
+                            -5e-324,
+                            1.6717489842459246e-255
                         ],
                         "min_value": 0.0,
-                        "max_value": 55.5
-                    }
-                },
-                "2": {
-                    "value": 640.514,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            2.3272981983260035
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 23.2
+                        "max_value": 14.583333333333334
                     }
                 }
             },
@@ -126319,17 +126204,138 @@
                     }
                 }
             },
-            "Back-Office Adjustment Requested": {
+            "Service closure Request with BO responsibility": {
                 "0": {
-                    "feature": "resource = BOC",
+                    "feature": "CLOSURE_TYPE = Inheritance",
                     "threshold": 0.5,
                     "children": {
                         "true": 1,
-                        "false": 6
+                        "false": 4
                     }
                 },
                 "1": {
-                    "feature": "CLOSURE_TYPE = Bank Recess",
+                    "feature": "Service closure Request with network responsibility",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 2,
+                        "false": 3
+                    }
+                },
+                "2": {
+                    "value": 630.404,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            4.220261027359017
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 42.583333333333336
+                    }
+                },
+                "3": {
+                    "value": 2063.794,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            2021.6284899122243
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 23290.33333333333
+                    }
+                },
+                "4": {
+                    "feature": "Authorization Requested",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 5,
+                        "false": 6
+                    }
+                },
+                "5": {
+                    "value": 477.948,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            112.11666666666667
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 929.1500000000001
+                    }
+                },
+                "6": {
+                    "value": 3649.701,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            3649.701314148681
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 27837.983333333337
+                    }
+                }
+            },
+            "Request deleted": {
+                "0": {
+                    "value": 0.0,
+                    "dist": {
+                        "dist_name": "fixed",
+                        "params": [
+                            0.0
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.0
+                    }
+                }
+            },
+            "Service closure Request with network responsibility": {
+                "0": {
+                    "feature": "CLOSURE_REASON = 1 - Client lost",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 1,
+                        "false": 2
+                    }
+                },
+                "1": {
+                    "value": 1535.033,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            4.590175995383728
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 55.5
+                    }
+                },
+                "2": {
+                    "value": 640.514,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            2.3272981983260035
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 23.2
+                    }
+                }
+            },
+            "Pending Liquidation Request": {
+                "0": {
+                    "feature": "Evaluating Request (NO registered letter)",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 1,
+                        "false": 8
+                    }
+                },
+                "1": {
+                    "feature": "Service closure Request with network responsibility",
                     "threshold": 0.5,
                     "children": {
                         "true": 2,
@@ -126337,7 +126343,7 @@
                     }
                 },
                 "2": {
-                    "feature": "resource = SDCTCC",
+                    "feature": "CLOSURE_REASON = NotDef",
                     "threshold": 0.5,
                     "children": {
                         "true": 3,
@@ -126345,92 +126351,133 @@
                     }
                 },
                 "3": {
-                    "value": 400.106,
+                    "value": 69.227,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "norm",
                         "params": [
-                            0.0,
-                            189.36988727858292
+                            2.000135685210312,
+                            1.4565134604796195
                         ],
                         "min_value": 0.0,
-                        "max_value": 1324.4833333333336
+                        "max_value": 18.516666666666666
                     }
                 },
                 "4": {
-                    "value": 350.854,
+                    "value": 946.986,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "norm",
                         "params": [
-                            0.0,
-                            143.4410843373494
+                            907.629353773098,
+                            327.363267794783
                         ],
                         "min_value": 0.0,
-                        "max_value": 734.0666666666666
+                        "max_value": 3545.9500000000007
                     }
                 },
                 "5": {
-                    "value": 489.015,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.8166666666666667,
-                            346.01888888888885
-                        ],
-                        "min_value": 0.8166666666666667,
-                        "max_value": 2235.2333333333336
+                    "feature": "Evaluating Request (WITH registered letter)",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 6,
+                        "false": 7
                     }
                 },
                 "6": {
-                    "feature": "Evaluating Request (NO registered letter)",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 7,
-                        "false": 10
+                    "value": 1016.47,
+                    "dist": {
+                        "dist_name": "norm",
+                        "params": [
+                            938.688179236017,
+                            260.8980132777164
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 3711.9333333333325
                     }
                 },
                 "7": {
-                    "feature": "Service closure Request with network responsibility",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 8,
-                        "false": 9
+                    "value": 1179.054,
+                    "dist": {
+                        "dist_name": "norm",
+                        "params": [
+                            926.0590875093493,
+                            192.778946478862
+                        ],
+                        "min_value": 0.75,
+                        "max_value": 2456.1000000000004
                     }
                 },
                 "8": {
-                    "value": 830.375,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.35,
-                            812.4509581881533
-                        ],
-                        "min_value": 0.35,
-                        "max_value": 4950.3499999999985
+                    "feature": "CLOSURE_REASON = 1 - Client lost",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 9,
+                        "false": 12
                     }
                 },
                 "9": {
-                    "value": 792.571,
-                    "dist": {
-                        "dist_name": "lognorm",
-                        "params": [
-                            1.317531390204779,
-                            -9.565387304321575,
-                            311.759122035031
-                        ],
-                        "min_value": 0.38333333333333336,
-                        "max_value": 4046.966666666667
+                    "feature": "CLOSURE_REASON = 7 - Keep other relationships. Same dip",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 10,
+                        "false": 11
                     }
                 },
                 "10": {
-                    "value": 648.946,
+                    "value": 1210.135,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "norm",
                         "params": [
-                            0.0,
-                            648.9462139917696
+                            890.8566666666667,
+                            167.69269904213795
                         ],
-                        "min_value": 0.0,
-                        "max_value": 5389.633333333335
+                        "min_value": 599.5,
+                        "max_value": 1256.6333333333332
+                    }
+                },
+                "11": {
+                    "value": 1132.16,
+                    "dist": {
+                        "dist_name": "norm",
+                        "params": [
+                            928.9902494331066,
+                            184.4193057054196
+                        ],
+                        "min_value": 514.6500000000001,
+                        "max_value": 2436.166666666667
+                    }
+                },
+                "12": {
+                    "feature": "Network Adjustment Requested",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 13,
+                        "false": 14
+                    }
+                },
+                "13": {
+                    "value": 1307.93,
+                    "dist": {
+                        "dist_name": "lognorm",
+                        "params": [
+                            0.1290496043433656,
+                            -501.8028414482466,
+                            1410.6710789110043
+                        ],
+                        "min_value": 0.4166666666666667,
+                        "max_value": 3476.1499999999996
+                    }
+                },
+                "14": {
+                    "value": 1569.32,
+                    "dist": {
+                        "dist_name": "lognorm",
+                        "params": [
+                            0.03269855889662772,
+                            -6073.412511871314,
+                            6988.1125528111
+                        ],
+                        "min_value": 0.08333333333333333,
+                        "max_value": 2414.583333333333
                     }
                 }
             },
@@ -126516,7 +126563,7 @@
                     }
                 },
                 "8": {
-                    "feature": "Network Adjustment Requested",
+                    "feature": "CLOSURE_TYPE = Inheritance",
                     "threshold": 0.5,
                     "children": {
                         "true": 9,
@@ -126524,7 +126571,7 @@
                     }
                 },
                 "9": {
-                    "feature": "CLOSURE_REASON = NotDef",
+                    "feature": "Network Adjustment Requested",
                     "threshold": 0.5,
                     "children": {
                         "true": 10,
@@ -126532,31 +126579,31 @@
                     }
                 },
                 "10": {
-                    "value": 1.623,
+                    "value": 1.65,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.0004911391613094958
+                            0.010750754957815759
                         ],
                         "min_value": 0.0,
                         "max_value": 8.333333333333334
                     }
                 },
                 "11": {
-                    "value": 55.82,
+                    "value": 47.007,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.01602231198307367
+                            0.08972962066182406
                         ],
                         "min_value": 0.0,
-                        "max_value": 17.383333333333333
+                        "max_value": 4.183333333333334
                     }
                 },
                 "12": {
-                    "feature": "CLOSURE_TYPE = Bank Recess",
+                    "feature": "Authorization Requested",
                     "threshold": 0.5,
                     "children": {
                         "true": 13,
@@ -126564,31 +126611,31 @@
                     }
                 },
                 "13": {
-                    "value": 57.069,
+                    "value": 911.064,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "norm",
                         "params": [
-                            0.0,
-                            0.05352498288843258
+                            911.0635327635329,
+                            246.2074949787697
                         ],
                         "min_value": 0.0,
-                        "max_value": 4.283333333333333
+                        "max_value": 1255.7333333333331
                     }
                 },
                 "14": {
-                    "value": 421.723,
+                    "value": 9.05,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.030607966457023062
+                            0.021098799630655585
                         ],
                         "min_value": 0.0,
-                        "max_value": 2.3
+                        "max_value": 17.383333333333333
                     }
                 }
             },
-            "Service closure Request with BO responsibility": {
+            "Network Adjustment Requested": {
                 "0": {
                     "feature": "CLOSURE_TYPE = Inheritance",
                     "threshold": 0.5,
@@ -126598,7 +126645,7 @@
                     }
                 },
                 "1": {
-                    "feature": "Service closure Request with network responsibility",
+                    "feature": "CLOSURE_REASON = 2 - Keep bank account. Same dip",
                     "threshold": 0.5,
                     "children": {
                         "true": 2,
@@ -126606,31 +126653,31 @@
                     }
                 },
                 "2": {
-                    "value": 630.404,
+                    "value": 3585.929,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            4.220261027359017
+                            1155.8125268817203
                         ],
                         "min_value": 0.0,
-                        "max_value": 42.583333333333336
+                        "max_value": 7468.816666666666
                     }
                 },
                 "3": {
-                    "value": 2056.885,
+                    "value": 2726.796,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            2018.0097117821397
+                            605.408149058149
                         ],
                         "min_value": 0.0,
-                        "max_value": 23290.33333333333
+                        "max_value": 3579.616666666667
                     }
                 },
                 "4": {
-                    "feature": "resource = BOC",
+                    "feature": "Network Adjustment Requested",
                     "threshold": 0.5,
                     "children": {
                         "true": 5,
@@ -126638,33 +126685,35 @@
                     }
                 },
                 "5": {
-                    "value": 662.268,
+                    "value": 4349.461,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            106.17298474945534
+                            2.2012482891974017,
+                            -0.2898738716875601,
+                            239.7573293889751
                         ],
                         "min_value": 0.0,
-                        "max_value": 929.1500000000001
+                        "max_value": 8092.316666666666
                     }
                 },
                 "6": {
-                    "value": 3665.97,
+                    "value": 9318.289,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            3665.96973441892
+                            3.0177284297243108,
+                            0.9826082401448838,
+                            345.59213828835317
                         ],
-                        "min_value": 0.0,
-                        "max_value": 27837.983333333337
+                        "min_value": 1.0,
+                        "max_value": 25462.800000000003
                     }
                 }
             },
-            "Evaluating Request (NO registered letter)": {
+            "Authorization Requested": {
                 "0": {
-                    "feature": "resource = 00594",
+                    "feature": "resource = 00870",
                     "threshold": 0.5,
                     "children": {
                         "true": 1,
@@ -126672,28 +126721,28 @@
                     }
                 },
                 "1": {
-                    "value": 1130.819,
+                    "value": 1175.14,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            62.096026261230136
+                            86.69860403131767
                         ],
                         "min_value": 0.0,
-                        "max_value": 540.6833333333334
+                        "max_value": 833.7833333333333
                     }
                 },
                 "2": {
-                    "value": 222.594,
+                    "value": 5378.557,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            2.413652789183342,
-                            0.5360185436050295,
-                            19.702344397742674
+                            1.6153644758403642,
+                            -6.211414611878693,
+                            260.3584212641501
                         ],
-                        "min_value": 0.55,
-                        "max_value": 682.5333333333338
+                        "min_value": 0.3,
+                        "max_value": 5492.049999999999
                     }
                 }
             },
@@ -126719,105 +126768,16 @@
                     }
                 },
                 "2": {
-                    "value": 365.372,
+                    "value": 364.023,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.43333333333333335,
-                            257.62
+                            0.7585529913447268,
+                            -33.49070774610493,
+                            215.64830990975702
                         ],
                         "min_value": 0.43333333333333335,
                         "max_value": 1354.6333333333332
-                    }
-                }
-            },
-            "Network Adjustment Requested": {
-                "0": {
-                    "feature": "CLOSURE_REASON = NotDef",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 1,
-                        "false": 4
-                    }
-                },
-                "1": {
-                    "feature": "Authorization Requested",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 2,
-                        "false": 3
-                    }
-                },
-                "2": {
-                    "value": 3662.077,
-                    "dist": {
-                        "dist_name": "lognorm",
-                        "params": [
-                            2.5572282222580096,
-                            -0.05310842927738904,
-                            224.65355388361615
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 9371.099999999999
-                    }
-                },
-                "3": {
-                    "value": 2910.016,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            637.7039717348928
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 3842.083333333334
-                    }
-                },
-                "4": {
-                    "feature": "Service closure Request with BO responsibility",
-                    "threshold": 1.5,
-                    "children": {
-                        "true": 5,
-                        "false": 6
-                    }
-                },
-                "5": {
-                    "value": 4356.96,
-                    "dist": {
-                        "dist_name": "lognorm",
-                        "params": [
-                            2.1984063937663847,
-                            -0.29090635069471604,
-                            238.93605655439242
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 8092.316666666666
-                    }
-                },
-                "6": {
-                    "value": 9185.678,
-                    "dist": {
-                        "dist_name": "lognorm",
-                        "params": [
-                            2.975952109364029,
-                            0.978180683457262,
-                            360.3359899940399
-                        ],
-                        "min_value": 1.0,
-                        "max_value": 25462.800000000003
-                    }
-                }
-            },
-            "Request deleted": {
-                "0": {
-                    "value": 0.0,
-                    "dist": {
-                        "dist_name": "fixed",
-                        "params": [
-                            0.0
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 0.0
                     }
                 }
             }
@@ -126875,26 +126835,26 @@
                     }
                 },
                 "5": {
-                    "value": 1.715,
+                    "value": 2.225,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            343.0263374441136,
+                            342.78957182006036,
                             -5e-324,
-                            9.79870059622816e-224
+                            5.473347497306177e-224
                         ],
                         "min_value": 0.0,
                         "max_value": 13.566666666666666
                     }
                 },
                 "6": {
-                    "value": 40.303,
+                    "value": 36.889,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            297.54350651605296,
+                            301.6870520187113,
                             -5e-324,
-                            6.156218342835389e-259
+                            1.860876777711172e-256
                         ],
                         "min_value": 0.0,
                         "max_value": 17.566666666666663
@@ -126913,9 +126873,8 @@
                 "1": {
                     "value": 1103.362,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "fixed",
                         "params": [
-                            0.0,
                             0.009347275031685679
                         ],
                         "min_value": 0.0,
@@ -127119,8 +127078,9 @@
                 "1": {
                     "value": 1.995,
                     "dist": {
-                        "dist_name": "fixed",
+                        "dist_name": "expon",
                         "params": [
+                            0.0,
                             0.004405286343612335
                         ],
                         "min_value": 0.0,
@@ -127341,10 +127301,11 @@
                 "2": {
                     "value": 77.799,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            0.7194719471947195
+                            249.75508972934566,
+                            -5e-324,
+                            2.4181004161290588e-282
                         ],
                         "min_value": 0.0,
                         "max_value": 19.933333333333334
@@ -127399,10 +127360,11 @@
                 "1": {
                     "value": 90.593,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            0.8900793650793651
+                            254.88125504751955,
+                            -5e-324,
+                            2.5647918539511564e-280
                         ],
                         "min_value": 0.0,
                         "max_value": 17.866666666666667
@@ -127647,11 +127609,10 @@
                 "1": {
                     "value": 169.924,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            287.64131274358334,
-                            -5e-324,
-                            3.8201029974195126e-265
+                            0.0,
+                            1.0315426997245178
                         ],
                         "min_value": 0.0,
                         "max_value": 18.116666666666667
@@ -128342,11 +128303,10 @@
                 "0": {
                     "value": 125.741,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            301.05814385371417,
-                            -5e-324,
-                            1.9833789468826956e-257
+                            0.0,
+                            0.25427135678391954
                         ],
                         "min_value": 0.0,
                         "max_value": 6.433333333333334
@@ -128746,10 +128706,11 @@
                 "0": {
                     "value": 112.839,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            0.33773946360153256
+                            304.5614437687946,
+                            -5e-324,
+                            2.7050853113119033e-255
                         ],
                         "min_value": 0.0,
                         "max_value": 10.9
@@ -129312,10 +129273,11 @@
                 "0": {
                     "value": 101.036,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            0.9129385964912281
+                            280.8120995541048,
+                            -5e-324,
+                            1.2379110061885302e-268
                         ],
                         "min_value": 0.0,
                         "max_value": 18.8
@@ -129519,9 +129481,8 @@
                 "0": {
                     "value": 1.397,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "fixed",
                         "params": [
-                            0.0,
                             0.16623931623931623
                         ],
                         "min_value": 0.0,
@@ -129665,10 +129626,11 @@
                 "0": {
                     "value": 0.375,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            0.37505307855626324
+                            316.0594901780726,
+                            -5e-324,
+                            8.180325985682364e-248
                         ],
                         "min_value": 0.0,
                         "max_value": 4.666666666666667
@@ -130946,10 +130908,11 @@
                 "0": {
                     "value": 1.477,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            0.7748737373737373
+                            354.86477290924125,
+                            -5e-324,
+                            2.5551989433708337e-211
                         ],
                         "min_value": 0.0,
                         "max_value": 17.483333333333334
@@ -131091,10 +131054,11 @@
                 "0": {
                     "value": 14.412,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            0.4014435695538057
+                            259.89067078506463,
+                            -5e-324,
+                            3.635051028248495e-278
                         ],
                         "min_value": 0.0,
                         "max_value": 9.683333333333334
@@ -131178,11 +131142,10 @@
                 "0": {
                     "value": 130.384,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            321.59651992955753,
-                            -5e-324,
-                            6.881326561383086e-244
+                            0.0,
+                            0.5354740061162079
                         ],
                         "min_value": 0.0,
                         "max_value": 9.9
@@ -131426,10 +131389,11 @@
                 "0": {
                     "value": 34.077,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            0.6237891737891738
+                            335.1790884079508,
+                            -5e-324,
+                            8.556621766329144e-233
                         ],
                         "min_value": 0.0,
                         "max_value": 14.133333333333333
@@ -131483,11 +131447,10 @@
                 "0": {
                     "value": 778.113,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            362.5033712357768,
-                            -5e-324,
-                            1.430716095326646e-199
+                            0.0,
+                            1.1358974358974356
                         ],
                         "min_value": 0.0,
                         "max_value": 17.833333333333332
@@ -131760,10 +131723,11 @@
                 "0": {
                     "value": 24.439,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            1.3384057971014491
+                            258.36122701508623,
+                            -5e-324,
+                            6.336022115305465e-279
                         ],
                         "min_value": 0.0,
                         "max_value": 18.96666666666667
@@ -132019,10 +131983,11 @@
                 "0": {
                     "value": 131.38,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            0.9943365695792881
+                            283.22035252963195,
+                            -5e-324,
+                            1.978010717314308e-267
                         ],
                         "min_value": 0.0,
                         "max_value": 19.6
@@ -132062,9 +132027,8 @@
                 "0": {
                     "value": 53.288,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "fixed",
                         "params": [
-                            0.0,
                             0.048684210526315795
                         ],
                         "min_value": 0.0,
@@ -132324,11 +132288,10 @@
                 "0": {
                     "value": 7.211,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            352.8857691983459,
-                            -5e-324,
-                            3.9761718363131685e-214
+                            0.0,
+                            1.1400943396226415
                         ],
                         "min_value": 0.0,
                         "max_value": 17.566666666666666
@@ -132413,10 +132376,11 @@
                 "0": {
                     "value": 119.706,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            0.49471947194719473
+                            232.2380579401195,
+                            -5e-324,
+                            9.007339240631507e-289
                         ],
                         "min_value": 0.0,
                         "max_value": 14.2
@@ -132631,10 +132595,11 @@
                 "0": {
                     "value": 1261.16,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            0.23541666666666666
+                            229.12856694882495,
+                            -5e-324,
+                            8.25649458559677e-290
                         ],
                         "min_value": 0.0,
                         "max_value": 4.733333333333333
@@ -133126,8 +133091,9 @@
                 "0": {
                     "value": 32.794,
                     "dist": {
-                        "dist_name": "fixed",
+                        "dist_name": "expon",
                         "params": [
+                            0.0,
                             0.019528619528619527
                         ],
                         "min_value": 0.0,
@@ -133241,11 +133207,10 @@
                 "0": {
                     "value": 229.499,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            357.93224231389564,
-                            -5e-324,
-                            5.1364352673212936e-207
+                            0.0,
+                            0.9184397163120568
                         ],
                         "min_value": 0.0,
                         "max_value": 14.75
@@ -133542,10 +133507,11 @@
                 "0": {
                     "value": 31.369,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            0.2143617021276596
+                            248.41567661510948,
+                            -5e-324,
+                            9.224369971619516e-283
                         ],
                         "min_value": 0.0,
                         "max_value": 6.416666666666667
@@ -133640,9 +133606,8 @@
                 "0": {
                     "value": 3.319,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "fixed",
                         "params": [
-                            0.0,
                             0.13974358974358975
                         ],
                         "min_value": 0.0,
@@ -133695,10 +133660,11 @@
                 "0": {
                     "value": 97.43,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            0.7809236947791164
+                            345.43662585523754,
+                            -5e-324,
+                            1.0356717039231507e-222
                         ],
                         "min_value": 0.0,
                         "max_value": 14.7
@@ -133739,9 +133705,8 @@
                 "0": {
                     "value": 31.223,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "fixed",
                         "params": [
-                            0.0,
                             0.10294117647058823
                         ],
                         "min_value": 0.0,
@@ -133782,8 +133747,9 @@
                 "0": {
                     "value": 31.427,
                     "dist": {
-                        "dist_name": "fixed",
+                        "dist_name": "expon",
                         "params": [
+                            0.0,
                             0.005490196078431373
                         ],
                         "min_value": 0.0,
@@ -133879,8 +133845,9 @@
                 "0": {
                     "value": 5.231,
                     "dist": {
-                        "dist_name": "fixed",
+                        "dist_name": "expon",
                         "params": [
+                            0.0,
                             0.05588235294117647
                         ],
                         "min_value": 0.0,
@@ -133963,8 +133930,9 @@
                 "0": {
                     "value": 0.292,
                     "dist": {
-                        "dist_name": "fixed",
+                        "dist_name": "expon",
                         "params": [
+                            0.0,
                             0.02599206349206349
                         ],
                         "min_value": 0.0,
@@ -134161,9 +134129,8 @@
                 "0": {
                     "value": 93.844,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "fixed",
                         "params": [
-                            0.0,
                             0.0649122807017544
                         ],
                         "min_value": 0.0,
@@ -134204,9 +134171,8 @@
                 "0": {
                     "value": 4.488,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "fixed",
                         "params": [
-                            0.0,
                             0.40584415584415584
                         ],
                         "min_value": 0.0,
@@ -134232,10 +134198,11 @@
                 "0": {
                     "value": 122.106,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            1.135714285714286
+                            324.4998653886742,
+                            -5e-324,
+                            8.314321067116906e-242
                         ],
                         "min_value": 0.0,
                         "max_value": 13.566666666666666
@@ -134358,10 +134325,11 @@
                 "0": {
                     "value": 126.923,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            1.1596354166666667
+                            315.79833056062324,
+                            -5e-324,
+                            3.768841789698802e-248
                         ],
                         "min_value": 0.0,
                         "max_value": 18.166666666666668
@@ -134499,11 +134467,10 @@
                 "0": {
                     "value": 528.215,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            280.0348911081215,
-                            -5e-324,
-                            4.314994517109715e-269
+                            0.0,
+                            1.5076271186440668
                         ],
                         "min_value": 0.0,
                         "max_value": 19.43333333333328
@@ -134543,11 +134510,10 @@
                 "0": {
                     "value": 133.888,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            328.1889924725535,
-                            -5e-324,
-                            4.814640881995505e-239
+                            0.0,
+                            1.9456284153005465
                         ],
                         "min_value": 0.0,
                         "max_value": 19.483333333333334
@@ -134688,10 +134654,11 @@
                 "0": {
                     "value": 116.014,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            1.4899425287356323
+                            344.93412381715916,
+                            -5e-324,
+                            1.5295819805430592e-223
                         ],
                         "min_value": 0.0,
                         "max_value": 18.183333333333334
@@ -134790,8 +134757,9 @@
                 "0": {
                     "value": 202.043,
                     "dist": {
-                        "dist_name": "fixed",
+                        "dist_name": "expon",
                         "params": [
+                            0.0,
                             0.26419753086419756
                         ],
                         "min_value": 0.0,
@@ -134942,11 +134910,10 @@
                 "0": {
                     "value": 46.152,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            322.8182866502198,
-                            -5e-324,
-                            4.3364826126647293e-243
+                            0.0,
+                            1.2773809523809523
                         ],
                         "min_value": 0.0,
                         "max_value": 16.716666666666665
@@ -135028,11 +134995,10 @@
                 "0": {
                     "value": 1881.841,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            252.1911406757394,
-                            -5e-324,
-                            2.624071570686263e-281
+                            0.0,
+                            0.2569182389937107
                         ],
                         "min_value": 0.0,
                         "max_value": 4.25
@@ -135070,9 +135036,8 @@
                 "0": {
                     "value": 101.727,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "fixed",
                         "params": [
-                            0.0,
                             0.3804878048780488
                         ],
                         "min_value": 0.0,
@@ -135084,11 +135049,10 @@
                 "0": {
                     "value": 693.931,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            327.10454469621277,
-                            -5e-324,
-                            7.932194934586805e-240
+                            0.0,
+                            1.631
                         ],
                         "min_value": 0.0,
                         "max_value": 17.883333333333333
@@ -135183,11 +135147,10 @@
                 "0": {
                     "value": 9.529,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            312.76432590543016,
-                            -5e-324,
-                            3.3583895999182587e-250
+                            0.0,
+                            0.7400584795321636
                         ],
                         "min_value": 0.0,
                         "max_value": 9.533333333333333
@@ -135267,11 +135230,10 @@
                 "0": {
                     "value": 82.356,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            289.0997596145209,
-                            -5e-324,
-                            3.543994625100362e-264
+                            0.0,
+                            0.1796296296296296
                         ],
                         "min_value": 0.0,
                         "max_value": 3.0166666666666666
@@ -135325,11 +135287,10 @@
                 "0": {
                     "value": 89.288,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            328.85792982294714,
-                            -5e-324,
-                            3.300175302244456e-238
+                            0.0,
+                            0.7051020408163267
                         ],
                         "min_value": 0.0,
                         "max_value": 13.883333333333333
@@ -135355,9 +135316,8 @@
                 "0": {
                     "value": 109.644,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "fixed",
                         "params": [
-                            0.0,
                             0.04607843137254902
                         ],
                         "min_value": 0.0,
@@ -135441,11 +135401,10 @@
                 "0": {
                     "value": 534.56,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            300.9601830881983,
-                            -5e-324,
-                            9.406822039729233e-258
+                            0.0,
+                            1.4170454545454536
                         ],
                         "min_value": 0.0,
                         "max_value": 14.549999999999955
@@ -135484,11 +135443,10 @@
                 "0": {
                     "value": 77.672,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            332.9615357053827,
-                            -5e-324,
-                            5.653170473829173e-235
+                            0.0,
+                            1.3320833333333333
                         ],
                         "min_value": 0.0,
                         "max_value": 16.566666666666666
@@ -135632,10 +135590,11 @@
                 "0": {
                     "value": 14.017,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            2.369918699186992
+                            339.43966224331285,
+                            -5e-324,
+                            3.32700655553013e-229
                         ],
                         "min_value": 0.0,
                         "max_value": 18.766666666666666
@@ -135676,10 +135635,11 @@
                 "0": {
                     "value": 477.292,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            1.7133333333333334
+                            281.3798715955924,
+                            -5e-324,
+                            1.8980222282034455e-268
                         ],
                         "min_value": 0.0,
                         "max_value": 18.166666666666668
@@ -135690,10 +135650,11 @@
                 "0": {
                     "value": 147.656,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            1.5967479674796752
+                            330.3658057880595,
+                            -5e-324,
+                            3.738574491459714e-237
                         ],
                         "min_value": 0.0,
                         "max_value": 17.516666666666666
@@ -135734,11 +135695,10 @@
                 "0": {
                     "value": 474.245,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            301.27419376032304,
-                            -5e-324,
-                            2.0655496976811088e-257
+                            0.0,
+                            0.7215686274509805
                         ],
                         "min_value": 0.0,
                         "max_value": 13.450000000000003
@@ -135764,9 +135724,8 @@
                 "0": {
                     "value": 204.175,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "fixed",
                         "params": [
-                            0.0,
                             0.1661904761904762
                         ],
                         "min_value": 0.0,
@@ -135852,11 +135811,10 @@
                 "0": {
                     "value": 25.753,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            287.8975897232034,
-                            -5e-324,
-                            4.310908427755659e-265
+                            0.0,
+                            1.588888888888889
                         ],
                         "min_value": 0.0,
                         "max_value": 15.1
@@ -135896,11 +135854,10 @@
                 "0": {
                     "value": 338.617,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            308.02945207412756,
-                            -5e-324,
-                            3.027370683339849e-253
+                            0.0,
+                            0.6729166666666666
                         ],
                         "min_value": 0.0,
                         "max_value": 12.2
@@ -135911,11 +135868,10 @@
                 "0": {
                     "value": 167.575,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            257.5511180378898,
-                            -5e-324,
-                            2.7226038456569055e-279
+                            0.0,
+                            1.7965517241379312
                         ],
                         "min_value": 0.0,
                         "max_value": 19.266666666666666
@@ -135926,11 +135882,10 @@
                 "0": {
                     "value": 13.086,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            298.2019630268244,
-                            -5e-324,
-                            2.802036308954968e-259
+                            0.0,
+                            0.7899999999999999
                         ],
                         "min_value": 0.0,
                         "max_value": 10.7
@@ -135956,11 +135911,10 @@
                 "0": {
                     "value": 281.626,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            289.3068165174314,
-                            -5e-324,
-                            3.9116883953135416e-264
+                            0.0,
+                            0.28950617283950614
                         ],
                         "min_value": 0.0,
                         "max_value": 2.783333333333333
@@ -135986,10 +135940,11 @@
                 "0": {
                     "value": 17.981,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            0.7166666666666669
+                            180.71249934974173,
+                            -5e-324,
+                            9.075068072282941e-304
                         ],
                         "min_value": 0.0,
                         "max_value": 19.38333333333334
@@ -136015,10 +135970,11 @@
                 "0": {
                     "value": 4.296,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            2.034375
+                            323.19663178300686,
+                            -5e-324,
+                            5.396195271233304e-243
                         ],
                         "min_value": 0.0,
                         "max_value": 14.916666666666666
@@ -136044,10 +136000,11 @@
                 "0": {
                     "value": 31.273,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            1.6125
+                            323.0891231113482,
+                            -5e-324,
+                            5.071393336102892e-243
                         ],
                         "min_value": 0.0,
                         "max_value": 10.616666666666667
@@ -136087,11 +136044,10 @@
                 "0": {
                     "value": 251.602,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            318.708841695923,
-                            -5e-324,
-                            5.880564462588259e-246
+                            0.0,
+                            0.635632183908046
                         ],
                         "min_value": 0.0,
                         "max_value": 10.533333333333333
@@ -136102,10 +136058,11 @@
                 "0": {
                     "value": 11.594,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            1.3679012345679011
+                            326.8418605166976,
+                            -5e-324,
+                            4.6760632928151847e-240
                         ],
                         "min_value": 0.0,
                         "max_value": 12.166666666666666
@@ -136160,11 +136117,10 @@
                 "0": {
                     "value": 19.761,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            214.25705063288183,
-                            -5e-324,
-                            1.3151742056607838e-294
+                            0.0,
+                            0.22121212121212122
                         ],
                         "min_value": 0.0,
                         "max_value": 3.066666666666667
@@ -136175,11 +136131,10 @@
                 "0": {
                     "value": 156.861,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            323.21231089263966,
-                            -5e-324,
-                            5.444981404834981e-243
+                            0.0,
+                            2.4055555555555554
                         ],
                         "min_value": 0.0,
                         "max_value": 19.983333333333334
@@ -136218,10 +136173,11 @@
                 "0": {
                     "value": 208.439,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            1.7506666666666666
+                            347.6870811015474,
+                            -5e-324,
+                            1.8954431101456965e-220
                         ],
                         "min_value": 0.0,
                         "max_value": 19.583333333333332
@@ -136232,11 +136188,10 @@
                 "0": {
                     "value": 146.001,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            317.8737550804219,
-                            -5e-324,
-                            1.8688861413174167e-246
+                            0.0,
+                            0.316
                         ],
                         "min_value": 0.0,
                         "max_value": 4.516666666666667
@@ -136306,10 +136261,11 @@
                 "0": {
                     "value": 38.343,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            2.04
+                            341.81605836152954,
+                            -5e-324,
+                            7.5202486148233605e-227
                         ],
                         "min_value": 0.0,
                         "max_value": 19.9
@@ -136409,10 +136365,11 @@
                 "0": {
                     "value": 143.762,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            0.05454545454545454
+                            213.86462148298625,
+                            -5e-324,
+                            1.1616912302811496e-294
                         ],
                         "min_value": 0.0,
                         "max_value": 0.6
@@ -136423,11 +136380,10 @@
                 "0": {
                     "value": 356.549,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            269.26265162685377,
-                            -5e-324,
-                            3.604436949881351e-274
+                            0.0,
+                            1.2230769230769232
                         ],
                         "min_value": 0.0,
                         "max_value": 12.716666666666667
@@ -136438,11 +136394,10 @@
                 "0": {
                     "value": 346.744,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            339.90909279360534,
-                            -5e-324,
-                            9.603652595494623e-229
+                            0.0,
+                            1.8627450980392157
                         ],
                         "min_value": 0.0,
                         "max_value": 16.766666666666666
@@ -136453,11 +136408,10 @@
                 "0": {
                     "value": 80.834,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            228.92755649432942,
-                            -5e-324,
-                            6.239794662641431e-290
+                            0.0,
+                            1.0578947368421052
                         ],
                         "min_value": 0.0,
                         "max_value": 19.016666666666666
@@ -136468,11 +136422,10 @@
                 "0": {
                     "value": 21.434,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            261.0293158261245,
-                            -5e-324,
-                            9.42479974901567e-278
+                            0.0,
+                            0.6821428571428572
                         ],
                         "min_value": 0.0,
                         "max_value": 6.25
@@ -136513,10 +136466,11 @@
                 "0": {
                     "value": 10.66,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            1.6622222222222223
+                            298.53227927767466,
+                            -5e-324,
+                            3.3052780592991717e-259
                         ],
                         "min_value": 0.0,
                         "max_value": 14.716666666666667
@@ -136527,10 +136481,11 @@
                 "0": {
                     "value": 782.681,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            1.0180555555555555
+                            322.6460962326391,
+                            -5e-324,
+                            3.9257326753838886e-243
                         ],
                         "min_value": 0.0,
                         "max_value": 10.083333333333334
@@ -136556,11 +136511,10 @@
                 "0": {
                     "value": 11.149,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            323.12705118449827,
-                            -5e-324,
-                            5.182637568131318e-243
+                            0.0,
+                            2.420833333333333
                         ],
                         "min_value": 0.0,
                         "max_value": 19.316666666666666
@@ -136702,11 +136656,10 @@
                 "0": {
                     "value": 14.012,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            360.9018670247197,
-                            -5e-324,
-                            1.2654071456059513e-202
+                            0.0,
+                            1.2104166666666554
                         ],
                         "min_value": 0.0,
                         "max_value": 5.599999999999909
@@ -136730,11 +136683,10 @@
                 "0": {
                     "value": 0.113,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            233.9601382329368,
-                            -5e-324,
-                            4.1447190126899725e-288
+                            0.0,
+                            0.11296296296296296
                         ],
                         "min_value": 0.0,
                         "max_value": 1.0166666666666666
@@ -136745,11 +136697,10 @@
                 "0": {
                     "value": 18.278,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            337.3117866413657,
-                            -5e-324,
-                            2.2072084276401347e-231
+                            0.0,
+                            2.9714285714285715
                         ],
                         "min_value": 0.0,
                         "max_value": 15.033333333333333
@@ -136760,10 +136711,11 @@
                 "0": {
                     "value": 1.73,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            1.7296296296296296
+                            351.4127668312814,
+                            -5e-324,
+                            4.0718567060927766e-216
                         ],
                         "min_value": 0.0,
                         "max_value": 11.333333333333334
@@ -136802,10 +136754,10 @@
                 "0": {
                     "value": 253.286,
                     "dist": {
-                        "dist_name": "norm",
+                        "dist_name": "uniform",
                         "params": [
-                            1.3083333333333333,
-                            0.900732726420243
+                            0.0,
+                            2.3
                         ],
                         "min_value": 0.0,
                         "max_value": 2.3
@@ -136856,10 +136808,10 @@
                 "0": {
                     "value": 3.667,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "uniform",
                         "params": [
                             0.0,
-                            3.666666666666667
+                            7.983333333333333
                         ],
                         "min_value": 0.0,
                         "max_value": 7.983333333333333
@@ -136870,10 +136822,10 @@
                 "0": {
                     "value": 2.128,
                     "dist": {
-                        "dist_name": "norm",
+                        "dist_name": "expon",
                         "params": [
-                            2.1277777777777778,
-                            0.8811118116853037
+                            0.9666666666666667,
+                            1.161111111111111
                         ],
                         "min_value": 0.9666666666666667,
                         "max_value": 3.1
@@ -136897,10 +136849,11 @@
                 "0": {
                     "value": 164.328,
                     "dist": {
-                        "dist_name": "uniform",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.5166666666666515,
-                            1.0500000000000151
+                            18.392795366923274,
+                            0.5166666666666514,
+                            1.07969170407873e-08
                         ],
                         "min_value": 0.5166666666666515,
                         "max_value": 1.5666666666666667
@@ -136911,10 +136864,11 @@
                 "0": {
                     "value": 0.006,
                     "dist": {
-                        "dist_name": "norm",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.005555555555555556,
-                            0.00785674201318386
+                            349.0023228254322,
+                            -5e-324,
+                            7.409792068968747e-217
                         ],
                         "min_value": 0.0,
                         "max_value": 0.016666666666666666
