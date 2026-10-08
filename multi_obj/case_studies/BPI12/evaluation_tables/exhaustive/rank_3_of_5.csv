@@ -1,1 +1,3 @@
-
+case_study,method,rank,k_total,case:concept:name,rec_activity,rec_resource,sim_status_method_mean,sim_remaining_time_method_mean_sigmoid_mm,sim_remaining_time_method_mean,sim_rec_applied_fraction,sim_status_baseline_mean,sim_remaining_time_baseline_mean_sigmoid_mm,sim_remaining_time_baseline_mean,pred_status_with_rec,pred_remaining_time_with_rec_sigmoid_mm,pred_remaining_time_with_rec,pred_status_no_rec,pred_remaining_time_no_rec_sigmoid_mm,pred_remaining_time_no_rec
+BPI12,exhaustive,3,5,209652,A_ACCEPTED,10972,0.4,0.43888063007580735,1608815.7,1.0,0.5,0.5640775597999474,2051530.8,0.43642142396184874,0.46550410458081226,1487145.2908123815,0.33423435025545284,0.46550410458081226,1487145.2908123815
+BPI12,exhaustive,3,5,209957,W_Complete_preaccepted_appl,10629,0.5,0.630475996811699,2491182.1,1.0,0.5,0.6376080312478883,2332570.9,0.3247709643436706,0.46213320113319734,1476518.6384359975,0.32177510929029063,0.4766501258506496,1522455.4252090934

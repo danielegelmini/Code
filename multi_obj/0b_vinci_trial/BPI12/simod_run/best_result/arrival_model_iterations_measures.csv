@@ -1,0 +1,2 @@
+distance,metric,status,outlier_threshold,output_dir,project_name,optimization_metric
+91.51120597652081,arrival_event_distribution,ok,17.698067202138997,C:\Users\Utente\Desktop\tesi magistrale\Code\multi_obj\0b_vinci_trial\BPI12\simod_run\case_arrival\iteration_20261006_163222_34AE40FB_244F_4256_BB4C_24B60BED552C,BPI12,ARRIVAL_EVENT_DISTRIBUTION

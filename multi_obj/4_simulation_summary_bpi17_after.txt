@@ -1,0 +1,52 @@
+==============================================================================================================
+SIMULATION SUMMARY - bpi17_after (exhaustive)
+Written by 4_run_recommendation_simulation.py - 2026-10-08 11:30:03
+Test cases (prefixes in test_log.csv): 1840
+==============================================================================================================
+simulated          : test cases with a recommendation at this rank (step 3): only these are continued
+                     by the simulator (all of them for the baseline). % of test: share of the test cases.
+unreach./run       : cases whose recommendation could not be applied in a run (not enabled and not
+                     reachable through silent transitions from the replayed prefix). The case is NOT
+                     stopped: it continues without the recommendation, and step 5 drops that run.
+unreach. all runs  : cases unreachable in every run -> no usable run, excluded from step 5.
+% case-runs usable : (simulated cases x runs - unreachable case-runs) / (simulated cases x runs).
+runaway/run        : cases truncated by the event cap (should be 0).
+non-fitting / inserted act. / ambiguous: prefix replay diagnostics of run 1 (properties of the prefixes).
+
+(a) Cases simulated and recommendations not applicable
+scenario  runs  simulated % of test unreach./run (mean) min-max  unreach. >=1 run  unreach. all runs % case-runs usable  cases usable (step 5) runaway/run  non-fitting prefixes  inserted act.  ambiguous
+baseline    10       1840     100.0                 0.0     0-0                 0                  0              100.0                   1840         0.0                   290            263          0
+rank 1/5    10       1836      99.8               359.0 359-359               359                359               80.4                   1477         0.0                   286            260          0
+rank 2/5    10       1251      68.0               251.0 251-251               251                251               79.9                   1000         0.0                   215            191          0
+rank 3/5    10        144       7.8                54.0   54-54                54                 54               62.5                     90         0.0                    61             53          0
+rank 4/5    10         40       2.2                30.0   30-30                30                 30               25.0                     10         0.0                    34             31          0
+rank 5/5    10          0       0.0                 0.0     0-0                 0                  0                n/a                      0         0.0                     0              0          0
+
+(b) Unreachable recommendations by reason
+scenario                                     reason  cases (>=1 run)  case-runs
+rank 1/5 not_reachable_from_replayed_prefix_marking              359       3590
+rank 2/5 not_reachable_from_replayed_prefix_marking              251       2510
+rank 3/5 not_reachable_from_replayed_prefix_marking               54        540
+rank 4/5 not_reachable_from_replayed_prefix_marking               30        300
+
+(c) Most frequent unreachable recommended activities (cases, >=1 run)
+scenario     recommended activity  unreachable cases
+rank 1/5             A_Validating                311
+rank 1/5             A_Incomplete                 42
+rank 1/5     O_Sent (online only)                  2
+rank 1/5           O_Create Offer                  2
+rank 1/5  W_Call incomplete files                  2
+rank 2/5             A_Validating                195
+rank 2/5               O_Returned                 29
+rank 2/5  W_Call incomplete files                 15
+rank 2/5             A_Incomplete                  9
+rank 2/5 O_Sent (mail and online)                  2
+rank 3/5  W_Call incomplete files                 22
+rank 3/5               O_Returned                 20
+rank 3/5             A_Validating                 11
+rank 3/5           O_Create Offer                  1
+rank 4/5  W_Call incomplete files                 21
+rank 4/5               O_Returned                  7
+rank 4/5           O_Create Offer                  1
+rank 4/5             A_Validating                  1
+

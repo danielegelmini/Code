@@ -121,15 +121,22 @@ def feature_vector(models: dict, case_attributes: dict, case_history: dict, age_
     return out
 
 
-def sample_wait_days(models: dict, place_name: str, x: list, min_days: float, rng) -> float:
+def sample_wait_days(models: dict, place_name: str, x: list, min_days: float, rng, max_days: float = None) -> float:
     """Draws the waiting time (days) of a case in a place from the waiting times observed in the
-    leaf of its time tree, keeping only those >= min_days; falls back to the whole place, then to
-    min_days itself."""
+    leaf of its time tree, keeping only those >= min_days (and <= max_days when given); falls back
+    to the whole place, then to min_days itself."""
     tm = models["time"][place_name]
     values = tm["leaf"].get(tm["tree"].apply(np.array([x]))[0], tm["all"])
-    candidates = values[values >= min_days]
+
+    def keep(v):
+        ok = v >= min_days
+        if max_days is not None:
+            ok &= v <= max_days
+        return v[ok]
+
+    candidates = keep(values)
     if len(candidates) == 0:
-        candidates = tm["all"][tm["all"] >= min_days]
+        candidates = keep(tm["all"])
     return float(rng.choice(list(candidates))) if len(candidates) else float(min_days)
 
 

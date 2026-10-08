@@ -1,0 +1,21 @@
+case_study,method,rank,test_cases,with_recommendation,pct_with_recommendation,top_activities
+BAC,exhaustive,1,1876,1397,74.46695095948827,Pending Liquidation Request (32%); Service closure Request with BO responsibility (27%); Service closure Request with network responsibility (19%)
+BAC,exhaustive,2,1876,261,13.912579957356076,Service closure Request with BO responsibility (68%); Authorization Requested (28%); Request completed with account closure (3%)
+BAC,exhaustive,3,1876,10,0.5330490405117271,Service closure Request with BO responsibility (100%)
+BAC,exhaustive,4,1876,0,0.0,
+BAC,exhaustive,5,1876,0,0.0,
+BPI12,exhaustive,1,623,616,98.87640449438203,O_SENT_BACK (84%); W_Assess_application (13%); A_ACCEPTED (2%)
+BPI12,exhaustive,2,623,579,92.93739967897271,O_SENT_BACK (88%); W_Assess_application (10%); W_Fix_incoplete_submission (1%)
+BPI12,exhaustive,3,623,2,0.32102728731942215,A_ACCEPTED (50%); W_Complete_preaccepted_appl (50%)
+BPI12,exhaustive,4,623,0,0.0,
+BPI12,exhaustive,5,623,0,0.0,
+bpi17_before,exhaustive,1,1218,1195,98.11165845648604,A_Validating (91%); A_Accepted (7%); A_Incomplete (1%)
+bpi17_before,exhaustive,2,1218,1159,95.1559934318555,A_Validating (92%); A_Accepted (6%); A_Incomplete (1%)
+bpi17_before,exhaustive,3,1218,734,60.26272577996716,A_Validating (90%); A_Accepted (7%); W_Call incomplete files (2%)
+bpi17_before,exhaustive,4,1218,23,1.8883415435139572,A_Validating (70%); W_Call incomplete files (26%); O_Cancelled (4%)
+bpi17_before,exhaustive,5,1218,0,0.0,
+bpi17_after,exhaustive,1,1840,1836,99.78260869565217,A_Validating (93%); A_Incomplete (4%); A_Accepted (2%)
+bpi17_after,exhaustive,2,1840,1251,67.98913043478261,A_Validating (93%); O_Returned (2%); W_Call incomplete files (2%)
+bpi17_after,exhaustive,3,1840,144,7.826086956521739,A_Validating (64%); W_Call incomplete files (21%); O_Returned (14%)
+bpi17_after,exhaustive,4,1840,40,2.1739130434782608,W_Call incomplete files (72%); O_Returned (18%); A_Validating (8%)
+bpi17_after,exhaustive,5,1840,0,0.0,

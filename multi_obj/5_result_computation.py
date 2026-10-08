@@ -32,8 +32,9 @@ one row per case_id:
       on the case's prefix with NEXT_ACTIVITY/NEXT_RESOURCE = the recommendation)
   - pred_status_no_rec, pred_remaining_time_no_rec_sigmoid_mm,
     pred_remaining_time_no_rec
-      (same models on the prefix with the actual historical NEXT_ACTIVITY/
-      NEXT_RESOURCE -- rank/method independent, computed once and reused)
+      (same models on the prefix with NEXT_ACTIVITY = NEXT_RESOURCE = NO_NEXT_TOKEN,
+      the "no recommendation" baseline of the confidence filter -- rank/method
+      independent, computed once and reused)
 
 Remaining time -- reference point and scale. Both the predicted and the
 simulated remaining time are measured from the SAME point, the end of the
@@ -78,11 +79,12 @@ from utils.simulation_functions import (
     activity_column_name,
     resource_column_name,
 )
-from utils.pre_processing_functions import convert_dtypes_bpi12
+from utils.pre_processing_functions import convert_dtypes_bpi12, NO_NEXT_TOKEN
 from utils.recommendation_functions import (
     build_query_instances,
     align_query_instance_with_model,
     predict_outcome_proba,
+    predict_time_and_uncertainty,
 )
 from utils.get_features import load_case_study, get_case_study_features
 
@@ -269,7 +271,10 @@ def predict_batch(
         time_rows.append(t_row)
 
     predicted_status = predict_outcome_proba(predictive_outcome_model, pd.DataFrame(outcome_rows))
-    predicted_rt = predictive_time_model.predict(pd.DataFrame(time_rows))
+    # virtual-ensemble mean, the remaining time the recommender ranks the candidates on (step 3,
+    # predict_time_and_uncertainty), not the full model's .predict(): the "predicted" points are then
+    # exactly the ones the Pareto front was built from
+    predicted_rt, _ = predict_time_and_uncertainty(predictive_time_model, pd.DataFrame(time_rows))
     return predicted_status, predicted_rt
 
 
@@ -345,8 +350,12 @@ def compute_case_study_tables(base_dir: Path, case_study: str, output_subdir: st
     pred_no_rec: dict[str, tuple[float, float, float]] = {}
     if no_rec_ids:
         no_rec_qis = [query_instances_by_case[cid] for cid in no_rec_ids]
-        no_rec_acts = [qi["NEXT_ACTIVITY"] for qi in no_rec_qis]
-        no_rec_ress = [qi["NEXT_RESOURCE"] for qi in no_rec_qis]
+        # "no recommendation" = NO_NEXT_TOKEN as next step: the baseline the confidence filter of step 3
+        # compares every candidate with, and the predicted counterpart of the baseline simulation (the case
+        # left free to continue). The query instance's own NEXT_ACTIVITY/NEXT_RESOURCE is the step that
+        # really followed the split, known only afterwards, so it is not used here.
+        no_rec_acts = [NO_NEXT_TOKEN] * len(no_rec_qis)
+        no_rec_ress = [NO_NEXT_TOKEN] * len(no_rec_qis)
         pred_status_no_arr, pred_rt_no_sigmoid_arr = predict_batch(
             no_rec_qis, no_rec_acts, no_rec_ress, predictive_outcome_model, predictive_time_model
         )
@@ -378,7 +387,11 @@ def compute_case_study_tables(base_dir: Path, case_study: str, output_subdir: st
                 continue
 
             print(f"    Processing {case_study}/{method} rank {rank}/{k_total}...")
-            rec_df = pd.read_csv(rec_path, dtype={case_id_name_local: str})
+            # Next_activity/Next_resource read as str, as 4_run_recommendation_simulation.py does: with missing
+            # values (cases with no recommendation at this rank) and numeric-looking resource ids (BPI12's),
+            # pandas would infer float64 and "10972" would become "10972.0", a resource the models never saw --
+            # every recommendation of a case would then be predicted as the same unknown resource.
+            rec_df = pd.read_csv(rec_path, dtype={case_id_name_local: str, "Next_activity": str, "Next_resource": str})
             if case_study in BPI12_DTYPE_CASE_STUDIES:
                 rec_df = convert_dtypes_bpi12(rec_df, "simulation_prep")
 

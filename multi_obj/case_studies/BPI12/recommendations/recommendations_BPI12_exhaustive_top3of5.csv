@@ -594,7 +594,7 @@ case:concept:name,Next_activity,Next_resource
 209607,,
 209619,,
 209646,,
-209652,,
+209652,A_ACCEPTED,10972
 209661,,
 209664,,
 209667,,
@@ -620,5 +620,5 @@ case:concept:name,Next_activity,Next_resource
 209910,,
 209913,,
 209939,,
-209957,,
+209957,W_Complete_preaccepted_appl,10629
 210008,,

@@ -43,9 +43,10 @@ import numpy as np
 import pandas as pd
 
 from utils.get_features import load_case_study, get_case_study_features
-from utils.recommendation_functions import build_query_instances, align_query_instance_with_model, predict_outcome_proba
+from utils.recommendation_functions import (build_query_instances, align_query_instance_with_model, predict_outcome_proba,
+                                            predict_time_and_uncertainty)
 from utils.simulation_functions import case_id_name
-from utils.pre_processing_functions import convert_dtypes_bpi12
+from utils.pre_processing_functions import convert_dtypes_bpi12, NO_NEXT_TOKEN
 
 METHODS = ["exhaustive", "nsga2"]
 DEFAULT_METHOD = "exhaustive"
@@ -114,7 +115,8 @@ def predict_batch(query_instances, acts, resources, predictive_outcome_model, pr
         time_rows.append(t_row)
 
     predicted_status = predict_outcome_proba(predictive_outcome_model, pd.DataFrame(outcome_rows))
-    predicted_rt_sigmoid_mm = predictive_time_model.predict(pd.DataFrame(time_rows))
+    # virtual-ensemble mean, as 5_result_computation.py and the recommender use it
+    predicted_rt_sigmoid_mm, _ = predict_time_and_uncertainty(predictive_time_model, pd.DataFrame(time_rows))
     return np.asarray(predicted_status, dtype=float), np.asarray(predicted_rt_sigmoid_mm, dtype=float)
 
 
@@ -150,8 +152,10 @@ def predict_with_sim_model(
         [qi] * len(rows), acts, resources, predictive_outcome_model, predictive_time_model
     )
 
+    # "no recommendation" = NO_NEXT_TOKEN, the same baseline 5_result_computation.py and the confidence
+    # filter use (the query instance's own NEXT_* is the step that really followed the split)
     baseline_status_arr, baseline_rt_arr = predict_batch(
-        [qi], [qi["NEXT_ACTIVITY"]], [qi["NEXT_RESOURCE"]], predictive_outcome_model, predictive_time_model
+        [qi], [NO_NEXT_TOKEN], [NO_NEXT_TOKEN], predictive_outcome_model, predictive_time_model
     )
     return status_arr, rt_sigmoid_arr, float(baseline_status_arr[0]), float(baseline_rt_arr[0])
 

@@ -21,22 +21,6 @@
                     "value": 0.11661391822765245
                 }
             },
-            "sfl_6c4a09b7-2047-4f2f-9a5c-c7300f287dd2": {
-                "0": {
-                    "feature": "AMOUNT_REQ = 7000",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.37011689253136265
-                },
-                "2": {
-                    "value": 0.4173085374039609
-                }
-            },
             "sfl_36a52448-e970-4088-ab0b-af82d272f81f": {
                 "0": {
                     "feature": "AMOUNT_REQ = 8000",
@@ -75,78 +59,9 @@
                     "value": 0.42664136922408
                 }
             },
-            "A_ACCEPTED": 1.0,
-            "O_SELECTED": 1.0,
-            "sfl_7023f11f-6e4d-4abd-8de4-fdb72930d969": {
+            "sfl_6c4a09b7-2047-4f2f-9a5c-c7300f287dd2": {
                 "0": {
-                    "feature": "O_SELECTED",
-                    "threshold": 1.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.005325214541824623
-                },
-                "2": {
-                    "value": 0.9562168928217573
-                }
-            },
-            "A_FINALIZED": {
-                "0": {
-                    "feature": "O_SELECTED",
-                    "threshold": 1.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.9946747854581754
-                },
-                "2": {
-                    "value": 0.043783107178242756
-                }
-            },
-            "O_CREATED": 1.0,
-            "O_SENT": 1.0,
-            "sfl_e18b1857-81d4-4f73-a720-4dd526924257": {
-                "0": {
-                    "feature": "O_SELECTED",
-                    "threshold": 1.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.005325214541824623
-                },
-                "2": {
-                    "value": 0.9562168928217573
-                }
-            },
-            "sfl_d4fedf5c-a305-4261-b584-8c70638f8852": {
-                "0": {
-                    "feature": "O_SELECTED",
-                    "threshold": 1.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.9946747854581754
-                },
-                "2": {
-                    "value": 0.043783107178242756
-                }
-            },
-            "W_Complete_preaccepted_appl": 1.0,
-            "sfl_67bfb56b-eae6-4285-9e00-c5d93979f386": {
-                "0": {
-                    "feature": "O_SELECTED",
+                    "feature": "AMOUNT_REQ = 7000",
                     "threshold": 0.5,
                     "children": {
                         "true": 1,
@@ -154,15 +69,116 @@
                     }
                 },
                 "1": {
-                    "value": 0.38452997730181665
+                    "value": 0.37011689253136265
                 },
                 "2": {
-                    "value": 0.06048185445426646
+                    "value": 0.4173085374039609
+                }
+            },
+            "A_ACCEPTED": 1.0,
+            "O_SELECTED": 1.0,
+            "A_FINALIZED": {
+                "0": {
+                    "feature": "O_CREATED",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 1,
+                        "false": 2
+                    }
+                },
+                "1": {
+                    "value": 0.9946723087681235
+                },
+                "2": {
+                    "value": 0.04375043890515017
+                }
+            },
+            "sfl_7023f11f-6e4d-4abd-8de4-fdb72930d969": {
+                "0": {
+                    "feature": "O_CREATED",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 1,
+                        "false": 2
+                    }
+                },
+                "1": {
+                    "value": 0.005327691231876545
+                },
+                "2": {
+                    "value": 0.9562495610948498
+                }
+            },
+            "O_CREATED": 1.0,
+            "O_SENT": 1.0,
+            "sfl_d4fedf5c-a305-4261-b584-8c70638f8852": {
+                "0": {
+                    "feature": "O_CREATED",
+                    "threshold": 1.5,
+                    "children": {
+                        "true": 1,
+                        "false": 2
+                    }
+                },
+                "1": {
+                    "value": 0.9946723087681235
+                },
+                "2": {
+                    "value": 0.04375043890515017
+                }
+            },
+            "sfl_e18b1857-81d4-4f73-a720-4dd526924257": {
+                "0": {
+                    "feature": "O_CREATED",
+                    "threshold": 1.5,
+                    "children": {
+                        "true": 1,
+                        "false": 2
+                    }
+                },
+                "1": {
+                    "value": 0.005327691231876545
+                },
+                "2": {
+                    "value": 0.9562495610948498
+                }
+            },
+            "W_Complete_preaccepted_appl": 1.0,
+            "sfl_67bfb56b-eae6-4285-9e00-c5d93979f386": {
+                "0": {
+                    "feature": "O_CREATED",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 1,
+                        "false": 2
+                    }
+                },
+                "1": {
+                    "value": 0.38454938030145386
+                },
+                "2": {
+                    "value": 0.06342111385743805
+                }
+            },
+            "sfl_2ffc43eb-f93c-4b92-8ccb-4c2f976d5e2c": {
+                "0": {
+                    "feature": "O_CREATED",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 1,
+                        "false": 2
+                    }
+                },
+                "1": {
+                    "value": 0.0044100246318308535
+                },
+                "2": {
+                    "value": 0.6680516729208567
                 }
             },
             "O_SENT_BACK": {
                 "0": {
-                    "feature": "O_SELECTED",
+                    "feature": "O_CREATED",
                     "threshold": 0.5,
                     "children": {
                         "true": 1,
@@ -178,7 +194,7 @@
             },
             "sfl_f3fa1746-9f22-49b3-9102-725ba8abd6d3": {
                 "0": {
-                    "feature": "O_SELECTED",
+                    "feature": "O_CREATED",
                     "threshold": 0.5,
                     "children": {
                         "true": 1,
@@ -192,39 +208,7 @@
                     "value": 0.011761909644644481
                 }
             },
-            "sfl_2ffc43eb-f93c-4b92-8ccb-4c2f976d5e2c": {
-                "0": {
-                    "feature": "O_SELECTED",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.004429427631468074
-                },
-                "2": {
-                    "value": 0.6709909323240282
-                }
-            },
             "W_Call_after_offer": 1.0,
-            "A_CANCELLED": {
-                "0": {
-                    "feature": "W_Call_after_offer",
-                    "threshold": 1.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.1427922334305499
-                },
-                "2": {
-                    "value": 0.03970758248568588
-                }
-            },
             "sfl_e2764518-d929-4eea-89d1-2572452b7ff6": {
                 "0": {
                     "feature": "O_SENT_BACK",
@@ -235,42 +219,26 @@
                     }
                 },
                 "1": {
-                    "value": 0.7621346039399676
+                    "value": 0.7625899517274508
                 },
                 "2": {
-                    "value": 0.053331394769512486
+                    "value": 0.05340358052913403
                 }
             },
-            "A_DECLINED": {
-                "0": {
-                    "feature": "O_SENT_BACK",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.020448647402465454
-                },
-                "2": {
-                    "value": 0.16041570356462476
-                }
-            },
-            "sfl_ddf8f806-c56f-469b-9a8d-0c9d822eb024": {
+            "A_CANCELLED": {
                 "0": {
                     "feature": "W_Call_after_offer",
-                    "threshold": 7.5,
+                    "threshold": 1.5,
                     "children": {
                         "true": 1,
                         "false": 2
                     }
                 },
                 "1": {
-                    "value": 0.05330043371062077
+                    "value": 0.13922752247025355
                 },
                 "2": {
-                    "value": 0.15292716598215214
+                    "value": 0.039973937938006285
                 }
             },
             "sfl_e92af7ff-6d52-4996-af78-f5912c2e8ec1": {
@@ -283,10 +251,42 @@
                     }
                 },
                 "1": {
-                    "value": 0.07780116820895241
+                    "value": 0.07784779388659611
                 },
                 "2": {
-                    "value": 0.7593157426770996
+                    "value": 0.7598857460411869
+                }
+            },
+            "sfl_ddf8f806-c56f-469b-9a8d-0c9d822eb024": {
+                "0": {
+                    "feature": "W_Call_after_offer",
+                    "threshold": 7.5,
+                    "children": {
+                        "true": 1,
+                        "false": 2
+                    }
+                },
+                "1": {
+                    "value": 0.05343899392202481
+                },
+                "2": {
+                    "value": 0.1525426074020947
+                }
+            },
+            "A_DECLINED": {
+                "0": {
+                    "feature": "O_SENT_BACK",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 1,
+                        "false": 2
+                    }
+                },
+                "1": {
+                    "value": 0.020460894737754153
+                },
+                "2": {
+                    "value": 0.1605362949461833
                 }
             },
             "W_Assess_application": 1.0,
@@ -300,7 +300,7 @@
                     }
                 },
                 "1": {
-                    "feature": "O_DECLINED",
+                    "feature": "A_DECLINED",
                     "threshold": 0.5,
                     "children": {
                         "true": 2,
@@ -322,26 +322,10 @@
                     }
                 },
                 "5": {
-                    "value": 0.9352012178524953
+                    "value": 0.935175686417449
                 },
                 "6": {
-                    "value": 0.4981147198830421
-                }
-            },
-            "sfl_83fe1968-3a04-440c-bb58-f8c0b1a06279": {
-                "0": {
-                    "feature": "W_Assess_application",
-                    "threshold": 1.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.28861850443179987
-                },
-                "2": {
-                    "value": 0.04497226272693768
+                    "value": 0.4999135918547875
                 }
             },
             "sfl_db62b5b4-5b5b-427b-870e-732950d92ab1": {
@@ -350,7 +334,7 @@
                     "threshold": 0.5,
                     "children": {
                         "true": 1,
-                        "false": 4
+                        "false": 8
                     }
                 },
                 "1": {
@@ -358,28 +342,72 @@
                     "threshold": 1.5,
                     "children": {
                         "true": 2,
-                        "false": 3
+                        "false": 5
                     }
                 },
                 "2": {
-                    "value": 0.22943215567948583
+                    "feature": "A_DECLINED",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 3,
+                        "false": 4
+                    }
                 },
                 "3": {
-                    "value": 0.5047707633171263
+                    "value": 0.2826117109392534
                 },
                 "4": {
+                    "value": 0.032213909400923016
+                },
+                "5": {
+                    "feature": "W_Assess_application",
+                    "threshold": 2.5,
+                    "children": {
+                        "true": 6,
+                        "false": 7
+                    }
+                },
+                "6": {
+                    "value": 0.4419863495750509
+                },
+                "7": {
+                    "value": 0.533581659087436
+                },
+                "8": {
                     "feature": "W_Assess_application",
                     "threshold": 4.5,
                     "children": {
-                        "true": 5,
-                        "false": 6
+                        "true": 9,
+                        "false": 12
                     }
                 },
-                "5": {
-                    "value": 0.04573957494780747
+                "9": {
+                    "feature": "W_Call_missing_information",
+                    "threshold": 4.5,
+                    "children": {
+                        "true": 10,
+                        "false": 11
+                    }
                 },
-                "6": {
-                    "value": 0.3074327527537772
+                "10": {
+                    "value": 0.015695914326487963
+                },
+                "11": {
+                    "value": 0.12419392783734926
+                },
+                "12": {
+                    "feature": "W_Call_missing_information",
+                    "threshold": 5.5,
+                    "children": {
+                        "true": 13,
+                        "false": 14
+                    }
+                },
+                "13": {
+                    "value": 0.17976834036087955
+                },
+                "14": {
+                    "value": 0.3867094638428407
                 }
             },
             "sfl_b995e089-6c3c-4226-8ec1-00ba603b6a35": {
@@ -392,10 +420,26 @@
                     }
                 },
                 "1": {
-                    "value": 0.27774120928210605
+                    "value": 0.27753113254284034
                 },
                 "2": {
-                    "value": 0.00923862156281259
+                    "value": 0.009233608582703192
+                }
+            },
+            "sfl_83fe1968-3a04-440c-bb58-f8c0b1a06279": {
+                "0": {
+                    "feature": "W_Assess_application",
+                    "threshold": 1.5,
+                    "children": {
+                        "true": 1,
+                        "false": 2
+                    }
+                },
+                "1": {
+                    "value": 0.2889264085226131
+                },
+                "2": {
+                    "value": 0.044975467495633505
                 }
             },
             "O_ACCEPTED": 1.0,
@@ -406,22 +450,6 @@
             "O_CANCELLED": 1.0,
             "O_DECLINED": 1.0,
             "W_Call_missing_information": 1.0,
-            "sfl_b0f3904b-114b-428e-b1ce-15071b123f6a": {
-                "0": {
-                    "feature": "W_Call_missing_information",
-                    "threshold": 1.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.942148525396683
-                },
-                "2": {
-                    "value": 0.8552614758570062
-                }
-            },
             "sfl_05ae6972-2a84-41f9-9277-ad3ecfe5e8b6": {
                 "0": {
                     "feature": "W_Call_missing_information",
@@ -432,10 +460,26 @@
                     }
                 },
                 "1": {
-                    "value": 0.05785147460331699
+                    "value": 0.057887024851559526
                 },
                 "2": {
-                    "value": 0.14473852414299382
+                    "value": 0.14464045728900252
+                }
+            },
+            "sfl_b0f3904b-114b-428e-b1ce-15071b123f6a": {
+                "0": {
+                    "feature": "W_Call_missing_information",
+                    "threshold": 1.5,
+                    "children": {
+                        "true": 1,
+                        "false": 2
+                    }
+                },
+                "1": {
+                    "value": 0.9421129751484405
+                },
+                "2": {
+                    "value": 0.8553595427109975
                 }
             },
             "W_Fix_incoplete_submission": 1.0,
@@ -471,9 +515,9 @@
                     "value": 0.49337352766240833
                 }
             },
+            "W_Assess_fraud": 0,
             "sfl_7b326fb0-bef1-4053-a89f-ff16586aa6f5": 0,
-            "sfl_57414911-4c76-4c5a-984f-9a9dab447878": 0,
-            "W_Assess_fraud": 0
+            "sfl_57414911-4c76-4c5a-984f-9a9dab447878": 0
         }
     },
     "resource_params": {
@@ -14066,10 +14110,11 @@
             "6": {
                 "value": 33.232,
                 "dist": {
-                    "dist_name": "expon",
+                    "dist_name": "lognorm",
                     "params": [
-                        0.013116666666666667,
-                        33.21889145176695
+                        1.097343211984496,
+                        -1.614939856920189,
+                        20.54281932357924
                     ],
                     "min_value": 0.013116666666666667,
                     "max_value": 229.5417
@@ -14139,10 +14184,11 @@
             "13": {
                 "value": 58.196,
                 "dist": {
-                    "dist_name": "expon",
+                    "dist_name": "lognorm",
                     "params": [
-                        0.10179999999999999,
-                        54.20701528455285
+                        0.9255238191547362,
+                        -5.661975947900977,
+                        41.0347480913485
                     ],
                     "min_value": 0.10179999999999999,
                     "max_value": 296.7840833333333
@@ -14164,79 +14210,109 @@
     },
     "execution_time_params": {
         "execution_time_distributions": {
-            "O_ACCEPTED": {
+            "A_REGISTERED": {
+                "0": {
+                    "feature": "W_Call_missing_information",
+                    "threshold": 7.5,
+                    "children": {
+                        "true": 1,
+                        "false": 2
+                    }
+                },
+                "1": {
+                    "value": 4.989,
+                    "dist": {
+                        "dist_name": "lognorm",
+                        "params": [
+                            213.85139387817765,
+                            -5e-324,
+                            1.066597542975461e-294
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 19.956616666666665
+                    }
+                },
+                "2": {
+                    "value": 51.857,
+                    "dist": {
+                        "dist_name": "lognorm",
+                        "params": [
+                            234.91716305311047,
+                            -5e-324,
+                            1.2326344257552802e-287
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.4794
+                    }
+                }
+            },
+            "O_DECLINED": {
+                "0": {
+                    "feature": "W_Complete_preaccepted_appl",
+                    "threshold": 1.5,
+                    "children": {
+                        "true": 1,
+                        "false": 2
+                    }
+                },
+                "1": {
+                    "value": 65.934,
+                    "dist": {
+                        "dist_name": "lognorm",
+                        "params": [
+                            355.60299233503406,
+                            -5e-324,
+                            3.736496520520027e-209
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 17.124450000000003
+                    }
+                },
+                "2": {
+                    "value": 11.819,
+                    "dist": {
+                        "dist_name": "lognorm",
+                        "params": [
+                            333.38005661575994,
+                            -5e-324,
+                            3.692851862674054e-234
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 19.32058333333333
+                    }
+                }
+            },
+            "W_Fix_incoplete_submission": {
                 "0": {
                     "feature": "resource = 0",
                     "threshold": 0.5,
                     "children": {
                         "true": 1,
-                        "false": 6
+                        "false": 2
                     }
                 },
                 "1": {
-                    "feature": "W_Complete_preaccepted_appl",
-                    "threshold": 5.5,
-                    "children": {
-                        "true": 2,
-                        "false": 5
+                    "value": 1.405,
+                    "dist": {
+                        "dist_name": "norm",
+                        "params": [
+                            0.018051380208333318,
+                            0.012795782294803054
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.12841666666666668
                     }
                 },
                 "2": {
-                    "feature": "W_Assess_application",
-                    "threshold": 1.5,
-                    "children": {
-                        "true": 3,
-                        "false": 4
-                    }
-                },
-                "3": {
-                    "value": 12.125,
-                    "dist": {
-                        "dist_name": "lognorm",
-                        "params": [
-                            369.57761213970844,
-                            -5e-324,
-                            6.621088962208361e-151
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 0.7588833333333334
-                    }
-                },
-                "4": {
-                    "value": 22.224,
+                    "value": 36.438,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            12.672935564853557
+                            36.43779029126213
                         ],
                         "min_value": 0.0,
-                        "max_value": 108.50605
-                    }
-                },
-                "5": {
-                    "value": 36.351,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            3.997654545454548
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 31.25476666666667
-                    }
-                },
-                "6": {
-                    "value": 1040.791,
-                    "dist": {
-                        "dist_name": "lognorm",
-                        "params": [
-                            1.6881618065495412,
-                            -6.382674056179626,
-                            411.031044479097
-                        ],
-                        "min_value": 0.024033333333333334,
-                        "max_value": 4186.8645166666665
+                        "max_value": 236.01216666666676
                     }
                 }
             },
@@ -14250,28 +14326,41 @@
                     }
                 },
                 "1": {
-                    "value": 0.688,
+                    "value": 0.702,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.07258792794261494
+                            0.07365809027211995
                         ],
                         "min_value": 0.0,
                         "max_value": 19.063533333333332
                     }
                 },
                 "2": {
-                    "value": 17.5,
+                    "value": 14.262,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            230.92589788799285,
+                            246.42289953670135,
                             -5e-324,
-                            4.851205119300537e-289
+                            2.1142300670568953e-283
                         ],
                         "min_value": 0.0,
                         "max_value": 12.81025
+                    }
+                }
+            },
+            "W_Assess_fraud": {
+                "0": {
+                    "value": 0.0,
+                    "dist": {
+                        "dist_name": "fixed",
+                        "params": [
+                            0
+                        ],
+                        "min_value": 0,
+                        "max_value": 0
                     }
                 }
             },
@@ -14301,15 +14390,15 @@
                     }
                 },
                 "3": {
-                    "value": 12.305,
+                    "value": 12.297,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            2.944752828854314
+                            2.931453836037914
                         ],
                         "min_value": 0.0,
-                        "max_value": 29.925283333333333
+                        "max_value": 29.73391666666667
                     }
                 },
                 "4": {
@@ -14325,7 +14414,7 @@
                     }
                 },
                 "5": {
-                    "feature": "O_SENT",
+                    "feature": "O_SELECTED",
                     "threshold": 1.5,
                     "children": {
                         "true": 6,
@@ -14345,19 +14434,19 @@
                     }
                 },
                 "7": {
-                    "value": 17.876,
+                    "value": 18.542,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            3.607044601167315
+                            3.583609770395701
                         ],
                         "min_value": 0.0,
                         "max_value": 37.016783333333336
                     }
                 },
                 "8": {
-                    "feature": "O_CREATED",
+                    "feature": "O_SELECTED",
                     "threshold": 1.5,
                     "children": {
                         "true": 9,
@@ -14406,144 +14495,28 @@
                     }
                 },
                 "13": {
-                    "value": 352.482,
+                    "value": 342.614,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            0.5697985075659612,
-                            0.015555071292023591,
-                            0.013741157780729776
+                            0.6975653084521717,
+                            0.017034476011871847,
+                            0.012107590990686886
                         ],
                         "min_value": 0.018583333333333334,
-                        "max_value": 0.06606666666666666
+                        "max_value": 0.1797
                     }
                 },
                 "14": {
-                    "value": 1588.587,
+                    "value": 1586.479,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.021333333333333333,
-                            1550.0127736318407
+                            1529.1238844817926
                         ],
                         "min_value": 0.021333333333333333,
-                        "max_value": 12448.39345
-                    }
-                }
-            },
-            "W_Assess_application": {
-                "0": {
-                    "feature": "resource = 0",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 1,
-                        "false": 8
-                    }
-                },
-                "1": {
-                    "feature": "A_REGISTERED",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 2,
-                        "false": 5
-                    }
-                },
-                "2": {
-                    "feature": "W_Assess_application",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 3,
-                        "false": 4
-                    }
-                },
-                "3": {
-                    "value": 6.628,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            0.019641216102408626
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 0.39361666666666667
-                    }
-                },
-                "4": {
-                    "value": 33.854,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            22.618859292237445
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 207.30246666666665
-                    }
-                },
-                "5": {
-                    "feature": "W_Call_missing_information",
-                    "threshold": 4.5,
-                    "children": {
-                        "true": 6,
-                        "false": 7
-                    }
-                },
-                "6": {
-                    "value": 0.186,
-                    "dist": {
-                        "dist_name": "lognorm",
-                        "params": [
-                            275.24765314554975,
-                            -5e-324,
-                            5.395960590099476e-271
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 14.564666666666666
-                    }
-                },
-                "7": {
-                    "value": 9.969,
-                    "dist": {
-                        "dist_name": "lognorm",
-                        "params": [
-                            361.06708051241765,
-                            -5e-324,
-                            3.0603974950294498e-202
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 19.666433333333334
-                    }
-                },
-                "8": {
-                    "feature": "W_Complete_preaccepted_appl",
-                    "threshold": 1.5,
-                    "children": {
-                        "true": 9,
-                        "false": 10
-                    }
-                },
-                "9": {
-                    "value": 1542.685,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.286,
-                            1542.3986809294872
-                        ],
-                        "min_value": 0.286,
-                        "max_value": 10488.450699999998
-                    }
-                },
-                "10": {
-                    "value": 1390.73,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.21015,
-                            1390.5194476897689
-                        ],
-                        "min_value": 0.21015,
-                        "max_value": 4176.8372
+                        "max_value": 11918.01151666667
                     }
                 }
             },
@@ -14636,181 +14609,132 @@
                     }
                 }
             },
-            "W_Call_missing_information": {
+            "W_Assess_application": {
                 "0": {
                     "feature": "resource = 0",
                     "threshold": 0.5,
                     "children": {
                         "true": 1,
+                        "false": 8
+                    }
+                },
+                "1": {
+                    "feature": "A_REGISTERED",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 2,
+                        "false": 5
+                    }
+                },
+                "2": {
+                    "feature": "W_Assess_application",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 3,
                         "false": 4
                     }
                 },
-                "1": {
-                    "feature": "W_Call_missing_information",
-                    "threshold": 1.5,
-                    "children": {
-                        "true": 2,
-                        "false": 3
-                    }
-                },
-                "2": {
-                    "value": 25.72,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            20.324130923526955
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 227.78486666666686
-                    }
-                },
                 "3": {
-                    "value": 16.925,
+                    "value": 6.508,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            7.982721337162435
+                            0.020120433384120538
                         ],
                         "min_value": 0.0,
-                        "max_value": 69.93098333333333
+                        "max_value": 0.40526666666666666
                     }
                 },
                 "4": {
-                    "feature": "W_Call_missing_information",
-                    "threshold": 1.5,
-                    "children": {
-                        "true": 5,
-                        "false": 6
+                    "value": 33.816,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            22.75751696367375
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 207.30246666666665
                     }
                 },
                 "5": {
-                    "value": 1647.394,
-                    "dist": {
-                        "dist_name": "norm",
-                        "params": [
-                            1647.3938325102881,
-                            1102.4599694876028
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 6660.485116666667
+                    "feature": "W_Call_missing_information",
+                    "threshold": 4.5,
+                    "children": {
+                        "true": 6,
+                        "false": 7
                     }
                 },
                 "6": {
-                    "value": 384.66,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            338.76094105392156
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 2714.9224166666663
-                    }
-                }
-            },
-            "A_REGISTERED": {
-                "0": {
-                    "feature": "W_Call_missing_information",
-                    "threshold": 12.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 7.064,
+                    "value": 0.18,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            232.8715888837556,
+                            274.36073987319213,
                             -5e-324,
-                            1.7011364970104878e-288
+                            2.0364444811895607e-271
                         ],
                         "min_value": 0.0,
-                        "max_value": 19.956616666666665
+                        "max_value": 14.564666666666666
                     }
                 },
-                "2": {
-                    "value": 83.231,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            1.688418923611111
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 10.653583333333334
-                    }
-                }
-            },
-            "A_ACTIVATED": {
-                "0": {
-                    "feature": "W_Call_missing_information",
-                    "threshold": 6.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.917,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            0.2044643316786174
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 19.21291666666667
-                    }
-                },
-                "2": {
-                    "value": 15.555,
+                "7": {
+                    "value": 10.258,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            349.043447038121,
+                            360.40806710562924,
                             -5e-324,
-                            8.449599238353415e-219
+                            2.3752786226257474e-203
                         ],
                         "min_value": 0.0,
-                        "max_value": 19.989916666666666
+                        "max_value": 19.666433333333334
                     }
-                }
-            },
-            "W_Fix_incoplete_submission": {
-                "0": {
-                    "feature": "resource = 0",
-                    "threshold": 0.5,
+                },
+                "8": {
+                    "feature": "W_Complete_preaccepted_appl",
+                    "threshold": 1.5,
                     "children": {
-                        "true": 1,
-                        "false": 2
+                        "true": 9,
+                        "false": 10
                     }
                 },
-                "1": {
-                    "value": 1.405,
-                    "dist": {
-                        "dist_name": "norm",
-                        "params": [
-                            0.018051380208333318,
-                            0.012795782294803054
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 0.12841666666666668
-                    }
-                },
-                "2": {
-                    "value": 36.438,
+                "9": {
+                    "value": 1516.237,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
-                            0.0,
-                            36.43779029126213
+                            0.286,
+                            1515.9505575617281
+                        ],
+                        "min_value": 0.286,
+                        "max_value": 10488.450699999998
+                    }
+                },
+                "10": {
+                    "value": 1402.487,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.21015,
+                            1402.2771101307187
+                        ],
+                        "min_value": 0.21015,
+                        "max_value": 4176.8372
+                    }
+                }
+            },
+            "A_SUBMITTED": {
+                "0": {
+                    "value": 0.0,
+                    "dist": {
+                        "dist_name": "fixed",
+                        "params": [
+                            0.0
                         ],
                         "min_value": 0.0,
-                        "max_value": 236.01216666666676
+                        "max_value": 0.0
                     }
                 }
             },
@@ -14869,20 +14793,78 @@
                     }
                 }
             },
-            "A_SUBMITTED": {
+            "A_ACTIVATED": {
                 "0": {
-                    "value": 0.0,
+                    "feature": "W_Call_missing_information",
+                    "threshold": 6.5,
+                    "children": {
+                        "true": 1,
+                        "false": 2
+                    }
+                },
+                "1": {
+                    "value": 0.975,
                     "dist": {
-                        "dist_name": "fixed",
+                        "dist_name": "expon",
                         "params": [
-                            0.0
+                            0.0,
+                            0.18768249585864166
                         ],
                         "min_value": 0.0,
-                        "max_value": 0.0
+                        "max_value": 18.450033333333337
+                    }
+                },
+                "2": {
+                    "value": 18.037,
+                    "dist": {
+                        "dist_name": "lognorm",
+                        "params": [
+                            348.26048500249544,
+                            -5e-324,
+                            1.1042061590713609e-219
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 19.989916666666666
                     }
                 }
             },
-            "W_Assess_fraud": {
+            "O_CANCELLED": {
+                "0": {
+                    "feature": "W_Call_after_offer",
+                    "threshold": 5.5,
+                    "children": {
+                        "true": 1,
+                        "false": 2
+                    }
+                },
+                "1": {
+                    "value": 13.707,
+                    "dist": {
+                        "dist_name": "lognorm",
+                        "params": [
+                            311.9883847541084,
+                            -5e-324,
+                            2.9795901922688765e-250
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 19.862783333333333
+                    }
+                },
+                "2": {
+                    "value": 65.665,
+                    "dist": {
+                        "dist_name": "lognorm",
+                        "params": [
+                            354.0689925670673,
+                            -5e-324,
+                            1.2936442429633223e-211
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 15.609416666666668
+                    }
+                }
+            },
+            "A_CANCELLED": {
                 "0": {
                     "value": 0.0,
                     "dist": {
@@ -14905,15 +14887,15 @@
                     }
                 },
                 "1": {
-                    "value": 0.01,
+                    "value": 0.032,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.00237283983609478
+                            0.007395592777381801
                         ],
                         "min_value": 0.0,
-                        "max_value": 4.604116666666667
+                        "max_value": 16.220016666666666
                     }
                 },
                 "2": {
@@ -14929,9 +14911,9 @@
                     }
                 }
             },
-            "A_APPROVED": {
+            "O_CREATED": {
                 "0": {
-                    "feature": "A_ACCEPTED",
+                    "feature": "O_SENT",
                     "threshold": 1.5,
                     "children": {
                         "true": 1,
@@ -14939,29 +14921,135 @@
                     }
                 },
                 "1": {
-                    "value": 18.316,
+                    "value": 0.018,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            313.75061761019674,
-                            -5e-324,
-                            2.1190342187492194e-249
+                            0.0,
+                            0.010581343748231165
                         ],
                         "min_value": 0.0,
-                        "max_value": 19.93456666666667
+                        "max_value": 16.34855
                     }
                 },
                 "2": {
-                    "value": 73.83,
+                    "value": 11.022,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            347.18676815490244,
-                            -5e-324,
-                            2.121772247765492e-105
+                            0.0,
+                            0.1265318690783807
                         ],
                         "min_value": 0.0,
-                        "max_value": 7.179383333333333
+                        "max_value": 15.486033333333333
+                    }
+                }
+            },
+            "A_FINALIZED": {
+                "0": {
+                    "feature": "AMOUNT_REQ = 10000",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 1,
+                        "false": 2
+                    }
+                },
+                "1": {
+                    "value": 0.012,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            0.012116738385528727
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 14.552816666666667
+                    }
+                },
+                "2": {
+                    "value": 0.185,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            0.005353892215568861
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 2.6822999999999997
+                    }
+                }
+            },
+            "W_Call_missing_information": {
+                "0": {
+                    "feature": "resource = 0",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 1,
+                        "false": 4
+                    }
+                },
+                "1": {
+                    "feature": "W_Call_missing_information",
+                    "threshold": 1.5,
+                    "children": {
+                        "true": 2,
+                        "false": 3
+                    }
+                },
+                "2": {
+                    "value": 25.393,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            20.001584933222038
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 222.1517333333333
+                    }
+                },
+                "3": {
+                    "value": 16.957,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            7.984770878041409
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 69.93098333333333
+                    }
+                },
+                "4": {
+                    "feature": "W_Call_missing_information",
+                    "threshold": 1.5,
+                    "children": {
+                        "true": 5,
+                        "false": 6
+                    }
+                },
+                "5": {
+                    "value": 1662.854,
+                    "dist": {
+                        "dist_name": "norm",
+                        "params": [
+                            1662.8538923566878,
+                            1100.3388737112366
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 6660.485116666667
+                    }
+                },
+                "6": {
+                    "value": 384.794,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            333.8014900617284
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 2714.9224166666663
                     }
                 }
             },
@@ -14975,97 +15063,27 @@
                     }
                 },
                 "1": {
-                    "value": 204.447,
+                    "value": 190.46,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.022038873626373627
+                            0.020510164835164834
                         ],
                         "min_value": 0.0,
-                        "max_value": 0.3825333333333333
+                        "max_value": 0.32938333333333336
                     }
                 },
                 "2": {
-                    "value": 0.023,
+                    "value": 1.164,
                     "dist": {
                         "dist_name": "norm",
                         "params": [
-                            0.023470552147239265,
-                            0.013980749688869427
+                            0.023655864197530865,
+                            0.01359291255958832
                         ],
                         "min_value": 0.0,
-                        "max_value": 0.05076666666666666
-                    }
-                }
-            },
-            "O_CREATED": {
-                "0": {
-                    "feature": "O_CREATED",
-                    "threshold": 1.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.018,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            0.010605724391624221
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 16.34855
-                    }
-                },
-                "2": {
-                    "value": 11.334,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            0.14059395126196692
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 15.486033333333333
-                    }
-                }
-            },
-            "O_CANCELLED": {
-                "0": {
-                    "feature": "W_Call_after_offer",
-                    "threshold": 3.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 11.432,
-                    "dist": {
-                        "dist_name": "lognorm",
-                        "params": [
-                            311.0743455036354,
-                            -5e-324,
-                            9.130664749944997e-251
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 18.095383333333334
-                    }
-                },
-                "2": {
-                    "value": 34.022,
-                    "dist": {
-                        "dist_name": "lognorm",
-                        "params": [
-                            334.1959463565548,
-                            -5e-324,
-                            3.1896087788623752e-233
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 15.850850000000001
+                        "max_value": 0.0485
                     }
                 }
             },
@@ -15079,7 +15097,7 @@
                     }
                 },
                 "1": {
-                    "feature": "O_SENT",
+                    "feature": "A_FINALIZED",
                     "threshold": 0.5,
                     "children": {
                         "true": 2,
@@ -15151,7 +15169,7 @@
                     }
                 },
                 "8": {
-                    "feature": "O_CREATED",
+                    "feature": "O_SELECTED",
                     "threshold": 0.5,
                     "children": {
                         "true": 9,
@@ -15181,11 +15199,10 @@
                 "11": {
                     "value": 302.073,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            2.134063767952235,
-                            -0.07418182282808679,
-                            72.26077196603147
+                            0.16108333333333333,
+                            271.4143429049531
                         ],
                         "min_value": 0.16108333333333333,
                         "max_value": 2708.5017
@@ -15224,55 +15241,9 @@
                     }
                 }
             },
-            "A_CANCELLED": {
+            "A_APPROVED": {
                 "0": {
-                    "value": 0.0,
-                    "dist": {
-                        "dist_name": "fixed",
-                        "params": [
-                            0
-                        ],
-                        "min_value": 0,
-                        "max_value": 0
-                    }
-                }
-            },
-            "A_FINALIZED": {
-                "0": {
-                    "feature": "AMOUNT_REQ = 10000",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 1,
-                        "false": 2
-                    }
-                },
-                "1": {
-                    "value": 0.012,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            0.012116738385528727
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 14.552816666666667
-                    }
-                },
-                "2": {
-                    "value": 0.185,
-                    "dist": {
-                        "dist_name": "fixed",
-                        "params": [
-                            0.005353892215568861
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 2.6822999999999997
-                    }
-                }
-            },
-            "O_DECLINED": {
-                "0": {
-                    "feature": "W_Complete_preaccepted_appl",
+                    "feature": "A_ACCEPTED",
                     "threshold": 1.5,
                     "children": {
                         "true": 1,
@@ -15280,29 +15251,28 @@
                     }
                 },
                 "1": {
-                    "value": 39.691,
+                    "value": 17.696,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            354.9520673110124,
+                            313.8034009837537,
                             -5e-324,
-                            4.029739561974282e-210
+                            2.360210493214091e-249
                         ],
                         "min_value": 0.0,
-                        "max_value": 17.124450000000003
+                        "max_value": 19.93456666666667
                     }
                 },
                 "2": {
-                    "value": 12.958,
+                    "value": 86.461,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            331.3058996821018,
-                            -5e-324,
-                            5.455925032479582e-236
+                            0.0,
+                            3.2833284523809527
                         ],
                         "min_value": 0.0,
-                        "max_value": 19.32058333333333
+                        "max_value": 20.918666666666663
                     }
                 }
             },
@@ -15339,11 +15309,10 @@
                 "3": {
                     "value": 12.8,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            371.1263647916692,
-                            -5e-324,
-                            4.229603022009063e-173
+                            0.0,
+                            1.205301092896175
                         ],
                         "min_value": 0.0,
                         "max_value": 15.183733333333333
@@ -15359,6 +15328,100 @@
                         ],
                         "min_value": 0.0,
                         "max_value": 48.36906666666666
+                    }
+                }
+            },
+            "O_ACCEPTED": {
+                "0": {
+                    "feature": "resource = 0",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 1,
+                        "false": 8
+                    }
+                },
+                "1": {
+                    "feature": "W_Assess_application",
+                    "threshold": 1.5,
+                    "children": {
+                        "true": 2,
+                        "false": 5
+                    }
+                },
+                "2": {
+                    "feature": "W_Call_missing_information",
+                    "threshold": 1.5,
+                    "children": {
+                        "true": 3,
+                        "false": 4
+                    }
+                },
+                "3": {
+                    "value": 8.936,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            0.022166965105601476
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.5455833333333333
+                    }
+                },
+                "4": {
+                    "value": 18.429,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            6.247747704081633
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 48.92731666666667
+                    }
+                },
+                "5": {
+                    "feature": "W_Call_missing_information",
+                    "threshold": 1.5,
+                    "children": {
+                        "true": 6,
+                        "false": 7
+                    }
+                },
+                "6": {
+                    "value": 34.946,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            21.78853915770609
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 184.13711666666654
+                    }
+                },
+                "7": {
+                    "value": 15.377,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            8.464055010224948
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 65.80103333333334
+                    }
+                },
+                "8": {
+                    "value": 1058.361,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.037616666666666666,
+                            1058.3236519480517
+                        ],
+                        "min_value": 0.037616666666666666,
+                        "max_value": 5745.188716666666
                     }
                 }
             }
@@ -15388,7 +15451,7 @@
                     }
                 },
                 "2": {
-                    "value": 100.012,
+                    "value": 99.961,
                     "dist": {
                         "dist_name": "norm",
                         "params": [
@@ -15410,27 +15473,26 @@
                     }
                 },
                 "1": {
-                    "value": 6.289,
+                    "value": 6.287,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.014816919191919192
+                            0.014813049534256115
                         ],
                         "min_value": 0.0,
                         "max_value": 11.282466666666666
                     }
                 },
                 "2": {
-                    "value": 53.589,
+                    "value": 55.68,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "fixed",
                         "params": [
-                            0.0,
-                            0.004813173898750822
+                            0.0008748682476943347
                         ],
                         "min_value": 0.0,
-                        "max_value": 4.6006
+                        "max_value": 1.4850166666666667
                     }
                 }
             },
@@ -15460,27 +15522,27 @@
                     }
                 },
                 "3": {
-                    "value": 790.031,
+                    "value": 784.598,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            790.0310412154988
+                            784.5983232987771
                         ],
                         "min_value": 0.0,
-                        "max_value": 5430.261516666669
+                        "max_value": 5423.817966666666
                     }
                 },
                 "4": {
-                    "value": 244.772,
+                    "value": 249.535,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            90.74439862745098
+                            89.11084842519685
                         ],
                         "min_value": 0.0,
-                        "max_value": 633.09445
+                        "max_value": 608.7861833333334
                     }
                 },
                 "5": {
@@ -15492,24 +15554,24 @@
                     }
                 },
                 "6": {
-                    "value": 179.958,
+                    "value": 195.934,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            104.6560625527426
+                            103.18775673076922
                         ],
                         "min_value": 0.0,
-                        "max_value": 1178.0350666666664
+                        "max_value": 993.5577333333331
                     }
                 },
                 "7": {
-                    "value": 104.328,
+                    "value": 93.608,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            70.02523453159043
+                            69.81533856209151
                         ],
                         "min_value": 0.0,
                         "max_value": 397.75691666666665
@@ -15524,7 +15586,7 @@
                     }
                 },
                 "9": {
-                    "feature": "O_SENT",
+                    "feature": "O_SELECTED",
                     "threshold": 1.5,
                     "children": {
                         "true": 10,
@@ -15545,13 +15607,13 @@
                     }
                 },
                 "11": {
-                    "value": 168.089,
+                    "value": 200.541,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            296.9367938446449,
+                            284.72465082386424,
                             -5e-324,
-                            3.0503657447233107e-258
+                            3.67294887550218e-265
                         ],
                         "min_value": 0.0,
                         "max_value": 8.333333333333333e-05
@@ -15566,26 +15628,26 @@
                     }
                 },
                 "13": {
-                    "value": 9.823,
+                    "value": 7.536,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            273.30932092212015,
+                            276.2528134969351,
                             -5e-324,
-                            4.294606389812301e-271
+                            1.1686342258506427e-269
                         ],
                         "min_value": 0.0,
                         "max_value": 18.59715
                     }
                 },
                 "14": {
-                    "value": 118.472,
+                    "value": 117.726,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            323.4448809991706,
+                            329.4786763133726,
                             -5e-324,
-                            5.0028101633856035e-241
+                            3.579182867229731e-236
                         ],
                         "min_value": 0.0,
                         "max_value": 18.780683333333332
@@ -15618,27 +15680,27 @@
                     }
                 },
                 "3": {
-                    "value": 685.889,
+                    "value": 691.446,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            669.1785473364669
+                            674.6093116508688
                         ],
                         "min_value": 0.0,
                         "max_value": 3775.9798333333347
                     }
                 },
                 "4": {
-                    "value": 113.034,
+                    "value": 116.979,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            59.66798138747885
+                            64.30762763819095
                         ],
                         "min_value": 0.0,
-                        "max_value": 575.6069166666666
+                        "max_value": 710.5348833333333
                     }
                 },
                 "5": {
@@ -15650,24 +15712,24 @@
                     }
                 },
                 "6": {
-                    "value": 105.001,
+                    "value": 105.836,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            47.835483394383395
+                            45.638099641577064
                         ],
                         "min_value": 0.0,
-                        "max_value": 361.3043
+                        "max_value": 333.6640666666667
                     }
                 },
                 "7": {
-                    "value": 232.297,
+                    "value": 214.889,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            68.22694075907592
+                            67.79366909385114
                         ],
                         "min_value": 0.0,
                         "max_value": 513.1650833333333
@@ -15682,7 +15744,7 @@
                     }
                 },
                 "9": {
-                    "feature": "O_SENT",
+                    "feature": "O_CREATED",
                     "threshold": 1.5,
                     "children": {
                         "true": 10,
@@ -15703,16 +15765,16 @@
                     }
                 },
                 "11": {
-                    "value": 108.145,
+                    "value": 118.486,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            336.80922274220035,
+                            327.6406037284843,
                             -5e-324,
-                            2.83231377757307e-228
+                            1.417974326714364e-236
                         ],
                         "min_value": 0.0,
-                        "max_value": 0.022233333333333334
+                        "max_value": 0.0008
                     }
                 },
                 "12": {
@@ -15724,26 +15786,26 @@
                     }
                 },
                 "13": {
-                    "value": 14.649,
+                    "value": 13.852,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            296.3196780445599,
+                            296.78951349560725,
                             -5e-324,
-                            6.038864493512833e-259
+                            1.1147362329587434e-258
                         ],
                         "min_value": 0.0,
                         "max_value": 19.611333333333334
                     }
                 },
                 "14": {
-                    "value": 55.25,
+                    "value": 58.867,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            335.0971389712258,
+                            329.9950463975205,
                             -5e-324,
-                            2.0212936292807786e-230
+                            5.3314662044526574e-235
                         ],
                         "min_value": 0.0,
                         "max_value": 19.9574
@@ -15752,7 +15814,7 @@
             },
             "10609": {
                 "0": {
-                    "feature": "O_ACCEPTED",
+                    "feature": "W_Call_missing_information",
                     "threshold": 0.5,
                     "children": {
                         "true": 1,
@@ -15760,7 +15822,7 @@
                     }
                 },
                 "1": {
-                    "feature": "W_Call_missing_information",
+                    "feature": "A_APPROVED",
                     "threshold": 0.5,
                     "children": {
                         "true": 2,
@@ -15768,68 +15830,69 @@
                     }
                 },
                 "2": {
-                    "feature": "W_Call_after_offer",
-                    "threshold": 0.5,
+                    "feature": "W_Assess_application",
+                    "threshold": 1.5,
                     "children": {
                         "true": 3,
                         "false": 4
                     }
                 },
                 "3": {
-                    "value": 125.133,
-                    "dist": {
-                        "dist_name": "lognorm",
-                        "params": [
-                            369.37674146483954,
-                            -5e-324,
-                            1.594871708581917e-158
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 0.45416666666666666
-                    }
-                },
-                "4": {
-                    "value": 728.06,
+                    "value": 740.936,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            706.5526350775193
+                            726.1804639527753
                         ],
                         "min_value": 0.0,
-                        "max_value": 4856.001683333332
+                        "max_value": 5841.875316666668
+                    }
+                },
+                "4": {
+                    "value": 290.945,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            81.12598252688173
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 631.1145166666668
                     }
                 },
                 "5": {
-                    "feature": "W_Call_missing_information",
-                    "threshold": 1.5,
+                    "feature": "workload",
+                    "threshold": 0.5,
                     "children": {
                         "true": 6,
                         "false": 7
                     }
                 },
                 "6": {
-                    "value": 386.687,
+                    "value": 22.835,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            20.485749224806206
+                            269.047978982618,
+                            -5e-324,
+                            4.057264666912191e-273
                         ],
                         "min_value": 0.0,
-                        "max_value": 250.97434999999996
+                        "max_value": 1.7942500000000001
                     }
                 },
                 "7": {
-                    "value": 133.734,
+                    "value": 51.392,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            80.85252571884983
+                            320.02038532027245,
+                            -5e-324,
+                            5.11893888216753e-243
                         ],
                         "min_value": 0.0,
-                        "max_value": 667.2855166666664
+                        "max_value": 8.585616666666665
                     }
                 },
                 "8": {
@@ -15842,34 +15905,34 @@
                 },
                 "9": {
                     "feature": "W_Call_missing_information",
-                    "threshold": 1.5,
+                    "threshold": 2.5,
                     "children": {
                         "true": 10,
                         "false": 11
                     }
                 },
                 "10": {
-                    "value": 405.201,
+                    "value": 263.143,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            142.36627172284645
+                            31.637895996275603
                         ],
                         "min_value": 0.0,
-                        "max_value": 976.6954333333333
+                        "max_value": 322.3987333333332
                     }
                 },
                 "11": {
-                    "value": 138.149,
+                    "value": 120.454,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            78.49288723404256
+                            89.82177448186529
                         ],
                         "min_value": 0.0,
-                        "max_value": 665.4820166666666
+                        "max_value": 832.75065
                     }
                 },
                 "12": {
@@ -15881,26 +15944,26 @@
                     }
                 },
                 "13": {
-                    "value": 23.783,
+                    "value": 15.669,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            311.76825532277087,
+                            314.2813533910646,
                             -5e-324,
-                            4.0349071239044294e-249
+                            2.2044950415564526e-247
                         ],
                         "min_value": 0.0,
                         "max_value": 19.344866666666668
                     }
                 },
                 "14": {
-                    "value": 74.683,
+                    "value": 75.014,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            275.38172381763474,
+                            269.89265960818,
                             -5e-324,
-                            6.0737360964083935e-270
+                            1.3586242283214038e-272
                         ],
                         "min_value": 0.0,
                         "max_value": 1.6666666666666667e-05
@@ -15967,10 +16030,10 @@
                 "6": {
                     "value": 12.968,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "norm",
                         "params": [
-                            0.0,
-                            4.019384681372549
+                            4.019384681372549,
+                            2.850502430389039
                         ],
                         "min_value": 0.0,
                         "max_value": 18.293400000000002
@@ -16005,24 +16068,25 @@
                     }
                 },
                 "10": {
-                    "value": 1462.778,
+                    "value": 1464.942,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            1462.778242992993
+                            1464.9416355889725
                         ],
                         "min_value": 0.0,
                         "max_value": 9712.4047
                     }
                 },
                 "11": {
-                    "value": 838.491,
+                    "value": 829.601,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            166.89837028985508
+                            371.43210519851374,
+                            -5e-324,
+                            1.498157998117726e-144
                         ],
                         "min_value": 0.0,
                         "max_value": 1094.6777500000003
@@ -16037,25 +16101,25 @@
                     }
                 },
                 "13": {
-                    "value": 632.871,
+                    "value": 633.579,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            372.6154174774269,
+                            372.64155184329627,
                             -5e-324,
-                            9.569251521932614e-158
+                            1.1091598521118655e-158
                         ],
                         "min_value": 0.0,
-                        "max_value": 416.31039999999985
+                        "max_value": 402.2491333333335
                     }
                 },
                 "14": {
-                    "value": 139.088,
+                    "value": 137.21,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            139.088148173516
+                            137.21041887052343
                         ],
                         "min_value": 0.0,
                         "max_value": 1429.3656500000006
@@ -16173,13 +16237,13 @@
                     }
                 },
                 "11": {
-                    "value": 547.29,
+                    "value": 548.245,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            354.3500411285852,
+                            353.866273704973,
                             -5e-324,
-                            4.716241873858289e-211
+                            1.0553790237086807e-211
                         ],
                         "min_value": 0.0,
                         "max_value": 102.54311666666672
@@ -16256,25 +16320,25 @@
                     }
                 },
                 "4": {
-                    "value": 14.818,
+                    "value": 15.532,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.00022322074788902292
+                            0.00022302921168467385
                         ],
                         "min_value": 0.0,
                         "max_value": 0.011183333333333333
                     }
                 },
                 "5": {
-                    "value": 169.935,
+                    "value": 173.834,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            358.78156593565046,
+                            360.9891911956311,
                             -5e-324,
-                            8.431231785733899e-202
+                            1.2291628103125091e-197
                         ],
                         "min_value": 0.0,
                         "max_value": 0.05195
@@ -16297,24 +16361,25 @@
                     }
                 },
                 "8": {
-                    "value": 338.476,
+                    "value": 331.37,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            278.10519638989166
+                            264.83266636473434
                         ],
                         "min_value": 0.0,
-                        "max_value": 1915.9832333333334
+                        "max_value": 1642.5086499999998
                     }
                 },
                 "9": {
-                    "value": 194.257,
+                    "value": 207.078,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            0.006460158730158729
+                            363.7084999646546,
+                            -5e-324,
+                            1.0338632307709859e-191
                         ],
                         "min_value": 0.0,
                         "max_value": 0.20546666666666666
@@ -16329,15 +16394,15 @@
                     }
                 },
                 "11": {
-                    "value": 82.786,
+                    "value": 81.545,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            29.66236437389771
+                            34.131161227154045
                         ],
                         "min_value": 0.0,
-                        "max_value": 169.2567666666667
+                        "max_value": 199.6477
                     }
                 },
                 "12": {
@@ -16393,11 +16458,10 @@
                 "4": {
                     "value": 0.49,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            330.3811222132809,
-                            -5e-324,
-                            8.218540873722805e-235
+                            0.0,
+                            0.00017996794871794872
                         ],
                         "min_value": 0.0,
                         "max_value": 0.00155
@@ -16412,27 +16476,27 @@
                     }
                 },
                 "6": {
-                    "value": 703.196,
+                    "value": 700.93,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            696.0519798872996
+                            693.7452002832244
                         ],
                         "min_value": 0.0,
                         "max_value": 4352.801833333333
                     }
                 },
                 "7": {
-                    "value": 156.857,
+                    "value": 160.17,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            89.98142192592594
+                            95.61233174962292
                         ],
                         "min_value": 0.0,
-                        "max_value": 852.9832500000002
+                        "max_value": 903.4348333333337
                     }
                 },
                 "8": {
@@ -16452,13 +16516,13 @@
                     }
                 },
                 "10": {
-                    "value": 139.466,
+                    "value": 143.683,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            328.979500267681,
+                            329.4546611546054,
                             -5e-324,
-                            4.831787403013602e-236
+                            6.462935640059617e-236
                         ],
                         "min_value": 0.0,
                         "max_value": 17.388733333333334
@@ -16478,37 +16542,37 @@
                     }
                 },
                 "12": {
-                    "feature": "W_Call_missing_information",
-                    "threshold": 5.5,
+                    "feature": "workload",
+                    "threshold": 0.5,
                     "children": {
                         "true": 13,
                         "false": 14
                     }
                 },
                 "13": {
-                    "value": 6.466,
+                    "value": 24.07,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            278.58140034608715,
+                            267.6708811011938,
                             -5e-324,
-                            1.5440065245892452e-268
+                            9.323910724270147e-274
                         ],
                         "min_value": 0.0,
-                        "max_value": 18.680233333333334
+                        "max_value": 9.301133333333333
                     }
                 },
                 "14": {
-                    "value": 31.36,
+                    "value": 2.389,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            298.4267965655843,
+                            301.3482122781136,
                             -5e-324,
-                            1.5084982003108502e-257
+                            6.688572683140502e-256
                         ],
                         "min_value": 0.0,
-                        "max_value": 12.019083333333333
+                        "max_value": 18.680233333333334
                     }
                 }
             },
@@ -16570,26 +16634,26 @@
                     }
                 },
                 "6": {
-                    "value": 631.514,
+                    "value": 631.503,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            293.5152227058081,
+                            293.4921819916338,
                             -5e-324,
-                            3.3824185031410915e-261
+                            3.3444215380749606e-261
                         ],
                         "min_value": 0.0,
                         "max_value": 7.090333333333334
                     }
                 },
                 "7": {
-                    "value": 239.568,
+                    "value": 262.561,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            291.6083742773086,
+                            294.97755829963137,
                             -5e-324,
-                            2.8252555248395497e-262
+                            2.237570756819416e-260
                         ],
                         "min_value": 0.0,
                         "max_value": 18.241233333333334
@@ -16612,24 +16676,25 @@
                     }
                 },
                 "10": {
-                    "value": 1593.544,
+                    "value": 1614.967,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            1593.5444874856814
+                            1614.9674402993667
                         ],
                         "min_value": 0.0,
                         "max_value": 9737.303133333335
                     }
                 },
                 "11": {
-                    "value": 815.236,
+                    "value": 778.063,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            0.005054524886877828
+                            366.69906292163023,
+                            -5e-324,
+                            7.207028965140228e-183
                         ],
                         "min_value": 0.0,
                         "max_value": 0.08969999999999999
@@ -16718,24 +16783,24 @@
                     }
                 },
                 "5": {
-                    "value": 1035.115,
+                    "value": 1046.68,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            681.6928200061558
+                            687.969745124195
                         ],
                         "min_value": 0.0,
-                        "max_value": 3844.3584833333334
+                        "max_value": 3856.1198333333323
                     }
                 },
                 "6": {
-                    "value": 274.921,
+                    "value": 275.059,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            234.2552442797712
+                            234.45839942886815
                         ],
                         "min_value": 0.0,
                         "max_value": 2240.738716666666
@@ -16804,12 +16869,12 @@
                     }
                 },
                 "6": {
-                    "value": 336.451,
+                    "value": 336.286,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            34.372760477001705
+                            34.66175164399093
                         ],
                         "min_value": 0.0,
                         "max_value": 255.58596666666654
@@ -16874,26 +16939,26 @@
                     }
                 },
                 "6": {
-                    "value": 138.697,
+                    "value": 128.177,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            246.55726034606693,
+                            279.2419968771248,
                             -5e-324,
-                            4.846309166803402e-283
+                            1.1136117476606197e-268
                         ],
                         "min_value": 0.0,
                         "max_value": 0.8488833333333333
                     }
                 },
                 "7": {
-                    "value": 279.032,
+                    "value": 271.973,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            285.52777995046483,
+                            295.6502528676029,
                             -5e-324,
-                            1.0181454113435785e-265
+                            3.8550921038830144e-260
                         ],
                         "min_value": 0.0,
                         "max_value": 19.2612
@@ -16916,24 +16981,24 @@
                     }
                 },
                 "10": {
-                    "value": 669.58,
+                    "value": 665.98,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            669.5804066570881
+                            665.980349022413
                         ],
                         "min_value": 0.0,
                         "max_value": 6202.7575
                     }
                 },
                 "11": {
-                    "value": 134.051,
+                    "value": 159.506,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            121.73393429752065
+                            135.57512763532762
                         ],
                         "min_value": 0.0,
                         "max_value": 630.2615833333334
@@ -16948,28 +17013,28 @@
                     }
                 },
                 "13": {
-                    "value": 52.601,
+                    "value": 62.948,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            328.3492299862498,
+                            330.7874279758307,
                             -5e-324,
-                            1.042792613379677e-236
+                            1.1864902227633198e-234
                         ],
                         "min_value": 0.0,
-                        "max_value": 0.007983333333333334
+                        "max_value": 0.01095
                     }
                 },
                 "14": {
-                    "value": 413.384,
+                    "value": 405.478,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            175.30916889158576
+                            203.89697647286823
                         ],
                         "min_value": 0.0,
-                        "max_value": 956.3813333333333
+                        "max_value": 1224.1677
                     }
                 }
             },
@@ -17023,24 +17088,24 @@
                     }
                 },
                 "5": {
-                    "value": 1240.822,
+                    "value": 1239.977,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            371.9471201704546
+                            320.44635723086895
                         ],
                         "min_value": 0.0,
-                        "max_value": 2284.4967000000006
+                        "max_value": 1977.3097500000003
                     }
                 },
                 "6": {
-                    "value": 230.818,
+                    "value": 230.276,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            130.98040572916668
+                            130.66346883116884
                         ],
                         "min_value": 0.0,
                         "max_value": 1031.4302166666666
@@ -17073,24 +17138,24 @@
                     }
                 },
                 "3": {
-                    "value": 656.712,
+                    "value": 651.101,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            613.3328838559814
+                            601.7215662872155
                         ],
                         "min_value": 0.0,
-                        "max_value": 3924.7376833333346
+                        "max_value": 2900.9401333333335
                     }
                 },
                 "4": {
-                    "value": 361.474,
+                    "value": 358.462,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            361.4744073820396
+                            358.46205581039754
                         ],
                         "min_value": 0.0,
                         "max_value": 2369.7102333333332
@@ -17105,39 +17170,39 @@
                     }
                 },
                 "6": {
-                    "value": 375.919,
+                    "value": 385.961,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            72.57139419831223
+                            79.72824937499999
                         ],
                         "min_value": 0.0,
-                        "max_value": 583.2658000000001
+                        "max_value": 655.6717166666667
                     }
                 },
                 "7": {
-                    "value": 161.072,
+                    "value": 167.196,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            25.253240543735224
+                            25.14781548463357
                         ],
                         "min_value": 0.0,
                         "max_value": 183.32066666666665
                     }
                 },
                 "8": {
-                    "feature": "W_Call_missing_information",
-                    "threshold": 5.5,
+                    "feature": "A_REGISTERED",
+                    "threshold": 0.5,
                     "children": {
                         "true": 9,
                         "false": 12
                     }
                 },
                 "9": {
-                    "feature": "A_REGISTERED",
+                    "feature": "workload",
                     "threshold": 0.5,
                     "children": {
                         "true": 10,
@@ -17145,42 +17210,63 @@
                     }
                 },
                 "10": {
-                    "value": 89.304,
+                    "value": 118.0,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            333.255801451163,
+                            341.17714481092776,
                             -5e-324,
-                            6.559289839597993e-232
+                            1.836267001522303e-224
                         ],
                         "min_value": 0.0,
                         "max_value": 15.828316666666666
                     }
                 },
                 "11": {
-                    "value": 13.837,
+                    "value": 84.879,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            288.18526575683524,
+                            333.287729522168,
                             -5e-324,
-                            2.0141497499596124e-263
+                            3.765787357563406e-232
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 18.89806666666667
+                    }
+                },
+                "12": {
+                    "feature": "W_Call_missing_information",
+                    "threshold": 5.5,
+                    "children": {
+                        "true": 13,
+                        "false": 14
+                    }
+                },
+                "13": {
+                    "value": 7.834,
+                    "dist": {
+                        "dist_name": "lognorm",
+                        "params": [
+                            289.1589830497804,
+                            -5e-324,
+                            6.764542151718969e-263
                         ],
                         "min_value": 0.0,
                         "max_value": 18.0675
                     }
                 },
-                "12": {
-                    "value": 110.322,
+                "14": {
+                    "value": 106.93,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            251.6970571702758,
+                            309.9374559348382,
                             -5e-324,
-                            1.3471928227704505e-280
+                            1.0761742853960601e-250
                         ],
                         "min_value": 0.0,
-                        "max_value": 1.6666666666666667e-05
+                        "max_value": 10.884533333333334
                     }
                 }
             },
@@ -17207,13 +17293,12 @@
                     }
                 },
                 "2": {
-                    "value": 636.762,
+                    "value": 635.355,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            371.94023608647365,
-                            -5e-324,
-                            8.390566106890309e-150
+                            0.0,
+                            68.93660868930266
                         ],
                         "min_value": 0.0,
                         "max_value": 445.7351
@@ -17331,13 +17416,13 @@
                     }
                 },
                 "11": {
-                    "value": 395.575,
+                    "value": 396.003,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            253.87545232613,
+                            254.0796497785935,
                             -5e-324,
-                            5.591237627794217e-280
+                            6.790504730684922e-280
                         ],
                         "min_value": 0.0,
                         "max_value": 0.0018333333333333333
@@ -17475,57 +17560,57 @@
                     }
                 },
                 "10": {
-                    "value": 552.53,
+                    "value": 551.771,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            334.05080183142434,
+                            335.24822216868324,
                             -5e-324,
-                            1.9446640014449613e-232
+                            2.5480202848545917e-231
                         ],
                         "min_value": 0.0,
                         "max_value": 18.47485
                     }
                 },
                 "11": {
-                    "value": 1025.711,
+                    "value": 1029.98,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            771.8676086389568
+                            781.9814584766585
                         ],
                         "min_value": 0.0,
-                        "max_value": 3710.069950000001
+                        "max_value": 3818.279183333334
                     }
                 },
                 "12": {
                     "feature": "W_Call_missing_information",
-                    "threshold": 3.5,
+                    "threshold": 4.5,
                     "children": {
                         "true": 13,
                         "false": 14
                     }
                 },
                 "13": {
-                    "value": 183.549,
+                    "value": 194.152,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            145.81123040712473
+                            150.5347128125
                         ],
                         "min_value": 0.0,
                         "max_value": 1141.0687000000003
                     }
                 },
                 "14": {
-                    "value": 373.291,
+                    "value": 396.607,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            306.73276277777785
+                            317.7293381898456
                         ],
                         "min_value": 0.0,
                         "max_value": 2538.3415166666655
@@ -17570,12 +17655,12 @@
                     }
                 },
                 "4": {
-                    "value": 710.995,
+                    "value": 705.345,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            566.1863857171965
+                            558.8717459910459
                         ],
                         "min_value": 0.0,
                         "max_value": 3803.4878333333327
@@ -17614,73 +17699,54 @@
                 },
                 "8": {
                     "feature": "W_Call_missing_information",
-                    "threshold": 1.5,
+                    "threshold": 12.5,
                     "children": {
                         "true": 9,
                         "false": 12
                     }
                 },
                 "9": {
-                    "feature": "W_Complete_preaccepted_appl",
-                    "threshold": 1.5,
+                    "feature": "workload",
+                    "threshold": 0.5,
                     "children": {
                         "true": 10,
                         "false": 11
                     }
                 },
                 "10": {
-                    "value": 152.828,
+                    "value": 199.241,
                     "dist": {
-                        "dist_name": "fixed",
+                        "dist_name": "expon",
                         "params": [
-                            0.0
+                            0.0,
+                            124.7372560231023
                         ],
                         "min_value": 0.0,
-                        "max_value": 0.0
+                        "max_value": 853.1864499999992
                     }
                 },
                 "11": {
-                    "value": 67.977,
+                    "value": 136.884,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.06864639175257647
+                            71.40286708754209
                         ],
                         "min_value": 0.0,
-                        "max_value": 3.4591
+                        "max_value": 537.3521499999997
                     }
                 },
                 "12": {
-                    "feature": "workload",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 13,
-                        "false": 14
-                    }
-                },
-                "13": {
-                    "value": 254.962,
+                    "value": 280.167,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            254.9617874118832
+                            280.1665624242424
                         ],
                         "min_value": 0.0,
-                        "max_value": 1629.115483333333
-                    }
-                },
-                "14": {
-                    "value": 154.269,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            146.53965322420638
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 1201.0661666666665
+                        "max_value": 1450.006683333333
                     }
                 }
             },
@@ -17827,12 +17893,12 @@
                     }
                 },
                 "14": {
-                    "value": 1673.41,
+                    "value": 1669.974,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            1673.4101314128943
+                            1669.9739709787816
                         ],
                         "min_value": 0.0,
                         "max_value": 10527.3652
@@ -17869,23 +17935,23 @@
                     "dist": {
                         "dist_name": "norm",
                         "params": [
-                            1409.7497412403097,
-                            907.8493804583786
+                            1409.74972124031,
+                            907.8494330578676
                         ],
                         "min_value": 0.0,
                         "max_value": 4966.310616666669
                     }
                 },
                 "4": {
-                    "value": 975.594,
+                    "value": 974.386,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            623.072434295713
+                            615.8207058057395
                         ],
                         "min_value": 0.0,
-                        "max_value": 3779.9026166666663
+                        "max_value": 3583.1459166666646
                     }
                 },
                 "5": {
@@ -17936,36 +18002,36 @@
                     }
                 },
                 "10": {
-                    "value": 150.884,
+                    "value": 161.742,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.11974502583979336
+                            0.12220820413436649
                         ],
                         "min_value": 0.0,
                         "max_value": 10.826233333333333
                     }
                 },
                 "11": {
-                    "value": 269.553,
+                    "value": 269.493,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            269.55332413333326
+                            269.4933976377952
                         ],
                         "min_value": 0.0,
                         "max_value": 2098.572416666666
                     }
                 },
                 "12": {
-                    "value": 441.585,
+                    "value": 446.341,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            441.58527437185927
+                            446.34075710659897
                         ],
                         "min_value": 0.0,
                         "max_value": 2886.737383333333
@@ -17982,29 +18048,29 @@
                     }
                 },
                 "1": {
-                    "value": 50.144,
+                    "value": 50.023,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            366.6362136307547,
+                            366.61003158111725,
                             -5e-324,
-                            3.7518172957472307e-183
+                            2.98766305654685e-183
                         ],
                         "min_value": 0.0,
                         "max_value": 0.3295833333333333
                     }
                 },
                 "2": {
-                    "value": 205.841,
+                    "value": 208.727,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            340.973176496536,
+                            343.2714643115241,
                             -5e-324,
-                            2.065677232467301e-225
+                            4.966517592557013e-223
                         ],
                         "min_value": 0.0,
-                        "max_value": 1.0555333333333334
+                        "max_value": 1.4930999999999999
                     }
                 }
             },
@@ -18046,15 +18112,15 @@
                     }
                 },
                 "4": {
-                    "value": 867.37,
+                    "value": 854.551,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            696.4918206152433
+                            685.1029537138927
                         ],
                         "min_value": 0.0,
-                        "max_value": 4376.747199999998
+                        "max_value": 4419.946366666663
                     }
                 },
                 "5": {
@@ -18068,10 +18134,10 @@
                 "6": {
                     "value": 824.271,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "norm",
                         "params": [
-                            0.0,
-                            824.2706880674449
+                            824.2706880674449,
+                            878.7859592533841
                         ],
                         "min_value": 0.0,
                         "max_value": 3196.331166666667
@@ -18105,25 +18171,25 @@
                     }
                 },
                 "10": {
-                    "value": 148.004,
+                    "value": 158.473,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            189.7782845079829,
+                            186.2213059606807,
                             -5e-324,
-                            1.6185146255523816e-301
+                            2.0347138878991727e-302
                         ],
                         "min_value": 0.0,
                         "max_value": 10.993316666666487
                     }
                 },
                 "11": {
-                    "value": 90.889,
+                    "value": 82.154,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.1215807770961144
+                            0.12309109730848848
                         ],
                         "min_value": 0.0,
                         "max_value": 12.121333333333332
@@ -18138,27 +18204,27 @@
                     }
                 },
                 "13": {
-                    "value": 251.902,
+                    "value": 254.022,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            251.9019813034188
+                            254.0219349056604
                         ],
                         "min_value": 0.0,
                         "max_value": 1900.808500000001
                     }
                 },
                 "14": {
-                    "value": 115.509,
+                    "value": 115.334,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            55.89973080000001
+                            52.174443852459014
                         ],
                         "min_value": 0.0,
-                        "max_value": 367.66353333333336
+                        "max_value": 357.2105333333334
                     }
                 }
             },
@@ -18185,15 +18251,15 @@
                     }
                 },
                 "2": {
-                    "value": 631.149,
+                    "value": 628.047,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            82.83490686619719
+                            81.6869184158805
                         ],
                         "min_value": 0.0,
-                        "max_value": 602.7453333333333
+                        "max_value": 598.9816666666666
                     }
                 }
             },
@@ -18267,13 +18333,13 @@
                     }
                 },
                 "7": {
-                    "value": 149.535,
+                    "value": 154.423,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            313.57685031111396,
+                            306.291657184147,
                             -5e-324,
-                            1.488728062346115e-248
+                            2.1794261850854483e-253
                         ],
                         "min_value": 0.0,
                         "max_value": 13.2528
@@ -18296,28 +18362,28 @@
                     }
                 },
                 "10": {
-                    "value": 849.53,
+                    "value": 854.22,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            369.00251546228026,
+                            369.2173494693378,
                             -5e-324,
-                            4.864829818251016e-175
+                            1.131045548512145e-173
                         ],
                         "min_value": 0.0,
                         "max_value": 11.084983333333334
                     }
                 },
                 "11": {
-                    "value": 370.331,
+                    "value": 371.138,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            135.14402619047615
+                            146.57722816666666
                         ],
                         "min_value": 0.0,
-                        "max_value": 907.3821999999991
+                        "max_value": 947.3492333333334
                     }
                 },
                 "12": {
@@ -18329,34 +18395,34 @@
                     }
                 },
                 "13": {
-                    "value": 433.959,
+                    "value": 426.358,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            206.3519134615385
+                            152.69880165562915
                         ],
                         "min_value": 0.0,
-                        "max_value": 1584.1916666666666
+                        "max_value": 1116.1870333333336
                     }
                 },
                 "14": {
-                    "value": 123.818,
+                    "value": 125.677,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            353.74678211718276,
+                            350.0693538107687,
                             -5e-324,
-                            3.45866887191095e-209
+                            3.781157050047424e-214
                         ],
                         "min_value": 0.0,
-                        "max_value": 0.017083333333333332
+                        "max_value": 0.015566666666666668
                     }
                 }
             },
             "10929": {
                 "0": {
-                    "feature": "O_SENT",
+                    "feature": "W_Call_after_offer",
                     "threshold": 0.5,
                     "children": {
                         "true": 1,
@@ -18364,29 +18430,28 @@
                     }
                 },
                 "1": {
-                    "value": 37.166,
+                    "value": 68.763,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            367.99753729419575,
+                            364.1911524447814,
                             -5e-324,
-                            5.316531877611806e-150
+                            3.306697217292457e-190
                         ],
                         "min_value": 0.0,
-                        "max_value": 0.40243333333333337
+                        "max_value": 0.2919333333333333
                     }
                 },
                 "2": {
-                    "value": 273.337,
+                    "value": 311.413,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            313.2897638646537,
-                            -5e-324,
-                            1.2486063914392418e-248
+                            0.0,
+                            28.166076496478873
                         ],
                         "min_value": 0.0,
-                        "max_value": 0.31983333333333336
+                        "max_value": 223.60996666666668
                     }
                 }
             },
@@ -18396,7 +18461,7 @@
                     "threshold": 0.5,
                     "children": {
                         "true": 1,
-                        "false": 4
+                        "false": 8
                     }
                 },
                 "1": {
@@ -18404,65 +18469,144 @@
                     "threshold": 0.5,
                     "children": {
                         "true": 2,
-                        "false": 3
+                        "false": 5
                     }
                 },
                 "2": {
-                    "value": 113.275,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            94.56734999999999
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 646.7365333333337
+                    "feature": "W_Complete_preaccepted_appl",
+                    "threshold": 1.5,
+                    "children": {
+                        "true": 3,
+                        "false": 4
                     }
                 },
                 "3": {
-                    "value": 2.497,
-                    "dist": {
-                        "dist_name": "lognorm",
-                        "params": [
-                            348.81372855924695,
-                            -5e-324,
-                            7.127272985606842e-111
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 0.32376666666666665
-                    }
-                },
-                "4": {
-                    "feature": "W_Assess_application",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 5,
-                        "false": 6
-                    }
-                },
-                "5": {
-                    "value": 498.839,
-                    "dist": {
-                        "dist_name": "lognorm",
-                        "params": [
-                            289.80333318642374,
-                            -5e-324,
-                            7.644876163694834e-263
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 0.006666666666666667
-                    }
-                },
-                "6": {
-                    "value": 198.291,
+                    "value": 74.088,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            126.73357035440614
+                            68.39781764705882
                         ],
                         "min_value": 0.0,
-                        "max_value": 1167.2205999999996
+                        "max_value": 379.53208333333305
+                    }
+                },
+                "4": {
+                    "value": 165.221,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            143.4722477864583
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 1027.9345833333336
+                    }
+                },
+                "5": {
+                    "feature": "O_SELECTED",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 6,
+                        "false": 7
+                    }
+                },
+                "6": {
+                    "value": 9.13,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            3.9738963333333333
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 28.4199
+                    }
+                },
+                "7": {
+                    "value": 0.293,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            0.0003305699481865285
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.007766666666666667
+                    }
+                },
+                "8": {
+                    "feature": "W_Assess_application",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 9,
+                        "false": 12
+                    }
+                },
+                "9": {
+                    "feature": "W_Call_after_offer",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 10,
+                        "false": 11
+                    }
+                },
+                "10": {
+                    "value": 247.906,
+                    "dist": {
+                        "dist_name": "lognorm",
+                        "params": [
+                            328.7226138387066,
+                            -5e-324,
+                            3.7558978870297797e-237
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 16.616766666666667
+                    }
+                },
+                "11": {
+                    "value": 627.397,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            0.005048630136986302
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.161
+                    }
+                },
+                "12": {
+                    "feature": "W_Call_missing_information",
+                    "threshold": 6.5,
+                    "children": {
+                        "true": 13,
+                        "false": 14
+                    }
+                },
+                "13": {
+                    "value": 143.72,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            87.38248455284551
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 660.2095833333333
+                    }
+                },
+                "14": {
+                    "value": 325.277,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            325.2772021604938
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 2328.9061833333326
                     }
                 }
             },
@@ -18498,11 +18642,10 @@
                 "3": {
                     "value": 1.303,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            347.66708896391646,
-                            -5e-324,
-                            1.1023101423206644e-109
+                            0.0,
+                            0.009091156462585034
                         ],
                         "min_value": 0.0,
                         "max_value": 0.2711166666666667
@@ -18517,19 +18660,19 @@
                     }
                 },
                 "5": {
-                    "value": 441.733,
+                    "value": 441.31,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            117.12205662482566
+                            118.47961949466853
                         ],
                         "min_value": 0.0,
-                        "max_value": 718.5391666666669
+                        "max_value": 725.9474833333334
                     }
                 },
                 "6": {
-                    "value": 108.082,
+                    "value": 106.986,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
@@ -18599,26 +18742,26 @@
                     }
                 },
                 "6": {
-                    "value": 511.817,
+                    "value": 530.255,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            285.6997105228246,
+                            260.9144722911577,
                             -5e-324,
-                            2.3785228743736556e-265
+                            3.617152634166445e-277
                         ],
                         "min_value": 0.0,
-                        "max_value": 3.074883333333333
+                        "max_value": 3.1753
                     }
                 },
                 "7": {
-                    "value": 167.823,
+                    "value": 161.374,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            273.1801517760497,
+                            282.4211829608099,
                             -5e-324,
-                            1.1410704362693392e-271
+                            3.895229819720898e-267
                         ],
                         "min_value": 0.0,
                         "max_value": 9.69675
@@ -18634,67 +18777,47 @@
                 },
                 "9": {
                     "feature": "W_Call_after_offer",
-                    "threshold": 3.5,
+                    "threshold": 2.5,
                     "children": {
                         "true": 10,
                         "false": 11
                     }
                 },
                 "10": {
-                    "value": 1482.754,
+                    "value": 1366.944,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            1482.7539830532214
+                            1366.9442121359225
                         ],
                         "min_value": 0.0,
                         "max_value": 6663.214733333334
                     }
                 },
                 "11": {
-                    "value": 1450.724,
+                    "value": 1540.937,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            1450.724107165109
+                            1540.9372963824287
                         ],
                         "min_value": 0.0,
                         "max_value": 9922.07845
                     }
                 },
                 "12": {
-                    "feature": "W_Call_after_offer",
-                    "threshold": 2.5,
-                    "children": {
-                        "true": 13,
-                        "false": 14
-                    }
-                },
-                "13": {
-                    "value": 271.352,
+                    "value": 342.384,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            274.6936560203848,
+                            360.86922772037724,
                             -5e-324,
-                            1.1102765916784167e-270
+                            8.828734202766741e-200
                         ],
                         "min_value": 0.0,
-                        "max_value": 0.0022166666666666667
-                    }
-                },
-                "14": {
-                    "value": 396.711,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            48.915313654618465
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 322.99803333333335
+                        "max_value": 10.44168333333333
                     }
                 }
             },
@@ -18704,7 +18827,7 @@
                     "threshold": 0.5,
                     "children": {
                         "true": 1,
-                        "false": 4
+                        "false": 8
                     }
                 },
                 "1": {
@@ -18712,65 +18835,144 @@
                     "threshold": 0.5,
                     "children": {
                         "true": 2,
-                        "false": 3
+                        "false": 5
                     }
                 },
                 "2": {
-                    "value": 76.681,
+                    "feature": "workload",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 3,
+                        "false": 4
+                    }
+                },
+                "3": {
+                    "value": 98.683,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            43.018162857142855
+                            53.34464940476191
                         ],
                         "min_value": 0.0,
                         "max_value": 252.6682166666667
                     }
                 },
-                "3": {
-                    "value": 6.556,
+                "4": {
+                    "value": 47.142,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.011989486260454003
+                            9.672317934782606
                         ],
                         "min_value": 0.0,
-                        "max_value": 0.2881666666666666
-                    }
-                },
-                "4": {
-                    "feature": "workload",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 5,
-                        "false": 6
+                        "max_value": 66.37651666666666
                     }
                 },
                 "5": {
-                    "value": 896.174,
-                    "dist": {
-                        "dist_name": "lognorm",
-                        "params": [
-                            358.7182967629827,
-                            -5e-324,
-                            8.379089855439097e-203
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 8.00485
+                    "feature": "A_FINALIZED",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 6,
+                        "false": 7
                     }
                 },
                 "6": {
-                    "value": 275.419,
+                    "value": 12.937,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            1.9139309397163122
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 14.641483333333333
+                    }
+                },
+                "7": {
+                    "value": 0.077,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            0.011129322638146168
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.06488333333333333
+                    }
+                },
+                "8": {
+                    "feature": "workload",
+                    "threshold": 0.5,
+                    "children": {
+                        "true": 9,
+                        "false": 12
+                    }
+                },
+                "9": {
+                    "feature": "O_SELECTED",
+                    "threshold": 1.5,
+                    "children": {
+                        "true": 10,
+                        "false": 11
+                    }
+                },
+                "10": {
+                    "value": 1158.311,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            1101.4589454697987
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 5133.123183333333
+                    }
+                },
+                "11": {
+                    "value": 550.107,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            0.0056640522875817
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.036366666666666665
+                    }
+                },
+                "12": {
+                    "feature": "W_Call_after_offer",
+                    "threshold": 1.5,
+                    "children": {
+                        "true": 13,
+                        "false": 14
+                    }
+                },
+                "13": {
+                    "value": 135.889,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            334.9815839419166,
+                            359.42916682946395,
                             -5e-324,
-                            3.320998556705155e-231
+                            1.9132567636086259e-202
                         ],
                         "min_value": 0.0,
-                        "max_value": 0.22378333333333333
+                        "max_value": 19.717866666666666
+                    }
+                },
+                "14": {
+                    "value": 400.021,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            99.54173211111112
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 650.5421166666667
                     }
                 }
             },
@@ -18824,20 +19026,20 @@
                     }
                 },
                 "5": {
-                    "value": 133.301,
+                    "value": 126.908,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            331.55374813214644,
+                            327.30627963866505,
                             -5e-324,
-                            1.3182733543046398e-234
+                            3.0694561318002294e-238
                         ],
                         "min_value": 0.0,
                         "max_value": 19.779066666666665
                     }
                 },
                 "6": {
-                    "feature": "O_CANCELLED",
+                    "feature": "W_Call_missing_information",
                     "threshold": 0.5,
                     "children": {
                         "true": 7,
@@ -18845,7 +19047,7 @@
                     }
                 },
                 "7": {
-                    "feature": "W_Assess_application",
+                    "feature": "A_CANCELLED",
                     "threshold": 0.5,
                     "children": {
                         "true": 8,
@@ -18853,61 +19055,60 @@
                     }
                 },
                 "8": {
-                    "value": 670.917,
+                    "value": 683.024,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            553.5112207762558
+                            591.4412315656566
                         ],
                         "min_value": 0.0,
-                        "max_value": 2538.65215
+                        "max_value": 2996.339416666666
                     }
                 },
                 "9": {
-                    "value": 122.037,
+                    "value": 190.162,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            60.5068274122807
+                            337.2152596128152,
+                            -5e-324,
+                            1.3021792165379642e-228
                         ],
                         "min_value": 0.0,
-                        "max_value": 372.4268166666667
+                        "max_value": 0.01565
                     }
                 },
                 "10": {
                     "feature": "W_Call_after_offer",
-                    "threshold": 2.5,
+                    "threshold": 3.5,
                     "children": {
                         "true": 11,
                         "false": 12
                     }
                 },
                 "11": {
-                    "value": 1.557,
+                    "value": 84.78,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            173.95031234811623,
-                            -5e-324,
-                            5.363785141482206e-305
+                            0.0,
+                            45.58150573476702
                         ],
                         "min_value": 0.0,
-                        "max_value": 0.00031666666666666665
+                        "max_value": 302.70104999999995
                     }
                 },
                 "12": {
-                    "value": 262.308,
+                    "value": 146.315,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            341.98623320801454,
-                            -5e-324,
-                            7.905785765304948e-225
+                            0.0,
+                            56.060052724358975
                         ],
                         "min_value": 0.0,
-                        "max_value": 2.1050833333333334
+                        "max_value": 331.27796666666666
                     }
                 }
             },
@@ -18941,47 +19142,48 @@
                     }
                 },
                 "3": {
-                    "value": 18.553,
+                    "value": 18.686,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.007323923657345762
+                            0.0073164876957494416
                         ],
                         "min_value": 0.0,
                         "max_value": 0.21476666666666666
                     }
                 },
                 "4": {
-                    "feature": "W_Call_after_offer",
-                    "threshold": 3.5,
+                    "feature": "A_CANCELLED",
+                    "threshold": 1.5,
                     "children": {
                         "true": 5,
                         "false": 6
                     }
                 },
                 "5": {
-                    "value": 437.085,
+                    "value": 727.368,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.00623075117370892
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 0.032233333333333336
-                    }
-                },
-                "6": {
-                    "value": 433.316,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            0.0077157534246575345
+                            0.006241203703703704
                         ],
                         "min_value": 0.0,
                         "max_value": 0.039950000000000006
+                    }
+                },
+                "6": {
+                    "value": 52.973,
+                    "dist": {
+                        "dist_name": "lognorm",
+                        "params": [
+                            337.42371235064576,
+                            -5e-324,
+                            9.655865606692294e-99
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.028050000000000002
                     }
                 }
             },
@@ -19015,24 +19217,44 @@
                     }
                 },
                 "3": {
-                    "value": 13.351,
+                    "value": 13.135,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.006599221411192214
+                            0.0070185078909612625
                         ],
                         "min_value": 0.0,
-                        "max_value": 0.09133333333333334
+                        "max_value": 0.2628333333333333
                     }
                 },
                 "4": {
-                    "value": 257.399,
+                    "feature": "W_Complete_preaccepted_appl",
+                    "threshold": 1.5,
+                    "children": {
+                        "true": 5,
+                        "false": 6
+                    }
+                },
+                "5": {
+                    "value": 74.04,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.007045351473922902
+                            0.005999765258215963
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.0355
+                    }
+                },
+                "6": {
+                    "value": 462.695,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            0.007708974358974358
                         ],
                         "min_value": 0.0,
                         "max_value": 0.04836666666666667
@@ -19049,28 +19271,28 @@
                     }
                 },
                 "1": {
-                    "value": 110.711,
+                    "value": 111.003,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            363.0074508499089,
+                            362.395952449281,
                             -5e-324,
-                            3.8985136801915183e-193
+                            1.485572438126544e-194
                         ],
                         "min_value": 0.0,
                         "max_value": 0.3221166666666667
                     }
                 },
                 "2": {
-                    "value": 670.634,
+                    "value": 663.89,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            175.5528084566596
+                            156.5297865534324
                         ],
                         "min_value": 0.0,
-                        "max_value": 1207.5755166666663
+                        "max_value": 1132.6198166666668
                     }
                 }
             },
@@ -19124,13 +19346,13 @@
                     }
                 },
                 "5": {
-                    "value": 310.365,
+                    "value": 312.89,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            312.03714623980386,
+                            308.6489919734877,
                             -5e-324,
-                            1.6954040741002161e-249
+                            8.96516827111451e-252
                         ],
                         "min_value": 0.0,
                         "max_value": 19.33288333333333
@@ -19153,25 +19375,25 @@
                     }
                 },
                 "8": {
-                    "value": 1115.204,
+                    "value": 1076.492,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            1115.2043525287356
+                            1076.4918009195403
                         ],
                         "min_value": 0.0,
                         "max_value": 7364.984583333331
                     }
                 },
                 "9": {
-                    "value": 690.006,
+                    "value": 721.205,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            359.0266364809186,
+                            360.3836150421408,
                             -5e-324,
-                            1.7141456506735774e-201
+                            6.2294000092073525e-199
                         ],
                         "min_value": 0.0,
                         "max_value": 0.08803333333333334
@@ -19260,46 +19482,46 @@
                     }
                 },
                 "7": {
-                    "value": 74.16,
+                    "value": 73.353,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            320.0004937073638,
+                            318.128706881492,
                             -5e-324,
-                            2.5350712515443716e-243
+                            9.973747893280905e-245
                         ],
                         "min_value": 0.0,
                         "max_value": 0.004916666666666666
                     }
                 },
                 "8": {
-                    "feature": "O_SELECTED",
-                    "threshold": 1.5,
+                    "feature": "A_CANCELLED",
+                    "threshold": 0.5,
                     "children": {
                         "true": 9,
                         "false": 10
                     }
                 },
                 "9": {
-                    "value": 395.633,
+                    "value": 402.759,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            316.3113930213464
+                            324.0706746732026
                         ],
                         "min_value": 0.0,
                         "max_value": 2084.321516666667
                     }
                 },
                 "10": {
-                    "value": 204.239,
+                    "value": 189.006,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            293.6575030074494,
+                            294.83048296345265,
                             -5e-324,
-                            1.0529532935106338e-260
+                            5.191878431477856e-260
                         ],
                         "min_value": 0.0,
                         "max_value": 0.0038333333333333336
@@ -19308,36 +19530,116 @@
             },
             "11289": {
                 "0": {
-                    "feature": "O_ACCEPTED",
+                    "feature": "A_APPROVED",
                     "threshold": 0.5,
                     "children": {
                         "true": 1,
-                        "false": 2
+                        "false": 8
                     }
                 },
                 "1": {
-                    "value": 477.445,
+                    "feature": "W_Assess_application",
+                    "threshold": 1.5,
+                    "children": {
+                        "true": 2,
+                        "false": 5
+                    }
+                },
+                "2": {
+                    "feature": "W_Call_after_offer",
+                    "threshold": 2.5,
+                    "children": {
+                        "true": 3,
+                        "false": 4
+                    }
+                },
+                "3": {
+                    "value": 557.914,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            122.6010087804878
+                            557.9137697368421
                         ],
                         "min_value": 0.0,
-                        "max_value": 885.59375
+                        "max_value": 2798.7949666666664
                     }
                 },
-                "2": {
-                    "value": 99.824,
+                "4": {
+                    "value": 738.652,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            738.6518278317153
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 3707.5
+                    }
+                },
+                "5": {
+                    "feature": "W_Assess_application",
+                    "threshold": 3.5,
+                    "children": {
+                        "true": 6,
+                        "false": 7
+                    }
+                },
+                "6": {
+                    "value": 225.609,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            29.87308826086956
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 202.576
+                    }
+                },
+                "7": {
+                    "value": 71.334,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            16.514687499999997
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 104.22433333333333
+                    }
+                },
+                "8": {
+                    "feature": "W_Call_missing_information",
+                    "threshold": 3.5,
+                    "children": {
+                        "true": 9,
+                        "false": 10
+                    }
+                },
+                "9": {
+                    "value": 13.856,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            318.98934939149615,
+                            304.8161244498158,
                             -5e-324,
-                            1.465658628435789e-244
+                            5.495917509756877e-254
                         ],
                         "min_value": 0.0,
-                        "max_value": 15.024683333333334
+                        "max_value": 15.004383333333333
+                    }
+                },
+                "10": {
+                    "value": 87.592,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            34.46100645161291
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 213.9135
                     }
                 }
             },
@@ -19347,133 +19649,32 @@
                     "threshold": 0.5,
                     "children": {
                         "true": 1,
-                        "false": 8
+                        "false": 2
                     }
                 },
                 "1": {
-                    "feature": "A_ACCEPTED",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 2,
-                        "false": 5
+                    "value": 20.8,
+                    "dist": {
+                        "dist_name": "expon",
+                        "params": [
+                            0.0,
+                            0.008344925512104284
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.36318333333333336
                     }
                 },
                 "2": {
-                    "feature": "W_Complete_preaccepted_appl",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 3,
-                        "false": 4
-                    }
-                },
-                "3": {
-                    "value": 28.664,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            25.598197935103244
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 159.68033333333335
-                    }
-                },
-                "4": {
-                    "value": 79.716,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            55.17106142857143
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 329.4440166666668
-                    }
-                },
-                "5": {
-                    "feature": "O_SELECTED",
-                    "threshold": 0.5,
-                    "children": {
-                        "true": 6,
-                        "false": 7
-                    }
-                },
-                "6": {
-                    "value": 9.917,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            3.6418026041666667
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 19.592049999999997
-                    }
-                },
-                "7": {
-                    "value": 0.723,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            0.0004057788944723619
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 0.0105
-                    }
-                },
-                "8": {
-                    "feature": "W_Call_after_offer",
-                    "threshold": 1.5,
-                    "children": {
-                        "true": 9,
-                        "false": 12
-                    }
-                },
-                "9": {
-                    "feature": "W_Complete_preaccepted_appl",
-                    "threshold": 1.5,
-                    "children": {
-                        "true": 10,
-                        "false": 11
-                    }
-                },
-                "10": {
-                    "value": 286.664,
+                    "value": 446.453,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            313.5869376815459,
+                            264.3776338655124,
                             -5e-324,
-                            1.3911192067761798e-248
+                            1.8096271769304572e-275
                         ],
                         "min_value": 0.0,
-                        "max_value": 13.354383333333335
-                    }
-                },
-                "11": {
-                    "value": 452.711,
-                    "dist": {
-                        "dist_name": "lognorm",
-                        "params": [
-                            290.602528879831,
-                            -5e-324,
-                            2.3348795713798846e-262
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 0.0013833333333333334
-                    }
-                },
-                "12": {
-                    "value": 608.664,
-                    "dist": {
-                        "dist_name": "expon",
-                        "params": [
-                            0.0,
-                            134.96625746666666
-                        ],
-                        "min_value": 0.0,
-                        "max_value": 941.1508666666668
+                        "max_value": 0.003
                     }
                 }
             },
@@ -19500,15 +19701,15 @@
                     }
                 },
                 "2": {
-                    "value": 425.591,
+                    "value": 431.436,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            76.37215737410071
+                            79.14481705495818
                         ],
                         "min_value": 0.0,
-                        "max_value": 548.6252666666667
+                        "max_value": 568.4517000000001
                     }
                 }
             },
@@ -19518,31 +19719,53 @@
                     "threshold": 0.5,
                     "children": {
                         "true": 1,
-                        "false": 2
+                        "false": 4
                     }
                 },
                 "1": {
-                    "value": 72.443,
+                    "feature": "W_Complete_preaccepted_appl",
+                    "threshold": 1.5,
+                    "children": {
+                        "true": 2,
+                        "false": 3
+                    }
+                },
+                "2": {
+                    "value": 44.469,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            0.007865189289012003
+                            368.62748348605226,
+                            -5e-324,
+                            1.1493544746414889e-155
                         ],
                         "min_value": 0.0,
                         "max_value": 0.37665
                     }
                 },
-                "2": {
-                    "value": 591.517,
+                "3": {
+                    "value": 154.216,
+                    "dist": {
+                        "dist_name": "lognorm",
+                        "params": [
+                            363.88226303989325,
+                            -5e-324,
+                            2.924527761805311e-191
+                        ],
+                        "min_value": 0.0,
+                        "max_value": 0.5256500000000001
+                    }
+                },
+                "4": {
+                    "value": 605.183,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            170.46288013245032
+                            219.1785262061403
                         ],
                         "min_value": 0.0,
-                        "max_value": 1101.9123166666668
+                        "max_value": 1764.5396666666666
                     }
                 }
             },
@@ -19556,28 +19779,28 @@
                     }
                 },
                 "1": {
-                    "value": 47.359,
+                    "value": 41.873,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            363.923425942844,
+                            364.15386918650034,
                             -5e-324,
-                            2.1935605223237553e-190
+                            8.464073781554242e-190
                         ],
                         "min_value": 0.0,
                         "max_value": 0.027483333333333335
                     }
                 },
                 "2": {
-                    "value": 373.326,
+                    "value": 383.407,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            170.18839092088194
+                            198.6697901399491
                         ],
                         "min_value": 0.0,
-                        "max_value": 1147.7462
+                        "max_value": 1265.5032500000002
                     }
                 }
             },
@@ -19599,12 +19822,12 @@
                     }
                 },
                 "2": {
-                    "value": 145.58,
+                    "value": 146.14,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            133.08409666666665
+                            133.60527494331063
                         ],
                         "min_value": 0.0,
                         "max_value": 1724.1743166666638
@@ -19630,24 +19853,24 @@
                     }
                 },
                 "5": {
-                    "value": 24.75,
+                    "value": 24.305,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            0.027316463414634947
+                            0.02698734939759115
                         ],
                         "min_value": 0.0,
                         "max_value": 1.1810333333333332
                     }
                 },
                 "6": {
-                    "value": 67.241,
+                    "value": 67.052,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            67.24066428571429
+                            67.05174611650486
                         ],
                         "min_value": 0.0,
                         "max_value": 326.6104833333329
@@ -19786,7 +20009,7 @@
                     }
                 },
                 "4": {
-                    "value": 167.023,
+                    "value": 154.909,
                     "dist": {
                         "dist_name": "norm",
                         "params": [
@@ -19854,7 +20077,7 @@
                     }
                 },
                 "2": {
-                    "value": 73.38,
+                    "value": 73.399,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
@@ -19923,12 +20146,12 @@
                     }
                 },
                 "2": {
-                    "value": 405.171,
+                    "value": 399.407,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            405.1708490384615
+                            399.40739500000007
                         ],
                         "min_value": 0.0,
                         "max_value": 3048.932499999999
@@ -19947,10 +20170,11 @@
                 "1": {
                     "value": 42.816,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            0.0048168458781362
+                            363.1068269108995,
+                            -5e-324,
+                            5.897653918680392e-193
                         ],
                         "min_value": 0.0,
                         "max_value": 0.04715
@@ -20042,12 +20266,12 @@
             },
             "11299": {
                 "0": {
-                    "value": 703.023,
+                    "value": 699.284,
                     "dist": {
-                        "dist_name": "norm",
+                        "dist_name": "expon",
                         "params": [
-                            703.0232965240641,
-                            605.9252148451435
+                            0.0,
+                            699.2838109042555
                         ],
                         "min_value": 0.0,
                         "max_value": 3919.0027166666696
@@ -20058,10 +20282,11 @@
                 "0": {
                     "value": 378.596,
                     "dist": {
-                        "dist_name": "expon",
+                        "dist_name": "lognorm",
                         "params": [
-                            0.0,
-                            30.904781770833328
+                            355.44495423361,
+                            -5e-324,
+                            2.1343062533759746e-114
                         ],
                         "min_value": 0.0,
                         "max_value": 382.41171666666673
@@ -20070,12 +20295,12 @@
             },
             "11309": {
                 "0": {
-                    "value": 369.954,
+                    "value": 373.367,
                     "dist": {
                         "dist_name": "expon",
                         "params": [
                             0.0,
-                            344.34283572854287
+                            347.9695681547619
                         ],
                         "min_value": 0.0,
                         "max_value": 1155.2155833333345
@@ -20084,7 +20309,7 @@
             },
             "11319": {
                 "0": {
-                    "value": 153.976,
+                    "value": 158.655,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
@@ -20116,11 +20341,10 @@
                 "0": {
                     "value": 7.034,
                     "dist": {
-                        "dist_name": "lognorm",
+                        "dist_name": "expon",
                         "params": [
-                            315.33913596903005,
-                            -5e-324,
-                            8.790633554230387e-247
+                            0.0,
+                            0.00013735632183908047
                         ],
                         "min_value": 0.0,
                         "max_value": 0.0011833333333333333
@@ -20144,13 +20368,13 @@
             },
             "10779": {
                 "0": {
-                    "value": 2.314,
+                    "value": 2.373,
                     "dist": {
                         "dist_name": "lognorm",
                         "params": [
-                            364.74256968217736,
+                            366.1129676798875,
                             -5e-324,
-                            6.450300443603829e-192
+                            1.933354077539751e-188
                         ],
                         "min_value": 0.0,
                         "max_value": 19.7344
@@ -20214,10 +20438,10 @@
                 "0": {
                     "value": 18.048,
                     "dist": {
-                        "dist_name": "uniform",
+                        "dist_name": "norm",
                         "params": [
-                            0.0,
-                            36.09690000000046
+                            18.04845000000023,
+                            18.04845000000023
                         ],
                         "min_value": 0.0,
                         "max_value": 36.09690000000046

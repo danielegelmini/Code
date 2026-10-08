@@ -1,0 +1,41 @@
+==============================================================================================================
+SIMULATION SUMMARY - BAC (exhaustive)
+Written by 4_run_recommendation_simulation.py - 2026-10-08 11:02:44
+Test cases (prefixes in test_log.csv): 1876
+==============================================================================================================
+simulated          : test cases with a recommendation at this rank (step 3): only these are continued
+                     by the simulator (all of them for the baseline). % of test: share of the test cases.
+unreach./run       : cases whose recommendation could not be applied in a run (not enabled and not
+                     reachable through silent transitions from the replayed prefix). The case is NOT
+                     stopped: it continues without the recommendation, and step 5 drops that run.
+unreach. all runs  : cases unreachable in every run -> no usable run, excluded from step 5.
+% case-runs usable : (simulated cases x runs - unreachable case-runs) / (simulated cases x runs).
+runaway/run        : cases truncated by the event cap (should be 0).
+non-fitting / inserted act. / ambiguous: prefix replay diagnostics of run 1 (properties of the prefixes).
+
+(a) Cases simulated and recommendations not applicable
+scenario  runs  simulated % of test unreach./run (mean) min-max  unreach. >=1 run  unreach. all runs % case-runs usable  cases usable (step 5) runaway/run  non-fitting prefixes  inserted act.  ambiguous
+baseline    10       1876     100.0                 0.0     0-0                 0                  0              100.0                   1876         0.0                    39              2          0
+rank 1/5    10       1397      74.5                39.0   39-39                39                 39               97.2                   1358         0.0                    24              1          0
+rank 2/5    10        261      13.9                20.0   20-20                20                 20               92.3                    241         0.0                     7              0          0
+rank 3/5    10         10       0.5                 1.0     1-1                 1                  1               90.0                      9         0.0                     0              0          0
+rank 4/5    10          0       0.0                 0.0     0-0                 0                  0                n/a                      0         0.0                     0              0          0
+rank 5/5    10          0       0.0                 0.0     0-0                 0                  0                n/a                      0         0.0                     0              0          0
+
+(b) Unreachable recommendations by reason
+scenario                                     reason  cases (>=1 run)  case-runs
+rank 1/5 not_reachable_from_replayed_prefix_marking               39        390
+rank 2/5 not_reachable_from_replayed_prefix_marking               20        200
+rank 3/5 not_reachable_from_replayed_prefix_marking                1         10
+
+(c) Most frequent unreachable recommended activities (cases, >=1 run)
+scenario                           recommended activity  unreachable cases
+rank 1/5    Evaluating Request (WITH registered letter)                 20
+rank 1/5                    Pending Liquidation Request                 10
+rank 1/5        Pending Request for Reservation Closure                  7
+rank 1/5                        Authorization Requested                  2
+rank 2/5 Service closure Request with BO responsibility                 17
+rank 2/5                    Pending Liquidation Request                  2
+rank 2/5        Pending Request for Reservation Closure                  1
+rank 3/5 Service closure Request with BO responsibility                  1
+

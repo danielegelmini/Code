@@ -1,0 +1,184 @@
+======================================================================
+HYPERPARAMETER AND METRICS SUMMARY PER DATASET (CATBOOST) - TIME MODEL ON THE RAW REMAINING TIME
+Written by a temporary test script - 2026-10-07 11:21:23
+======================================================================
+Time model trained exactly as in step 2 (2_training_predictive_model.py: Optuna, RMSEWithUncertainty,
+sigma-scaling recalibration, doubled training set with the no-recommendation copies), except for the target:
+the remaining time in DAYS instead of sigmoid_mm. No other change (no idle_days). The outcome classifier is
+not retrained (production model, see 2_training_results.txt). Every metric below is recomputed from the
+saved model with step 2's own functions; RMSE / MAE / std are in days. The Optuna study of this test run
+was not saved, so the number of completed trials and the best trial are not available.
+
+1. DATASET BAC
+----------------------------------------------------------------------
+* Optuna trials target: 80 (timeout none) | completed -> not recorded in this test run | Early stopping rounds: 50
+
+* Metrics for Model 2 (remaining time in days - Regressor with uncertainty):
+  - Search space:
+    - learning_rate: type=float, min=0.02, max=0.3, log=True
+    - depth: type=int, min=3, max=12
+    - l2_leaf_reg: type=float, min=1.0, max=50.0, log=True
+    - colsample_bylevel: type=float, min=0.5, max=1.0
+    - bootstrap_type: type=categorical, choices=['Bayesian', 'Bernoulli', 'MVS']
+    - grow_policy: type=categorical, choices=['SymmetricTree', 'Depthwise']
+  - Optuna trials completed / best trial: not recorded in this test run
+  - Best hyperparameters: learning_rate=0.06778, depth=12, l2_leaf_reg=1.952, colsample_bylevel=0.6323, bootstrap_type=MVS, grow_policy=Depthwise, subsample=0.6136, min_data_in_leaf=25
+  - Trees in final model (refit on 100% training data): 101
+  - RMSE of training set: 16.54349 d (MAE 5.01800 d)
+  - RMSE of test set: 18.21795 d
+  - MAE score of test set: 5.60371 d
+  - Predictive uncertainty (test avg): data/aleatoric std = 12.07525 d, knowledge/epistemic std = 0.16274 d, total std = 12.08464 d
+    epistemic share of variance = 0.1% (rest is irreducible noise)
+  - Calibration: sigma-scaling factor s = 1.071 (Levi et al. 2022, Gaussian NLL on a held-out slice; rescales the interval width only, NOT the Pareto front)
+    ENCE (expected normalized calibration error, 15 std bins): raw 39.31% -> recalibrated 38.03%
+    c_v (dispersion of predicted std, scale-invariant): 1.032 (must be well above 0 for the uncertainty to be informative)
+    mean +/- 1 sigma coverage (target ~68%): raw 95.9% -> recalibrated 96.3%
+    mean +/- 2 sigma coverage (target ~95%): raw 98.4% -> recalibrated 98.5%
+    RMV  per std bin (recalibrated, days): 0.2949 0.3030 0.4701 0.5617 2.9936 5.3900 5.9056 6.5576 8.0432 12.2003 17.7317 22.7263 26.7833 31.7800 40.4200
+    RMSE per std bin (recalibrated, days): 0.0921 0.0854 0.1701 0.1815 2.3396 1.5856 1.1406 3.1938 9.7503 11.0909 21.8505 25.5621 27.3342 31.9606 42.5431
+
+* Comparison in days with the production time model (sigmoid_mm, decoded to days):
+  - all test-set rows (14147 rows; real remaining days median 2.32, mean 7.34):
+    sigmoid_mm (production)  MAE 4.94 d | median abs error 1.41 d | RMSE 18.39 d | bias -1.85 d | coverage +/-1 sigma 90.5% | +/-2 sigma 96.0%
+    raw days                 MAE 5.60 d | median abs error 1.34 d | RMSE 18.16 d | bias +0.09 d | coverage +/-1 sigma 96.3% | +/-2 sigma 98.5%
+  - test cases at the split (1876 rows; real remaining days median 6.60, mean 15.76):
+    sigmoid_mm (production)  MAE 11.05 d | median abs error 3.42 d | RMSE 30.25 d | bias -8.04 d | coverage +/-1 sigma 76.8% | +/-2 sigma 88.6%
+    raw days                 MAE 10.68 d | median abs error 3.66 d | RMSE 29.43 d | bias -6.19 d | coverage +/-1 sigma 89.0% | +/-2 sigma 94.8%
+* Train and test in days, both targets computed the same way (virtual-ensemble mean as used by the
+  recommender; sigmoid_mm decoded to days, raw days clipped at 0; train = training rows with their real
+  next step, no-recommendation copies excluded):
+  - train (164257 rows) sigmoid_mm (production)  MAE 4.57 d | RMSE 17.88 d
+  - train (164257 rows) raw days                 MAE 4.96 d | RMSE 16.21 d
+  - test  (14147 rows) sigmoid_mm (production)  MAE 4.94 d | RMSE 18.39 d
+  - test  (14147 rows) raw days                 MAE 5.60 d | RMSE 18.16 d
+
+2. DATASET BPI12
+----------------------------------------------------------------------
+* Optuna trials target: 80 (timeout none) | completed -> not recorded in this test run | Early stopping rounds: 50
+
+* Metrics for Model 2 (remaining time in days - Regressor with uncertainty):
+  - Search space:
+    - learning_rate: type=float, min=0.02, max=0.3, log=True
+    - depth: type=int, min=3, max=12
+    - l2_leaf_reg: type=float, min=1.0, max=50.0, log=True
+    - colsample_bylevel: type=float, min=0.5, max=1.0
+    - bootstrap_type: type=categorical, choices=['Bayesian', 'Bernoulli', 'MVS']
+    - grow_policy: type=categorical, choices=['SymmetricTree', 'Depthwise']
+  - Optuna trials completed / best trial: not recorded in this test run
+  - Best hyperparameters: learning_rate=0.1695, depth=8, l2_leaf_reg=3.583, colsample_bylevel=0.5611, bootstrap_type=MVS, grow_policy=Depthwise, subsample=0.6016, min_data_in_leaf=59
+  - Trees in final model (refit on 100% training data): 31
+  - RMSE of training set: 8.91545 d (MAE 5.99401 d)
+  - RMSE of test set: 11.79232 d
+  - MAE score of test set: 7.88431 d
+  - Predictive uncertainty (test avg): data/aleatoric std = 10.32886 d, knowledge/epistemic std = 0.28651 d, total std = 10.34204 d
+    epistemic share of variance = 0.2% (rest is irreducible noise)
+  - Calibration: sigma-scaling factor s = 1.254 (Levi et al. 2022, Gaussian NLL on a held-out slice; rescales the interval width only, NOT the Pareto front)
+    ENCE (expected normalized calibration error, 15 std bins): raw 39.48% -> recalibrated 20.86%
+    c_v (dispersion of predicted std, scale-invariant): 0.406 (must be well above 0 for the uncertainty to be informative)
+    mean +/- 1 sigma coverage (target ~68%): raw 70.2% -> recalibrated 80.8%
+    mean +/- 2 sigma coverage (target ~95%): raw 91.8% -> recalibrated 94.0%
+    RMV  per std bin (recalibrated, days): 1.4202 3.2820 6.2003 7.3929 8.2928 9.4816 10.8444 11.6791 12.2136 12.6057 13.1747 13.6505 14.0818 14.6273 16.4482
+    RMSE per std bin (recalibrated, days): 0.4600 2.0617 8.8782 9.5436 8.2026 11.5701 13.6287 14.5104 13.3406 13.6631 14.1422 14.6341 13.7962 12.3944 14.2551
+
+* Comparison in days with the production time model (sigmoid_mm, decoded to days):
+  - all test-set rows (17119 rows; real remaining days median 13.00, mean 15.82):
+    sigmoid_mm (production)  MAE 8.29 d | median abs error 5.35 d | RMSE 12.47 d | bias -4.52 d | coverage +/-1 sigma 64.6% | +/-2 sigma 94.6%
+    raw days                 MAE 7.93 d | median abs error 5.25 d | RMSE 11.82 d | bias -3.55 d | coverage +/-1 sigma 80.8% | +/-2 sigma 94.0%
+  - test cases at the split (623 rows; real remaining days median 11.85, mean 13.13):
+    sigmoid_mm (production)  MAE 6.04 d | median abs error 5.20 d | RMSE 7.38 d | bias -0.35 d | coverage +/-1 sigma 76.9% | +/-2 sigma 98.9%
+    raw days                 MAE 6.23 d | median abs error 5.77 d | RMSE 7.53 d | bias +0.32 d | coverage +/-1 sigma 90.5% | +/-2 sigma 99.0%
+* Train and test in days, both targets computed the same way (virtual-ensemble mean as used by the
+  recommender; sigmoid_mm decoded to days, raw days clipped at 0; train = training rows with their real
+  next step, no-recommendation copies excluded):
+  - train (91056 rows) sigmoid_mm (production)  MAE 6.08 d | RMSE 9.36 d
+  - train (91056 rows) raw days                 MAE 5.97 d | RMSE 8.90 d
+  - test  (17119 rows) sigmoid_mm (production)  MAE 8.29 d | RMSE 12.47 d
+  - test  (17119 rows) raw days                 MAE 7.93 d | RMSE 11.82 d
+
+3. DATASET BPI17_BEFORE
+----------------------------------------------------------------------
+* Optuna trials target: 80 (timeout none) | completed -> not recorded in this test run | Early stopping rounds: 50
+
+* Metrics for Model 2 (remaining time in days - Regressor with uncertainty):
+  - Search space:
+    - learning_rate: type=float, min=0.02, max=0.3, log=True
+    - depth: type=int, min=3, max=12
+    - l2_leaf_reg: type=float, min=1.0, max=50.0, log=True
+    - colsample_bylevel: type=float, min=0.5, max=1.0
+    - bootstrap_type: type=categorical, choices=['Bayesian', 'Bernoulli', 'MVS']
+    - grow_policy: type=categorical, choices=['SymmetricTree', 'Depthwise']
+  - Optuna trials completed / best trial: not recorded in this test run
+  - Best hyperparameters: learning_rate=0.05337, depth=12, l2_leaf_reg=3.333, colsample_bylevel=0.9274, bootstrap_type=MVS, grow_policy=Depthwise, subsample=0.9772, min_data_in_leaf=191
+  - Trees in final model (refit on 100% training data): 130
+  - RMSE of training set: 9.23023 d (MAE 6.62069 d)
+  - RMSE of test set: 13.85460 d
+  - MAE score of test set: 9.28190 d
+  - Predictive uncertainty (test avg): data/aleatoric std = 9.77556 d, knowledge/epistemic std = 0.21571 d, total std = 9.78332 d
+    epistemic share of variance = 0.1% (rest is irreducible noise)
+  - Calibration: sigma-scaling factor s = 1.245 (Levi et al. 2022, Gaussian NLL on a held-out slice; rescales the interval width only, NOT the Pareto front)
+    ENCE (expected normalized calibration error, 15 std bins): raw 55.20% -> recalibrated 32.56%
+    c_v (dispersion of predicted std, scale-invariant): 0.539 (must be well above 0 for the uncertainty to be informative)
+    mean +/- 1 sigma coverage (target ~68%): raw 62.7% -> recalibrated 74.6%
+    mean +/- 2 sigma coverage (target ~95%): raw 87.5% -> recalibrated 91.6%
+    RMV  per std bin (recalibrated, days): 0.4588 0.5596 2.1014 5.8142 7.6621 8.8316 10.1169 11.3835 12.7492 13.5151 13.8749 14.1778 14.5588 14.9692 16.4477
+    RMSE per std bin (recalibrated, days): 0.1456 0.2608 1.6094 7.5213 10.7532 13.2622 15.7090 14.9702 16.0657 17.7175 16.3770 16.8602 16.3921 16.4834 19.7179
+
+* Comparison in days with the production time model (sigmoid_mm, decoded to days):
+  - all test-set rows (19904 rows; real remaining days median 15.27, mean 18.79):
+    sigmoid_mm (production)  MAE 9.62 d | median abs error 7.21 d | RMSE 14.34 d | bias -6.19 d | coverage +/-1 sigma 60.5% | +/-2 sigma 95.3%
+    raw days                 MAE 9.29 d | median abs error 7.08 d | RMSE 13.84 d | bias -5.41 d | coverage +/-1 sigma 74.6% | +/-2 sigma 91.6%
+  - test cases at the split (1218 rows; real remaining days median 29.85, mean 24.86):
+    sigmoid_mm (production)  MAE 12.44 d | median abs error 12.08 d | RMSE 15.35 d | bias -8.81 d | coverage +/-1 sigma 44.7% | +/-2 sigma 93.7%
+    raw days                 MAE 12.07 d | median abs error 10.94 d | RMSE 14.99 d | bias -8.03 d | coverage +/-1 sigma 65.7% | +/-2 sigma 89.1%
+* Train and test in days, both targets computed the same way (virtual-ensemble mean as used by the
+  recommender; sigmoid_mm decoded to days, raw days clipped at 0; train = training rows with their real
+  next step, no-recommendation copies excluded):
+  - train (145832 rows) sigmoid_mm (production)  MAE 6.75 d | RMSE 9.73 d
+  - train (145832 rows) raw days                 MAE 6.54 d | RMSE 9.20 d
+  - test  (19904 rows) sigmoid_mm (production)  MAE 9.62 d | RMSE 14.34 d
+  - test  (19904 rows) raw days                 MAE 9.29 d | RMSE 13.84 d
+
+4. DATASET BPI17_AFTER
+----------------------------------------------------------------------
+* Optuna trials target: 80 (timeout none) | completed -> not recorded in this test run | Early stopping rounds: 50
+
+* Metrics for Model 2 (remaining time in days - Regressor with uncertainty):
+  - Search space:
+    - learning_rate: type=float, min=0.02, max=0.3, log=True
+    - depth: type=int, min=3, max=12
+    - l2_leaf_reg: type=float, min=1.0, max=50.0, log=True
+    - colsample_bylevel: type=float, min=0.5, max=1.0
+    - bootstrap_type: type=categorical, choices=['Bayesian', 'Bernoulli', 'MVS']
+    - grow_policy: type=categorical, choices=['SymmetricTree', 'Depthwise']
+  - Optuna trials completed / best trial: not recorded in this test run
+  - Best hyperparameters: learning_rate=0.05807, depth=12, l2_leaf_reg=6.179, colsample_bylevel=0.8988, bootstrap_type=MVS, grow_policy=Depthwise, subsample=0.8596, min_data_in_leaf=122
+  - Trees in final model (refit on 100% training data): 115
+  - RMSE of training set: 8.90936 d (MAE 6.52724 d)
+  - RMSE of test set: 13.44928 d
+  - MAE score of test set: 8.84711 d
+  - Predictive uncertainty (test avg): data/aleatoric std = 9.01618 d, knowledge/epistemic std = 0.26555 d, total std = 9.02743 d
+    epistemic share of variance = 0.1% (rest is irreducible noise)
+  - Calibration: sigma-scaling factor s = 1.175 (Levi et al. 2022, Gaussian NLL on a held-out slice; rescales the interval width only, NOT the Pareto front)
+    ENCE (expected normalized calibration error, 15 std bins): raw 60.13% -> recalibrated 42.21%
+    c_v (dispersion of predicted std, scale-invariant): 0.489 (must be well above 0 for the uncertainty to be informative)
+    mean +/- 1 sigma coverage (target ~68%): raw 62.7% -> recalibrated 73.3%
+    mean +/- 2 sigma coverage (target ~95%): raw 88.1% -> recalibrated 91.0%
+    RMV  per std bin (recalibrated, days): 0.6147 0.8058 3.3863 6.2881 7.2361 8.1628 9.2052 10.6554 11.7561 12.1481 12.3686 12.5482 12.8507 13.2889 14.4012
+    RMSE per std bin (recalibrated, days): 0.2075 0.3195 2.7548 10.3398 14.0631 14.4696 14.7197 15.4313 14.8105 13.3611 14.4011 14.7950 15.2588 15.4167 20.4549
+
+* Comparison in days with the production time model (sigmoid_mm, decoded to days):
+  - all test-set rows (28394 rows; real remaining days median 16.93, mean 19.10):
+    sigmoid_mm (production)  MAE 8.84 d | median abs error 6.70 d | RMSE 13.54 d | bias -5.72 d | coverage +/-1 sigma 62.3% | +/-2 sigma 94.6%
+    raw days                 MAE 8.83 d | median abs error 6.62 d | RMSE 13.39 d | bias -5.63 d | coverage +/-1 sigma 73.3% | +/-2 sigma 91.0%
+  - test cases at the split (1840 rows; real remaining days median 25.06, mean 22.33):
+    sigmoid_mm (production)  MAE 10.09 d | median abs error 10.86 d | RMSE 12.81 d | bias -7.01 d | coverage +/-1 sigma 46.8% | +/-2 sigma 94.4%
+    raw days                 MAE 10.19 d | median abs error 9.88 d | RMSE 12.99 d | bias -7.17 d | coverage +/-1 sigma 65.3% | +/-2 sigma 89.7%
+* Train and test in days, both targets computed the same way (virtual-ensemble mean as used by the
+  recommender; sigmoid_mm decoded to days, raw days clipped at 0; train = training rows with their real
+  next step, no-recommendation copies excluded):
+  - train (166924 rows) sigmoid_mm (production)  MAE 6.69 d | RMSE 9.37 d
+  - train (166924 rows) raw days                 MAE 6.49 d | RMSE 8.91 d
+  - test  (28394 rows) sigmoid_mm (production)  MAE 8.84 d | RMSE 13.54 d
+  - test  (28394 rows) raw days                 MAE 8.83 d | RMSE 13.39 d
+
+======================================================================

@@ -1,9 +1,9 @@
 case:concept:name,Next_activity,Next_resource
-201810001660,Pending Request for Reservation Closure,BOC
+201810001660,,
 201810002650,,
 201810006512,,
 201810008108,,
-201810008268,Service closure Request with BO responsibility,BOC
+201810008268,,
 201810008485,,
 201810008899,,
 20181000902,,
@@ -13,7 +13,7 @@ case:concept:name,Next_activity,Next_resource
 201810011583,,
 201810011588,,
 20181012611,,
-20181013679,Service closure Request with BO responsibility,BOC
+20181013679,,
 201811000205,,
 201811001580,,
 201811001889,,
@@ -30,15 +30,15 @@ case:concept:name,Next_activity,Next_resource
 201811006674,,
 201811006982,,
 201811007401,,
-201811008100,,
-201811008330,Service closure Request with BO responsibility,BOC
+201811008100,Service closure Request with BO responsibility,BOCSER
+201811008330,,
 201811008338,,
 201811008394,,
 201811008598,,
 201811008621,,
 201811008631,,
 201811008634,,
-201811009132,Service closure Request with BO responsibility,BOC
+201811009132,,
 201811009434,,
 201811009800,,
 201811010119,,
@@ -48,14 +48,14 @@ case:concept:name,Next_activity,Next_resource
 201811011699,,
 201811011715,,
 201811011742,,
-201811011907,Service closure Request with BO responsibility,00846
+201811011907,,
 201811011916,,
 201812000179,,
-201812000181,Service closure Request with BO responsibility,00846
-201812000186,Pending Request for Reservation Closure,BOC
+201812000181,,
+201812000186,,
 201812000605,,
 201812000606,,
-201812000900,Pending Request for Reservation Closure,BOC
+201812000900,,
 201812001964,,
 201812001995,,
 201812002344,,
@@ -63,7 +63,7 @@ case:concept:name,Next_activity,Next_resource
 201812002630,,
 201812002677,,
 201812002837,,
-201812002893,Pending Request for Reservation Closure,BOC
+201812002893,,
 201812003039,,
 201812003088,,
 201812003246,,
@@ -83,19 +83,19 @@ case:concept:name,Next_activity,Next_resource
 201812004921,,
 201812005259,,
 201812005350,,
-201812005402,Pending Request for Reservation Closure,BOC
+201812005402,,
 201812005434,,
-201812005461,Pending Request for Reservation Closure,BOC
+201812005461,,
 201812005659,,
 201812005779,,
 201812005853,,
 201812005862,,
 201812005898,,
 201812006094,,
-201812006124,,
+201812006124,Service closure Request with BO responsibility,BOCSER
 201812006380,,
 201812006485,,
-201812006628,Pending Request for Reservation Closure,BOC
+201812006628,,
 201812006707,,
 201812006755,,
 201812006820,,
@@ -111,7 +111,7 @@ case:concept:name,Next_activity,Next_resource
 201812007445,,
 201812007596,,
 201812007654,,
-201812007664,Service closure Request with BO responsibility,00846
+201812007664,,
 201812007718,,
 201812007723,,
 201812007727,,
@@ -127,22 +127,22 @@ case:concept:name,Next_activity,Next_resource
 201812008642,,
 201812008657,,
 201812008694,,
-201812008702,Service closure Request with BO responsibility,BOC
-201812008708,Service closure Request with BO responsibility,BOC
-201812008800,Pending Request for Reservation Closure,BOC
+201812008702,,
+201812008708,,
+201812008800,,
 201812008953,,
 201812009238,,
-201812009363,Service closure Request with BO responsibility,00846
+201812009363,,
 201812009396,,
 201812009485,,
 201812009515,,
 201812009556,,
 201812009573,,
 201812009645,,
-201812009682,Service closure Request with BO responsibility,00846
+201812009682,,
 201812009703,,
 201812009725,,
-201812009750,Service closure Request with BO responsibility,00846
+201812009750,,
 201812009753,,
 20182005961,,
 20182009106,,
@@ -156,30 +156,30 @@ case:concept:name,Next_activity,Next_resource
 20187001196,,
 20187001795,,
 20187002397,,
-20187003190,Service closure Request with BO responsibility,00846
+20187003190,,
 20187003641,,
 20187006392,,
-20187006846,Pending Request for Reservation Closure,BOC
+20187006846,,
 20187007250,,
 20187010782,,
 20188002087,,
 20188002441,,
 20188002645,,
-20188005486,Service closure Request with BO responsibility,00846
+20188005486,,
 20189001829,,
-20189003084,Pending Request for Reservation Closure,BOC
+20189003084,,
 20189003486,,
 20189004803,,
-20189006540,Pending Request for Reservation Closure,BOC
+20189006540,,
 20189007102,,
-20189007821,,
-20189007982,Pending Request for Reservation Closure,BOC
+20189007821,Service closure Request with BO responsibility,BOCSER
+20189007982,,
 20189008206,,
 20189009645,,
 20191000127,,
 20191000242,,
 20191000255,,
-20191000260,Service closure Request with BO responsibility,BOCSER
+20191000260,,
 20191000269,,
 20191000366,,
 20191000380,,
@@ -194,14 +194,14 @@ case:concept:name,Next_activity,Next_resource
 20191000676,,
 20191000751,,
 20191000782,,
-20191000845,Service closure Request with BO responsibility,00846
+20191000845,,
 20191000920,,
 20191000928,,
 20191000957,,
 20191001061,,
 20191001073,,
 20191001081,,
-20191001178,Pending Request for Reservation Closure,BOC
+20191001178,,
 20191001209,,
 20191001270,,
 20191001457,,
@@ -230,19 +230,19 @@ case:concept:name,Next_activity,Next_resource
 20191002211,,
 20191002216,,
 20191002277,,
-20191002297,Pending Request for Reservation Closure,BOC
+20191002297,,
 20191002326,,
 20191002394,,
 20191002430,,
 20191002483,,
-20191002511,Service closure Request with BO responsibility,BOC
+20191002511,,
 20191002519,,
-20191002521,Service closure Request with BO responsibility,BOC
+20191002521,,
 20191002534,,
-20191002537,Service closure Request with BO responsibility,BOC
+20191002537,,
 20191002552,,
 20191002594,,
-20191002706,Service closure Request with BO responsibility,BOC
+20191002706,,
 20191002742,,
 20191002745,,
 20191002751,,
@@ -261,13 +261,13 @@ case:concept:name,Next_activity,Next_resource
 20191003145,,
 20191003155,,
 20191003263,,
-20191003312,Service closure Request with BO responsibility,00846
+20191003312,,
 20191003315,,
 20191003440,,
 20191003460,,
 20191003465,,
 20191003502,,
-20191003540,,
+20191003540,Service closure Request with BO responsibility,BOCSER
 20191003568,,
 20191003594,,
 20191003598,,
@@ -287,22 +287,22 @@ case:concept:name,Next_activity,Next_resource
 20191003938,,
 20191004011,,
 20191004025,,
-20191004038,Service closure Request with BO responsibility,00846
+20191004038,,
 20191004043,,
 20191004048,,
 20191004077,,
 20191004109,,
-20191004146,Service closure Request with BO responsibility,00846
-20191004208,Service closure Request with BO responsibility,00846
+20191004146,,
+20191004208,,
 20191004220,,
 20191004224,,
 20191004227,,
-20191004251,Service closure Request with BO responsibility,00846
-20191004267,Service closure Request with BO responsibility,00846
+20191004251,,
+20191004267,,
 20191004286,,
 20191004316,,
 20191004326,,
-20191004364,Service closure Request with BO responsibility,00846
+20191004364,,
 20191004374,,
 20191004402,,
 20191004432,,
@@ -313,16 +313,16 @@ case:concept:name,Next_activity,Next_resource
 20191004521,,
 20191004550,,
 20191004556,,
-20191004566,Pending Request for Reservation Closure,BOC
+20191004566,,
 20191004680,,
 20191004710,,
 20191004729,,
 20191004805,,
 20191004812,,
-20191004843,Pending Request for Reservation Closure,BOC
+20191004843,,
 20191004845,,
 20191004854,,
-20191004869,Service closure Request with BO responsibility,00846
+20191004869,,
 20191004891,,
 20191004898,,
 20191004909,,
@@ -348,8 +348,8 @@ case:concept:name,Next_activity,Next_resource
 20191005428,,
 20191005462,,
 20191005480,,
-20191005537,Service closure Request with BO responsibility,00846
-20191005557,Pending Request for Reservation Closure,BOC
+20191005537,,
+20191005557,,
 20191005567,,
 20191005580,,
 20191005632,,
@@ -363,7 +363,7 @@ case:concept:name,Next_activity,Next_resource
 20191005769,,
 20191005791,,
 20191005816,,
-20191005838,Service closure Request with BO responsibility,BOC
+20191005838,,
 20191005893,,
 20191005903,,
 20191005916,,
@@ -372,14 +372,14 @@ case:concept:name,Next_activity,Next_resource
 20191005966,,
 20191005984,,
 20191006023,,
-20191006058,,
+20191006058,Service closure Request with BO responsibility,BOCSER
 20191006064,,
 20191006077,,
 20191006078,,
 20191006098,,
 20191006110,,
 20191006112,,
-20191006142,Pending Request for Reservation Closure,BOC
+20191006142,,
 20191006145,,
 20191006157,,
 20191006186,,
@@ -391,20 +391,20 @@ case:concept:name,Next_activity,Next_resource
 20191006220,,
 20191006225,,
 20191006233,,
-20191006273,Pending Request for Reservation Closure,BOC
+20191006273,,
 20191006292,,
 20191006301,,
 20191006309,,
 20191006333,,
 20191006358,,
 20191006382,,
-20191006394,Service closure Request with BO responsibility,00846
+20191006394,,
 20191006436,,
 20191006444,,
 20191006449,,
 20191006478,,
 20191006502,,
-20191006520,Pending Request for Reservation Closure,BOC
+20191006520,,
 20191006539,,
 20191006550,,
 20191006585,,
@@ -413,8 +413,8 @@ case:concept:name,Next_activity,Next_resource
 20191006655,,
 20191006661,,
 20191006675,,
-20191006747,,
-20191006756,Pending Request for Reservation Closure,BOC
+20191006747,Service closure Request with BO responsibility,BOCSER
+20191006756,,
 20191006771,,
 20191006784,,
 20191006788,,
@@ -429,7 +429,7 @@ case:concept:name,Next_activity,Next_resource
 20191006920,,
 20191006922,,
 20191006987,,
-20191007056,Service closure Request with BO responsibility,BOC
+20191007056,,
 20191007068,,
 20191007079,,
 20191007144,,
@@ -443,7 +443,7 @@ case:concept:name,Next_activity,Next_resource
 20191007413,,
 20191007430,,
 20191007453,,
-20191007463,Service closure Request with BO responsibility,00846
+20191007463,,
 20191007469,,
 20191007472,,
 20191007481,,
@@ -491,15 +491,15 @@ case:concept:name,Next_activity,Next_resource
 20191007979,,
 20191007993,,
 20191008000,,
-20191008019,Service closure Request with BO responsibility,00846
+20191008019,,
 20191008035,,
 20191008041,,
-20191008066,Service closure Request with BO responsibility,00846
+20191008066,,
 20191008071,,
-20191008074,Pending Request for Reservation Closure,BOC
+20191008074,,
 20191008076,,
 20191008079,,
-20191008080,Service closure Request with BO responsibility,00846
+20191008080,,
 20191008096,,
 20191008111,,
 20191008116,,
@@ -528,37 +528,37 @@ case:concept:name,Next_activity,Next_resource
 20191008397,,
 20191008402,,
 20191008415,,
-20191008420,Service closure Request with BO responsibility,00846
+20191008420,,
 20191008442,,
 20191008443,,
 20191008445,,
-20191008446,Service closure Request with BO responsibility,00846
+20191008446,,
 20191008454,,
 20191008456,,
 20191008469,,
 20191008473,,
 20191008481,,
 20191008500,,
-20191008537,Service closure Request with BO responsibility,00846
+20191008537,,
 20191008538,,
 20191008554,,
-20191008564,Service closure Request with BO responsibility,BOC
+20191008564,,
 20191008566,,
 20191008580,,
-20191008612,Service closure Request with BO responsibility,00846
+20191008612,,
 20191008625,,
 20191008640,,
 20191008645,,
 20191008646,,
 20191008650,,
 20191008651,,
-20191008668,Service closure Request with BO responsibility,BOC
+20191008668,,
 20191008691,,
 20191008693,,
 20191008696,,
 20191008720,,
 20191008732,,
-20191008742,Pending Request for Reservation Closure,BOC
+20191008742,,
 20191008751,,
 20191008755,,
 20191008759,,
@@ -566,9 +566,9 @@ case:concept:name,Next_activity,Next_resource
 20191008797,,
 20191008805,,
 20191008808,,
-20191008812,Pending Request for Reservation Closure,BOC
+20191008812,,
 20191008816,,
-20191008827,Service closure Request with BO responsibility,00846
+20191008827,,
 20191008833,,
 20191008838,,
 20191008840,,
@@ -600,12 +600,12 @@ case:concept:name,Next_activity,Next_resource
 20191009071,,
 20191009078,,
 20191009080,,
-20191009081,Service closure Request with BO responsibility,BOC
+20191009081,,
 20191009087,,
 20191009089,,
 20191009097,,
 20191009105,,
-20191009106,Service closure Request with BO responsibility,00846
+20191009106,,
 20191009108,,
 20191009120,,
 20191009129,,
@@ -638,7 +638,7 @@ case:concept:name,Next_activity,Next_resource
 20191009401,,
 20191009423,,
 20191009426,,
-20191009436,Pending Request for Reservation Closure,BOC
+20191009436,,
 20191009437,,
 20191009442,,
 20191009443,,
@@ -672,24 +672,24 @@ case:concept:name,Next_activity,Next_resource
 20191009638,,
 20191009648,,
 20191009677,,
-20191009680,Service closure Request with BO responsibility,BOC
-20191009681,Pending Request for Reservation Closure,BOC
+20191009680,,
+20191009681,,
 20191009686,,
 20191009699,,
 20191009711,,
 20191009713,,
 20191009721,,
 20191009722,,
-20191009727,Service closure Request with BO responsibility,BOC
+20191009727,,
 20191009734,,
 20191009739,,
 20191009759,,
-20191009788,Service closure Request with BO responsibility,BOC
+20191009788,,
 20191009789,,
 20191009797,,
 20191009806,,
 20191009815,,
-20191009817,Service closure Request with BO responsibility,00846
+20191009817,,
 20191009819,,
 20191009822,,
 20191009825,,
@@ -707,7 +707,7 @@ case:concept:name,Next_activity,Next_resource
 20191009919,,
 20191009924,,
 20191009939,,
-20191009945,Service closure Request with BO responsibility,00846
+20191009945,,
 20191009948,,
 20191009969,,
 20191009973,,
@@ -717,18 +717,18 @@ case:concept:name,Next_activity,Next_resource
 20191009995,,
 20191009998,,
 20191010020,,
-20191010024,Pending Request for Reservation Closure,BOC
-20191010030,Service closure Request with BO responsibility,00846
+20191010024,,
+20191010030,,
 20191010036,,
 20191010039,,
 20191010040,,
-20191010046,Service closure Request with BO responsibility,00846
+20191010046,,
 20191010047,,
 20191010048,,
-20191010053,Service closure Request with BO responsibility,00846
-20191010054,Service closure Request with BO responsibility,00846
+20191010053,,
+20191010054,,
 20191010056,,
-20191010059,Service closure Request with BO responsibility,BOCSER
+20191010059,,
 20191010079,,
 20191010088,,
 20191010107,,
@@ -762,18 +762,18 @@ case:concept:name,Next_activity,Next_resource
 20191010234,,
 20191010237,,
 20191010238,,
-20191010241,Pending Request for Reservation Closure,BOC
+20191010241,,
 20191010249,,
 20191010250,,
 20191010254,,
 20191010256,,
 20191010263,,
-20191010271,Service closure Request with BO responsibility,00846
+20191010271,,
 20191010273,,
 20191010274,,
 20191010275,,
 20191010278,,
-20191010279,Pending Request for Reservation Closure,BOC
+20191010279,,
 20191010281,,
 20191010282,,
 20191010286,,
@@ -781,7 +781,7 @@ case:concept:name,Next_activity,Next_resource
 20191010291,,
 20191010292,,
 20191010294,,
-20191010296,Pending Request for Reservation Closure,BOC
+20191010296,,
 20191010299,,
 20191010301,,
 20191010303,,
@@ -793,7 +793,7 @@ case:concept:name,Next_activity,Next_resource
 20191010327,,
 20191010328,,
 20191010329,,
-20191010335,Pending Request for Reservation Closure,BOC
+20191010335,,
 20191010336,,
 20191010338,,
 20191010341,,
@@ -813,10 +813,10 @@ case:concept:name,Next_activity,Next_resource
 20191010394,,
 20191010404,,
 20191010408,,
-20191010411,Service closure Request with BO responsibility,00846
+20191010411,,
 20191010414,,
 20191010418,,
-20191010421,Pending Request for Reservation Closure,BOC
+20191010421,,
 20191010423,,
 20191010430,,
 20191010433,,
@@ -858,7 +858,7 @@ case:concept:name,Next_activity,Next_resource
 20191010560,,
 20191010563,,
 20191010564,,
-20191010565,Service closure Request with BO responsibility,00846
+20191010565,,
 20191010566,,
 20191010567,,
 20191010577,,
@@ -868,7 +868,7 @@ case:concept:name,Next_activity,Next_resource
 20191010582,,
 20191010585,,
 20191010590,,
-20191010593,,
+20191010593,Service closure Request with BO responsibility,BOCSER
 20191010600,,
 20191010601,,
 20191010603,,
@@ -908,7 +908,7 @@ case:concept:name,Next_activity,Next_resource
 20191010764,,
 20191010766,,
 20191010767,,
-20191010782,Service closure Request with BO responsibility,00846
+20191010782,,
 20191010787,,
 20191010788,,
 20191010793,,
@@ -950,7 +950,7 @@ case:concept:name,Next_activity,Next_resource
 20191010906,,
 20191010908,,
 20191010909,,
-20191010911,Service closure Request with BO responsibility,00846
+20191010911,,
 20191010912,,
 20191010920,,
 20191010922,,
@@ -994,12 +994,12 @@ case:concept:name,Next_activity,Next_resource
 20191011051,,
 20191011054,,
 20191011056,,
-20191011057,Service closure Request with BO responsibility,00846
+20191011057,,
 20191011062,,
 20191011067,,
 20191011069,,
 20191011070,,
-20191011071,Service closure Request with BO responsibility,00846
+20191011071,,
 20191011081,,
 20191011083,,
 20191011086,,
@@ -1068,15 +1068,15 @@ case:concept:name,Next_activity,Next_resource
 20191011273,,
 20191011276,,
 20191011277,,
-20191011291,Service closure Request with BO responsibility,00846
+20191011291,,
 20191011292,,
 20191011296,,
 20191011305,,
 20191011306,,
 20191011315,,
 20191011316,,
-20191011319,Service closure Request with BO responsibility,00846
-20191011321,Service closure Request with BO responsibility,00846
+20191011319,,
+20191011321,,
 20191011322,,
 20191011325,,
 20191011329,,
@@ -1126,7 +1126,7 @@ case:concept:name,Next_activity,Next_resource
 20191011399,,
 20191011404,,
 20191011405,,
-20191011406,Service closure Request with BO responsibility,00846
+20191011406,,
 20191011408,,
 20191011411,,
 20191011412,,
@@ -1147,7 +1147,7 @@ case:concept:name,Next_activity,Next_resource
 20191011443,,
 20191011449,,
 20191011450,,
-20191011452,Service closure Request with BO responsibility,BOCSER
+20191011452,,
 20191011457,,
 20191011459,,
 20191011463,,
@@ -1185,7 +1185,7 @@ case:concept:name,Next_activity,Next_resource
 20191011549,,
 20191011550,,
 20191011553,,
-20191011556,Pending Request for Reservation Closure,BOC
+20191011556,,
 20191011558,,
 20191011559,,
 20191011560,,
@@ -1218,7 +1218,7 @@ case:concept:name,Next_activity,Next_resource
 20191011630,,
 20191011635,,
 20191011636,,
-20191011638,Pending Request for Reservation Closure,BOC
+20191011638,,
 20191011640,,
 20191011644,,
 20191011645,,
@@ -1236,16 +1236,16 @@ case:concept:name,Next_activity,Next_resource
 20191011677,,
 20191011678,,
 20191011680,,
-20191011684,Service closure Request with BO responsibility,BOC
-20191011688,Service closure Request with BO responsibility,BOCSER
+20191011684,,
+20191011688,,
 20191011691,,
 20191011692,,
-20191011695,Service closure Request with BO responsibility,00846
+20191011695,,
 20191011696,,
 20191011702,,
 20191011704,,
 20191011710,,
-20191011711,Service closure Request with BO responsibility,00846
+20191011711,,
 20191011713,,
 20191011714,,
 20191011715,,
@@ -1262,7 +1262,7 @@ case:concept:name,Next_activity,Next_resource
 20191011739,,
 20191011740,,
 20191011741,,
-20191011743,Service closure Request with BO responsibility,00846
+20191011743,,
 20191011744,,
 20191011745,,
 20191011746,,
@@ -1304,13 +1304,13 @@ case:concept:name,Next_activity,Next_resource
 20191011845,,
 20191011846,,
 20191011847,,
-20191011851,Service closure Request with BO responsibility,00846
+20191011851,,
 20191011853,,
 20191011855,,
 20191011856,,
 20191011858,,
 20191011861,,
-20191011862,Service closure Request with BO responsibility,00846
+20191011862,,
 20191011863,,
 20191011864,,
 20191011866,,
@@ -1352,7 +1352,7 @@ case:concept:name,Next_activity,Next_resource
 20191011944,,
 20191011946,,
 20191011947,,
-20191011948,Service closure Request with BO responsibility,BOCSER
+20191011948,,
 20191011951,,
 20191011952,,
 20191011958,,
@@ -1360,17 +1360,17 @@ case:concept:name,Next_activity,Next_resource
 20191011963,,
 20191011964,,
 20191011967,,
-20191011968,Service closure Request with BO responsibility,00846
+20191011968,,
 20191011974,,
-20191011976,Service closure Request with BO responsibility,BOC
+20191011976,,
 20191011977,,
 20191011980,,
 20191011981,,
 20191011982,,
 20191011983,,
-20191011984,Service closure Request with BO responsibility,BOC
+20191011984,,
 20191011985,,
-20191011987,Service closure Request with BO responsibility,BOCSER
+20191011987,,
 20191011989,,
 20191011993,,
 20191011995,,
@@ -1386,22 +1386,22 @@ case:concept:name,Next_activity,Next_resource
 20191012011,,
 20191012013,,
 20191012015,,
-20191012017,,
+20191012017,Service closure Request with BO responsibility,BOCSER
 20191012018,,
 20191012019,,
 20191012025,,
 20191012027,,
 20191012030,,
 20191012033,,
-20191012037,Service closure Request with BO responsibility,00846
+20191012037,,
 20191012040,,
 20191012043,,
-20191012049,Pending Request for Reservation Closure,BOC
+20191012049,,
 20191012055,,
 20191012056,,
 20191012057,,
 20191012063,,
-20191012066,Service closure Request with BO responsibility,BOC
+20191012066,,
 20191012067,,
 20191012071,,
 20191012072,,
@@ -1417,16 +1417,16 @@ case:concept:name,Next_activity,Next_resource
 20191012100,,
 20191012103,,
 20191012105,,
-20191012107,Pending Request for Reservation Closure,BOC
+20191012107,,
 20191012108,,
 20191012111,,
 20191012113,,
 20191012116,,
 20191012117,,
-20191012119,Pending Request for Reservation Closure,BOC
+20191012119,,
 20191012121,,
 20191012122,,
-20191012125,Service closure Request with BO responsibility,00846
+20191012125,,
 20191012126,,
 20191012128,,
 20191012130,,
@@ -1447,7 +1447,7 @@ case:concept:name,Next_activity,Next_resource
 20191012157,,
 20191012165,,
 20191012166,,
-20191012168,Service closure Request with BO responsibility,00846
+20191012168,,
 20191012170,,
 20191012173,,
 20191012174,,
@@ -1456,7 +1456,7 @@ case:concept:name,Next_activity,Next_resource
 20191012177,,
 20191012180,,
 20191012182,,
-20191012184,Service closure Request with BO responsibility,00846
+20191012184,,
 20191012185,,
 20191012186,,
 20191012189,,
@@ -1466,7 +1466,7 @@ case:concept:name,Next_activity,Next_resource
 20191012195,,
 20191012196,,
 20191012201,,
-20191012203,Service closure Request with BO responsibility,BOC
+20191012203,,
 20191012206,,
 20191012208,,
 20191012210,,
@@ -1487,7 +1487,7 @@ case:concept:name,Next_activity,Next_resource
 20191012256,,
 20191012257,,
 20191012259,,
-20191012261,Service closure Request with BO responsibility,00846
+20191012261,,
 20191012263,,
 20191012268,,
 20191012271,,
@@ -1495,7 +1495,7 @@ case:concept:name,Next_activity,Next_resource
 20191012273,,
 20191012276,,
 20191012281,,
-20191012283,Pending Request for Reservation Closure,BOC
+20191012283,,
 20191012285,,
 20191012290,,
 20191012291,,
@@ -1514,9 +1514,9 @@ case:concept:name,Next_activity,Next_resource
 20191012313,,
 20191012315,,
 20191012317,,
-20191012318,Pending Request for Reservation Closure,BOCSER
+20191012318,Service closure Request with BO responsibility,BOCSER
 20191012319,,
-20191012326,Pending Request for Reservation Closure,BOC
+20191012326,,
 20191012332,,
 20191012335,,
 20191012336,,
@@ -1526,7 +1526,7 @@ case:concept:name,Next_activity,Next_resource
 20191012341,,
 20191012348,,
 20191012349,,
-20191012354,Pending Request for Reservation Closure,BOC
+20191012354,,
 20191012357,,
 20191012359,,
 20191012360,,
@@ -1548,7 +1548,7 @@ case:concept:name,Next_activity,Next_resource
 20191012397,,
 20191012400,,
 20191012404,,
-20191012406,Pending Request for Reservation Closure,BOC
+20191012406,,
 20191012408,,
 20191012409,,
 20191012414,,
@@ -1571,15 +1571,15 @@ case:concept:name,Next_activity,Next_resource
 20191012469,,
 20191012473,,
 20191012474,,
-20191012475,Pending Request for Reservation Closure,BOC
-20191012476,Pending Request for Reservation Closure,BOC
+20191012475,,
+20191012476,,
 20191012477,,
 20191012479,,
 20191012482,,
 20191012483,,
 20191012485,,
 20191012486,,
-20191012487,Service closure Request with BO responsibility,00846
+20191012487,,
 20191012488,,
 20191012489,,
 20191012490,,
@@ -1610,11 +1610,11 @@ case:concept:name,Next_activity,Next_resource
 20191012539,,
 20191012540,,
 20191012542,,
-20191012547,Pending Request for Reservation Closure,BOC
+20191012547,,
 20191012548,,
-20191012555,Service closure Request with BO responsibility,00846
+20191012555,,
 20191012560,,
-20191012569,Pending Request for Reservation Closure,BOC
+20191012569,,
 20191012571,,
 20191012573,,
 20191012574,,
@@ -1630,7 +1630,7 @@ case:concept:name,Next_activity,Next_resource
 20191012600,,
 20191012602,,
 20191012604,,
-20191012606,,
+20191012606,Service closure Request with BO responsibility,BOCSER
 20191012607,,
 20191012608,,
 20191012610,,
@@ -1638,9 +1638,9 @@ case:concept:name,Next_activity,Next_resource
 20191012612,,
 20191012613,,
 20191012614,,
-20191012618,Pending Request for Reservation Closure,BOC
+20191012618,,
 20191012622,,
-20191012623,Pending Request for Reservation Closure,BOC
+20191012623,,
 20191012629,,
 20191012631,,
 20191012632,,
@@ -1648,7 +1648,7 @@ case:concept:name,Next_activity,Next_resource
 20191012638,,
 20191012640,,
 20191012642,,
-20191012647,Pending Request for Reservation Closure,BOC
+20191012647,,
 20191012648,,
 20191012651,,
 20191012656,,
@@ -1672,7 +1672,7 @@ case:concept:name,Next_activity,Next_resource
 20191012698,,
 20191012700,,
 20191012708,,
-20191012711,Service closure Request with BO responsibility,00846
+20191012711,,
 20191012714,,
 20191012720,,
 20191012723,,
@@ -1692,25 +1692,25 @@ case:concept:name,Next_activity,Next_resource
 20191012754,,
 20191012755,,
 20191012758,,
-20191012759,Service closure Request with BO responsibility,BOC
+20191012759,,
 20191012761,,
 20191012762,,
 20191012766,,
 20191012767,,
-20191012771,Service closure Request with BO responsibility,00846
+20191012771,,
 20191012772,,
 20191012776,,
-20191012779,Pending Request for Reservation Closure,BOC
+20191012779,,
 20191012780,,
 20191012781,,
-20191012782,Pending Request for Reservation Closure,BOC
+20191012782,,
 20191012786,,
 20191012787,,
 20191012788,,
-20191012790,Service closure Request with BO responsibility,00846
+20191012790,,
 20191012793,,
 20191012795,,
-20191012796,Service closure Request with BO responsibility,00846
+20191012796,,
 20191012798,,
 20191012799,,
 20191012800,,
@@ -1721,7 +1721,7 @@ case:concept:name,Next_activity,Next_resource
 20191012811,,
 20191012812,,
 20191012814,,
-20191012816,Pending Request for Reservation Closure,BOC
+20191012816,,
 20191012817,,
 20191012819,,
 20191012821,,
@@ -1741,20 +1741,20 @@ case:concept:name,Next_activity,Next_resource
 20191012866,,
 20191012869,,
 20191012871,,
-20191012873,Pending Request for Reservation Closure,BOC
+20191012873,,
 20191012876,,
 20191012877,,
 20191012878,,
 20191012880,,
 20191012881,,
 20191012882,,
-20191012883,Service closure Request with BO responsibility,00846
+20191012883,,
 20191012893,,
 20191012894,,
-20191012896,Pending Request for Reservation Closure,BOC
+20191012896,,
 20191012903,,
 20191012906,,
-20191012907,Pending Request for Reservation Closure,BOC
+20191012907,,
 20191012910,,
 20191012915,,
 20191012918,,
@@ -1790,12 +1790,12 @@ case:concept:name,Next_activity,Next_resource
 20191012986,,
 20191012987,,
 20191012988,,
-20191012991,Pending Request for Reservation Closure,BOC
+20191012991,,
 20191012993,,
 20191012996,,
 20191012998,,
 20191013000,,
-20191013003,Pending Request for Reservation Closure,BOC
+20191013003,,
 20191013005,,
 20191013007,,
 20191013009,,
@@ -1812,49 +1812,49 @@ case:concept:name,Next_activity,Next_resource
 20191013030,,
 20191013033,,
 20191013038,,
-20191013040,Service closure Request with BO responsibility,00846
+20191013040,,
 20191013041,,
 20191013043,,
 20191013047,,
 20191013048,,
 20191013049,,
 20191013053,,
-20191013055,Service closure Request with BO responsibility,00846
+20191013055,,
 20191013056,,
-20191013057,Pending Request for Reservation Closure,BOC
+20191013057,,
 20191013061,,
-20191013063,Pending Request for Reservation Closure,BOC
+20191013063,,
 20191013065,,
-20191013067,Pending Request for Reservation Closure,BOC
+20191013067,,
 20191013071,,
 20191013073,,
 20191013074,,
 20191013075,,
-20191013076,Service closure Request with BO responsibility,00846
+20191013076,,
 20191013077,,
-20191013079,Pending Request for Reservation Closure,BOC
+20191013079,,
 20191013087,,
 20191013088,,
 20191013089,,
 20191013091,,
 20191013096,,
 20191013101,,
-20191013102,Pending Request for Reservation Closure,BOC
+20191013102,,
 20191013103,,
 20191013105,,
 20191013106,,
 20191013108,,
-20191013109,Service closure Request with BO responsibility,BOC
+20191013109,,
 20191013111,,
 20191013112,,
 20191013115,,
 20191013117,,
-20191013118,Service closure Request with BO responsibility,00846
+20191013118,,
 20191013119,,
-20191013122,Pending Request for Reservation Closure,BOC
+20191013122,,
 20191013124,,
 20191013125,,
-20191013127,Service closure Request with BO responsibility,BOC
+20191013127,,
 20191013129,,
 20191013130,,
 20191013132,,
@@ -1863,9 +1863,9 @@ case:concept:name,Next_activity,Next_resource
 20191013146,,
 20191013148,,
 20191013150,,
-20191013153,Pending Request for Reservation Closure,BOC
+20191013153,,
 20191013165,,
-20191013169,Pending Request for Reservation Closure,BOC
+20191013169,,
 20191013172,,
 20191013174,,
 20191013176,,

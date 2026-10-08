@@ -5,7 +5,7 @@ Application_1001114274,A_Validating,User_100
 Application_1001484676,A_Validating,User_100
 Application_1002602375,A_Validating,User_100
 Application_1003146166,O_Create Offer,User_100
-Application_1005568510,O_Returned,User_100
+Application_1005568510,A_Validating,User_100
 Application_1007255451,A_Validating,User_100
 Application_1007290684,A_Validating,User_100
 Application_1007601292,A_Validating,User_100
@@ -27,7 +27,7 @@ Application_1018583202,A_Validating,User_100
 Application_101973919,A_Validating,User_100
 Application_1020019812,A_Validating,User_100
 Application_1020036346,A_Validating,User_100
-Application_1020830584,A_Validating,User_15
+Application_1020830584,A_Validating,User_100
 Application_1022069965,A_Validating,User_100
 Application_1023646798,A_Validating,User_100
 Application_1024372028,A_Validating,User_100
@@ -42,7 +42,7 @@ Application_103473608,A_Validating,User_100
 Application_1034800486,A_Validating,User_100
 Application_1035232735,A_Validating,User_100
 Application_1037467898,A_Validating,User_100
-Application_1037792917,A_Validating,User_100
+Application_1037792917,O_Create Offer,User_81
 Application_1038389815,A_Validating,User_100
 Application_1038835670,A_Validating,User_100
 Application_1038953283,A_Validating,User_100
@@ -68,8 +68,8 @@ Application_1056628969,A_Validating,User_100
 Application_1058972301,A_Validating,User_100
 Application_1059867108,A_Validating,User_100
 Application_1061764162,A_Validating,User_100
-Application_1063130816,O_Returned,User_93
-Application_1065388275,O_Returned,User_100
+Application_1063130816,A_Incomplete,User_29
+Application_1065388275,A_Validating,User_100
 Application_1065460501,A_Validating,User_100
 Application_1066050010,A_Validating,User_100
 Application_1068062776,A_Incomplete,User_100
@@ -96,7 +96,7 @@ Application_109019861,A_Validating,User_100
 Application_1090489225,A_Validating,User_100
 Application_1090618586,A_Validating,User_100
 Application_1091165384,A_Validating,User_100
-Application_109176319,O_Returned,User_100
+Application_109176319,A_Validating,User_100
 Application_1093058248,A_Validating,User_100
 Application_1094857756,A_Validating,User_100
 Application_1096250748,A_Validating,User_100
@@ -105,7 +105,7 @@ Application_1097388913,A_Validating,User_100
 Application_1097699720,A_Validating,User_100
 Application_109999371,A_Validating,User_100
 Application_1100925770,A_Validating,User_100
-Application_1101177535,A_Validating,User_58
+Application_1101177535,A_Validating,User_100
 Application_1101931698,A_Validating,User_100
 Application_1102726494,A_Validating,User_100
 Application_1103004057,A_Incomplete,User_100
@@ -116,12 +116,12 @@ Application_1109311467,A_Validating,User_100
 Application_1111235083,A_Validating,User_100
 Application_1113580705,A_Validating,User_100
 Application_1115113981,A_Validating,User_100
-Application_1115199869,A_Incomplete,User_100
+Application_1115199869,A_Validating,User_100
 Application_1119306976,A_Validating,User_100
 Application_1120157210,A_Validating,User_100
 Application_1123235662,A_Accepted,User_100
-Application_1123487192,A_Incomplete,User_116
-Application_1123629809,O_Returned,User_100
+Application_1123487192,A_Incomplete,User_100
+Application_1123629809,A_Validating,User_100
 Application_1124562062,A_Validating,User_100
 Application_1124845188,A_Validating,User_100
 Application_1128851023,A_Validating,User_100
@@ -132,7 +132,7 @@ Application_1130845322,A_Validating,User_100
 Application_1132528029,A_Validating,User_100
 Application_1137992645,A_Validating,User_100
 Application_1140614876,A_Validating,User_100
-Application_114551747,O_Returned,User_100
+Application_114551747,A_Validating,User_100
 Application_1146014097,A_Validating,User_100
 Application_1146099400,A_Validating,User_100
 Application_1146466172,A_Validating,User_100
@@ -144,7 +144,7 @@ Application_1155107642,A_Validating,User_100
 Application_115695512,A_Accepted,User_100
 Application_1157307010,A_Validating,User_100
 Application_1157629544,A_Validating,User_100
-Application_1157633683,O_Returned,User_100
+Application_1157633683,A_Validating,User_100
 Application_1158368771,A_Validating,User_100
 Application_1159445220,A_Validating,User_100
 Application_1159585631,A_Incomplete,User_100
@@ -164,7 +164,7 @@ Application_1172380323,A_Validating,User_100
 Application_1173080063,A_Validating,User_100
 Application_1174558661,A_Validating,User_100
 Application_1175375112,A_Validating,User_100
-Application_1175493423,A_Incomplete,User_109
+Application_1175493423,A_Incomplete,User_100
 Application_1176335358,A_Validating,User_100
 Application_117667027,A_Validating,User_100
 Application_1180537839,A_Incomplete,User_100
@@ -191,7 +191,7 @@ Application_1197789168,A_Accepted,User_100
 Application_1199714746,A_Validating,User_100
 Application_1200079309,A_Validating,User_100
 Application_1201359633,A_Validating,User_100
-Application_1202498150,A_Incomplete,User_100
+Application_1202498150,A_Validating,User_100
 Application_1202543218,A_Validating,User_100
 Application_1203606289,A_Validating,User_100
 Application_1203975466,A_Validating,User_100
@@ -220,7 +220,7 @@ Application_1224592697,A_Validating,User_100
 Application_1229045331,A_Validating,User_100
 Application_1229977722,A_Incomplete,User_100
 Application_1231420166,A_Validating,User_100
-Application_1232392890,O_Cancelled,User_100
+Application_1232392890,A_Validating,User_100
 Application_12324686,A_Validating,User_100
 Application_1233149304,A_Validating,User_100
 Application_1233198025,A_Validating,User_100
@@ -238,15 +238,15 @@ Application_1248150861,A_Validating,User_100
 Application_1248680314,A_Validating,User_100
 Application_1249411801,A_Validating,User_100
 Application_1249769519,A_Validating,User_100
-Application_1250084864,A_Incomplete,User_100
+Application_1250084864,A_Validating,User_100
 Application_1250773885,A_Incomplete,User_100
 Application_1251055212,A_Validating,User_100
 Application_1251068642,O_Create Offer,User_100
 Application_1251406798,A_Accepted,User_100
 Application_1252333862,A_Validating,User_100
-Application_1253908388,A_Incomplete,User_100
+Application_1253908388,A_Incomplete,User_29
 Application_1254769573,A_Incomplete,User_100
-Application_1255489836,A_Validating,User_10
+Application_1255489836,A_Validating,User_100
 Application_1256797311,A_Validating,User_100
 Application_125718857,A_Validating,User_100
 Application_125944151,A_Validating,User_100
@@ -271,9 +271,9 @@ Application_1279139907,A_Validating,User_100
 Application_1279531338,A_Validating,User_100
 Application_1280729591,A_Validating,User_100
 Application_1281064164,A_Validating,User_100
-Application_1281219916,A_Incomplete,User_100
+Application_1281219916,A_Validating,User_100
 Application_12818310,A_Validating,User_100
-Application_1282312320,O_Returned,User_100
+Application_1282312320,A_Validating,User_100
 Application_1284111301,A_Validating,User_100
 Application_1286860918,A_Validating,User_100
 Application_1287950240,A_Validating,User_100
@@ -281,39 +281,39 @@ Application_128895870,A_Validating,User_100
 Application_1289132611,A_Accepted,User_100
 Application_1289787823,A_Validating,User_100
 Application_1290334354,A_Validating,User_100
-Application_1290488002,A_Incomplete,User_100
+Application_1290488002,A_Validating,User_100
 Application_1290492777,A_Validating,User_100
 Application_1291779828,A_Validating,User_100
-Application_1292771933,O_Cancelled,User_100
+Application_1292771933,A_Validating,User_100
 Application_1294550702,A_Validating,User_100
 Application_1294741511,A_Validating,User_100
 Application_1295203711,A_Validating,User_100
 Application_1295686698,A_Validating,User_100
-Application_1295832185,A_Incomplete,User_100
+Application_1295832185,A_Validating,User_100
 Application_1296338723,A_Validating,User_100
 Application_1296453540,A_Validating,User_100
 Application_1296679854,A_Validating,User_100
 Application_1296990203,A_Validating,User_100
-Application_129792384,A_Incomplete,User_100
+Application_129792384,A_Validating,User_100
 Application_129957359,A_Validating,User_100
-Application_1301399748,A_Accepted,User_100
-Application_1305073860,A_Validating,User_100
+Application_1301399748,A_Accepted,User_81
+Application_1305073860,O_Create Offer,User_81
 Application_1309710626,A_Validating,User_100
 Application_1311928691,A_Validating,User_100
 Application_1312322500,A_Accepted,User_100
 Application_1312457363,A_Validating,User_100
 Application_1312464776,A_Validating,User_100
-Application_1313071265,A_Incomplete,User_100
-Application_1314534152,O_Returned,User_100
+Application_1313071265,A_Validating,User_100
+Application_1314534152,A_Validating,User_100
 Application_1314919756,A_Validating,User_100
 Application_131503089,A_Validating,User_100
 Application_1318334365,A_Validating,User_100
 Application_1319602969,A_Validating,User_100
 Application_131965778,A_Validating,User_100
 Application_1320153688,A_Incomplete,User_100
-Application_1323794365,O_Cancelled,User_100
-Application_1326874644,A_Incomplete,User_116
-Application_1327286359,A_Incomplete,User_100
+Application_1323794365,A_Validating,User_100
+Application_1326874644,A_Incomplete,User_100
+Application_1327286359,A_Validating,User_100
 Application_1332567294,A_Validating,User_100
 Application_1334425086,A_Validating,User_100
 Application_133715808,A_Validating,User_100
@@ -335,7 +335,7 @@ Application_1355696450,A_Validating,User_100
 Application_1355715243,A_Validating,User_100
 Application_1355747901,A_Incomplete,User_100
 Application_1356472998,A_Validating,User_100
-Application_1356606116,A_Incomplete,User_100
+Application_1356606116,A_Validating,User_100
 Application_1357127846,A_Validating,User_100
 Application_1358744041,A_Validating,User_100
 Application_1359020658,A_Validating,User_100
@@ -363,7 +363,7 @@ Application_138336932,A_Validating,User_100
 Application_1383670779,A_Validating,User_100
 Application_1384990566,A_Validating,User_100
 Application_13850224,A_Validating,User_100
-Application_1385574087,O_Returned,User_100
+Application_1385574087,A_Validating,User_100
 Application_138690674,A_Validating,User_100
 Application_1386927037,A_Validating,User_100
 Application_1388237664,A_Validating,User_100
@@ -373,9 +373,9 @@ Application_1388824644,A_Validating,User_100
 Application_1388864560,A_Validating,User_100
 Application_138912330,A_Validating,User_100
 Application_1390822818,A_Validating,User_100
-Application_139089952,A_Incomplete,User_100
+Application_139089952,A_Validating,User_100
 Application_1391641676,A_Validating,User_100
-Application_139354683,O_Cancelled,User_100
+Application_139354683,A_Validating,User_100
 Application_1394633662,A_Validating,User_100
 Application_1395107445,O_Create Offer,User_100
 Application_1395900304,A_Validating,User_100
@@ -408,7 +408,7 @@ Application_1415886047,A_Validating,User_100
 Application_1416971836,A_Validating,User_100
 Application_1419458810,A_Validating,User_100
 Application_1426681137,A_Validating,User_100
-Application_1426929415,O_Cancelled,User_100
+Application_1426929415,A_Validating,User_100
 Application_142712048,A_Validating,User_100
 Application_1427125327,A_Validating,User_100
 Application_1428804895,A_Validating,User_100
@@ -452,9 +452,9 @@ Application_1466389629,A_Validating,User_100
 Application_1467650398,A_Incomplete,User_100
 Application_1468251260,A_Validating,User_100
 Application_1468495573,A_Validating,User_100
-Application_1469289455,O_Create Offer,User_100
-Application_1469294844,W_Call incomplete files,User_100
-Application_146968001,A_Validating,User_58
+Application_1469289455,O_Create Offer,User_29
+Application_1469294844,A_Validating,User_100
+Application_146968001,A_Validating,User_100
 Application_147095816,A_Validating,User_100
 Application_1471201542,A_Validating,User_100
 Application_1471510503,A_Validating,User_100
@@ -469,10 +469,10 @@ Application_1477277765,A_Validating,User_100
 Application_1477327683,A_Validating,User_100
 Application_147809631,A_Validating,User_100
 Application_1478185792,A_Validating,User_100
-Application_147869159,A_Incomplete,User_100
+Application_147869159,A_Validating,User_100
 Application_1479030831,A_Validating,User_100
 Application_1480712559,A_Validating,User_100
-Application_1481302660,A_Incomplete,User_121
+Application_1481302660,A_Incomplete,User_100
 Application_1484214444,A_Validating,User_100
 Application_148486446,A_Validating,User_100
 Application_1484955476,A_Incomplete,User_100
@@ -483,21 +483,21 @@ Application_1489256650,A_Validating,User_100
 Application_1491072794,A_Incomplete,User_100
 Application_1492232175,A_Validating,User_100
 Application_1493156036,A_Validating,User_100
-Application_1493485488,O_Returned,User_100
+Application_1493485488,A_Validating,User_100
 Application_1493733461,A_Validating,User_100
 Application_1494602337,,
 Application_1496148798,A_Validating,User_100
 Application_1496728399,A_Validating,User_100
 Application_1496751218,A_Validating,User_100
 Application_1497050490,A_Validating,User_100
-Application_149980465,W_Call incomplete files,User_100
+Application_149980465,A_Validating,User_100
 Application_1504346428,A_Validating,User_100
 Application_150572905,A_Validating,User_100
 Application_1505801050,A_Validating,User_100
 Application_1505912637,A_Validating,User_100
 Application_1506673860,A_Validating,User_100
 Application_1506721954,A_Validating,User_100
-Application_1509297391,A_Incomplete,User_100
+Application_1509297391,A_Validating,User_100
 Application_1513321238,A_Validating,User_100
 Application_1518765385,A_Validating,User_100
 Application_152088581,A_Validating,User_100
@@ -531,13 +531,13 @@ Application_1555178270,A_Validating,User_100
 Application_155555799,A_Validating,User_100
 Application_1556952402,A_Validating,User_100
 Application_1559634770,A_Validating,User_100
-Application_156087508,O_Create Offer,User_100
+Application_156087508,A_Validating,User_121
 Application_1561581762,A_Validating,User_100
 Application_1561692075,A_Validating,User_100
 Application_156205308,A_Validating,User_100
 Application_1562508102,A_Validating,User_100
 Application_1562513686,A_Validating,User_100
-Application_1562532315,A_Validating,User_121
+Application_1562532315,A_Validating,User_100
 Application_1564472847,A_Validating,User_100
 Application_1565641655,A_Validating,User_100
 Application_1566541695,A_Validating,User_100
@@ -548,7 +548,7 @@ Application_1568412373,A_Validating,User_100
 Application_1568951817,A_Validating,User_100
 Application_1570000108,A_Validating,User_100
 Application_1571228698,A_Validating,User_100
-Application_157155173,O_Cancelled,User_100
+Application_157155173,A_Validating,User_100
 Application_157200774,A_Accepted,User_100
 Application_1574871736,A_Validating,User_100
 Application_1575691668,A_Validating,User_100
@@ -562,20 +562,20 @@ Application_1583027757,A_Validating,User_100
 Application_1584953437,A_Validating,User_100
 Application_1585721321,A_Validating,User_100
 Application_1587546099,A_Validating,User_100
-Application_1588476660,A_Incomplete,User_100
+Application_1588476660,A_Validating,User_100
 Application_1589109398,A_Validating,User_100
 Application_1589590132,A_Validating,User_100
 Application_1590235235,A_Validating,User_100
-Application_1590359938,A_Incomplete,User_100
+Application_1590359938,A_Validating,User_100
 Application_1590791050,A_Validating,User_100
 Application_1592706393,A_Validating,User_100
 Application_1592967370,A_Validating,User_100
 Application_1593639164,A_Validating,User_100
-Application_1594940843,A_Incomplete,User_100
+Application_1594940843,A_Validating,User_100
 Application_1597138122,A_Validating,User_100
 Application_1600020197,A_Validating,User_100
 Application_1600840489,A_Validating,User_100
-Application_1601830954,O_Cancelled,User_100
+Application_1601830954,A_Validating,User_100
 Application_1603047177,A_Validating,User_100
 Application_1604168929,A_Validating,User_100
 Application_1609732331,A_Validating,User_100
@@ -614,7 +614,7 @@ Application_1636562792,A_Validating,User_100
 Application_164152579,A_Validating,User_100
 Application_1641576878,A_Incomplete,User_100
 Application_1641972620,A_Validating,User_100
-Application_1646039554,O_Returned,User_100
+Application_1646039554,A_Validating,User_100
 Application_1646316879,A_Validating,User_100
 Application_1646895413,A_Validating,User_100
 Application_1647830097,A_Validating,User_100
@@ -625,7 +625,7 @@ Application_1654037961,A_Validating,User_100
 Application_1654987414,A_Validating,User_100
 Application_1656189522,A_Validating,User_100
 Application_1656558410,A_Validating,User_100
-Application_1656791018,O_Returned,User_100
+Application_1656791018,A_Validating,User_100
 Application_1658869403,A_Validating,User_100
 Application_1658899086,A_Validating,User_100
 Application_1659523402,A_Validating,User_100
@@ -636,12 +636,12 @@ Application_1662524797,A_Validating,User_100
 Application_1663711273,A_Validating,User_100
 Application_1665277555,A_Validating,User_100
 Application_1667164492,A_Validating,User_100
-Application_1667186103,A_Validating,User_10
+Application_1667186103,A_Validating,User_100
 Application_1667598015,A_Validating,User_100
 Application_1667746075,A_Validating,User_100
 Application_1667989141,A_Validating,User_100
-Application_1669077820,A_Accepted,User_100
-Application_1669429484,O_Returned,User_100
+Application_1669077820,A_Accepted,User_81
+Application_1669429484,A_Validating,User_100
 Application_1669784380,A_Validating,User_100
 Application_1669984193,A_Validating,User_100
 Application_1670458395,A_Validating,User_100
@@ -654,33 +654,33 @@ Application_1674370729,A_Validating,User_100
 Application_1675255697,A_Validating,User_100
 Application_1675830729,A_Validating,User_100
 Application_1680315596,A_Validating,User_100
-Application_1680514270,A_Validating,User_10
+Application_1680514270,W_Call incomplete files,User_100
 Application_1681194502,A_Validating,User_100
 Application_1682029053,A_Validating,User_100
 Application_1682805570,A_Validating,User_100
 Application_1683592982,A_Validating,User_100
 Application_1684602051,A_Validating,User_100
-Application_1685418490,A_Validating,User_121
+Application_1685418490,A_Validating,User_100
 Application_1685553482,A_Incomplete,User_100
-Application_1685601249,A_Incomplete,User_100
+Application_1685601249,A_Validating,User_100
 Application_168568235,A_Validating,User_100
 Application_1685939887,A_Incomplete,User_100
 Application_1686152726,A_Validating,User_100
-Application_1686314556,O_Cancelled,User_100
+Application_1686314556,A_Validating,User_100
 Application_1687097579,A_Validating,User_100
 Application_1688063211,A_Validating,User_100
 Application_1690391662,A_Validating,User_100
-Application_1691653218,O_Create Offer,User_100
+Application_1691653218,O_Create Offer,User_81
 Application_1692002404,A_Validating,User_100
 Application_1693259722,A_Accepted,User_100
 Application_1694062959,A_Incomplete,User_100
-Application_1695461065,O_Cancelled,User_100
+Application_1695461065,A_Validating,User_100
 Application_1695688535,A_Validating,User_100
 Application_1696233759,A_Validating,User_100
 Application_1696590587,A_Validating,User_100
 Application_1696760888,A_Validating,User_100
 Application_1699165633,A_Validating,User_100
-Application_1705393050,O_Cancelled,User_100
+Application_1705393050,A_Validating,User_100
 Application_1705571424,A_Validating,User_100
 Application_1706556182,A_Validating,User_100
 Application_1707249101,A_Validating,User_100
@@ -698,14 +698,14 @@ Application_1716488937,A_Validating,User_100
 Application_1716698141,A_Validating,User_100
 Application_1716865791,A_Validating,User_100
 Application_1716972964,A_Validating,User_100
-Application_1717449649,A_Incomplete,User_100
+Application_1717449649,A_Validating,User_100
 Application_1719040859,A_Validating,User_100
 Application_1719507589,A_Validating,User_100
 Application_172021397,A_Validating,User_100
-Application_1721140061,O_Returned,User_100
+Application_1721140061,A_Validating,User_100
 Application_1721513096,A_Validating,User_100
 Application_1722579608,A_Validating,User_100
-Application_172281488,O_Returned,User_100
+Application_172281488,A_Validating,User_100
 Application_1722967892,A_Validating,User_100
 Application_1727040001,A_Validating,User_100
 Application_1727628752,A_Validating,User_100
@@ -716,7 +716,7 @@ Application_1732322692,A_Validating,User_100
 Application_1733134376,A_Validating,User_100
 Application_1735390692,A_Validating,User_100
 Application_1736189273,A_Validating,User_100
-Application_1737595763,A_Incomplete,User_100
+Application_1737595763,A_Validating,User_100
 Application_1739097898,A_Validating,User_100
 Application_1740533240,A_Validating,User_100
 Application_1741360610,A_Validating,User_100
@@ -730,17 +730,17 @@ Application_1749792883,A_Validating,User_100
 Application_1750129865,A_Validating,User_100
 Application_1750416539,A_Validating,User_100
 Application_1751419807,A_Validating,User_100
-Application_1751558677,O_Returned,User_100
+Application_1751558677,A_Validating,User_100
 Application_1752993054,A_Validating,User_100
 Application_1753374182,A_Validating,User_100
 Application_1753681160,A_Validating,User_100
 Application_1755206432,A_Validating,User_100
-Application_1755675083,O_Returned,User_116
+Application_1755675083,A_Incomplete,User_100
 Application_1756652661,A_Validating,User_100
 Application_1758175578,A_Validating,User_100
 Application_1758193094,A_Validating,User_100
-Application_1758727131,W_Call incomplete files,User_93
-Application_176109526,O_Returned,User_100
+Application_1758727131,A_Validating,User_100
+Application_176109526,A_Validating,User_100
 Application_1761486530,A_Validating,User_100
 Application_1761923867,A_Validating,User_100
 Application_1762923723,A_Validating,User_100
@@ -748,28 +748,28 @@ Application_1763494631,A_Validating,User_100
 Application_1765017489,A_Validating,User_100
 Application_176502121,A_Validating,User_100
 Application_1767906244,A_Validating,User_100
-Application_1768567221,A_Validating,User_121
+Application_1768567221,A_Validating,User_100
 Application_1769401425,A_Validating,User_100
-Application_1773249073,A_Incomplete,User_100
+Application_1773249073,A_Validating,User_100
 Application_1774695082,A_Validating,User_100
 Application_1774968610,A_Validating,User_100
-Application_1777155847,O_Returned,User_100
-Application_1777257181,A_Incomplete,User_100
-Application_1777350724,O_Returned,User_100
+Application_1777155847,A_Validating,User_100
+Application_1777257181,A_Validating,User_100
+Application_1777350724,A_Validating,User_100
 Application_1777454448,A_Validating,User_100
 Application_1778559212,A_Validating,User_100
 Application_1780516109,A_Validating,User_100
 Application_1780975856,A_Validating,User_100
 Application_1780999556,A_Validating,User_100
 Application_1781623698,A_Validating,User_100
-Application_1782240690,O_Create Offer,User_100
+Application_1782240690,O_Create Offer,User_29
 Application_1782998013,A_Validating,User_100
 Application_1783531743,A_Validating,User_100
 Application_1785650204,A_Validating,User_100
 Application_1786918756,A_Validating,User_100
-Application_1788428875,A_Incomplete,User_100
+Application_1788428875,A_Validating,User_100
 Application_1791241142,A_Validating,User_100
-Application_1791914839,A_Validating,User_100
+Application_1791914839,W_Call incomplete files,User_100
 Application_1795530227,A_Validating,User_100
 Application_1796438229,A_Validating,User_100
 Application_1797034930,A_Validating,User_100
@@ -782,7 +782,7 @@ Application_1809362004,A_Validating,User_100
 Application_181023175,A_Validating,User_100
 Application_1811563411,A_Validating,User_100
 Application_1811976667,A_Validating,User_100
-Application_1812362363,O_Returned,User_100
+Application_1812362363,A_Validating,User_100
 Application_1813380390,A_Validating,User_100
 Application_1813924813,A_Validating,User_100
 Application_181522494,A_Validating,User_100
@@ -797,7 +797,7 @@ Application_1825060181,A_Validating,User_100
 Application_1826685201,A_Validating,User_100
 Application_182692737,A_Validating,User_100
 Application_1827376481,A_Validating,User_100
-Application_1828802183,O_Create Offer,User_100
+Application_1828802183,A_Validating,User_122
 Application_1829485980,A_Validating,User_100
 Application_1831134059,A_Validating,User_100
 Application_183198602,A_Validating,User_100
@@ -809,7 +809,7 @@ Application_1835447552,A_Validating,User_100
 Application_1836314441,A_Validating,User_100
 Application_1837263594,A_Validating,User_100
 Application_1838182698,,
-Application_1838195672,O_Cancelled,User_100
+Application_1838195672,A_Validating,User_100
 Application_1838351905,A_Validating,User_100
 Application_183981334,A_Validating,User_100
 Application_1839878297,A_Validating,User_100
@@ -818,7 +818,7 @@ Application_1844911312,A_Validating,User_100
 Application_1847012732,A_Validating,User_100
 Application_1847020617,A_Validating,User_100
 Application_1847062642,A_Validating,User_100
-Application_1847406506,O_Returned,User_100
+Application_1847406506,A_Incomplete,User_100
 Application_1848065299,A_Validating,User_100
 Application_1848644842,A_Validating,User_100
 Application_1848685618,A_Validating,User_100
@@ -826,7 +826,7 @@ Application_1849495113,A_Validating,User_100
 Application_1852368370,A_Validating,User_100
 Application_1853348131,A_Validating,User_100
 Application_1853671913,A_Accepted,User_100
-Application_1854102565,O_Returned,User_93
+Application_1854102565,A_Incomplete,User_100
 Application_18547553,A_Validating,User_100
 Application_185493618,A_Validating,User_100
 Application_1855681221,A_Validating,User_100
@@ -834,7 +834,7 @@ Application_1858818143,A_Validating,User_100
 Application_1859157542,A_Validating,User_100
 Application_1859548293,A_Validating,User_100
 Application_1861250409,A_Validating,User_100
-Application_1862264307,O_Sent (mail and online),User_100
+Application_1862264307,O_Sent (online only),User_29
 Application_1862652828,A_Validating,User_100
 Application_1865804738,A_Validating,User_100
 Application_186667038,A_Validating,User_100
@@ -846,17 +846,17 @@ Application_1877732225,A_Validating,User_100
 Application_1878585963,A_Validating,User_100
 Application_1882655907,A_Validating,User_100
 Application_1882772763,A_Validating,User_100
-Application_1882783264,O_Returned,User_100
+Application_1882783264,A_Validating,User_100
 Application_1882893523,A_Validating,User_100
 Application_1883089376,A_Validating,User_100
 Application_1883784032,A_Validating,User_100
-Application_1885551119,A_Incomplete,User_100
+Application_1885551119,A_Validating,User_100
 Application_1887563703,A_Validating,User_100
 Application_1888687616,A_Validating,User_100
 Application_1890915392,A_Validating,User_100
 Application_1891223976,A_Validating,User_100
 Application_1891253476,A_Validating,User_100
-Application_1892394315,A_Incomplete,User_100
+Application_1892394315,A_Validating,User_100
 Application_1894462613,A_Validating,User_100
 Application_1894559551,A_Validating,User_100
 Application_1894731804,A_Validating,User_100
@@ -882,7 +882,7 @@ Application_1906284757,A_Validating,User_100
 Application_1907801928,A_Validating,User_100
 Application_1908165167,A_Validating,User_100
 Application_1910779163,A_Validating,User_100
-Application_1910954034,O_Returned,User_100
+Application_1910954034,A_Validating,User_100
 Application_1911030393,A_Validating,User_100
 Application_1911105271,A_Validating,User_100
 Application_1913610903,A_Validating,User_100
@@ -891,14 +891,14 @@ Application_1919629146,A_Validating,User_100
 Application_1920008336,A_Validating,User_100
 Application_1921072973,A_Validating,User_100
 Application_1921145636,A_Validating,User_100
-Application_192191311,O_Create Offer,User_100
-Application_1921969224,A_Validating,User_100
+Application_192191311,A_Validating,User_100
+Application_1921969224,O_Create Offer,User_100
 Application_1924578239,A_Validating,User_100
 Application_1926453434,A_Validating,User_100
 Application_1927415133,A_Validating,User_100
 Application_1927683874,A_Validating,User_100
 Application_1928513473,A_Validating,User_100
-Application_1931690466,O_Returned,User_100
+Application_1931690466,A_Validating,User_100
 Application_1931880339,A_Validating,User_100
 Application_1934534935,A_Validating,User_100
 Application_1937302912,A_Validating,User_100
@@ -908,7 +908,7 @@ Application_1938975575,A_Validating,User_100
 Application_1939640271,A_Validating,User_100
 Application_1940707964,A_Validating,User_100
 Application_194208452,A_Validating,User_100
-Application_1942375524,A_Incomplete,User_100
+Application_1942375524,A_Incomplete,User_29
 Application_1942456208,A_Validating,User_100
 Application_1942946338,A_Validating,User_100
 Application_1943247002,A_Validating,User_100
@@ -926,28 +926,28 @@ Application_195441309,A_Validating,User_100
 Application_1958282351,A_Validating,User_100
 Application_1958977845,A_Validating,User_100
 Application_1959429828,A_Validating,User_100
-Application_1959891562,O_Returned,User_29
+Application_1959891562,A_Incomplete,User_100
 Application_1962303803,A_Validating,User_100
 Application_1963113833,A_Validating,User_100
 Application_1963851177,A_Validating,User_100
-Application_1965289028,O_Returned,User_100
+Application_1965289028,A_Validating,User_100
 Application_1965599410,A_Validating,User_100
-Application_1965696946,A_Validating,User_63
-Application_196846064,,
+Application_1965696946,A_Validating,User_100
+Application_196846064,A_Incomplete,User_29
 Application_1968486052,A_Validating,User_100
 Application_1969322143,A_Validating,User_100
-Application_1971384449,A_Incomplete,User_109
+Application_1971384449,A_Incomplete,User_100
 Application_1971831087,A_Validating,User_100
 Application_1971957937,A_Validating,User_100
 Application_1972029705,A_Validating,User_100
-Application_1972106715,O_Returned,User_100
-Application_1972589782,O_Cancelled,User_100
+Application_1972106715,A_Validating,User_100
+Application_1972589782,A_Validating,User_100
 Application_197286762,A_Validating,User_100
 Application_1973462456,A_Validating,User_100
 Application_1974408424,A_Validating,User_100
 Application_1974968061,A_Validating,User_100
 Application_1978035381,A_Validating,User_100
-Application_1978331738,A_Incomplete,User_100
+Application_1978331738,A_Validating,User_100
 Application_1980172661,A_Validating,User_100
 Application_198091646,A_Validating,User_100
 Application_1982448100,A_Validating,User_100
@@ -968,21 +968,21 @@ Application_199560590,A_Validating,User_100
 Application_1995611254,A_Validating,User_100
 Application_1997224474,A_Validating,User_100
 Application_1997885144,A_Validating,User_100
-Application_1998502100,A_Incomplete,User_100
+Application_1998502100,A_Validating,User_100
 Application_1999345768,A_Validating,User_100
 Application_1999348863,A_Validating,User_100
 Application_2002111319,A_Validating,User_100
 Application_2004651610,A_Validating,User_100
 Application_2006398286,A_Validating,User_100
-Application_2006710736,A_Validating,User_131
+Application_2006710736,A_Validating,User_100
 Application_2007487750,A_Validating,User_100
 Application_2014464461,A_Validating,User_100
 Application_2015410281,A_Validating,User_100
-Application_2015936535,A_Validating,User_121
+Application_2015936535,A_Validating,User_100
 Application_2017829434,A_Validating,User_100
 Application_2019122599,A_Validating,User_100
 Application_2019817059,A_Validating,User_100
-Application_2024966703,O_Cancelled,User_100
+Application_2024966703,A_Validating,User_100
 Application_2025342600,A_Validating,User_100
 Application_2026330587,A_Validating,User_100
 Application_2026733199,A_Validating,User_100
@@ -990,18 +990,18 @@ Application_2026840687,A_Accepted,User_100
 Application_202695521,A_Validating,User_100
 Application_2027016208,A_Validating,User_100
 Application_202743024,A_Validating,User_100
-Application_2029693986,A_Incomplete,User_100
+Application_2029693986,A_Validating,User_100
 Application_2029945978,A_Validating,User_100
-Application_2030070785,A_Incomplete,User_100
+Application_2030070785,A_Validating,User_100
 Application_2030168144,A_Validating,User_100
-Application_2031031437,A_Incomplete,User_100
+Application_2031031437,A_Validating,User_100
 Application_2033977705,A_Validating,User_100
 Application_2034581042,A_Validating,User_100
 Application_2035483447,A_Validating,User_100
-Application_2038392140,A_Accepted,User_100
+Application_2038392140,A_Accepted,User_81
 Application_2039565789,A_Validating,User_100
 Application_2041204599,A_Validating,User_100
-Application_2041306952,O_Cancelled,User_100
+Application_2041306952,A_Validating,User_100
 Application_2041624603,A_Validating,User_100
 Application_2041978198,A_Validating,User_100
 Application_2042454883,A_Validating,User_100
@@ -1015,7 +1015,7 @@ Application_205456732,A_Validating,User_100
 Application_2054705159,A_Validating,User_100
 Application_2055213669,A_Validating,User_100
 Application_2055289424,A_Validating,User_100
-Application_2055536976,O_Returned,User_100
+Application_2055536976,A_Validating,User_100
 Application_2057199590,A_Validating,User_100
 Application_2057771265,A_Validating,User_100
 Application_2057919760,A_Validating,User_100
@@ -1032,11 +1032,11 @@ Application_2064700670,A_Validating,User_100
 Application_2064931341,A_Validating,User_100
 Application_2067335172,A_Validating,User_100
 Application_2070123392,A_Validating,User_100
-Application_207191056,A_Incomplete,User_100
+Application_207191056,A_Validating,User_100
 Application_2072387574,A_Validating,User_100
 Application_2072468842,A_Validating,User_100
 Application_2073946665,A_Validating,User_100
-Application_2074520281,O_Create Offer,User_100
+Application_2074520281,O_Create Offer,User_81
 Application_2075356216,A_Validating,User_100
 Application_20756984,A_Validating,User_100
 Application_2076314524,A_Validating,User_100
@@ -1046,16 +1046,16 @@ Application_208251490,A_Validating,User_100
 Application_2084882126,A_Validating,User_100
 Application_2084907175,A_Incomplete,User_100
 Application_2085455067,A_Validating,User_100
-Application_2086684889,W_Call incomplete files,User_100
+Application_2086684889,A_Validating,User_100
 Application_209142304,A_Validating,User_100
 Application_2091895631,A_Validating,User_100
-Application_2092004160,O_Sent (mail and online),User_100
+Application_2092004160,O_Sent (online only),User_29
 Application_2093027855,A_Validating,User_100
 Application_2096597980,A_Validating,User_100
 Application_2098216717,A_Validating,User_100
 Application_2099935440,A_Validating,User_100
 Application_2102194190,A_Validating,User_100
-Application_2102558833,A_Incomplete,User_100
+Application_2102558833,A_Validating,User_100
 Application_2103006676,A_Validating,User_100
 Application_2104220031,A_Validating,User_100
 Application_2106009667,A_Validating,User_100
@@ -1063,7 +1063,7 @@ Application_2106803691,A_Validating,User_100
 Application_2107633163,A_Validating,User_100
 Application_2110656628,A_Validating,User_100
 Application_2111897411,A_Validating,User_100
-Application_2113040289,O_Returned,User_100
+Application_2113040289,A_Validating,User_100
 Application_2114516423,A_Validating,User_100
 Application_2115489972,A_Validating,User_100
 Application_2115637548,A_Validating,User_100
@@ -1096,27 +1096,27 @@ Application_213538350,A_Validating,User_100
 Application_213664539,A_Incomplete,User_100
 Application_214000838,A_Validating,User_100
 Application_2141581748,A_Validating,User_100
-Application_2141808398,A_Validating,User_100
+Application_2141808398,A_Incomplete,User_29
 Application_2142018582,A_Validating,User_100
-Application_2143102476,O_Returned,User_100
-Application_2143151465,A_Incomplete,User_100
-Application_214380816,O_Returned,User_100
+Application_2143102476,A_Incomplete,User_100
+Application_2143151465,A_Validating,User_100
+Application_214380816,A_Validating,User_100
 Application_2144108594,A_Validating,User_100
 Application_216273399,A_Validating,User_100
 Application_216754029,A_Validating,User_100
 Application_217025274,,
-Application_21872303,A_Incomplete,User_100
+Application_21872303,A_Incomplete,User_121
 Application_2188153,A_Validating,User_100
 Application_221786502,A_Accepted,User_100
 Application_222189951,A_Validating,User_100
-Application_223400033,A_Incomplete,User_109
+Application_223400033,A_Incomplete,User_100
 Application_223837496,A_Validating,User_100
 Application_224241639,A_Validating,User_100
 Application_224662530,A_Validating,User_100
 Application_227804496,A_Validating,User_100
 Application_227911113,A_Accepted,User_100
 Application_228069219,A_Validating,User_100
-Application_228318739,A_Accepted,User_100
+Application_228318739,A_Accepted,User_81
 Application_228538500,A_Validating,User_100
 Application_229840349,A_Validating,User_100
 Application_235239251,A_Validating,User_100
@@ -1130,7 +1130,7 @@ Application_238582681,A_Validating,User_100
 Application_238984243,A_Validating,User_100
 Application_238988465,A_Validating,User_100
 Application_241443069,A_Validating,User_100
-Application_242124370,O_Returned,User_100
+Application_242124370,A_Validating,User_100
 Application_242423863,A_Accepted,User_100
 Application_24406425,A_Validating,User_100
 Application_245908497,A_Validating,User_100
@@ -1147,7 +1147,7 @@ Application_261962420,A_Validating,User_100
 Application_263206383,A_Validating,User_100
 Application_264373481,A_Validating,User_100
 Application_268406883,A_Validating,User_100
-Application_268431474,O_Returned,User_100
+Application_268431474,A_Validating,User_100
 Application_27100045,A_Validating,User_100
 Application_271787481,A_Validating,User_100
 Application_272415884,A_Validating,User_100
@@ -1160,20 +1160,20 @@ Application_277122874,A_Validating,User_100
 Application_279199020,A_Validating,User_100
 Application_280797942,A_Validating,User_100
 Application_281607427,A_Validating,User_100
-Application_283917402,A_Incomplete,User_100
+Application_283917402,A_Validating,User_100
 Application_284749993,A_Validating,User_100
 Application_286309155,A_Validating,User_100
 Application_287357474,A_Validating,User_100
 Application_288379803,A_Validating,User_100
 Application_289350668,A_Validating,User_100
-Application_28960323,A_Incomplete,User_63
+Application_28960323,A_Incomplete,User_100
 Application_29159295,A_Validating,User_100
 Application_292415091,A_Validating,User_100
 Application_292461471,A_Validating,User_100
-Application_293081460,A_Incomplete,User_100
-Application_293379010,O_Returned,User_100
+Application_293081460,A_Validating,User_100
+Application_293379010,A_Validating,User_100
 Application_293590020,A_Validating,User_100
-Application_294970768,A_Concept,User_100
+Application_294970768,A_Concept,User_81
 Application_295059389,A_Validating,User_100
 Application_297860033,A_Validating,User_100
 Application_299706642,A_Validating,User_100
@@ -1194,7 +1194,7 @@ Application_314497877,A_Validating,User_100
 Application_315698810,A_Validating,User_100
 Application_317144905,A_Validating,User_100
 Application_318776969,A_Validating,User_100
-Application_319276505,A_Accepted,User_100
+Application_319276505,A_Accepted,User_93
 Application_319696917,A_Validating,User_100
 Application_320656653,A_Validating,User_100
 Application_322674067,A_Validating,User_100
@@ -1202,7 +1202,7 @@ Application_322796669,A_Validating,User_100
 Application_322806868,A_Validating,User_100
 Application_322832249,A_Validating,User_100
 Application_325370159,A_Validating,User_100
-Application_32936700,O_Returned,User_100
+Application_32936700,A_Validating,User_100
 Application_331396477,A_Validating,User_100
 Application_332230732,A_Validating,User_100
 Application_332549605,A_Validating,User_100
@@ -1212,7 +1212,7 @@ Application_336250197,A_Incomplete,User_100
 Application_337794163,A_Validating,User_100
 Application_338944736,A_Validating,User_100
 Application_340703406,A_Validating,User_100
-Application_341808795,A_Incomplete,User_100
+Application_341808795,A_Validating,User_100
 Application_342828964,A_Validating,User_100
 Application_342956454,A_Validating,User_100
 Application_344085083,A_Validating,User_100
@@ -1234,7 +1234,7 @@ Application_366370058,A_Validating,User_100
 Application_36692111,A_Validating,User_100
 Application_368259393,A_Validating,User_100
 Application_368291286,A_Validating,User_100
-Application_370470886,O_Returned,User_100
+Application_370470886,A_Validating,User_100
 Application_373109848,A_Validating,User_100
 Application_373749624,A_Validating,User_100
 Application_375799252,A_Validating,User_100
@@ -1242,7 +1242,7 @@ Application_376690381,A_Validating,User_100
 Application_377544827,A_Validating,User_100
 Application_377998077,A_Validating,User_100
 Application_379321877,A_Validating,User_100
-Application_37978891,A_Incomplete,User_100
+Application_37978891,A_Validating,User_100
 Application_380711094,A_Validating,User_100
 Application_38305454,A_Validating,User_100
 Application_383880109,A_Validating,User_100
@@ -1281,16 +1281,16 @@ Application_41457718,A_Validating,User_100
 Application_418638674,A_Validating,User_100
 Application_419116262,A_Validating,User_100
 Application_419328742,A_Validating,User_100
-Application_419724347,A_Incomplete,User_100
-Application_419876746,A_Validating,User_100
+Application_419724347,A_Validating,User_100
+Application_419876746,W_Call incomplete files,User_100
 Application_419933910,A_Validating,User_100
 Application_420669904,A_Validating,User_100
 Application_420715176,A_Validating,User_100
 Application_421333270,A_Validating,User_100
 Application_421585404,A_Validating,User_100
 Application_422558572,A_Validating,User_100
-Application_422742047,A_Incomplete,User_100
-Application_423354116,W_Complete application,User_93
+Application_422742047,A_Validating,User_100
+Application_423354116,A_Complete,User_29
 Application_423439630,A_Validating,User_100
 Application_424329054,A_Validating,User_100
 Application_4267974,A_Validating,User_100
@@ -1311,16 +1311,16 @@ Application_435518705,A_Validating,User_100
 Application_435700999,A_Validating,User_100
 Application_435802321,A_Validating,User_100
 Application_43601953,A_Validating,User_100
-Application_43612522,A_Incomplete,User_100
+Application_43612522,A_Incomplete,User_29
 Application_437287792,A_Validating,User_100
 Application_438124674,A_Validating,User_100
 Application_439060282,A_Validating,User_100
 Application_442169489,A_Validating,User_100
 Application_44239326,A_Validating,User_100
-Application_443770026,A_Validating,User_100
+Application_443770026,W_Call incomplete files,User_100
 Application_445562509,A_Validating,User_100
-Application_44606820,A_Accepted,User_100
-Application_449631390,O_Returned,User_100
+Application_44606820,A_Accepted,User_81
+Application_449631390,A_Validating,User_100
 Application_450199756,A_Validating,User_100
 Application_451813045,A_Validating,User_100
 Application_453337956,A_Validating,User_100
@@ -1333,7 +1333,7 @@ Application_45900350,A_Validating,User_100
 Application_459407663,A_Validating,User_100
 Application_459955569,A_Validating,User_100
 Application_461222959,A_Validating,User_100
-Application_461492498,O_Cancelled,User_100
+Application_461492498,O_Create Offer,User_100
 Application_461576889,A_Validating,User_100
 Application_462387356,A_Validating,User_100
 Application_464098432,A_Validating,User_100
@@ -1367,13 +1367,13 @@ Application_492379324,A_Validating,User_100
 Application_492470670,A_Validating,User_100
 Application_493571606,A_Incomplete,User_100
 Application_494333708,A_Validating,User_100
-Application_496748439,O_Returned,User_100
+Application_496748439,A_Validating,User_100
 Application_498594805,A_Validating,User_100
 Application_499343172,A_Validating,User_100
 Application_500901648,A_Validating,User_100
 Application_501271301,A_Validating,User_100
 Application_502308903,A_Incomplete,User_100
-Application_503122563,O_Cancelled,User_100
+Application_503122563,O_Create Offer,User_29
 Application_503299627,A_Validating,User_100
 Application_503919356,A_Validating,User_100
 Application_504905109,A_Validating,User_100
@@ -1382,7 +1382,7 @@ Application_506741540,A_Validating,User_100
 Application_507124292,A_Validating,User_100
 Application_507640161,A_Validating,User_100
 Application_508299436,A_Validating,User_100
-Application_508396198,A_Incomplete,User_100
+Application_508396198,A_Validating,User_100
 Application_508861682,A_Validating,User_100
 Application_511350922,A_Validating,User_100
 Application_511603944,A_Accepted,User_100
@@ -1408,7 +1408,7 @@ Application_529398103,A_Validating,User_100
 Application_530444177,A_Validating,User_100
 Application_531296723,A_Validating,User_100
 Application_535372826,A_Validating,User_100
-Application_535782889,A_Incomplete,User_100
+Application_535782889,A_Validating,User_100
 Application_536044692,A_Accepted,User_100
 Application_537232908,A_Validating,User_100
 Application_538169581,A_Validating,User_100
@@ -1418,14 +1418,14 @@ Application_539906487,A_Validating,User_100
 Application_542599834,A_Validating,User_100
 Application_54309881,A_Validating,User_100
 Application_545440810,A_Validating,User_100
-Application_546700899,A_Incomplete,User_100
+Application_546700899,A_Validating,User_100
 Application_547285151,A_Validating,User_100
 Application_547388165,A_Accepted,User_100
 Application_547422624,A_Validating,User_100
 Application_548417596,A_Validating,User_100
 Application_54901363,A_Validating,User_100
 Application_549023518,A_Validating,User_100
-Application_550891135,A_Accepted,User_100
+Application_550891135,A_Accepted,User_81
 Application_551444244,A_Validating,User_100
 Application_552268672,A_Validating,User_100
 Application_55240812,A_Validating,User_100
@@ -1438,9 +1438,9 @@ Application_564808529,A_Validating,User_100
 Application_564937473,A_Validating,User_100
 Application_566861080,A_Validating,User_100
 Application_566948279,A_Validating,User_100
-Application_567402421,A_Incomplete,User_100
-Application_56762945,O_Cancelled,User_100
-Application_568907714,A_Incomplete,User_100
+Application_567402421,A_Validating,User_100
+Application_56762945,A_Validating,User_100
+Application_568907714,A_Validating,User_100
 Application_568941744,A_Validating,User_100
 Application_570793200,A_Validating,User_100
 Application_570875507,A_Validating,User_100
@@ -1470,7 +1470,7 @@ Application_593935959,A_Validating,User_100
 Application_595612823,A_Validating,User_100
 Application_596823707,A_Validating,User_100
 Application_597580909,A_Validating,User_100
-Application_599524194,,
+Application_599524194,A_Incomplete,User_100
 Application_600869793,A_Validating,User_100
 Application_601219508,A_Validating,User_100
 Application_601594697,A_Validating,User_100
@@ -1515,13 +1515,13 @@ Application_649420116,A_Validating,User_100
 Application_64965901,A_Validating,User_100
 Application_650088661,A_Validating,User_100
 Application_65199173,A_Validating,User_100
-Application_652119414,O_Returned,User_100
-Application_654470447,A_Incomplete,User_100
+Application_652119414,A_Validating,User_100
+Application_654470447,A_Validating,User_100
 Application_654932562,A_Validating,User_100
-Application_655546228,O_Returned,User_100
+Application_655546228,A_Validating,User_100
 Application_657716944,A_Validating,User_100
 Application_660773864,A_Validating,User_100
-Application_661165121,W_Validate application,User_100
+Application_661165121,A_Incomplete,User_29
 Application_66116892,A_Validating,User_100
 Application_662896680,A_Validating,User_100
 Application_66537879,A_Validating,User_100
@@ -1558,7 +1558,7 @@ Application_694825379,A_Validating,User_100
 Application_695083820,A_Validating,User_100
 Application_696705115,A_Validating,User_100
 Application_698131674,A_Incomplete,User_100
-Application_699126971,A_Incomplete,User_100
+Application_699126971,A_Validating,User_100
 Application_69913766,A_Validating,User_100
 Application_699543314,A_Validating,User_100
 Application_700094592,A_Validating,User_100
@@ -1567,7 +1567,7 @@ Application_701033782,A_Validating,User_100
 Application_702829933,A_Validating,User_100
 Application_704139340,A_Validating,User_100
 Application_704673299,A_Validating,User_100
-Application_705051999,A_Incomplete,User_100
+Application_705051999,A_Incomplete,User_29
 Application_705059143,A_Validating,User_100
 Application_705749409,A_Validating,User_100
 Application_708067308,A_Validating,User_100
@@ -1581,12 +1581,12 @@ Application_722944980,A_Validating,User_100
 Application_723918543,A_Validating,User_100
 Application_725147343,A_Validating,User_100
 Application_726154989,A_Validating,User_100
-Application_726893387,A_Incomplete,User_100
+Application_726893387,A_Validating,User_100
 Application_727760467,A_Validating,User_100
 Application_728202734,A_Validating,User_100
 Application_729141109,A_Validating,User_100
 Application_729340980,A_Validating,User_100
-Application_729494720,O_Create Offer,User_100
+Application_729494720,A_Validating,User_100
 Application_73130035,A_Validating,User_100
 Application_73738380,A_Validating,User_100
 Application_737606033,A_Validating,User_100
@@ -1609,7 +1609,7 @@ Application_753356368,A_Validating,User_100
 Application_755691679,A_Validating,User_100
 Application_759582319,A_Validating,User_100
 Application_760107630,A_Validating,User_100
-Application_7606451,A_Incomplete,User_100
+Application_7606451,A_Validating,User_100
 Application_76073117,A_Accepted,User_100
 Application_76077728,A_Validating,User_100
 Application_761317512,A_Validating,User_100
@@ -1618,7 +1618,7 @@ Application_764749022,A_Validating,User_100
 Application_766473476,A_Validating,User_100
 Application_766537064,A_Validating,User_100
 Application_76843824,A_Validating,User_100
-Application_768808611,O_Returned,User_100
+Application_768808611,A_Validating,User_100
 Application_769670015,A_Validating,User_100
 Application_771286338,A_Validating,User_100
 Application_772281578,A_Validating,User_100
@@ -1633,17 +1633,17 @@ Application_785051963,A_Validating,User_100
 Application_788455374,A_Validating,User_100
 Application_790167194,A_Validating,User_100
 Application_790236241,A_Validating,User_100
-Application_790779450,O_Cancelled,User_100
+Application_790779450,A_Validating,User_100
 Application_792733103,A_Validating,User_100
 Application_793376272,A_Validating,User_100
-Application_793939885,A_Validating,User_100
-Application_793997351,O_Returned,User_100
+Application_793939885,O_Create Offer,User_81
+Application_793997351,A_Validating,User_100
 Application_796205430,A_Validating,User_100
 Application_796471169,A_Incomplete,User_100
 Application_796519168,A_Validating,User_100
 Application_797417927,A_Validating,User_100
 Application_799419769,A_Validating,User_100
-Application_799442244,O_Returned,User_100
+Application_799442244,A_Validating,User_100
 Application_79957873,A_Validating,User_100
 Application_799931863,A_Validating,User_100
 Application_800066706,A_Validating,User_100
@@ -1655,15 +1655,15 @@ Application_804571961,A_Validating,User_100
 Application_804976669,A_Validating,User_100
 Application_805043529,A_Validating,User_100
 Application_806234153,A_Validating,User_100
-Application_807155180,O_Returned,User_100
+Application_807155180,A_Validating,User_100
 Application_807384853,A_Validating,User_100
 Application_807788459,A_Validating,User_100
-Application_808162283,O_Returned,User_100
+Application_808162283,A_Validating,User_100
 Application_808374175,A_Validating,User_100
-Application_808506107,W_Call incomplete files,User_100
+Application_808506107,A_Validating,User_100
 Application_80880051,A_Validating,User_100
 Application_809842364,A_Validating,User_100
-Application_810347380,A_Validating,User_58
+Application_810347380,A_Validating,User_100
 Application_811493670,A_Validating,User_100
 Application_8118144,A_Validating,User_100
 Application_812506944,A_Validating,User_100
@@ -1672,10 +1672,10 @@ Application_815351292,A_Validating,User_100
 Application_816376942,A_Validating,User_100
 Application_816701109,A_Validating,User_100
 Application_817508008,A_Validating,User_100
-Application_818706394,O_Returned,User_100
+Application_818706394,A_Validating,User_100
 Application_818973933,A_Validating,User_100
 Application_824825338,A_Validating,User_100
-Application_825818565,O_Create Offer,User_100
+Application_825818565,O_Cancelled,User_100
 Application_826353357,A_Validating,User_100
 Application_826791651,A_Validating,User_100
 Application_826854912,A_Validating,User_100
@@ -1686,9 +1686,9 @@ Application_82979191,A_Validating,User_100
 Application_830170446,A_Validating,User_100
 Application_83385957,A_Validating,User_100
 Application_83386929,A_Validating,User_100
-Application_834511232,A_Incomplete,User_100
+Application_834511232,W_Validate application,User_100
 Application_834563183,A_Validating,User_100
-Application_834614072,A_Incomplete,User_100
+Application_834614072,A_Validating,User_100
 Application_834650046,A_Validating,User_100
 Application_8352800,A_Validating,User_100
 Application_835326390,A_Validating,User_100
@@ -1702,12 +1702,12 @@ Application_844845235,A_Validating,User_100
 Application_847278478,A_Validating,User_100
 Application_847875764,A_Validating,User_100
 Application_84849067,A_Validating,User_100
-Application_849701067,A_Incomplete,User_100
+Application_849701067,A_Validating,User_100
 Application_851079180,A_Validating,User_100
 Application_852716835,A_Validating,User_100
-Application_855274864,O_Returned,User_100
+Application_855274864,A_Validating,User_100
 Application_856341410,A_Validating,User_100
-Application_856904799,O_Returned,User_100
+Application_856904799,A_Validating,User_100
 Application_85776840,A_Validating,User_100
 Application_858142548,A_Validating,User_100
 Application_858881040,A_Validating,User_100
@@ -1717,8 +1717,8 @@ Application_862319891,A_Validating,User_100
 Application_863402872,A_Validating,User_100
 Application_864484571,A_Validating,User_100
 Application_865137936,A_Accepted,User_100
-Application_866670658,O_Cancelled,User_100
-Application_867048229,O_Create Offer,User_100
+Application_866670658,A_Validating,User_100
+Application_867048229,O_Create Offer,User_29
 Application_868540202,A_Validating,User_100
 Application_869220020,A_Validating,User_100
 Application_871215308,A_Validating,User_100
@@ -1735,22 +1735,22 @@ Application_887681298,A_Validating,User_100
 Application_888740551,A_Validating,User_100
 Application_890472683,A_Validating,User_100
 Application_891126700,A_Validating,User_100
-Application_891430949,A_Validating,User_100
+Application_891430949,O_Create Offer,User_81
 Application_892251286,A_Validating,User_100
 Application_894374405,A_Validating,User_100
 Application_895880399,A_Validating,User_100
-Application_900320294,A_Incomplete,User_100
+Application_900320294,A_Incomplete,User_29
 Application_901150708,A_Validating,User_100
 Application_901390041,A_Validating,User_100
-Application_90260130,A_Validating,User_100
+Application_90260130,A_Validating,User_121
 Application_904225542,A_Validating,User_100
 Application_904451412,A_Validating,User_100
 Application_905022889,A_Validating,User_100
 Application_905282795,A_Validating,User_100
 Application_90621717,A_Validating,User_100
-Application_907188218,O_Returned,User_100
+Application_907188218,A_Validating,User_100
 Application_90743535,A_Validating,User_100
-Application_908229321,A_Incomplete,User_100
+Application_908229321,A_Validating,User_100
 Application_908586068,A_Validating,User_100
 Application_909952098,A_Validating,User_100
 Application_910003252,A_Validating,User_100
@@ -1763,13 +1763,13 @@ Application_917476215,A_Validating,User_100
 Application_917640298,A_Validating,User_100
 Application_91776621,A_Validating,User_100
 Application_922063750,A_Validating,User_100
-Application_923517455,O_Returned,User_100
-Application_924638731,O_Returned,User_100
+Application_923517455,A_Validating,User_100
+Application_924638731,A_Validating,User_100
 Application_926747574,A_Validating,User_100
 Application_928156547,A_Validating,User_100
 Application_92831750,A_Validating,User_100
 Application_929827604,A_Validating,User_100
-Application_930390995,A_Validating,User_100
+Application_930390995,O_Create Offer,User_81
 Application_931609833,A_Validating,User_100
 Application_932953546,A_Validating,User_100
 Application_935269154,A_Validating,User_100
@@ -1778,16 +1778,16 @@ Application_937048157,A_Validating,User_100
 Application_937212077,A_Validating,User_100
 Application_937423447,A_Validating,User_100
 Application_937515890,A_Validating,User_100
-Application_938184987,A_Incomplete,User_100
+Application_938184987,A_Validating,User_100
 Application_938425131,A_Validating,User_100
 Application_941665501,A_Validating,User_100
 Application_943624516,A_Validating,User_100
 Application_944206598,A_Validating,User_100
 Application_944419573,A_Validating,User_100
-Application_944860637,A_Incomplete,User_100
+Application_944860637,A_Validating,User_100
 Application_946540113,A_Validating,User_100
 Application_946583171,A_Incomplete,User_100
-Application_947366120,A_Incomplete,User_100
+Application_947366120,A_Incomplete,User_29
 Application_947700835,A_Validating,User_100
 Application_949514127,A_Validating,User_100
 Application_949702714,A_Validating,User_100
@@ -1798,7 +1798,7 @@ Application_95461104,A_Incomplete,User_100
 Application_954830822,A_Validating,User_100
 Application_95535126,A_Validating,User_100
 Application_957907246,A_Validating,User_100
-Application_958762299,W_Call incomplete files,User_100
+Application_958762299,A_Validating,User_100
 Application_959242917,A_Validating,User_100
 Application_959893793,A_Validating,User_100
 Application_962505423,A_Validating,User_100
@@ -1808,12 +1808,12 @@ Application_963481013,A_Validating,User_100
 Application_964109049,A_Validating,User_100
 Application_96540087,A_Validating,User_100
 Application_966598082,A_Validating,User_100
-Application_967577338,A_Incomplete,User_100
+Application_967577338,A_Incomplete,User_29
 Application_969888320,A_Validating,User_100
 Application_970172259,A_Validating,User_100
 Application_97035604,A_Validating,User_100
-Application_970965406,O_Returned,User_100
-Application_973645066,A_Validating,User_100
+Application_970965406,A_Validating,User_100
+Application_973645066,O_Create Offer,User_81
 Application_973750778,,
 Application_973851961,A_Validating,User_100
 Application_974485148,A_Validating,User_100
@@ -1821,7 +1821,7 @@ Application_974575173,A_Validating,User_100
 Application_978512250,A_Validating,User_100
 Application_980593207,A_Validating,User_100
 Application_980700134,A_Validating,User_100
-Application_982136058,,
+Application_982136058,A_Incomplete,User_100
 Application_982813856,A_Validating,User_100
 Application_983073417,A_Validating,User_100
 Application_985184981,A_Validating,User_100
@@ -1830,12 +1830,12 @@ Application_98763482,A_Validating,User_100
 Application_988067784,A_Validating,User_100
 Application_988274349,A_Validating,User_100
 Application_988366578,A_Validating,User_100
-Application_988369102,O_Returned,User_100
+Application_988369102,A_Validating,User_100
 Application_988769752,A_Validating,User_100
-Application_988854237,A_Accepted,User_100
+Application_988854237,A_Accepted,User_81
 Application_989429368,A_Validating,User_100
 Application_989790181,A_Validating,User_100
-Application_991440803,A_Validating,User_121
+Application_991440803,A_Validating,User_100
 Application_994357941,A_Validating,User_100
-Application_999464866,O_Returned,User_100
+Application_999464866,A_Validating,User_100
 Application_999632431,A_Validating,User_100

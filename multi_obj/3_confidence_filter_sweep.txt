@@ -1,0 +1,146 @@
+====================================================================================================
+CONFIDENCE FILTER SWEEP (exhaustive method, gamma_cls = gamma_reg = gamma)
+Written by 3_confidence_filter_sweep.py - 2026-10-08 10:41:42
+k = 5 | window size = 5 | min next-activity share = 0.01 | gammas = 0, 0.5, 0.6, 0.7, 0.8
+====================================================================================================
+cand/case   : feasible (activity, resource) candidates per case (transition system, forbidden activities removed),
+              averaged over the cases with at least one candidate; gamma = 0 means no filter.
+pass/case   : candidates per case passing the filter on both KPIs.
+% pass ...  : share of all the candidates with P(beats the no-recommendation baseline) >= gamma on the
+              outcome only, on the time only, and on both (the filter).
+front/case  : size of the 2-D Pareto front (outcome, 1 - time) of the surviving candidates.
+% rank r    : share of ALL the test cases with a recommendation at rank r, i.e. with at least r
+              recommendations (min(k, front size)): the cases simulated at rank r in step 4.
+
+
+BAC
+----------------------------------------------------------------------------------------------------
+Test cases: 1876 | with at least one feasible candidate: 1876 | candidates per case (mean): 403.5
+check against the step-3 recommendation files (gamma 0.5): number of recommendations equal for 100.0% of 1876 cases | computed in 4.9 min
+
+(a) Candidates passing the filter and share of test cases with a recommendation at each rank
+gamma cand/case pass/case % pass out % pass time % pass both front/case % rank 1 % rank 2 % rank 3 % rank 4 % rank 5
+ 0.00     403.5     403.5      100.0       100.0       100.0       1.59    100.0     38.4     14.8      5.2      0.7
+ 0.50     403.5      97.4       49.8        53.7        24.1       0.89     74.5     13.9      0.5      0.0      0.0
+ 0.60     403.5       0.1       48.4         0.0         0.0       0.04      3.9      0.4      0.0      0.0      0.0
+ 0.70     403.5       0.0       47.9         0.0         0.0       0.00      0.1      0.0      0.0      0.0      0.0
+ 0.80     403.5       0.0       47.2         0.0         0.0       0.00      0.0      0.0      0.0      0.0      0.0
+
+(b) Distribution of the number of recommendations per test case (% of the test cases)
+gamma 5 recs 4 recs 3 recs 2 recs 1 recs 0 recs
+ 0.00    0.7    4.4    9.6   23.6   61.6    0.0
+ 0.50    0.0    0.0    0.5   13.4   60.6   25.5
+ 0.60    0.0    0.0    0.0    0.4    3.5   96.1
+ 0.70    0.0    0.0    0.0    0.0    0.1   99.9
+ 0.80    0.0    0.0    0.0    0.0    0.0  100.0
+
+(c) Test cases with NO recommendation, by cause (number of cases)
+    no next act. (TS): the transition system knows no next activity, not even matching only the last
+    activity of the prefix; only forbidden: every next activity is forbidden; no resource: no resource
+    known for the next activities; none passes filter: candidates exist but none reaches gamma on both KPIs.
+gamma  no next act. (TS)  only forbidden  no resource  none passes filter  total no rec. % of test
+ 0.00                  0               0            0                   0              0       0.0
+ 0.50                  0               0            0                 479            479      25.5
+ 0.60                  0               0            0                1802           1802      96.1
+ 0.70                  0               0            0                1875           1875      99.9
+ 0.80                  0               0            0                1876           1876     100.0
+
+
+BPI12
+----------------------------------------------------------------------------------------------------
+Test cases: 623 | with at least one feasible candidate: 623 | candidates per case (mean): 170.9
+check against the step-3 recommendation files (gamma 0.5): number of recommendations equal for 100.0% of 623 cases | computed in 0.8 min
+
+(a) Candidates passing the filter and share of test cases with a recommendation at each rank
+gamma cand/case pass/case % pass out % pass time % pass both front/case % rank 1 % rank 2 % rank 3 % rank 4 % rank 5
+ 0.00     170.9     170.9      100.0       100.0       100.0       2.35    100.0     99.0     22.5     11.1      2.6
+ 0.50     170.9      50.7       37.7        81.9        29.7       1.92     98.9     92.9      0.3      0.0      0.0
+ 0.60     170.9       4.9       20.1         2.9         2.9       0.45     24.7     20.4      0.0      0.0      0.0
+ 0.70     170.9       0.0       19.9         0.0         0.0       0.00      0.0      0.0      0.0      0.0      0.0
+ 0.80     170.9       0.0       19.1         0.0         0.0       0.00      0.0      0.0      0.0      0.0      0.0
+
+(b) Distribution of the number of recommendations per test case (% of the test cases)
+gamma 5 recs 4 recs 3 recs 2 recs 1 recs 0 recs
+ 0.00    2.6    8.5   11.4   76.6    1.0    0.0
+ 0.50    0.0    0.0    0.3   92.6    5.9    1.1
+ 0.60    0.0    0.0    0.0   20.4    4.3   75.3
+ 0.70    0.0    0.0    0.0    0.0    0.0  100.0
+ 0.80    0.0    0.0    0.0    0.0    0.0  100.0
+
+(c) Test cases with NO recommendation, by cause (number of cases)
+    no next act. (TS): the transition system knows no next activity, not even matching only the last
+    activity of the prefix; only forbidden: every next activity is forbidden; no resource: no resource
+    known for the next activities; none passes filter: candidates exist but none reaches gamma on both KPIs.
+gamma  no next act. (TS)  only forbidden  no resource  none passes filter  total no rec. % of test
+ 0.00                  0               0            0                   0              0       0.0
+ 0.50                  0               0            0                   7              7       1.1
+ 0.60                  0               0            0                 469            469      75.3
+ 0.70                  0               0            0                 623            623     100.0
+ 0.80                  0               0            0                 623            623     100.0
+
+
+BPI17_BEFORE
+----------------------------------------------------------------------------------------------------
+Test cases: 1218 | with at least one feasible candidate: 1218 | candidates per case (mean): 283.3
+check against the step-3 recommendation files (gamma 0.5): number of recommendations equal for 100.0% of 1218 cases | computed in 2.0 min
+
+(a) Candidates passing the filter and share of test cases with a recommendation at each rank
+gamma cand/case pass/case % pass out % pass time % pass both front/case % rank 1 % rank 2 % rank 3 % rank 4 % rank 5
+ 0.00     283.3     283.3      100.0       100.0       100.0       3.92    100.0     99.9     93.5     62.3     35.1
+ 0.50     283.3     122.9       65.0        68.4        43.4       2.55     98.1     95.2     60.3      1.9      0.0
+ 0.60     283.3       2.4       36.2        19.7         0.9       0.68     53.7     12.1      2.4      0.0      0.0
+ 0.70     283.3       0.0       35.9        17.2         0.0       0.00      0.0      0.0      0.0      0.0      0.0
+ 0.80     283.3       0.0       35.9         4.8         0.0       0.00      0.0      0.0      0.0      0.0      0.0
+
+(b) Distribution of the number of recommendations per test case (% of the test cases)
+gamma 5 recs 4 recs 3 recs 2 recs 1 recs 0 recs
+ 0.00   35.1   27.2   31.2    6.4    0.1    0.0
+ 0.50    0.0    1.9   58.4   34.9    3.0    1.9
+ 0.60    0.0    0.0    2.4    9.7   41.6   46.3
+ 0.70    0.0    0.0    0.0    0.0    0.0  100.0
+ 0.80    0.0    0.0    0.0    0.0    0.0  100.0
+
+(c) Test cases with NO recommendation, by cause (number of cases)
+    no next act. (TS): the transition system knows no next activity, not even matching only the last
+    activity of the prefix; only forbidden: every next activity is forbidden; no resource: no resource
+    known for the next activities; none passes filter: candidates exist but none reaches gamma on both KPIs.
+gamma  no next act. (TS)  only forbidden  no resource  none passes filter  total no rec. % of test
+ 0.00                  0               0            0                   0              0       0.0
+ 0.50                  0               0            0                  23             23       1.9
+ 0.60                  0               0            0                 564            564      46.3
+ 0.70                  0               0            0                1218           1218     100.0
+ 0.80                  0               0            0                1218           1218     100.0
+
+
+BPI17_AFTER
+----------------------------------------------------------------------------------------------------
+Test cases: 1840 | with at least one feasible candidate: 1836 | candidates per case (mean): 340.4
+check against the step-3 recommendation files (gamma 0.5): number of recommendations equal for 100.0% of 1840 cases | computed in 3.3 min
+
+(a) Candidates passing the filter and share of test cases with a recommendation at each rank
+gamma cand/case pass/case % pass out % pass time % pass both front/case % rank 1 % rank 2 % rank 3 % rank 4 % rank 5
+ 0.00     340.4     340.4      100.0       100.0       100.0       3.58     99.8     95.8     79.8     59.8     20.7
+ 0.50     340.4     164.4       64.3        74.9        48.3       1.78     99.8     68.0      7.8      2.2      0.0
+ 0.60     340.4       0.1       47.9        18.7         0.0       0.01      0.8      0.1      0.0      0.0      0.0
+ 0.70     340.4       0.0       47.8        15.6         0.0       0.00      0.0      0.0      0.0      0.0      0.0
+ 0.80     340.4       0.0       46.9        13.6         0.0       0.00      0.0      0.0      0.0      0.0      0.0
+
+(b) Distribution of the number of recommendations per test case (% of the test cases)
+gamma 5 recs 4 recs 3 recs 2 recs 1 recs 0 recs
+ 0.00   20.7   39.1   20.1   15.9    4.0    0.2
+ 0.50    0.0    2.2    5.7   60.2   31.8    0.2
+ 0.60    0.0    0.0    0.0    0.1    0.7   99.2
+ 0.70    0.0    0.0    0.0    0.0    0.0  100.0
+ 0.80    0.0    0.0    0.0    0.0    0.0  100.0
+
+(c) Test cases with NO recommendation, by cause (number of cases)
+    no next act. (TS): the transition system knows no next activity, not even matching only the last
+    activity of the prefix; only forbidden: every next activity is forbidden; no resource: no resource
+    known for the next activities; none passes filter: candidates exist but none reaches gamma on both KPIs.
+gamma  no next act. (TS)  only forbidden  no resource  none passes filter  total no rec. % of test
+ 0.00                  4               0            0                   0              4       0.2
+ 0.50                  4               0            0                   0              4       0.2
+ 0.60                  4               0            0                1821           1825      99.2
+ 0.70                  4               0            0                1836           1840     100.0
+ 0.80                  4               0            0                1836           1840     100.0
+

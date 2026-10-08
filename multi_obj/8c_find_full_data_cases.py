@@ -54,21 +54,26 @@ def get_prefix_lengths(test_log: pd.DataFrame) -> pd.Series:
     return counts
 
 
-def find_complete_cases(eval_table: pd.DataFrame) -> pd.DataFrame:
+def find_complete_cases(eval_table: pd.DataFrame, min_ranks: int = 2) -> pd.DataFrame:
     """One row per case_id that has a finite sim_status_method_mean AND
-    sim_remaining_time_method_mean_sigmoid_mm for EVERY one of its k ranks, plus a finite
+    sim_remaining_time_method_mean_sigmoid_mm for EVERY rank it was recommended at, plus a finite
     baseline (sim_status_baseline_mean / sim_remaining_time_baseline_mean_sigmoid_mm).
 
-    Returns a DataFrame with case_id, k_total, and a 'spread_score' column (higher = more
+    The table only has a row for the ranks the case actually got a recommendation at: with the
+    confidence filter a case often has fewer than k (the Pareto front of the surviving candidates
+    is small), so requiring all k ranks would leave almost no case. A case qualifies with at least
+    min_ranks recommended ranks, all of them simulated.
+
+    Returns a DataFrame with case_id, k_total, n_ranks and a 'spread_score' column (higher = more
     visually separated rank/baseline points in the (outcome, 1-sigmoid_mm) plane -- range of
-    the k ranks' positions plus their mean distance from the baseline).
+    the ranks' positions plus their mean distance from the baseline).
     """
     rows = []
     for cid, g in eval_table.groupby(case_id_name):
         g = g.sort_values("rank")
         k_total = int(g["k_total"].iloc[0])
-        if len(g) != k_total:
-            continue  # some ranks missing entirely (no recommendation at all for that rank)
+        if len(g) < min_ranks:
+            continue  # too few recommended ranks to compare
 
         sim_x = g["sim_status_method_mean"].to_numpy(dtype=float)
         sim_y = 1.0 - g["sim_remaining_time_method_mean_sigmoid_mm"].to_numpy(dtype=float)
@@ -87,6 +92,7 @@ def find_complete_cases(eval_table: pd.DataFrame) -> pd.DataFrame:
         rows.append({
             case_id_name: str(cid),
             "k_total": k_total,
+            "n_ranks": len(g),
             "rank_spread": rank_spread,
             "mean_dist_from_baseline": mean_dist_from_baseline,
             "spread_score": spread_score,
@@ -106,6 +112,8 @@ def main():
     parser.add_argument("--method", type=str, default=DEFAULT_METHOD)
     parser.add_argument("--top_n", type=int, default=5,
                          help="How many case_ids to print per prefix-length band (default: 5).")
+    parser.add_argument("--min_ranks", type=int, default=2,
+                         help="Minimum number of recommended ranks, all simulated, for a case to qualify (default: 2).")
     args = parser.parse_args()
 
     base_dir = Path(args.base_dir)
@@ -115,10 +123,10 @@ def main():
         raise SystemExit(f"No evaluation table at {table_path} -- run 5_result_computation.py first.")
 
     eval_table = pd.read_csv(table_path, dtype={case_id_name: str})
-    complete = find_complete_cases(eval_table)
+    complete = find_complete_cases(eval_table, args.min_ranks)
     if complete.empty:
         raise SystemExit(
-            f"No case_id in {table_path} has simulated data for all its ranks plus the baseline."
+            f"No case_id in {table_path} has at least {args.min_ranks} recommended ranks, all simulated, plus the baseline."
         )
 
     _, _, test_log = load_case_study(args.case_study)
@@ -128,7 +136,7 @@ def main():
     complete["prefix_length"] = complete["prefix_length"].astype(int)
 
     print(f"{len(complete)} / {eval_table[case_id_name].nunique()} case_ids in {table_path.name} "
-          f"have a full k-rank + baseline simulated panel.\n")
+          f"have every recommended rank (at least {args.min_ranks}) + the baseline simulated.\n")
 
     # Tertile bands over prefix length, same short/medium/long split used when picking the
     # existing example case_ids (see CODICI DA RUNNARE.txt).
@@ -146,7 +154,7 @@ def main():
         if band_df.empty:
             print("  (none)")
         else:
-            print(band_df[[case_id_name, "prefix_length", "k_total", "rank_spread",
+            print(band_df[[case_id_name, "prefix_length", "n_ranks", "rank_spread",
                            "mean_dist_from_baseline", "spread_score"]]
                   .to_string(index=False, float_format=lambda v: f"{v:.3f}"))
         print()

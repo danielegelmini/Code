@@ -448,7 +448,8 @@ def run_and_plot_comparison(
     elev: float = 22.0,
     azim: float = 0,
     rebuild_cache: bool = False,
-    save_dir: str = None
+    save_dir: str = None,
+    min_next_share: float = 0.01,
 ):
     """Run ONE Pareto search for one case and plot its result.
 
@@ -525,6 +526,7 @@ def run_and_plot_comparison(
         activity_column_name=activity_column_name,
         window_size=window_size,
         rebuild=rebuild_cache,
+        min_next_share=min_next_share,
     )
 
     act_with_res = act_with_res_func(train_data, activity_column_name, resource_column_name)
@@ -660,12 +662,15 @@ if __name__ == '__main__':
                         help="3D camera azimuth in degrees (method='nsga2' only, default: -45)")
     parser.add_argument('--rebuild-cache', dest='rebuild_cache', action='store_true',
                         help="Force recomputing the (cached) transition system instead of loading it")
+    parser.add_argument('--min_next_share', type=float, default=0.01,
+                        help="Same as 3_run_experiment.py: rarer next activities of a window are not candidates")
 
     try:
         args = parser.parse_args()
         run_and_plot_comparison(case_study=args.case_study, target_case_id=args.case_id, k=args.k,
                                 method=args.method, gamma_cls=args.gamma_cls, gamma_reg=args.gamma_reg,
-                                elev=args.elev, azim=args.azim, rebuild_cache=args.rebuild_cache)
+                                elev=args.elev, azim=args.azim, rebuild_cache=args.rebuild_cache,
+                                min_next_share=args.min_next_share)
     except Exception as e:
         print(f"Error during execution: {e}")
 

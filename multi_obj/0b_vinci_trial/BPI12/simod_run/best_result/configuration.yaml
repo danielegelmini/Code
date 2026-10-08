@@ -1,0 +1,66 @@
+version: 5.2
+common:
+  train_log_path: C:\Users\Utente\Desktop\tesi magistrale\Code\multi_obj\0b_vinci_trial\BPI12\BPI12.csv
+  test_log_path: null
+  log_ids:
+    case: case_id
+    activity: activity
+    resource: resource
+    start_time: start_time
+    end_time: end_time
+    enabled_time: enabled_time
+    enabling_activity: enabling_activity
+    available_time: available_time
+    estimated_start_time: estimated_start_time
+    batch_id: batch_instance_id
+    batch_type: batch_instance_type
+  process_model_path: null
+  num_final_evaluations: 0
+  evaluation_metrics: []
+  clean_intermediate_files: true
+  discover_data_attributes: false
+preprocessing:
+  multitasking: false
+  enable_time_concurrency_threshold: 0.5
+  concurrency_df: 0.9
+  concurrency_l2l: 0.9
+  concurrency_l1l: 0.9
+case_arrival:
+  optimization_metric: arrival_event_distribution
+  num_iterations: 1
+  num_evaluations_per_iteration: 1
+  outlier_threshold: !!python/tuple
+  - 5.0
+  - 50.0
+  use_observed_arrival_distribution: false
+control_flow:
+  optimization_metric: three_gram_distance
+  num_iterations: 3
+  num_evaluations_per_iteration: 1
+  gateway_probabilities: discovery
+  mining_algorithm: sm1
+  epsilon: !!python/tuple
+  - 0.0
+  - 1.0
+  eta: !!python/tuple
+  - 0.0
+  - 1.0
+  replace_or_joins: false
+  prioritize_parallelism: false
+resource_model:
+  optimization_metric: circadian_event_distribution
+  num_iterations: 3
+  num_evaluations_per_iteration: 1
+  discovery_type: differentiated_by_resource
+  discover_prioritization_rules: false
+  discover_batching_rules: false
+  granularity: !!python/tuple
+  - 15
+  - 60
+  confidence: !!python/tuple
+  - 0.5
+  - 0.85
+  support: !!python/tuple
+  - 0.01
+  - 0.3
+  participation: 0.4

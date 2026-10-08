@@ -1,9 +1,9 @@
 {
-    "learning_rate": 0.13121829871676124,
-    "depth": 3,
-    "l2_leaf_reg": 1.5897467356652533,
-    "colsample_bylevel": 0.6371155301393225,
+    "learning_rate": 0.2994920915962497,
+    "depth": 9,
+    "l2_leaf_reg": 21.5658908558707,
+    "colsample_bylevel": 0.7665664337695578,
     "bootstrap_type": "MVS",
-    "subsample": 0.7543786304508152,
-    "scale_pos_weight": 0.3037083332318212
+    "grow_policy": "SymmetricTree",
+    "subsample": 0.6420906204983725
 }

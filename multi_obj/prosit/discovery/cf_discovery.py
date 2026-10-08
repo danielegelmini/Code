@@ -111,17 +111,6 @@ def build_models(
     for t in tqdm(datasets_t.keys()):
         data_t = datasets_t[t]
         if len(data_t['class'].unique())<2:
-            # Degenerate case: whenever this transition was enabled, it EITHER always fired
-            # (class always 1) or never did (class always 0) -- no variance to fit a tree on.
-            # Must preserve which of the two, not blank it to None: None is later defaulted to a
-            # constant weight of 1 regardless (decision_rules_to_dict's `if d is None: d = 1`),
-            # silently turning a "this never actually fires here" transition into "always fires
-            # with full weight" -- observed on BPI12's A_CANCELLED, whose one enabling point
-            # (a rework-loop exit gate) has class constantly 0 in the aligned log (matching
-            # discover_weight_transitions' own depth-0/flat formula, which gives it weight 0 --
-            # see the `if not max_depths_cv` branch above), yet was being forced to weight 1 here,
-            # making a transition the real log essentially never takes at that gate dominate the
-            # gate's competing weighted draw and fire repeatedly within a single simulated case.
             models_t[t] = float(data_t['class'].mode().iloc[0])
             continue
         
@@ -138,17 +127,6 @@ def build_models(
 
         elif model_type == 'DecisionTree':
 
-            # min_samples_leaf/min_samples_split match the regularization already used for the
-            # execution/waiting-time regression trees (time_discovery.py's build_models_ex/wt).
-            # Without it, an unconstrained classifier at these shallow depths (1-2) reliably picks
-            # a spurious split on one of the ~hundreds of sparse one-hot label_data_attributes
-            # dummy columns (e.g. a single rare 'AMOUNT_REQ = <value>') over the handful of
-            # genuinely informative case-history columns, just because a tiny, low-impurity leaf
-            # is easy to carve out of a few samples by chance -- this was directly observed on
-            # BPI12: a routing gate split on 'AMOUNT_REQ = 21000' instead of loop-repeat history,
-            # leaving the common branch's probability essentially unregularized noise instead of a
-            # real history-conditioned estimate, and driving simulated rework loops far longer than
-            # in the real log.
             if max_depths_cv:
                 clf_t_dtc = DecisionTreeClassifier(random_state=72, min_samples_leaf=100, min_samples_split=200)
                 try:

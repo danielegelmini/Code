@@ -185,3 +185,40 @@ def transition_system(df, case_id_name=None, activity_column_name="ACTIVITY", th
                 new_ts[key][activity] = count
 
     return transition_graph, new_ts
+
+
+def filter_rare_next_activities(transition_graph, df, case_id_name, activity_column_name, window_size, min_share):
+    """Drop, from every window of the transition graph, the next activities that followed that window in less
+    than `min_share` of its occurrences in `df` (the training log the graph was built from).
+
+    The recommender takes its candidate next activities from the transition graph, which keeps every activity
+    ever observed after a window, however rare. A step seen a handful of times (e.g. 17 times in 32,429 BAC cases)
+    is then scored by the predictive models with almost no data behind it, and the recommender often prefers such
+    shortcuts (e.g. jumping to the closing activity). A relative threshold removes them; it uses only the training
+    log, so the recommender stays independent of the simulator.
+
+    Counts are taken with the same windows and the same traversal as transition_system() (verified to rebuild the
+    same graph with no threshold). The empty window "" (start of a trace) is left unchanged.
+
+    Returns:
+        (filtered graph, number of removed (window -> next activity) entries)
+    """
+    counts = {}
+    for _, group in df.groupby(case_id_name):
+        acts = group[activity_column_name].to_list()
+        for idx in range(len(acts) - 1):
+            start_index, end_index = indexs_for_window(idx, window_size=window_size, end_exclusive=True)
+            window_counts = counts.setdefault(list_to_str(acts[start_index:end_index]), Counter())
+            window_counts[acts[idx + 1]] += 1
+
+    filtered, removed = {}, 0
+    for window, next_activities in transition_graph.items():
+        window_counts = counts.get(window)
+        if window == "" or not window_counts:
+            filtered[window] = set(next_activities)
+            continue
+        total = sum(window_counts.values())
+        kept = {a for a in next_activities if window_counts[a] / total >= min_share}
+        removed += len(next_activities) - len(kept)
+        filtered[window] = kept
+    return filtered, removed

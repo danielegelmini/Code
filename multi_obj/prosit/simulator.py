@@ -1189,23 +1189,33 @@ class SimulatorEngine:
         """Draws, once per visible event, how long after the case arrived in `place` its next visible
         event starts, and stores it as case["forced_start"] (consumed when that event is executed).
 
-        The first step after the train/test split of a case that is idle at the split (no activity in
-        progress) is measured from its last logged event and must be at least the idle time already
-        observed up to the split: the case is known to have done nothing in between.
+        The first step after the train/test split is measured from the case's last logged event:
+        - a case idle at the split (nothing in progress) is known to have started nothing up to the split,
+          so its next event starts after it: wait >= idle time;
+        - a case busy at the split (case["busy_at_split"]: an activity in progress, which activity is NOT
+          used) is known to have started its next event before the split and not to have completed it by
+          then: wait <= time from the last logged event to the split, and that event must end after the split.
         """
         if "pending_wait_days" in case:
             return
         models = self.simulation_parameters.time_first_models
         t_arrival = min(case["enabled"][t] for t in enabled_transitions)
-        t0, min_days = t_arrival, 0.0
+        t0, min_days, max_days = t_arrival, 0.0, None
         last_end = case.get("last_logged_end")
-        if (case.get("sim_event_count", 0) == 0 and not case.get("had_running_activity")
+        resume_time = case.get("resume_time")
+        first_step = case.get("sim_event_count", 0) == 0
+        if (first_step and case.get("busy_at_split") and last_end is not None
+                and resume_time is not None and last_end < resume_time):
+            t0, max_days = last_end, (resume_time - last_end).total_seconds() / 86400
+            case["must_end_after"] = resume_time
+            self.last_time_first_stats["busy_conditioned"] += 1
+        elif (first_step and not case.get("had_running_activity")
                 and last_end is not None and last_end < t_arrival):
             t0, min_days = last_end, (t_arrival - last_end).total_seconds() / 86400
             self.last_time_first_stats["idle_conditioned"] += 1
         start = case.get("first_start") or case["arrival_time"]
         x = feature_vector(models, case["attributes"], case["history"], max((t0 - start).total_seconds() / 86400, 0.0))
-        wait = sample_wait_days(models, place.name, x, min_days, random)
+        wait = sample_wait_days(models, place.name, x, min_days, random, max_days=max_days)
         case["pending_wait_days"], case["pending_features"] = wait, x
         case["forced_start"] = t0 + timedelta(days=wait)
 
@@ -1265,6 +1275,7 @@ class SimulatorEngine:
         max_reachability_search_seconds: float = 5.0,
         resume_time: Optional[datetime] = None,
         running_activities: Optional[dict] = None,
+        busy_at_split: Optional[set] = None,
     ) -> pd.DataFrame:
         """
         Runs the discrete-event simulation itself and returns the resulting event log.
@@ -1349,6 +1360,13 @@ class SimulatorEngine:
             activity, keeping its logged start and resource, with a duration that ends after
             resume_time. Defaults to None (no activity in progress).
 
+        busy_at_split (set, optional): ids (str) of the cases that have an activity in progress at
+            resume_time, used WITHOUT knowing which activity (an alternative to running_activities,
+            which wins for the cases it lists). Such a case is not idle: its continuation starts
+            right after its last logged event (not at resume_time), and with the time-first models its
+            next event starts before resume_time and ends after it; the activity and the resource are
+            chosen by the simulator as for any other step. Defaults to None.
+
         Returns:
             pd.DataFrame: the resulting event log, with columns "case:concept:name",
             "concept:name", "org:resource", "start:timestamp", "time:timestamp" (plus any
@@ -1365,9 +1383,10 @@ class SimulatorEngine:
         self.last_model_inserted_activities = []
         self.last_ambiguous_prefixes = []
         self.last_time_first_stats = {"time_first_steps": 0, "fallback_steps": 0, "idle_conditioned": 0,
-                                      "running_completed": 0, "running_unreachable": 0}
+                                      "busy_conditioned": 0, "running_completed": 0, "running_unreachable": 0}
         time_first = self.use_time_first and self.simulation_parameters.time_first_models is not None
         running_activities = {str(k): v for k, v in (running_activities or {}).items()}
+        busy_at_split = {str(k) for k in (busy_at_split or ())} - set(running_activities)
         self._reachability_search_max_nodes = max_reachability_search_nodes
         self._reachability_search_max_seconds = max_reachability_search_seconds
 
@@ -1462,12 +1481,19 @@ class SimulatorEngine:
                 case_id_c = cases_prefixes[c] #id of prefix (case:concept:name)
                 rename_case_id[f"case_{c+1}"] = case_id_c
                 prefix_log_c = prefixes_log[prefixes_log['case:concept:name'] == case_id_c]
-                prefix_log_c_sorted = prefix_log_c.sort_values('time:timestamp')
+                # stable sort: events with the same timestamp (frequent in BPI12) keep the log order; the
+                # default sort could swap them, creating steps that never happened (e.g. A_ACCEPTED -> A_FINALIZED
+                # instead of A_ACCEPTED -> O_SELECTED -> A_FINALIZED), a non-fitting replay of a fitting prefix, and
+                # a different "last event" than the one build_recommender_df put the recommendation on
+                prefix_log_c_sorted = prefix_log_c.sort_values('time:timestamp', kind="stable")
                 prefix_end_c = prefix_log_c_sorted['time:timestamp'].iloc[-1]
                 last_logged_end_c = prefix_end_c
-                if resume_time is not None:
+                busy_c = time_first and str(case_id_c) in busy_at_split
+                if resume_time is not None and not busy_c:
                     # the continuation starts at the cut instant, not inside the stretch between
-                    # the last logged event and the cut, which is known to hold no completed event
+                    # the last logged event and the cut, which is known to hold no completed event.
+                    # A case busy at the cut is the exception: its next event already started in that
+                    # stretch, so it continues right after its last logged event (see _fix_next_event_time)
                     prefix_end_c = max(prefix_end_c, resume_time)
                 rec_act_c = prefix_log_c_sorted['recommendation:act'].iloc[-1]
                 rec_res_c = prefix_log_c_sorted['recommendation:res'].iloc[-1]
@@ -1544,6 +1570,7 @@ class SimulatorEngine:
                     "last_logged_end": last_logged_end_c,
                     "running_activity": running_c,
                     "had_running_activity": running_c is not None,
+                    "busy_at_split": busy_c,
                     "resume_time": resume_time,
                 })
 

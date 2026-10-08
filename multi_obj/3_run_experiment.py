@@ -60,6 +60,7 @@ def run_experiment_top_k(
     rebuild_cache: bool = False,
     gamma_cls: float = 0.5,
     gamma_reg: float = 0.5,
+    min_next_share: float = 0.01,
 ) -> Dict[str, List[Dict[Any, Any]]]:
     """
     Same as run_experiment, but instead of a single best (activity, resource)
@@ -148,6 +149,7 @@ def run_experiment_top_k(
         activity_column_name=activity_column_name,
         window_size=window_size,
         rebuild=rebuild_cache,
+        min_next_share=min_next_share,
     )
 
     # -------------------------
@@ -320,6 +322,15 @@ if __name__ == "__main__":
              "baseline) for a candidate to survive the pre-Pareto filter (default: 0.5).",
     )
 
+    parser.add_argument(
+        "--min_next_share",
+        type=float,
+        default=0.01,
+        help="Candidate next activities must have followed the current window (last <= window_size activities) in "
+             "at least this share of its occurrences in the training log; rarer ones are not recommended "
+             "(default: 0.01; 0 keeps every observed next activity, the behaviour before 2026-10-08).",
+    )
+
     args = parser.parse_args()
 
     run_experiment_top_k(
@@ -335,6 +346,7 @@ if __name__ == "__main__":
         rebuild_cache=args.rebuild_cache,
         gamma_cls=args.gamma_cls,
         gamma_reg=args.gamma_reg,
+        min_next_share=args.min_next_share,
     )
 
 # FOR RUNNING EXPERIMENT:

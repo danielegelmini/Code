@@ -60,7 +60,9 @@ def build_recommender_df(prev_log: pd.DataFrame, recommendations: dict) -> pd.Da
             continue
 
         if "time:timestamp" in case_rows.columns:
-            case_rows = case_rows.sort_values("time:timestamp")
+            # stable: events with the same timestamp keep the log order, so the "last" event is the same row
+            # SimulatorEngine.apply reads the recommendation from (it sorts the prefix the same way)
+            case_rows = case_rows.sort_values("time:timestamp", kind="stable")
 
         last_index = case_rows.index[-1]
         prev_log.at[last_index, "recommendation:act"] = act

@@ -12,7 +12,7 @@ from pathlib import Path
 
 import joblib
 
-from utils.transition_system import transition_system
+from utils.transition_system import transition_system, filter_rare_next_activities
 
 # Bump when transition_system()'s logic changes, to invalidate every cache file.
 CACHE_VERSION = 1
@@ -30,6 +30,7 @@ def get_transition_graph(
     window_size=5,
     base_dir=".",
     rebuild=False,
+    min_next_share=0.0,
 ):
     """Return transition_system()'s graph for (case_study, window_size), cached on disk.
 
@@ -39,9 +40,25 @@ def get_transition_graph(
     unchanged. Pass ``rebuild=True`` to force recomputation (e.g. after editing
     transition_system()).
 
+    With ``min_next_share`` > 0 the next activities that followed a window in less than that share of its
+    training occurrences are removed (filter_rare_next_activities); the cache always holds the full graph.
+
     Only the graph is returned; transition_system()'s second output (the
     next-activity frequency dict) is not used anywhere in the codebase.
     """
+    graph = _cached_transition_graph(case_study, train_data, case_id_name, activity_column_name,
+                                     window_size, base_dir, rebuild)
+    if min_next_share and min_next_share > 0:
+        graph, removed = filter_rare_next_activities(graph, train_data, case_id_name, activity_column_name,
+                                                     window_size, min_next_share)
+        n_entries = sum(len(v) for k, v in graph.items() if k) + removed
+        print(f"[setup_cache] rare next activities removed (< {min_next_share:.1%} of a window's continuations): "
+              f"{removed} of {n_entries} (window -> next activity) entries")
+    return graph
+
+
+def _cached_transition_graph(case_study, train_data, case_id_name, activity_column_name, window_size, base_dir, rebuild):
+    """The full transition graph, from the on-disk cache when fresh (see get_transition_graph)."""
     case_dir = Path(base_dir) / "case_studies" / case_study
     cache_dir = case_dir / "cache"
     cache_dir.mkdir(parents=True, exist_ok=True)
