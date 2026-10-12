@@ -11,15 +11,19 @@ optimization) is used to find the (epsilon, eta) combination that maximizes
 the F-score (harmonic mean of alignment-based fitness and precision).
 
 For every log found it saves, in the same case study's `discovery_output/`
-directory (overwriting any previous Petri net there, since that is where
-4_run_recommendation_simulation.py loads it from):
-    - <dataset>_best_petri_net.pnml   -> the discovered Petri net (PNML format)
-    - <dataset>_best_petri_net.jpg    -> a rendered image of the Petri net
+directory (overwriting any previous net with the same name):
+    - petri_net_bestfscore_<dataset>.pnml   -> the discovered Petri net (PNML format)
+    - petri_net_bestfscore_<dataset>.jpg    -> a rendered image of the Petri net
 
 and records the net's quality (alignment-based fitness, share of perfectly
 fitting traces, precision, F-score, epsilon/eta, size) as one row of
 `discovery/petri_net_quality.csv` (next to this script), replacing that
-dataset's previous row.
+dataset's previous row for the same kind of net (column `net`).
+
+Since 2026-10-09 the simulations of step 4 do NOT use this net but the fitness-1 net of
+petri_net_discovery_fitness1.py (petri_net_fitness1_<dataset>.pnml), on which every
+recommendation seen in the log can be applied; this best-F-score net stays available with
+`4_run_recommendation_simulation.py --petri_net bestfscore`.
 
 Usage
 -----
@@ -284,26 +288,29 @@ def optimize_hyperparameters(log, n_trials: int, dataset_name: str):
 
 
 def save_quality_row(csv_path: Path, row: dict):
-    """Write one net's quality metrics into the summary CSV shared by all case studies.
+    """Write one net's quality metrics into the summary CSV shared by all case studies and nets.
 
-    The row replaces any previous row for the same dataset (a rediscovered net
-    overwrites its .pnml too), while the other datasets' rows are kept, so the
-    file always describes the nets currently saved in each discovery_output/.
+    The row replaces any previous row for the same dataset and the same kind of net (column
+    "net": "bestfscore" for this script, "fitness1" for petri_net_discovery_fitness1.py; a
+    rediscovered net overwrites its .pnml too), while the other rows are kept, so the file
+    always describes the nets currently saved in each discovery_output/.
     """
     csv_path = Path(csv_path)
     new_row = pd.DataFrame([row])
     if csv_path.exists():
         table = pd.read_csv(csv_path)
-        table = table[table["dataset"] != row["dataset"]]
+        if "net" not in table.columns:
+            table["net"] = "bestfscore"
+        table = table[~((table["dataset"] == row["dataset"]) & (table["net"] == row["net"]))]
         new_row = pd.concat([table, new_row], ignore_index=True)
-    new_row.sort_values("dataset").to_csv(csv_path, index=False)
+    new_row.sort_values(["dataset", "net"]).to_csv(csv_path, index=False)
     print(f"  [✓] Quality metrics saved to: {csv_path}")
 
 
 def process_log_file(xes_path: str, n_trials: int, dataset_name: str = None):
     xes_path = Path(xes_path)
     # For auto-discovered logs, use the parent folder name (e.g. "BAC") so
-    # that files aren't all named "log_<dataset>_best_petri_net.*". For
+    # that files aren't all named "petri_net_bestfscore_log_<dataset>.*". For
     # explicitly-passed files, fall back to the file stem.
     if dataset_name is None:
         dataset_name = xes_path.stem
@@ -321,8 +328,8 @@ def process_log_file(xes_path: str, n_trials: int, dataset_name: str = None):
     # actually loads the Petri net (and its cached simulator params) from.
     discovery_output_dir = output_dir / "discovery_output"
     discovery_output_dir.mkdir(parents=True, exist_ok=True)
-    pnml_path = discovery_output_dir / f"{dataset_name}_best_petri_net.pnml"
-    jpg_path = discovery_output_dir / f"{dataset_name}_best_petri_net.jpg"
+    pnml_path = discovery_output_dir / f"petri_net_bestfscore_{dataset_name}.pnml"
+    jpg_path = discovery_output_dir / f"petri_net_bestfscore_{dataset_name}.jpg"
 
     pm4py.write_pnml(net, initial_marking, final_marking, str(pnml_path))
     save_petri_net_image(net, initial_marking, final_marking, jpg_path)
@@ -335,7 +342,9 @@ def process_log_file(xes_path: str, n_trials: int, dataset_name: str = None):
     n_silent = sum(t.label is None for t in net.transitions)
     save_quality_row(QUALITY_CSV_PATH, {
         "dataset": dataset_name,
+        "net": "bestfscore",
         "miner": "split_miner",
+        "metric": "alignments",
         "epsilon": best_eps,
         "eta": best_eta,
         "fitness": best_metrics["fitness"],

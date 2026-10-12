@@ -55,6 +55,7 @@ from utils.recommendation_functions import (
     _build_valid_pairs,
     _evaluate_candidates,
     _compute_confidence_probabilities,
+    _filter_by_confidence,
     _front_objective_matrix,
 )
 
@@ -91,7 +92,7 @@ def front_size(objs: np.ndarray) -> int:
 
 def sweep_case_study(case_study: str, gammas: list, k: int, window_size: int, max_cases,
                      min_next_share: float = 0.01) -> pd.DataFrame:
-    """One row per test case and gamma: candidates, survivors (both KPIs / outcome only / time
+    """One row per test case and gamma: candidates, survivors (filter of step 3 / outcome only / time
     only), Pareto front size and number of recommendations."""
     train_data, test_data, test_log = load_case_study(case_study)
     if case_study in BPI12_CASE_STUDIES:
@@ -133,8 +134,9 @@ def sweep_case_study(case_study: str, gammas: list, k: int, window_size: int, ma
                                                           outcome_model, time_model)
         p_out, p_time = np.asarray(p_out), np.asarray(p_time)
         for g in gammas:
-            keep_out, keep_time = p_out >= g, p_time >= g
-            keep = keep_out & keep_time
+            keep_out, keep_time = p_out > g, p_time > g
+            # the same rule as step 3 (utils/recommendation_functions._filter_by_confidence), not a copy of it
+            keep = _filter_by_confidence(p_out, p_time, g, g)
             n_front = front_size(objs[keep])
             rows.append({"case_id": str(cid), "gamma": g, "n_candidates": len(pairs),
                          "n_pass_outcome": int(keep_out.sum()), "n_pass_time": int(keep_time.sum()),
@@ -160,7 +162,7 @@ def summarize(per_case: pd.DataFrame, case_study: str, k: int) -> pd.DataFrame:
             "mean_passing": with_cand["n_pass"].mean(),
             "pct_pass_outcome": 100 * d["n_pass_outcome"].sum() / n_cand if n_cand else np.nan,
             "pct_pass_time": 100 * d["n_pass_time"].sum() / n_cand if n_cand else np.nan,
-            "pct_pass_both": 100 * d["n_pass"].sum() / n_cand if n_cand else np.nan,
+            "pct_pass_filter": 100 * d["n_pass"].sum() / n_cand if n_cand else np.nan,
             "mean_front_size": with_cand["front_size"].mean(),
             # cases with no recommendation at all, by cause: no candidate (transition system / forbidden
             # activities / resources), or candidates but none passing the filter
@@ -212,7 +214,7 @@ def format_tables(summary: pd.DataFrame, k: int, check: str, elapsed: float) -> 
         "pass/case": summary["mean_passing"].map("{:.1f}".format),
         "% pass out": summary["pct_pass_outcome"].map("{:.1f}".format),
         "% pass time": summary["pct_pass_time"].map("{:.1f}".format),
-        "% pass both": summary["pct_pass_both"].map("{:.1f}".format),
+        "% pass filter": summary["pct_pass_filter"].map("{:.1f}".format),
         "front/case": summary["mean_front_size"].map("{:.2f}".format),
         **{f"% rank {r}": summary[f"pct_cases_rank{r}"].map("{:.1f}".format) for r in range(1, k + 1)},
     })
@@ -240,7 +242,7 @@ def format_tables(summary: pd.DataFrame, k: int, check: str, elapsed: float) -> 
     lines += ["(c) Test cases with NO recommendation, by cause (number of cases)",
               "    no next act. (TS): the transition system knows no next activity, not even matching only the last",
               "    activity of the prefix; only forbidden: every next activity is forbidden; no resource: no resource",
-              "    known for the next activities; none passes filter: candidates exist but none reaches gamma on both KPIs.",
+              "    known for the next activities; none passes filter: candidates exist but none passes the filter.",
               t3.to_string(index=False), "", ""]
     return lines
 
@@ -251,7 +253,7 @@ def main():
                         help=f"Comma-separated case studies (default: {DEFAULT_CASE_STUDIES}).")
     parser.add_argument("--gammas", type=str, default=DEFAULT_GAMMAS,
                         help=f"Comma-separated thresholds, used for both KPIs (default: {DEFAULT_GAMMAS}). "
-                             "0 = no filter.")
+                             "With 0 almost every candidate passes (only P exactly 0 on both KPIs is removed).")
     parser.add_argument("--k", type=int, default=5)
     parser.add_argument("--window_size", type=int, default=5)
     parser.add_argument("--min_next_share", type=float, default=0.01,
@@ -272,10 +274,10 @@ def main():
              + (f" | ONLY THE FIRST {args.max_cases} TEST CASES" if args.max_cases else ""),
              "=" * 100,
              "cand/case   : feasible (activity, resource) candidates per case (transition system, forbidden activities removed),",
-             "              averaged over the cases with at least one candidate; gamma = 0 means no filter.",
-             "pass/case   : candidates per case passing the filter on both KPIs.",
-             "% pass ...  : share of all the candidates with P(beats the no-recommendation baseline) >= gamma on the",
-             "              outcome only, on the time only, and on both (the filter).",
+             "              averaged over the cases with at least one candidate.",
+             "pass/case   : candidates per case passing the filter of step 3 (P_out > gamma OR P_time > gamma).",
+             "% pass ...  : share of all the candidates with P(beats the no-recommendation baseline) > gamma on the",
+             "              outcome, on the time, and passing the filter (either of the two).",
              "front/case  : size of the 2-D Pareto front (outcome, 1 - time) of the surviving candidates.",
              "% rank r    : share of ALL the test cases with a recommendation at rank r, i.e. with at least r",
              "              recommendations (min(k, front size)): the cases simulated at rank r in step 4.",

@@ -71,7 +71,7 @@
         \item \textbf{Pareto Front Generation:} Evaluate and store all optimal non-dominated solutions during the recommendation phase.
         \item \textbf{Predictive uncertainty as a confidence filter:} a candidate enters the
           Pareto front only if it is likely enough to beat the ``no recommendation''
-          baseline on both KPIs; both models are calibrated post-hoc.
+          baseline on at least one KPI; both models are calibrated post-hoc.
     \end{itemize}
 \end{frame}
 
@@ -129,79 +129,140 @@
   \end{itemize}
 \end{frame}
 
+\begin{frame}{Removing the \texttt{W\_} Work Items (BPI12, bpi17)}
+  \small
+  \begin{itemize}
+    \item The BPI12 and BPI17 logs mix three kinds of events: \texttt{A\_} (application
+      states), \texttt{O\_} (offer states) and \texttt{W\_} (work items of the bank's employees).
+    \item All the \texttt{W\_} events are \alert{removed}: the logs keep only the
+      \texttt{A\_} and \texttt{O\_} activities. Only rows are removed: the other events, their
+      attributes and order, and the set of cases are unchanged (no case consists only of
+      \texttt{W\_} events).
+  \end{itemize}
+  \begin{center}\setlength{\tabcolsep}{5pt}
+  \begin{tabular}{lrrrrr}
+    \toprule
+    Dataset & Cases & Events before & \texttt{W\_} events removed & Events after & Activities \\
+    \midrule
+    BPI12        &  4\,685 & 115\,016 & 52\,902 (46.0\%) &  62\,114 & 23 $\rightarrow$ 17 \\
+    bpi17-before & 12\,121 & 184\,506 & 17\,959 (9.7\%)  & 166\,547 & 24 $\rightarrow$ 18 \\
+    bpi17-after  & 14\,066 & 209\,877 & 17\,154 (8.2\%)  & 192\,723 & 24 $\rightarrow$ 18 \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+  \begin{itemize}
+    \item Six \texttt{W\_} activities per dataset. The filtered log is the input of the
+      start-time estimation (next slides), which uses only its completion times.
+  \end{itemize}
+  {\scriptsize Script: \texttt{0\_filtering\_W\_activities.py} $\rightarrow$ \texttt{log\_<case>\_no\_start\_W\_filtered.xes}.}
+\end{frame}
+
 \begin{frame}{Start-Time Estimation: the Technique}
   \footnotesize
-  Chapela-Campa \& Dumas, \textit{Repairing Activity Start Times to Improve Business
-  Process Simulation} (2022), \texttt{pix-framework} implementation:
-  \[
-    \widehat{\text{start}}(e) = \max\bigl(\text{enabled}(e),\ \text{available}(e)\bigr)
-  \]
-  \vspace{-0.5cm}
+  {\scriptsize Vinci et al., \textit{Improving organizational processes in healthcare through
+  simulation-driven resource allocation}, Artif.\ Intell.\ Med.\ 176 (2026), Appendix A ---
+  extending Fracca et al.\ (CAiSE 2022).}
   \begin{itemize}
-    \item \textbf{enabled}$(e)$: end of the \emph{causal} predecessor of $e$ in its case
-      (latest earlier event not concurrent with $e$, per a concurrency oracle).
-    \item \textbf{available}$(e)$: end of the latest earlier event of the \emph{same
-      resource} (one activity at a time).
+    \item One parameter $\alpha(a) \in [0,1]$ per activity $a$; the start of an event $e$ of
+      activity $a$ lies between its \alert{earliest possible start} and its completion:
+      \[
+        t_{\text{start}}(e) = \alpha(a)\, \textit{mintime}(e) + \bigl(1-\alpha(a)\bigr)\, \textit{time}(e),
+        \qquad
+        \textit{mintime}(e) = \max\bigl(\textit{time}(e_{i-1}),\ \textit{time}(e^{r}_{\text{prev}})\bigr)
+      \]
+    \item $e_{i-1}$: previous event of the case; $e^{r}_{\text{prev}}$: previous event of the same
+      resource (one activity at a time). $\alpha = 1$: as soon as possible; $\alpha = 0$: instantaneous.
   \end{itemize}
-  \vspace{0.1cm}
   \centering
-  \begin{tikzpicture}[x=0.92cm,y=0.72cm,font=\scriptsize]
+  \begin{tikzpicture}[x=0.86cm,y=0.62cm,font=\scriptsize]
     \node[anchor=east] at (0,2) {case of $e$};
     \node[anchor=east] at (0,1) {resource of $e$};
     \draw[->] (0,0.35) -- (12.3,0.35) node[anchor=west] {$t$};
-    % predecessor in the case
     \draw[fill=gray!25] (0.4,1.75) rectangle (3.4,2.25);
-    \node at (1.9,2) {causal predecessor};
-    % resource busy on another case
-    \draw[fill=gray!25] (2.2,0.75) rectangle (6.2,1.25);
-    \node at (4.2,1) {busy on another case};
-    % fake part of e (waiting) and estimated part of e
-    \draw[pattern=north east lines, pattern color=Darkcandyapplered!60] (3.4,1.75) rectangle (6.2,2.25);
-    \draw[fill=Darkcandyapplered!75] (6.2,1.75) rectangle (10.4,2.25);
-    \node[white] at (8.3,2) {\textbf{$e$ (estimated)}};
-    % markers
-    \draw[dashed] (3.4,0.35) -- (3.4,2.5);
-    \draw[dashed] (6.2,0.35) -- (6.2,2.5);
-    \draw[dashed] (10.4,0.35) -- (10.4,2.5);
-    \node[below left] at (3.5,0.35) {enabled$(e)$ = fake start};
-    \node[below right] at (6.1,0.35) {available$(e)$ = $\widehat{\text{start}}(e)$};
-    \node[below] at (10.4,0.35) {end$(e)$};
-    % braces
-    \draw[decorate,decoration={brace,amplitude=4pt}] (3.4,2.6) -- (6.2,2.6)
-      node[midway,above=3pt] {waiting (was processing)};
-    \draw[decorate,decoration={brace,amplitude=4pt}] (6.2,2.6) -- (10.4,2.6)
-      node[midway,above=3pt] {processing};
+    \node at (1.9,2) {$e_{i-1}$};
+    \draw[fill=gray!25] (2.2,0.75) rectangle (5.4,1.25);
+    \node at (3.8,1) {$e^{r}_{\text{prev}}$ (another case)};
+    \draw[pattern=north east lines, pattern color=Darkcandyapplered!60] (5.4,1.75) rectangle (7.6,2.25);
+    \draw[fill=Darkcandyapplered!75] (7.6,1.75) rectangle (10.8,2.25);
+    \node[white] at (9.2,2) {\textbf{$e$ (estimated)}};
+    \draw[dashed] (5.4,0.35) -- (5.4,2.5);
+    \draw[dashed] (7.6,0.35) -- (7.6,2.5);
+    \draw[dashed] (10.8,0.35) -- (10.8,2.5);
+    \node[below] at (5.4,0.35) {$\textit{mintime}(e)$};
+    \node[below] at (7.6,0.35) {$t_{\text{start}}(e)$};
+    \node[below] at (10.8,0.35) {$\textit{time}(e)$};
+    \draw[decorate,decoration={brace,amplitude=4pt}] (5.4,2.6) -- (7.6,2.6)
+      node[midway,above=3pt] {waiting};
+    \draw[decorate,decoration={brace,amplitude=4pt}] (7.6,2.6) -- (10.8,2.6)
+      node[midway,above=3pt] {$\alpha(a)\,(\textit{time} - \textit{mintime})$};
   \end{tikzpicture}
 \end{frame}
 
-\begin{frame}{Start-Time Estimation: Configuration}
-  \small
+\begin{frame}{Start-Time Estimation: Searching the $\alpha$}
+  \footnotesize
   \begin{itemize}
-    \item \textbf{Concurrency oracle:} Heuristics-Miner dependency measures
-      (thresholds $0.9$), to find each event's causal predecessor.
-    \item \textbf{Domain knowledge} (loan-application processes):
-      \begin{itemize}
-        \item \texttt{A\_} (application) and \texttt{O\_} (offer) events are state
-          changes recorded by the system $\rightarrow$ \alert{instantaneous}
-          (start $=$ end); only \texttt{W\_} work items get a duration;
-        \item system accounts (\texttt{112} in BPI12, \texttt{User\_1} in BPI17)
-          $\rightarrow$ instantaneous;
-        \item unknown resource \texttt{0} (BPI12) $\rightarrow$ start $=$ enabled
-          time (no availability constraint).
-      \end{itemize}
-    \item Starts that cannot be estimated are filled with the activity's median
-      duration.
+    \item The $\alpha$ are chosen so that a \alert{simulation} of the process reproduces the
+      real log. At every iteration:
+      \begin{enumerate}
+        \item the log is enriched with the start times given by the current $\alpha$;
+        \item the duration distribution of each activity is refitted on it and given to the
+          simulation model;
+        \item a log is simulated (Prosimos);
+        \item for each activity, the error is the \alert{Wasserstein distance} between the real
+          and the simulated \emph{inter-event times} (time between consecutive completions of
+          a case) --- quantities that do not depend on the unknown starts.
+      \end{enumerate}
+    \item \textbf{Search} (Algorithm 1 of the paper): for each activity, $\alpha$ starts in the
+      interval $[0, 1]$; after evaluating both endpoints, every iteration tries the midpoint and
+      moves the endpoint with the larger error to it, so the interval halves towards the
+      smaller error.
+    \item Every activity has its own interval, but all are evaluated in the \emph{same}
+      simulation, so activities influence each other through resources and waiting.
+    \item \textbf{Result:} for each activity, the $\alpha$ with the smallest error among
+      those tried; it gives the start times of the final log.
   \end{itemize}
 \end{frame}
 
-\begin{frame}{Start-Time Estimation: Effect on the Logs}
-
-
+\begin{frame}{Start-Time Estimation: the Simulation Model}
+  \small
   \begin{itemize}
-    \item Most of the former ``processing time'' is actually \alert{waiting}: the
-      simulator can now attribute it to resource availability and calendars.
-    \item The repaired log replaces the original as input of the whole pipeline.
+    \item \textbf{Input:} the log without \texttt{W\_} activities, completion times only.
+      \textbf{BAC} records real starts $\Rightarrow$ left untouched.
+    \item \textbf{Simulation model} (Prosimos: BPMN + parameters), recipe of Fracca et al.\
+      (Sec.~5), discovered from the completion events:
+      \begin{itemize}
+        \item control flow: the \alert{fitness-1 Petri net} used by the simulator
+          (directly-follows), converted to BPMN;
+        \item resource pools: roles of Burattin et al.\ (pm4py);
+        \item calendars: per role, the weekdays and hours with the most completions
+          (covering 95\% of them);
+        \item inter-arrival time: best-fitting distribution of the time between case arrivals;
+        \item branching probabilities of every XOR split, from the log.
+      \end{itemize}
+    \item \textbf{Activity durations:} not discovered here --- refitted at every iteration on
+      the current start times (best fit among fixed, normal, exponential, uniform,
+      log-normal, gamma).
   \end{itemize}
+\end{frame}
+
+\begin{frame}{Start-Time Estimation: Settings}
+  \small
+  \begin{itemize}
+    \item \textbf{Search:} 20 iterations (one simulation each); 10\% extra simulated cases,
+      discarded at the head (warm-up) and at the tail; fixed seed.
+    \item \textbf{Implementation choices:}
+      \begin{itemize}
+        \item the first event of a case stays instantaneous (case arrivals unchanged);
+        \item $e^{r}_{\text{prev}}$ is the latest event of the resource that ended
+          \emph{strictly} before $e$.
+      \end{itemize}
+    \item \textbf{Replaces} the previous estimator (Chapela-Campa \& Dumas,
+      \texttt{pix-framework}), which gave a duration only to the \texttt{W\_} items and kept
+      \texttt{A\_}/\texttt{O\_} instantaneous: without \texttt{W\_} it would leave every event
+      instantaneous.
+    \item The repaired log \texttt{log\_<case>.xes} is the input of the whole pipeline.
+  \end{itemize}
+  {\scriptsize Script: \texttt{0\_estimate\_start\_times\_vinci.py} (code in \texttt{start\_time\_estimator/}).}
 \end{frame}
 
 % =====================================================================
@@ -647,7 +708,7 @@
     \item Each candidate is scored by the two models, by placing it in the
       \texttt{NEXT\_ACTIVITY} / \texttt{NEXT\_RESOURCE} columns of the query instance.
     \item \alert{Confidence filter:} a candidate is kept only if it is likely enough
-      to beat the \emph{no-recommendation} baseline on both KPIs (next slides).
+      to beat the \emph{no-recommendation} baseline on at least one KPI (next slides).
     \item The survivors are compared on \alert{two objectives}, optimised jointly:
       \begin{itemize}
         \item outcome probability;
@@ -753,8 +814,8 @@
 \begin{frame}{Confidence Filter: the Rule}
   \begin{block}{}
     \centering
-    keep candidate $\iff$ $p_{\text{out}} \ge \gamma_{\text{cls}}$ \ \textbf{and} \
-    $p_{\text{time}} \ge \gamma_{\text{reg}}$ \qquad (default $\gamma_{\text{cls}} = \gamma_{\text{reg}} = 0.5$)
+    keep candidate $\iff$ $p_{\text{out}} > \gamma_{\text{cls}}$ \ \textbf{or} \
+    $p_{\text{time}} > \gamma_{\text{reg}}$ \qquad (default $\gamma_{\text{cls}} = \gamma_{\text{reg}} = 0.5$)
   \end{block}
   \vspace{0.1cm}
   \centering
@@ -764,7 +825,7 @@
       node distance=0.35cm]
     \node[stage] (c) {feasible\\\texttt{(activity, resource)}\\candidates};
     \node[stage, right=of c] (s) {score $A$ and $B$\\on every member};
-    \node[stage, fill=Darkcandyapplered!20, right=of s] (f) {filter\\$p_{\text{out}},\,p_{\text{time}} \ge \gamma$};
+    \node[stage, fill=Darkcandyapplered!20, right=of s] (f) {filter\\$p_{\text{out}} > \gamma$ or\\$p_{\text{time}} > \gamma$};
     \node[stage, right=of f] (p) {2-D Pareto front\\(outcome, $1-$time)};
     \node[stage, right=of p] (k) {$k$ diverse picks\\($p$-dispersion)};
     \draw[-{Latex}] (c) -- (s); \draw[-{Latex}] (s) -- (f);
@@ -772,14 +833,15 @@
     \node[below=0.2cm of f, font=\scriptsize, align=center, text=Darkcandyapplered]
       {no survivor $\Rightarrow$ \emph{no confident recommendation}};
   \end{tikzpicture}
-  \small
+  \footnotesize
   \begin{itemize}
     \item Uncertainty is no longer a Pareto axis: it acts as a \alert{gate} before the
       front, which is built on the two KPIs only.
     \item If nothing survives, the case receives \emph{no} recommendation rather than a
       doubtful one: letting the process continue is itself the safe choice.
-    \item $\gamma$ is the minimum required probability of improving on the baseline;
-      raising it makes the recommender more conservative.
+    \item A candidate passes if it is likely enough to improve \alert{at least one} KPI;
+      it may be predicted worse on the other one, and the trade-off is left to the
+      Pareto front. Raising $\gamma$ makes the recommender more conservative.
   \end{itemize}
 \end{frame}
 
@@ -1089,11 +1151,56 @@
 \end{frame}
 
 \begin{frame}{Petri Net Discovery}
-    \begin{itemize}
-        \item For each case study, a process model is mined from the \emph{entire} event log using the \textbf{Split Miner} algorithm.
-        \item \textbf{Hyperparameter tuning:} Split Miner's $(\varepsilon, \eta)$ parameters are optimized with \textbf{Optuna} (Bayesian search), maximizing the \textbf{F-score} -- the harmonic mean of alignment-based fitness and precision.
-        \item The Petri net with the highest F-score is retained as the process model used for the simulator.
-    \end{itemize}
+  \footnotesize
+  \begin{itemize}
+    \item \textbf{Requirement:} every recommendation of the recommender must be
+      \alert{applicable} in the simulation, so the net must replay the whole log
+      (\alert{fitness $= 1$}) --- without collapsing into a flower model (low precision).
+    \item \textbf{Net used:} the \textbf{directly-follows graph} of the \emph{entire} event log,
+      converted into a Petri net (pm4py, ``activity defines place''):
+      \begin{itemize}
+        \item one place per activity, meaning ``the last activity executed was $X$'';
+        \item one transition per step $X \rightarrow Y$ observed in the log, plus start and end.
+      \end{itemize}
+    \item \textbf{Why it guarantees applicability:} after a prefix ending with $X$, the
+      recommender only proposes activities $Y$ that followed a window ending with $X$ in the
+      training log, i.e.\ steps $X \rightarrow Y$ of the graph, always enabled in the place $X$.
+    \item \textbf{Price:} no concurrency and no long-range constraints (only the last activity
+      is remembered) $\Rightarrow$ lower precision than Split Miner.
+    \item Before: \textbf{Split Miner}, $(\varepsilon, \eta)$ tuned with \textbf{Optuna} for the best
+      F-score: fitness $< 1$, many recommendations \alert{unreachable} (83\% of rank 1 on BPI12).
+  \end{itemize}
+  {\scriptsize Script: \texttt{discovery/petri\_net\_discovery\_fitness1.py}.}
+\end{frame}
+
+\begin{frame}{Petri Net Discovery: Candidate Nets}
+  \small
+  Token-based replay on the entire event log. Fit.\ tr.: share of traces replayed with no
+  deviation. The Inductive Miner is run with noise threshold $0$ (fitness $1$ by construction).
+  \begin{center}\setlength{\tabcolsep}{4pt}
+  \begin{tabular}{l rrr rr rr}
+    \toprule
+     & \multicolumn{3}{c}{Split Miner (best F-score)} & \multicolumn{2}{c}{Inductive Miner}
+     & \multicolumn{2}{c}{\alert{Directly-follows}} \\
+    \cmidrule(lr){2-4}\cmidrule(lr){5-6}\cmidrule(lr){7-8}
+    Dataset & Fitness & Fit.\ tr. & Prec. & Fitness & Prec. & Fitness & Prec. \\
+    \midrule
+    BAC          & 0.992 & 90.3\% & 0.911 & 1.000 & 0.504 & 1.000 & 0.866 \\
+    BPI12        & 0.953 &  3.8\% & 0.678 & 1.000 & 0.226 & 1.000 & 0.431 \\
+    bpi17-before & 0.982 & 68.3\% & 0.835 & 1.000 & 0.275 & 1.000 & 0.466 \\
+    bpi17-after  & 0.974 & 57.6\% & 0.849 & 1.000 & 0.266 & 1.000 & 0.486 \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+  \scriptsize
+  \begin{itemize}
+    \item \textbf{Inductive Miner:} handles concurrency in principle, but to reach fitness 1 on
+      these loop-rich logs it falls back to flower-like blocks (many silent transitions, e.g.\
+      54 against 7 on BAC): \alert{precision about halved} with respect to the directly-follows net.
+    \item \textbf{Directly-follows:} fitness 1 on every dataset (100\% of the traces), the
+      highest precision among the fitness-1 nets; used by the simulator.
+      Source: \texttt{discovery/petri\_net\_quality.csv} (Inductive Miner: separate test).
+  \end{itemize}
 \end{frame}
 
 \begin{frame}{Simulator Calibration}

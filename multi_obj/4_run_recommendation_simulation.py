@@ -50,7 +50,11 @@ END_DATE_NAME = "time:timestamp"
 ACTIVITY_COLUMN_NAME = "concept:name"
 RESOURCE_COLUMN_NAME = "org:resource"
 
-PNML_OVERRIDES = {}
+# Petri nets in case_studies/<case_study>/discovery_output/ (see discovery/):
+#   fitness1   -> petri_net_fitness1_<cs>.pnml   (discovery/petri_net_discovery_fitness1.py): replays the whole log,
+#                 so every recommendation of step 3 can be applied -- default since 2026-10-09
+#   bestfscore -> petri_net_bestfscore_<cs>.pnml (discovery/petri_net_discovery.py): Split Miner, best F-score
+PETRI_NETS = ("fitness1", "bestfscore")
 
 
 def parse_args():
@@ -84,6 +88,12 @@ def parse_args():
         "--force_rediscover", action="store_true",
         help="Ignore any cached simulation parameters and re-run discovery from "
              "the event log, overwriting the cache.",
+    )
+    parser.add_argument(
+        "--petri_net", choices=PETRI_NETS, default="fitness1",
+        help="Petri net simulated: 'fitness1' (default; petri_net_fitness1_<case_study>.pnml, replays the whole log "
+             "so every recommendation can be applied) or 'bestfscore' (petri_net_bestfscore_<case_study>.pnml, the "
+             "Split Miner net with the best F-score used before 2026-10-09). Each net has its own parameters cache.",
     )
     parser.add_argument(
         "--legacy_routing", action="store_true",
@@ -142,7 +152,8 @@ def _find_xes_log(case_dir: Path, case_study: str) -> Path:
     )
 
 
-def setup_simulator(case_dir: Path, case_study: str, force_rediscover: bool, legacy_routing: bool = False) -> SimulatorEngine:
+def setup_simulator(case_dir: Path, case_study: str, force_rediscover: bool, legacy_routing: bool = False,
+                    petri_net: str = "fitness1") -> SimulatorEngine:
     """Load the Petri net for this case study and build a SimulatorEngine for it, loading its simulation parameters from cache when possible, discovering them from the .xes log otherwise.
 
     discover_from_eventlog is the expensive step (resource discovery, feature building/alignment, transition weights, calendars, execution/waiting/arrival time discovery -- typically 3-5 minutes). Since it depends only on the log (not on n_sim, case_ids, or the method being simulated), the discovered parameters are cached to disk the first time and reused on every subsequent run; when the cache hits, the .xes log isn't even parsed.
@@ -154,24 +165,25 @@ def setup_simulator(case_dir: Path, case_study: str, force_rediscover: bool, leg
         legacy_routing: if True, simulate with the previous routing (per-transition weights and
             per-resource waiting times) instead of "time first, then route". A cache without the
             time-first models is otherwise rediscovered.
+        petri_net: which net of discovery_output/ to simulate, "fitness1" (default) or "bestfscore"
+            (see PETRI_NETS). The parameters cache is named after the net, so the two never mix.
 
     Returns:
         A ready-to-use SimulatorEngine.
     """
-    if case_study in PNML_OVERRIDES:
-        pnml_filename = PNML_OVERRIDES[case_study]
-        pnml_path = case_dir / "discovery_output" / pnml_filename
-        params_cache_path = case_dir / "discovery_output" / f"simulator_params_{case_study}_{Path(pnml_filename).stem}.json"
-    else:
-        pnml_path = case_dir / "discovery_output" / f"{case_study}_best_petri_net.pnml"
-        params_cache_path = case_dir / "discovery_output" / f"simulator_params_{case_study}.json"
+    if petri_net not in PETRI_NETS:
+        raise ValueError(f"petri_net must be one of {PETRI_NETS}, got {petri_net!r}")
+    net_stem = f"petri_net_{petri_net}_{case_study}"
+    pnml_path = case_dir / "discovery_output" / f"{net_stem}.pnml"
+    params_cache_path = case_dir / "discovery_output" / f"simulator_params_{case_study}_{net_stem}.json"
 
     if not pnml_path.exists():
+        script = "petri_net_discovery_fitness1.py" if petri_net == "fitness1" else "petri_net_discovery.py"
         raise FileNotFoundError(
             f"No Petri net found at {pnml_path}. This script only discovers "
             f"the *simulation parameters* (from the .xes log, cached to "
             f"{params_cache_path.name}) -- it does not mine the Petri net "
-            f"structure itself. Generate the .pnml first (see discovery/)."
+            f"structure itself. Generate the .pnml first: python discovery/{script}"
         )
     print(f"Loading Petri net: {pnml_path}")
     net, im, fm = pm4py.read_pnml(str(pnml_path))
@@ -712,7 +724,7 @@ def main():
         write_simulation_summary(case_dir, args.case_study, args.k, summary_path)
         return
 
-    sim_engine = setup_simulator(case_dir, args.case_study, args.force_rediscover, args.legacy_routing)
+    sim_engine = setup_simulator(case_dir, args.case_study, args.force_rediscover, args.legacy_routing, args.petri_net)
     clean_prev_log, case_ids = load_inputs(case_dir, args.case_study, args.case_ids)
     split_time = load_split_time(case_dir)
     resume, running, busy = None, None, None

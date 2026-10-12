@@ -50,3 +50,6 @@ __MACOSX/
 
 # Derived transition-system caches (rebuilt on demand from train_data.csv)
 multi_obj/case_studies/*/cache/
+
+# CatBoost training logs (written automatically when allow_writing_files=True)
+catboost_info/

@@ -1,0 +1,644 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<pnml>
+  <net id="" type="http://www.pnml.org/version-2009/grammar/pnmlcoremodel">
+    <name>
+      <text></text>
+    </name>
+    <page id="n0">
+      <place id="Back-Office Adjustment Requested">
+        <name>
+          <text>Back-Office Adjustment Requested</text>
+        </name>
+      </place>
+      <place id="sink">
+        <name>
+          <text>sink</text>
+        </name>
+      </place>
+      <place id="Pending Request for Network Information">
+        <name>
+          <text>Pending Request for Network Information</text>
+        </name>
+      </place>
+      <place id="Pending Request for acquittance of heirs">
+        <name>
+          <text>Pending Request for acquittance of heirs</text>
+        </name>
+      </place>
+      <place id="Request created">
+        <name>
+          <text>Request created</text>
+        </name>
+      </place>
+      <place id="Service closure Request with BO responsibility">
+        <name>
+          <text>Service closure Request with BO responsibility</text>
+        </name>
+      </place>
+      <place id="Service closure Request with network responsibility">
+        <name>
+          <text>Service closure Request with network responsibility</text>
+        </name>
+      </place>
+      <place id="source">
+        <name>
+          <text>source</text>
+        </name>
+        <initialMarking>
+          <text>1</text>
+        </initialMarking>
+      </place>
+      <place id="Authorization Requested">
+        <name>
+          <text>Authorization Requested</text>
+        </name>
+      </place>
+      <place id="Evaluating Request (NO registered letter)">
+        <name>
+          <text>Evaluating Request (NO registered letter)</text>
+        </name>
+      </place>
+      <place id="Evaluating Request (WITH registered letter)">
+        <name>
+          <text>Evaluating Request (WITH registered letter)</text>
+        </name>
+      </place>
+      <place id="Network Adjustment Requested">
+        <name>
+          <text>Network Adjustment Requested</text>
+        </name>
+      </place>
+      <place id="Pending Liquidation Request">
+        <name>
+          <text>Pending Liquidation Request</text>
+        </name>
+      </place>
+      <place id="Pending Request for Reservation Closure">
+        <name>
+          <text>Pending Request for Reservation Closure</text>
+        </name>
+      </place>
+      <place id="Request completed with account closure">
+        <name>
+          <text>Request completed with account closure</text>
+        </name>
+      </place>
+      <place id="Request completed with customer recovery">
+        <name>
+          <text>Request completed with customer recovery</text>
+        </name>
+      </place>
+      <place id="Request deleted">
+        <name>
+          <text>Request deleted</text>
+        </name>
+      </place>
+      <transition id="Request created_1">
+        <name>
+          <text>Request created</text>
+        </name>
+      </transition>
+      <transition id="Request deleted_3">
+        <name>
+          <text>Request deleted</text>
+        </name>
+      </transition>
+      <transition id="Request deleted_13">
+        <name>
+          <text>Request deleted_13</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="2f296858-177f-41dc-a21f-c89f1af08f0f"/>
+      </transition>
+      <transition id="Service closure Request with BO responsibility_28">
+        <name>
+          <text>Service closure Request with BO responsibility</text>
+        </name>
+      </transition>
+      <transition id="Service closure Request with BO responsibility_36">
+        <name>
+          <text>Service closure Request with BO responsibility</text>
+        </name>
+      </transition>
+      <transition id="Pending Request for acquittance of heirs_40">
+        <name>
+          <text>Pending Request for acquittance of heirs</text>
+        </name>
+      </transition>
+      <transition id="Request completed with customer recovery_45">
+        <name>
+          <text>Request completed with customer recovery</text>
+        </name>
+      </transition>
+      <transition id="Pending Request for Reservation Closure_49">
+        <name>
+          <text>Pending Request for Reservation Closure</text>
+        </name>
+      </transition>
+      <transition id="Evaluating Request (NO registered letter)_52">
+        <name>
+          <text>Evaluating Request (NO registered letter)</text>
+        </name>
+      </transition>
+      <transition id="Evaluating Request (WITH registered letter)_53">
+        <name>
+          <text>Evaluating Request (WITH registered letter)</text>
+        </name>
+      </transition>
+      <transition id="Service closure Request with BO responsibility_63">
+        <name>
+          <text>Service closure Request with BO responsibility</text>
+        </name>
+      </transition>
+      <transition id="Request created_66">
+        <name>
+          <text>Request created</text>
+        </name>
+      </transition>
+      <transition id="Evaluating Request (NO registered letter)_11">
+        <name>
+          <text>Evaluating Request (NO registered letter)_11</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="420d8025-5381-48d0-815e-0ff19ab59e20"/>
+      </transition>
+      <transition id="Evaluating Request (WITH registered letter)_16">
+        <name>
+          <text>Evaluating Request (WITH registered letter)_16</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="5841d2b6-2eb7-4a26-9442-49c3c91a2f20"/>
+      </transition>
+      <transition id="Pending Request for acquittance of heirs_24">
+        <name>
+          <text>Pending Request for acquittance of heirs</text>
+        </name>
+      </transition>
+      <transition id="Request completed with customer recovery_27">
+        <name>
+          <text>Request completed with customer recovery</text>
+        </name>
+      </transition>
+      <transition id="Request completed with account closure_41">
+        <name>
+          <text>Request completed with account closure</text>
+        </name>
+      </transition>
+      <transition id="Request completed with account closure_44">
+        <name>
+          <text>Request completed with account closure</text>
+        </name>
+      </transition>
+      <transition id="Request completed with customer recovery_61">
+        <name>
+          <text>Request completed with customer recovery</text>
+        </name>
+      </transition>
+      <transition id="Pending Request for Network Information_65">
+        <name>
+          <text>Pending Request for Network Information</text>
+        </name>
+      </transition>
+      <transition id="Authorization Requested_72">
+        <name>
+          <text>Authorization Requested</text>
+        </name>
+      </transition>
+      <transition id="Pending Request for Reservation Closure_75">
+        <name>
+          <text>Pending Request for Reservation Closure</text>
+        </name>
+      </transition>
+      <transition id="Evaluating Request (NO registered letter)_56">
+        <name>
+          <text>Evaluating Request (NO registered letter)</text>
+        </name>
+      </transition>
+      <transition id="Service closure Request with BO responsibility_4">
+        <name>
+          <text>Service closure Request with BO responsibility</text>
+        </name>
+      </transition>
+      <transition id="Authorization Requested_6">
+        <name>
+          <text>Authorization Requested</text>
+        </name>
+      </transition>
+      <transition id="Pending Request for Reservation Closure_8">
+        <name>
+          <text>Pending Request for Reservation Closure</text>
+        </name>
+      </transition>
+      <transition id="Service closure Request with network responsibility_20">
+        <name>
+          <text>Service closure Request with network responsibility</text>
+        </name>
+      </transition>
+      <transition id="Pending Request for Network Information_22">
+        <name>
+          <text>Pending Request for Network Information</text>
+        </name>
+      </transition>
+      <transition id="Pending Liquidation Request_42">
+        <name>
+          <text>Pending Liquidation Request</text>
+        </name>
+      </transition>
+      <transition id="Pending Request for Reservation Closure_43">
+        <name>
+          <text>Pending Request for Reservation Closure</text>
+        </name>
+      </transition>
+      <transition id="Pending Request for Network Information_59">
+        <name>
+          <text>Pending Request for Network Information</text>
+        </name>
+      </transition>
+      <transition id="Request completed with account closure_51">
+        <name>
+          <text>Request completed with account closure</text>
+        </name>
+      </transition>
+      <transition id="Request deleted_62">
+        <name>
+          <text>Request deleted</text>
+        </name>
+      </transition>
+      <transition id="Evaluating Request (WITH registered letter)_73">
+        <name>
+          <text>Evaluating Request (WITH registered letter)</text>
+        </name>
+      </transition>
+      <transition id="Request completed with account closure_10">
+        <name>
+          <text>Request completed with account closure_10</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="d94af30a-3c06-4402-a654-19421a15ccf2"/>
+      </transition>
+      <transition id="Request created_15">
+        <name>
+          <text>Request created_15</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="43fc7857-5a91-4d43-9bb4-e4f34744c01a"/>
+      </transition>
+      <transition id="Request completed with account closure_25">
+        <name>
+          <text>Request completed with account closure</text>
+        </name>
+      </transition>
+      <transition id="Network Adjustment Requested_67">
+        <name>
+          <text>Network Adjustment Requested</text>
+        </name>
+      </transition>
+      <transition id="Pending Request for acquittance of heirs_70">
+        <name>
+          <text>Pending Request for acquittance of heirs</text>
+        </name>
+      </transition>
+      <transition id="Pending Request for Reservation Closure_60">
+        <name>
+          <text>Pending Request for Reservation Closure</text>
+        </name>
+      </transition>
+      <transition id="Request completed with account closure_71">
+        <name>
+          <text>Request completed with account closure</text>
+        </name>
+      </transition>
+      <transition id="Evaluating Request (NO registered letter)_5">
+        <name>
+          <text>Evaluating Request (NO registered letter)</text>
+        </name>
+      </transition>
+      <transition id="Pending Request for Reservation Closure_26">
+        <name>
+          <text>Pending Request for Reservation Closure</text>
+        </name>
+      </transition>
+      <transition id="Service closure Request with BO responsibility_32">
+        <name>
+          <text>Service closure Request with BO responsibility</text>
+        </name>
+      </transition>
+      <transition id="Pending Liquidation Request_68">
+        <name>
+          <text>Pending Liquidation Request</text>
+        </name>
+      </transition>
+      <transition id="Pending Request for Reservation Closure_69">
+        <name>
+          <text>Pending Request for Reservation Closure</text>
+        </name>
+      </transition>
+      <transition id="Authorization Requested_55">
+        <name>
+          <text>Authorization Requested</text>
+        </name>
+      </transition>
+      <transition id="Pending Request for Reservation Closure_18">
+        <name>
+          <text>Pending Request for Reservation Closure</text>
+        </name>
+      </transition>
+      <transition id="Pending Request for Reservation Closure_23">
+        <name>
+          <text>Pending Request for Reservation Closure</text>
+        </name>
+      </transition>
+      <transition id="Service closure Request with network responsibility_33">
+        <name>
+          <text>Service closure Request with network responsibility</text>
+        </name>
+      </transition>
+      <transition id="Back-Office Adjustment Requested_37">
+        <name>
+          <text>Back-Office Adjustment Requested</text>
+        </name>
+      </transition>
+      <transition id="Pending Liquidation Request_48">
+        <name>
+          <text>Pending Liquidation Request</text>
+        </name>
+      </transition>
+      <transition id="Evaluating Request (WITH registered letter)_57">
+        <name>
+          <text>Evaluating Request (WITH registered letter)</text>
+        </name>
+      </transition>
+      <transition id="Service closure Request with BO responsibility_76">
+        <name>
+          <text>Service closure Request with BO responsibility</text>
+        </name>
+      </transition>
+      <transition id="Network Adjustment Requested_74">
+        <name>
+          <text>Network Adjustment Requested</text>
+        </name>
+      </transition>
+      <transition id="Service closure Request with network responsibility_64">
+        <name>
+          <text>Service closure Request with network responsibility</text>
+        </name>
+      </transition>
+      <transition id="Pending Request for Network Information_9">
+        <name>
+          <text>Pending Request for Network Information</text>
+        </name>
+      </transition>
+      <transition id="Network Adjustment Requested_17">
+        <name>
+          <text>Network Adjustment Requested</text>
+        </name>
+      </transition>
+      <transition id="Service closure Request with BO responsibility_19">
+        <name>
+          <text>Service closure Request with BO responsibility</text>
+        </name>
+      </transition>
+      <transition id="Pending Request for Reservation Closure_30">
+        <name>
+          <text>Pending Request for Reservation Closure</text>
+        </name>
+      </transition>
+      <transition id="Authorization Requested_34">
+        <name>
+          <text>Authorization Requested</text>
+        </name>
+      </transition>
+      <transition id="Pending Liquidation Request_38">
+        <name>
+          <text>Pending Liquidation Request</text>
+        </name>
+      </transition>
+      <transition id="Back-Office Adjustment Requested_47">
+        <name>
+          <text>Back-Office Adjustment Requested</text>
+        </name>
+      </transition>
+      <transition id="Request completed with account closure_50">
+        <name>
+          <text>Request completed with account closure</text>
+        </name>
+      </transition>
+      <transition id="Pending Request for Network Information_54">
+        <name>
+          <text>Pending Request for Network Information</text>
+        </name>
+      </transition>
+      <transition id="Network Adjustment Requested_58">
+        <name>
+          <text>Network Adjustment Requested</text>
+        </name>
+      </transition>
+      <transition id="Service closure Request with network responsibility_2">
+        <name>
+          <text>Service closure Request with network responsibility</text>
+        </name>
+      </transition>
+      <transition id="Evaluating Request (WITH registered letter)_7">
+        <name>
+          <text>Evaluating Request (WITH registered letter)</text>
+        </name>
+      </transition>
+      <transition id="Request completed with customer recovery_12">
+        <name>
+          <text>Request completed with customer recovery_12</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="e0c775a4-5d3a-484a-9116-cca0970140c2"/>
+      </transition>
+      <transition id="Pending Request for Network Information_14">
+        <name>
+          <text>Pending Request for Network Information_14</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="c02e7c10-164f-4f86-9917-88998cd2fb88"/>
+      </transition>
+      <transition id="Network Adjustment Requested_21">
+        <name>
+          <text>Network Adjustment Requested</text>
+        </name>
+      </transition>
+      <transition id="Service closure Request with network responsibility_29">
+        <name>
+          <text>Service closure Request with network responsibility</text>
+        </name>
+      </transition>
+      <transition id="Request completed with customer recovery_31">
+        <name>
+          <text>Request completed with customer recovery</text>
+        </name>
+      </transition>
+      <transition id="Pending Request for Reservation Closure_35">
+        <name>
+          <text>Pending Request for Reservation Closure</text>
+        </name>
+      </transition>
+      <transition id="Pending Request for Network Information_39">
+        <name>
+          <text>Pending Request for Network Information</text>
+        </name>
+      </transition>
+      <transition id="Request deleted_46">
+        <name>
+          <text>Request deleted</text>
+        </name>
+      </transition>
+      <arc id="1445900445184" source="Back-Office Adjustment Requested" target="Request completed with account closure_25"/>
+      <arc id="1445900446720" source="Request completed with customer recovery_31" target="Request completed with customer recovery"/>
+      <arc id="1445900449792" source="Request completed with account closure_44" target="Request completed with account closure"/>
+      <arc id="1445978638336" source="Request completed with customer recovery_61" target="Request completed with customer recovery"/>
+      <arc id="1445978639872" source="Service closure Request with BO responsibility" target="Network Adjustment Requested_67"/>
+      <arc id="1445900444176" source="Request created" target="Request created_15"/>
+      <arc id="1445900436496" source="Evaluating Request (WITH registered letter)" target="Evaluating Request (WITH registered letter)_16"/>
+      <arc id="1445978640400" source="Service closure Request with BO responsibility" target="Pending Request for Reservation Closure_69"/>
+      <arc id="1445900437024" source="Request completed with customer recovery_12" target="sink"/>
+      <arc id="1445900450848" source="Pending Request for Reservation Closure" target="Pending Liquidation Request_48"/>
+      <arc id="1445900440624" source="Authorization Requested" target="Network Adjustment Requested_17"/>
+      <arc id="1445900446768" source="Evaluating Request (WITH registered letter)" target="Request completed with customer recovery_31"/>
+      <arc id="1445900448304" source="Pending Liquidation Request" target="Pending Liquidation Request_38"/>
+      <arc id="1445900451376" source="Pending Request for Reservation Closure" target="Request completed with account closure_50"/>
+      <arc id="1445978636848" source="Request completed with customer recovery" target="Pending Request for Network Information_54"/>
+      <arc id="1445900438080" source="Request completed with account closure_10" target="sink"/>
+      <arc id="1445900436544" source="Request deleted_13" target="sink"/>
+      <arc id="1445900439616" source="Service closure Request with BO responsibility_19" target="Service closure Request with BO responsibility"/>
+      <arc id="1445900447296" source="Service closure Request with network responsibility_33" target="Service closure Request with network responsibility"/>
+      <arc id="1445900450368" source="Pending Request for Network Information" target="Request deleted_46"/>
+      <arc id="1445978637376" source="Evaluating Request (WITH registered letter)_57" target="Evaluating Request (WITH registered letter)"/>
+      <arc id="1445978638912" source="Request created" target="Service closure Request with BO responsibility_63"/>
+      <arc id="1445978641984" source="Service closure Request with BO responsibility_76" target="Service closure Request with BO responsibility"/>
+      <arc id="1445900440144" source="source" target="Service closure Request with BO responsibility_4"/>
+      <arc id="1445900438608" source="source" target="Pending Request for Reservation Closure_8"/>
+      <arc id="1445900446288" source="Pending Request for Reservation Closure_30" target="Pending Request for Reservation Closure"/>
+      <arc id="1445900447824" source="Network Adjustment Requested" target="Service closure Request with BO responsibility_36"/>
+      <arc id="1445978636368" source="Request completed with customer recovery" target="Evaluating Request (WITH registered letter)_53"/>
+      <arc id="1445978637904" source="Network Adjustment Requested_58" target="Network Adjustment Requested"/>
+      <arc id="1445900439136" source="Evaluating Request (NO registered letter)_5" target="Evaluating Request (NO registered letter)"/>
+      <arc id="1445900437600" source="Authorization Requested_6" target="Authorization Requested"/>
+      <arc id="1445900449888" source="Pending Request for Network Information" target="Request completed with account closure_44"/>
+      <arc id="1445900451424" source="Request completed with account closure_51" target="Request completed with account closure"/>
+      <arc id="1445978636896" source="Authorization Requested_55" target="Authorization Requested"/>
+      <arc id="1445978638432" source="Request created" target="Request completed with customer recovery_61"/>
+      <arc id="1445978641504" source="Network Adjustment Requested_74" target="Network Adjustment Requested"/>
+      <arc id="1445900444272" source="Back-Office Adjustment Requested" target="Pending Request for acquittance of heirs_24"/>
+      <arc id="1445900445808" source="Service closure Request with BO responsibility_28" target="Service closure Request with BO responsibility"/>
+      <arc id="1445900448880" source="Pending Request for acquittance of heirs_40" target="Pending Request for acquittance of heirs"/>
+      <arc id="1445900440192" source="Network Adjustment Requested_17" target="Network Adjustment Requested"/>
+      <arc id="1445900444800" source="Evaluating Request (NO registered letter)" target="Pending Request for Reservation Closure_26"/>
+      <arc id="1445900449408" source="Pending Liquidation Request_42" target="Pending Liquidation Request"/>
+      <arc id="1445978639488" source="Pending Request for Network Information_65" target="Pending Request for Network Information"/>
+      <arc id="1445978641024" source="Authorization Requested_72" target="Authorization Requested"/>
+      <arc id="1445900445328" source="Pending Request for Reservation Closure_26" target="Pending Request for Reservation Closure"/>
+      <arc id="1445900446864" source="Evaluating Request (WITH registered letter)" target="Service closure Request with BO responsibility_32"/>
+      <arc id="1445978640016" source="Service closure Request with BO responsibility" target="Pending Liquidation Request_68"/>
+      <arc id="1445900438176" source="Pending Request for Reservation Closure_8" target="Pending Request for Reservation Closure"/>
+      <arc id="1445900436640" source="Evaluating Request (NO registered letter)" target="Evaluating Request (NO registered letter)_11"/>
+      <arc id="1445900441248" source="Pending Request for Network Information_14" target="sink"/>
+      <arc id="1445900439712" source="Service closure Request with network responsibility_20" target="Service closure Request with network responsibility"/>
+      <arc id="1445978637472" source="Request created" target="Evaluating Request (WITH registered letter)_57"/>
+      <arc id="1445978640544" source="Pending Request for acquittance of heirs_70" target="Pending Request for acquittance of heirs"/>
+      <arc id="1445978642080" source="Service closure Request with network responsibility" target="Service closure Request with BO responsibility_76"/>
+      <arc id="1445900438704" source="Evaluating Request (WITH registered letter)_7" target="Evaluating Request (WITH registered letter)"/>
+      <arc id="1445900446384" source="Evaluating Request (WITH registered letter)" target="Pending Request for Reservation Closure_30"/>
+      <arc id="1445900450992" source="Pending Request for Reservation Closure" target="Pending Request for Reservation Closure_49"/>
+      <arc id="1445900440768" source="Request created_15" target="sink"/>
+      <arc id="1445900448448" source="Pending Liquidation Request" target="Pending Request for Network Information_39"/>
+      <arc id="1445900451520" source="Pending Request for acquittance of heirs" target="Request completed with account closure_51"/>
+      <arc id="1445978636992" source="Request created" target="Authorization Requested_55"/>
+      <arc id="1445978641600" source="Service closure Request with network responsibility" target="Network Adjustment Requested_74"/>
+      <arc id="1445900438224" source="source" target="Pending Request for Network Information_9"/>
+      <arc id="1445900444368" source="Network Adjustment Requested_21" target="Network Adjustment Requested"/>
+      <arc id="1445900445904" source="Evaluating Request (NO registered letter)" target="Service closure Request with BO responsibility_28"/>
+      <arc id="1445900447440" source="Authorization Requested_34" target="Authorization Requested"/>
+      <arc id="1445900448976" source="Pending Liquidation Request" target="Pending Request for acquittance of heirs_40"/>
+      <arc id="1445900450512" source="Back-Office Adjustment Requested_47" target="Back-Office Adjustment Requested"/>
+      <arc id="1445978639056" source="Request created" target="Service closure Request with network responsibility_64"/>
+      <arc id="1445900438752" source="source" target="Evaluating Request (WITH registered letter)_7"/>
+      <arc id="1445900447968" source="Service closure Request with BO responsibility_36" target="Service closure Request with BO responsibility"/>
+      <arc id="1445978638048" source="Pending Request for Network Information_59" target="Pending Request for Network Information"/>
+      <arc id="1445978641120" source="Service closure Request with network responsibility" target="Authorization Requested_72"/>
+      <arc id="1445900440816" source="Request deleted_3" target="Request deleted"/>
+      <arc id="1445900439280" source="Authorization Requested" target="Pending Request for Reservation Closure_18"/>
+      <arc id="1445900445424" source="Back-Office Adjustment Requested" target="Pending Request for Network Information_22"/>
+      <arc id="1445900450032" source="Request completed with customer recovery_45" target="Request completed with customer recovery"/>
+      <arc id="1445978638576" source="Request created" target="Request deleted_62"/>
+      <arc id="1445900438272" source="Request completed with account closure" target="Request completed with account closure_10"/>
+      <arc id="1445900449024" source="Request completed with account closure_41" target="Request completed with account closure"/>
+      <arc id="1445978640640" source="Service closure Request with BO responsibility" target="Pending Request for acquittance of heirs_70"/>
+      <arc id="1445900438800" source="source" target="Service closure Request with network responsibility_2"/>
+      <arc id="1445900437264" source="Evaluating Request (NO registered letter)_11" target="sink"/>
+      <arc id="1445900449552" source="Pending Request for Reservation Closure_43" target="Pending Request for Reservation Closure"/>
+      <arc id="1445978639632" source="Request created_66" target="Request created"/>
+      <arc id="1445900439328" source="Authorization Requested" target="Service closure Request with BO responsibility_19"/>
+      <arc id="1445900437792" source="Back-Office Adjustment Requested" target="Network Adjustment Requested_21"/>
+      <arc id="1445900447008" source="Evaluating Request (WITH registered letter)" target="Service closure Request with network responsibility_33"/>
+      <arc id="1445978640160" source="Pending Liquidation Request_68" target="Pending Liquidation Request"/>
+      <arc id="1445900444464" source="Back-Office Adjustment Requested" target="Pending Request for Reservation Closure_23"/>
+      <arc id="1445900447536" source="Network Adjustment Requested" target="Authorization Requested_34"/>
+      <arc id="1445900450608" source="Pending Request for Reservation Closure" target="Back-Office Adjustment Requested_47"/>
+      <arc id="1445978637616" source="Request created" target="Network Adjustment Requested_58"/>
+      <arc id="1445900437312" source="Request completed with customer recovery" target="Request completed with customer recovery_12"/>
+      <arc id="1445900448064" source="Back-Office Adjustment Requested_37" target="Back-Office Adjustment Requested"/>
+      <arc id="1445900451136" source="Pending Request for Reservation Closure_49" target="Pending Request for Reservation Closure"/>
+      <arc id="1445978636608" source="Evaluating Request (WITH registered letter)_53" target="Evaluating Request (WITH registered letter)"/>
+      <arc id="1445900448592" source="Pending Liquidation Request_38" target="Pending Liquidation Request"/>
+      <arc id="1445900450128" source="Pending Request for Network Information" target="Request completed with customer recovery_45"/>
+      <arc id="1445900451664" source="Request completed with customer recovery" target="Evaluating Request (NO registered letter)_52"/>
+      <arc id="1445978637136" source="Request created" target="Evaluating Request (NO registered letter)_56"/>
+      <arc id="1445978641744" source="Pending Request for Reservation Closure_75" target="Pending Request for Reservation Closure"/>
+      <arc id="1445900436832" source="Pending Request for Network Information" target="Pending Request for Network Information_14"/>
+      <arc id="1445900444512" source="Pending Request for acquittance of heirs_24" target="Pending Request for acquittance of heirs"/>
+      <arc id="1445900446048" source="Service closure Request with network responsibility_29" target="Service closure Request with network responsibility"/>
+      <arc id="1445900447584" source="Pending Request for Reservation Closure_35" target="Pending Request for Reservation Closure"/>
+      <arc id="1445900449120" source="Pending Liquidation Request" target="Request completed with account closure_41"/>
+      <arc id="1445978639200" source="Request deleted" target="Pending Request for Network Information_65"/>
+      <arc id="1445900445040" source="Request completed with account closure_25" target="Request completed with account closure"/>
+      <arc id="1445900449648" source="Pending Request for Network Information" target="Pending Request for Reservation Closure_43"/>
+      <arc id="1445978638192" source="Pending Request for Reservation Closure_60" target="Pending Request for Reservation Closure"/>
+      <arc id="1445978639728" source="Request deleted" target="Request created_66"/>
+      <arc id="1445978641264" source="Evaluating Request (WITH registered letter)_73" target="Evaluating Request (WITH registered letter)"/>
+      <arc id="1445713602432" source="Request created_1" target="Request created"/>
+      <arc id="1445900436352" source="Request deleted" target="Request deleted_13"/>
+      <arc id="1445900445568" source="Request completed with customer recovery_27" target="Request completed with customer recovery"/>
+      <arc id="1445978638720" source="Request deleted_62" target="Request deleted"/>
+      <arc id="1445900444560" source="source" target="Request deleted_3"/>
+      <arc id="1445900438416" source="source" target="Authorization Requested_6"/>
+      <arc id="1445978640784" source="Request completed with account closure_71" target="Request completed with account closure"/>
+      <arc id="1445900437408" source="Evaluating Request (WITH registered letter)_16" target="sink"/>
+      <arc id="1445900445088" source="Pending Request for Network Information_22" target="Pending Request for Network Information"/>
+      <arc id="1445900448160" source="Pending Liquidation Request" target="Back-Office Adjustment Requested_37"/>
+      <arc id="1445978639776" source="Network Adjustment Requested_67" target="Network Adjustment Requested"/>
+      <arc id="1445900439472" source="Pending Request for Reservation Closure_18" target="Pending Request for Reservation Closure"/>
+      <arc id="1445900447152" source="Service closure Request with BO responsibility_32" target="Service closure Request with BO responsibility"/>
+      <arc id="1445978640304" source="Pending Request for Reservation Closure_69" target="Pending Request for Reservation Closure"/>
+      <arc id="1445978641840" source="Service closure Request with network responsibility" target="Pending Request for Reservation Closure_75"/>
+      <arc id="1445715680704" source="source" target="Request created_1"/>
+      <arc id="1445900440000" source="Authorization Requested" target="Service closure Request with network responsibility_20"/>
+      <arc id="1445900446144" source="Evaluating Request (NO registered letter)" target="Service closure Request with network responsibility_29"/>
+      <arc id="1445900447680" source="Network Adjustment Requested" target="Pending Request for Reservation Closure_35"/>
+      <arc id="1445900450752" source="Pending Liquidation Request_48" target="Pending Liquidation Request"/>
+      <arc id="1445978637760" source="Request created" target="Pending Request for Network Information_59"/>
+      <arc id="1445900438992" source="Service closure Request with network responsibility_2" target="Service closure Request with network responsibility"/>
+      <arc id="1445900440528" source="Service closure Request with BO responsibility_4" target="Service closure Request with BO responsibility"/>
+      <arc id="1445900451280" source="Request completed with account closure_50" target="Request completed with account closure"/>
+      <arc id="1445978636752" source="Pending Request for Network Information_54" target="Pending Request for Network Information"/>
+      <arc id="1445978638288" source="Request created" target="Pending Request for Reservation Closure_60"/>
+      <arc id="1445978641360" source="Service closure Request with network responsibility" target="Evaluating Request (WITH registered letter)_73"/>
+      <arc id="1445900437984" source="Pending Request for Network Information_9" target="Pending Request for Network Information"/>
+      <arc id="1445900445664" source="Evaluating Request (NO registered letter)" target="Request completed with customer recovery_27"/>
+      <arc id="1445900448736" source="Pending Request for Network Information_39" target="Pending Request for Network Information"/>
+      <arc id="1445900450272" source="Request deleted_46" target="Request deleted"/>
+      <arc id="1445900451808" source="Evaluating Request (NO registered letter)_52" target="Evaluating Request (NO registered letter)"/>
+      <arc id="1445978637280" source="Evaluating Request (NO registered letter)_56" target="Evaluating Request (NO registered letter)"/>
+      <arc id="1445978638816" source="Service closure Request with BO responsibility_63" target="Service closure Request with BO responsibility"/>
+      <arc id="1445900438512" source="source" target="Evaluating Request (NO registered letter)_5"/>
+      <arc id="1445900444656" source="Pending Request for Reservation Closure_23" target="Pending Request for Reservation Closure"/>
+      <arc id="1445900449264" source="Pending Request for Network Information" target="Pending Liquidation Request_42"/>
+      <arc id="1445978639344" source="Service closure Request with network responsibility_64" target="Service closure Request with network responsibility"/>
+      <arc id="1445978640880" source="Service closure Request with BO responsibility" target="Request completed with account closure_71"/>
+    </page>
+    <finalmarkings>
+      <marking>
+        <place idref="sink">
+          <text>1</text>
+        </place>
+      </marking>
+    </finalmarkings>
+  </net>
+</pnml>

@@ -141,12 +141,10 @@ def parse_args():
                         )
     parser.add_argument("--pnml_path", type=str, default=None,
                         help="Override the Petri net used for discovery+simulation (default: "
-                             "case_studies/<source>/discovery_output/<source>_best_petri_net.pnml). "
-                             "Use this to try a manually-patched net (e.g. "
-                             "BPI12_best_petri_net_patched.pnml) without touching the original -- "
-                             "the simulation-parameters cache filename includes the pnml's stem, so "
-                             "a patched net's discovery is cached separately and never collides with "
-                             "the original net's cache.")
+                             "case_studies/<source>/discovery_output/petri_net_fitness1_<source>.pnml, the "
+                             "net step 4 simulates; e.g. petri_net_bestfscore_<source>.pnml for the Split Miner "
+                             "net used before 2026-10-09). The simulation-parameters cache filename includes "
+                             "the pnml's stem, so every net's discovery is cached separately.")
     return parser.parse_args()
 
 
@@ -167,7 +165,7 @@ def load_simulator(source_dir: Path, source_case_study: str, force_rediscover: b
                    max_depth_tree: int = 0, pnml_path: str | None = None) -> SimulatorEngine:
     """Rebuild the SimulatorEngine for the source case study from its Petri net and its
     (cached, or freshly discovered) simulation parameters. Mirrors 4_run_recommendation_simulation.py's
-    setup_simulator, minus the PNML_OVERRIDES special-casing (unused for BPI12).
+    setup_simulator (same default net, petri_net_fitness1_<source>.pnml, and cache naming).
 
     max_depth_tree selects the discovery mode (see parse_args' help) and the cache filename, so
     a depth>0 (context-dependent, "rules") discovery never overwrites the depth-0 cache the rest
@@ -179,17 +177,14 @@ def load_simulator(source_dir: Path, source_case_study: str, force_rediscover: b
         resolved_pnml_path = Path(pnml_path)
         if not resolved_pnml_path.is_absolute():
             resolved_pnml_path = source_dir / "discovery_output" / resolved_pnml_path
-        net_tag = f"_{resolved_pnml_path.stem}"
     else:
-        resolved_pnml_path = source_dir / "discovery_output" / f"{source_case_study}_best_petri_net.pnml"
-        net_tag = ""
+        # the same net step 4 simulates by default (see 4_run_recommendation_simulation.PETRI_NETS)
+        resolved_pnml_path = source_dir / "discovery_output" / f"petri_net_fitness1_{source_case_study}.pnml"
     pnml_path = resolved_pnml_path
 
+    # the cache is named after the net (and the depth), as in step 4: two nets never share their parameters
     depth_tag = f"_depth{max_depth_tree}" if max_depth_tree > 0 else ""
-    if net_tag or depth_tag:
-        params_cache_path = source_dir / "discovery_output" / f"simulator_params_{source_case_study}{net_tag}{depth_tag}.json"
-    else:
-        params_cache_path = source_dir / "discovery_output" / f"simulator_params_{source_case_study}.json"
+    params_cache_path = source_dir / "discovery_output" / f"simulator_params_{source_case_study}_{pnml_path.stem}{depth_tag}.json"
 
     if not pnml_path.exists():
         raise FileNotFoundError(

@@ -1,0 +1,20 @@
+{
+  "A_Accepted": 0.46875,
+  "A_Cancelled": 1.0,
+  "A_Complete": 0.0,
+  "A_Concept": 0.25,
+  "A_Create Application": 0.0,
+  "A_Denied": 0.46875,
+  "A_Incomplete": 0.46875,
+  "A_Pending": 0.0,
+  "A_Submitted": 0.0,
+  "A_Validating": 1.0,
+  "O_Accepted": 0.46875,
+  "O_Cancelled": 0.0,
+  "O_Create Offer": 0.4375,
+  "O_Created": 0.0,
+  "O_Refused": 0.0,
+  "O_Returned": 0.125,
+  "O_Sent (mail and online)": 0.0,
+  "O_Sent (online only)": 0.125
+}

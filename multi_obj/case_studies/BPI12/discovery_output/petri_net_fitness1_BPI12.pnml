@@ -1,0 +1,322 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<pnml>
+  <net id="" type="http://www.pnml.org/version-2009/grammar/pnmlcoremodel">
+    <name>
+      <text></text>
+    </name>
+    <page id="n0">
+      <place id="A_APPROVED">
+        <name>
+          <text>A_APPROVED</text>
+        </name>
+      </place>
+      <place id="O_ACCEPTED">
+        <name>
+          <text>O_ACCEPTED</text>
+        </name>
+      </place>
+      <place id="O_SENT">
+        <name>
+          <text>O_SENT</text>
+        </name>
+      </place>
+      <place id="A_DECLINED">
+        <name>
+          <text>A_DECLINED</text>
+        </name>
+      </place>
+      <place id="O_CREATED">
+        <name>
+          <text>O_CREATED</text>
+        </name>
+      </place>
+      <place id="A_ACCEPTED">
+        <name>
+          <text>A_ACCEPTED</text>
+        </name>
+      </place>
+      <place id="A_FINALIZED">
+        <name>
+          <text>A_FINALIZED</text>
+        </name>
+      </place>
+      <place id="A_CANCELLED">
+        <name>
+          <text>A_CANCELLED</text>
+        </name>
+      </place>
+      <place id="A_PARTLYSUBMITTED">
+        <name>
+          <text>A_PARTLYSUBMITTED</text>
+        </name>
+      </place>
+      <place id="O_CANCELLED">
+        <name>
+          <text>O_CANCELLED</text>
+        </name>
+      </place>
+      <place id="O_SELECTED">
+        <name>
+          <text>O_SELECTED</text>
+        </name>
+      </place>
+      <place id="A_PREACCEPTED">
+        <name>
+          <text>A_PREACCEPTED</text>
+        </name>
+      </place>
+      <place id="O_SENT_BACK">
+        <name>
+          <text>O_SENT_BACK</text>
+        </name>
+      </place>
+      <place id="A_REGISTERED">
+        <name>
+          <text>A_REGISTERED</text>
+        </name>
+      </place>
+      <place id="source">
+        <name>
+          <text>source</text>
+        </name>
+        <initialMarking>
+          <text>1</text>
+        </initialMarking>
+      </place>
+      <place id="sink">
+        <name>
+          <text>sink</text>
+        </name>
+      </place>
+      <place id="A_ACTIVATED">
+        <name>
+          <text>A_ACTIVATED</text>
+        </name>
+      </place>
+      <place id="A_SUBMITTED">
+        <name>
+          <text>A_SUBMITTED</text>
+        </name>
+      </place>
+      <place id="O_DECLINED">
+        <name>
+          <text>O_DECLINED</text>
+        </name>
+      </place>
+      <transition id="O_DECLINED_3">
+        <name>
+          <text>O_DECLINED_3</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="c34fe3f9-6478-46dc-b7f1-14cbde941448"/>
+      </transition>
+      <transition id="A_PREACCEPTED_11">
+        <name>
+          <text>A_PREACCEPTED</text>
+        </name>
+      </transition>
+      <transition id="A_APPROVED_15">
+        <name>
+          <text>A_APPROVED</text>
+        </name>
+      </transition>
+      <transition id="O_SENT_18">
+        <name>
+          <text>O_SENT</text>
+        </name>
+      </transition>
+      <transition id="O_ACCEPTED_23">
+        <name>
+          <text>O_ACCEPTED</text>
+        </name>
+      </transition>
+      <transition id="A_ACTIVATED_2">
+        <name>
+          <text>A_ACTIVATED_2</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="129c1951-ca6b-4f18-abe0-5db1e5340b03"/>
+      </transition>
+      <transition id="O_CREATED_10">
+        <name>
+          <text>O_CREATED</text>
+        </name>
+      </transition>
+      <transition id="A_CANCELLED_16">
+        <name>
+          <text>A_CANCELLED</text>
+        </name>
+      </transition>
+      <transition id="O_CANCELLED_24">
+        <name>
+          <text>O_CANCELLED</text>
+        </name>
+      </transition>
+      <transition id="A_SUBMITTED_1">
+        <name>
+          <text>A_SUBMITTED</text>
+        </name>
+      </transition>
+      <transition id="O_DECLINED_9">
+        <name>
+          <text>O_DECLINED</text>
+        </name>
+      </transition>
+      <transition id="O_SELECTED_17">
+        <name>
+          <text>O_SELECTED</text>
+        </name>
+      </transition>
+      <transition id="O_SENT_BACK_25">
+        <name>
+          <text>O_SENT_BACK</text>
+        </name>
+      </transition>
+      <transition id="O_CANCELLED_8">
+        <name>
+          <text>O_CANCELLED</text>
+        </name>
+      </transition>
+      <transition id="A_CANCELLED_26">
+        <name>
+          <text>A_CANCELLED</text>
+        </name>
+      </transition>
+      <transition id="A_REGISTERED_7">
+        <name>
+          <text>A_REGISTERED</text>
+        </name>
+      </transition>
+      <transition id="A_FINALIZED_19">
+        <name>
+          <text>A_FINALIZED</text>
+        </name>
+      </transition>
+      <transition id="A_DECLINED_27">
+        <name>
+          <text>A_DECLINED</text>
+        </name>
+      </transition>
+      <transition id="O_SELECTED_6">
+        <name>
+          <text>O_SELECTED</text>
+        </name>
+      </transition>
+      <transition id="O_CREATED_20">
+        <name>
+          <text>O_CREATED</text>
+        </name>
+      </transition>
+      <transition id="O_ACCEPTED_28">
+        <name>
+          <text>O_ACCEPTED</text>
+        </name>
+      </transition>
+      <transition id="A_CANCELLED_5">
+        <name>
+          <text>A_CANCELLED_5</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="42bb2f4c-30ee-49d2-8652-c3da978814c0"/>
+      </transition>
+      <transition id="A_ACTIVATED_13">
+        <name>
+          <text>A_ACTIVATED</text>
+        </name>
+      </transition>
+      <transition id="A_CANCELLED_21">
+        <name>
+          <text>A_CANCELLED</text>
+        </name>
+      </transition>
+      <transition id="O_CANCELLED_29">
+        <name>
+          <text>O_CANCELLED</text>
+        </name>
+      </transition>
+      <transition id="O_CANCELLED_4">
+        <name>
+          <text>O_CANCELLED_4</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="83df948b-d3c9-4ab4-8579-947703c53c95"/>
+      </transition>
+      <transition id="A_ACCEPTED_12">
+        <name>
+          <text>A_ACCEPTED</text>
+        </name>
+      </transition>
+      <transition id="A_PARTLYSUBMITTED_14">
+        <name>
+          <text>A_PARTLYSUBMITTED</text>
+        </name>
+      </transition>
+      <transition id="A_DECLINED_22">
+        <name>
+          <text>A_DECLINED</text>
+        </name>
+      </transition>
+      <arc id="2766232829056" source="A_CANCELLED_5" target="sink"/>
+      <arc id="2766232828672" source="A_CANCELLED" target="O_CANCELLED_8"/>
+      <arc id="2766232827136" source="A_CANCELLED_16" target="A_CANCELLED"/>
+      <arc id="2766232825216" source="O_CANCELLED_24" target="O_CANCELLED"/>
+      <arc id="2766232824832" source="O_SENT_BACK" target="A_CANCELLED_26"/>
+      <arc id="2766232829200" source="O_CANCELLED_4" target="sink"/>
+      <arc id="2766232828816" source="A_APPROVED" target="A_REGISTERED_7"/>
+      <arc id="2766232828048" source="A_ACCEPTED_12" target="A_ACCEPTED"/>
+      <arc id="2766232826896" source="O_SELECTED_17" target="O_SELECTED"/>
+      <arc id="2766232826512" source="O_SELECTED" target="A_FINALIZED_19"/>
+      <arc id="2766232824976" source="O_SENT_BACK_25" target="O_SENT_BACK"/>
+      <arc id="2766232824592" source="O_SENT_BACK" target="A_DECLINED_27"/>
+      <arc id="2766232829344" source="O_DECLINED_3" target="sink"/>
+      <arc id="2766232828960" source="A_ACCEPTED" target="O_SELECTED_6"/>
+      <arc id="2766232828192" source="A_PREACCEPTED_11" target="A_PREACCEPTED"/>
+      <arc id="2766232826656" source="O_SENT_18" target="O_SENT"/>
+      <arc id="2766232826272" source="O_SELECTED" target="O_CREATED_20"/>
+      <arc id="2766232824736" source="A_CANCELLED_26" target="A_CANCELLED"/>
+      <arc id="2766232824352" source="O_SENT_BACK" target="O_ACCEPTED_28"/>
+      <arc id="2766232829872" source="source" target="A_SUBMITTED_1"/>
+      <arc id="2766232829488" source="A_ACTIVATED_2" target="sink"/>
+      <arc id="2766232829104" source="A_CANCELLED" target="A_CANCELLED_5"/>
+      <arc id="2766232828336" source="O_CREATED_10" target="O_CREATED"/>
+      <arc id="2766232827952" source="A_REGISTERED" target="A_ACTIVATED_13"/>
+      <arc id="2766232826800" source="O_CREATED" target="O_SENT_18"/>
+      <arc id="2766232826416" source="A_FINALIZED_19" target="A_FINALIZED"/>
+      <arc id="2766232826032" source="O_SENT" target="A_CANCELLED_21"/>
+      <arc id="2766232824496" source="A_DECLINED_27" target="A_DECLINED"/>
+      <arc id="2766232824112" source="O_SENT_BACK" target="O_CANCELLED_29"/>
+      <arc id="2766232829248" source="O_CANCELLED" target="O_CANCELLED_4"/>
+      <arc id="2766232828480" source="O_DECLINED_9" target="O_DECLINED"/>
+      <arc id="2766232828096" source="A_PREACCEPTED" target="A_ACCEPTED_12"/>
+      <arc id="2766232827712" source="A_SUBMITTED" target="A_PARTLYSUBMITTED_14"/>
+      <arc id="2766232826176" source="O_CREATED_20" target="O_CREATED"/>
+      <arc id="2766232825792" source="O_SENT" target="A_DECLINED_22"/>
+      <arc id="2766232824256" source="O_ACCEPTED_28" target="O_ACCEPTED"/>
+      <arc id="2766232829392" source="O_DECLINED" target="O_DECLINED_3"/>
+      <arc id="2766232828624" source="O_CANCELLED_8" target="O_CANCELLED"/>
+      <arc id="2766232828240" source="A_PARTLYSUBMITTED" target="A_PREACCEPTED_11"/>
+      <arc id="2766232827856" source="A_ACTIVATED_13" target="A_ACTIVATED"/>
+      <arc id="2766232827472" source="O_ACCEPTED" target="A_APPROVED_15"/>
+      <arc id="2766232825936" source="A_CANCELLED_21" target="A_CANCELLED"/>
+      <arc id="2766232825552" source="O_SENT" target="O_ACCEPTED_23"/>
+      <arc id="2766232824016" source="O_CANCELLED_29" target="O_CANCELLED"/>
+      <arc id="2766232829536" source="A_ACTIVATED" target="A_ACTIVATED_2"/>
+      <arc id="2766232829920" source="A_SUBMITTED_1" target="A_SUBMITTED"/>
+      <arc id="2766232828768" source="A_REGISTERED_7" target="A_REGISTERED"/>
+      <arc id="2766232828384" source="A_FINALIZED" target="O_CREATED_10"/>
+      <arc id="2766232827616" source="A_PARTLYSUBMITTED_14" target="A_PARTLYSUBMITTED"/>
+      <arc id="2766232827232" source="O_CANCELLED" target="A_CANCELLED_16"/>
+      <arc id="2766232825696" source="A_DECLINED_22" target="A_DECLINED"/>
+      <arc id="2766232825312" source="O_SENT" target="O_CANCELLED_24"/>
+      <arc id="2766232828912" source="O_SELECTED_6" target="O_SELECTED"/>
+      <arc id="2766232828528" source="A_DECLINED" target="O_DECLINED_9"/>
+      <arc id="2766232827376" source="A_APPROVED_15" target="A_APPROVED"/>
+      <arc id="2766232826992" source="O_CANCELLED" target="O_SELECTED_17"/>
+      <arc id="2766232825456" source="O_ACCEPTED_23" target="O_ACCEPTED"/>
+      <arc id="2766232825072" source="O_SENT" target="O_SENT_BACK_25"/>
+    </page>
+    <finalmarkings>
+      <marking>
+        <place idref="sink">
+          <text>1</text>
+        </place>
+      </marking>
+    </finalmarkings>
+  </net>
+</pnml>

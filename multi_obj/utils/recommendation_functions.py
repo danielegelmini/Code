@@ -685,19 +685,21 @@ def _filter_by_confidence(
 ) -> np.ndarray:
     """
     Boolean mask selecting the candidates whose probability of beating the
-    baseline meets both confidence thresholds.
+    baseline exceeds the confidence threshold on AT LEAST ONE KPI (outcome OR
+    time): a candidate likely to improve one KPI is kept even if predicted worse
+    on the other, and the trade-off is left to the Pareto front.
 
     Args:
         prob_outcome_better, prob_time_better: outputs of
             _compute_confidence_probabilities(), aligned with the same
             candidate_pairs.
-        gamma_cls: minimum required prob_outcome_better.
-        gamma_reg: minimum required prob_time_better.
+        gamma_cls: threshold prob_outcome_better must exceed (strictly).
+        gamma_reg: threshold prob_time_better must exceed (strictly).
 
     Returns:
         np.ndarray of bool.
     """
-    return (np.asarray(prob_outcome_better) >= gamma_cls) & (np.asarray(prob_time_better) >= gamma_reg)
+    return (np.asarray(prob_outcome_better) > gamma_cls) | (np.asarray(prob_time_better) > gamma_reg)
 
 # ---------------------------------------------------------------------------
 # Exhaustive research

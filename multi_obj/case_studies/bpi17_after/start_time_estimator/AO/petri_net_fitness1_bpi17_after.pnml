@@ -1,0 +1,734 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<pnml>
+  <net id="" type="http://www.pnml.org/version-2009/grammar/pnmlcoremodel">
+    <name>
+      <text></text>
+    </name>
+    <page id="n0">
+      <place id="A_Submitted">
+        <name>
+          <text>A_Submitted</text>
+        </name>
+      </place>
+      <place id="O_Accepted">
+        <name>
+          <text>O_Accepted</text>
+        </name>
+      </place>
+      <place id="O_Sent (online only)">
+        <name>
+          <text>O_Sent (online only)</text>
+        </name>
+      </place>
+      <place id="A_Cancelled">
+        <name>
+          <text>A_Cancelled</text>
+        </name>
+      </place>
+      <place id="O_Created">
+        <name>
+          <text>O_Created</text>
+        </name>
+      </place>
+      <place id="sink">
+        <name>
+          <text>sink</text>
+        </name>
+      </place>
+      <place id="A_Concept">
+        <name>
+          <text>A_Concept</text>
+        </name>
+      </place>
+      <place id="A_Create Application">
+        <name>
+          <text>A_Create Application</text>
+        </name>
+      </place>
+      <place id="A_Validating">
+        <name>
+          <text>A_Validating</text>
+        </name>
+      </place>
+      <place id="O_Cancelled">
+        <name>
+          <text>O_Cancelled</text>
+        </name>
+      </place>
+      <place id="O_Returned">
+        <name>
+          <text>O_Returned</text>
+        </name>
+      </place>
+      <place id="source">
+        <name>
+          <text>source</text>
+        </name>
+        <initialMarking>
+          <text>1</text>
+        </initialMarking>
+      </place>
+      <place id="A_Denied">
+        <name>
+          <text>A_Denied</text>
+        </name>
+      </place>
+      <place id="O_Sent (mail and online)">
+        <name>
+          <text>O_Sent (mail and online)</text>
+        </name>
+      </place>
+      <place id="A_Complete">
+        <name>
+          <text>A_Complete</text>
+        </name>
+      </place>
+      <place id="A_Pending">
+        <name>
+          <text>A_Pending</text>
+        </name>
+      </place>
+      <place id="O_Create Offer">
+        <name>
+          <text>O_Create Offer</text>
+        </name>
+      </place>
+      <place id="O_Refused">
+        <name>
+          <text>O_Refused</text>
+        </name>
+      </place>
+      <place id="A_Accepted">
+        <name>
+          <text>A_Accepted</text>
+        </name>
+      </place>
+      <place id="A_Incomplete">
+        <name>
+          <text>A_Incomplete</text>
+        </name>
+      </place>
+      <transition id="O_Refused_3">
+        <name>
+          <text>O_Refused_3</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="a35a46b3-27b0-4515-a770-82392120a21f"/>
+      </transition>
+      <transition id="A_Denied_20">
+        <name>
+          <text>A_Denied</text>
+        </name>
+      </transition>
+      <transition id="A_Incomplete_33">
+        <name>
+          <text>A_Incomplete</text>
+        </name>
+      </transition>
+      <transition id="O_Cancelled_29">
+        <name>
+          <text>O_Cancelled</text>
+        </name>
+      </transition>
+      <transition id="A_Validating_34">
+        <name>
+          <text>A_Validating</text>
+        </name>
+      </transition>
+      <transition id="A_Incomplete_71">
+        <name>
+          <text>A_Incomplete</text>
+        </name>
+      </transition>
+      <transition id="A_Denied_80">
+        <name>
+          <text>A_Denied</text>
+        </name>
+      </transition>
+      <transition id="O_Created_49">
+        <name>
+          <text>O_Created</text>
+        </name>
+      </transition>
+      <transition id="A_Incomplete_81">
+        <name>
+          <text>A_Incomplete</text>
+        </name>
+      </transition>
+      <transition id="A_Cancelled_60">
+        <name>
+          <text>A_Cancelled</text>
+        </name>
+      </transition>
+      <transition id="A_Concept_16">
+        <name>
+          <text>A_Concept</text>
+        </name>
+      </transition>
+      <transition id="A_Incomplete_21">
+        <name>
+          <text>A_Incomplete</text>
+        </name>
+      </transition>
+      <transition id="O_Returned_26">
+        <name>
+          <text>O_Returned</text>
+        </name>
+      </transition>
+      <transition id="O_Sent (online only)_28">
+        <name>
+          <text>O_Sent (online only)</text>
+        </name>
+      </transition>
+      <transition id="A_Denied_70">
+        <name>
+          <text>A_Denied</text>
+        </name>
+      </transition>
+      <transition id="A_Cancelled_50">
+        <name>
+          <text>A_Cancelled</text>
+        </name>
+      </transition>
+      <transition id="A_Pending_4">
+        <name>
+          <text>A_Pending_4</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="624a5958-7f76-455e-93ea-4442e3c75cfa"/>
+      </transition>
+      <transition id="A_Denied_6">
+        <name>
+          <text>A_Denied_6</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="5f77c419-846d-4d84-ad59-2a2ae705a066"/>
+      </transition>
+      <transition id="O_Accepted_73">
+        <name>
+          <text>O_Accepted</text>
+        </name>
+      </transition>
+      <transition id="A_Denied_58">
+        <name>
+          <text>A_Denied</text>
+        </name>
+      </transition>
+      <transition id="A_Validating_63">
+        <name>
+          <text>A_Validating</text>
+        </name>
+      </transition>
+      <transition id="O_Sent (online only)_87">
+        <name>
+          <text>O_Sent (online only)</text>
+        </name>
+      </transition>
+      <transition id="O_Cancelled_8">
+        <name>
+          <text>O_Cancelled</text>
+        </name>
+      </transition>
+      <transition id="A_Validating_22">
+        <name>
+          <text>A_Validating</text>
+        </name>
+      </transition>
+      <transition id="O_Accepted_35">
+        <name>
+          <text>O_Accepted</text>
+        </name>
+      </transition>
+      <transition id="A_Incomplete_62">
+        <name>
+          <text>A_Incomplete</text>
+        </name>
+      </transition>
+      <transition id="A_Create Application_1">
+        <name>
+          <text>A_Create Application</text>
+        </name>
+      </transition>
+      <transition id="O_Create Offer_25">
+        <name>
+          <text>O_Create Offer</text>
+        </name>
+      </transition>
+      <transition id="A_Cancelled_68">
+        <name>
+          <text>A_Cancelled</text>
+        </name>
+      </transition>
+      <transition id="O_Create Offer_45">
+        <name>
+          <text>O_Create Offer</text>
+        </name>
+      </transition>
+      <transition id="A_Denied_41">
+        <name>
+          <text>A_Denied</text>
+        </name>
+      </transition>
+      <transition id="O_Sent (mail and online)_27">
+        <name>
+          <text>O_Sent (mail and online)</text>
+        </name>
+      </transition>
+      <transition id="A_Denied_51">
+        <name>
+          <text>A_Denied</text>
+        </name>
+      </transition>
+      <transition id="A_Complete_79">
+        <name>
+          <text>A_Complete</text>
+        </name>
+      </transition>
+      <transition id="A_Submitted_17">
+        <name>
+          <text>A_Submitted</text>
+        </name>
+      </transition>
+      <transition id="O_Cancelled_44">
+        <name>
+          <text>O_Cancelled</text>
+        </name>
+      </transition>
+      <transition id="O_Sent (online only)_48">
+        <name>
+          <text>O_Sent (online only)</text>
+        </name>
+      </transition>
+      <transition id="O_Returned_76">
+        <name>
+          <text>O_Returned</text>
+        </name>
+      </transition>
+      <transition id="O_Create Offer_85">
+        <name>
+          <text>O_Create Offer</text>
+        </name>
+      </transition>
+      <transition id="O_Cancelled_2">
+        <name>
+          <text>O_Cancelled_2</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="537f1466-2bf1-4bfd-a7ed-5b08d933fa2a"/>
+      </transition>
+      <transition id="A_Cancelled_9">
+        <name>
+          <text>A_Cancelled</text>
+        </name>
+      </transition>
+      <transition id="A_Denied_32">
+        <name>
+          <text>A_Denied</text>
+        </name>
+      </transition>
+      <transition id="O_Accepted_64">
+        <name>
+          <text>O_Accepted</text>
+        </name>
+      </transition>
+      <transition id="O_Sent (mail and online)_77">
+        <name>
+          <text>O_Sent (mail and online)</text>
+        </name>
+      </transition>
+      <transition id="O_Cancelled_54">
+        <name>
+          <text>O_Cancelled</text>
+        </name>
+      </transition>
+      <transition id="A_Validating_82">
+        <name>
+          <text>A_Validating</text>
+        </name>
+      </transition>
+      <transition id="A_Incomplete_42">
+        <name>
+          <text>A_Incomplete</text>
+        </name>
+      </transition>
+      <transition id="O_Returned_46">
+        <name>
+          <text>O_Returned</text>
+        </name>
+      </transition>
+      <transition id="O_Returned_67">
+        <name>
+          <text>O_Returned</text>
+        </name>
+      </transition>
+      <transition id="A_Accepted_15">
+        <name>
+          <text>A_Accepted</text>
+        </name>
+      </transition>
+      <transition id="O_Sent (online only)_57">
+        <name>
+          <text>O_Sent (online only)</text>
+        </name>
+      </transition>
+      <transition id="A_Complete_69">
+        <name>
+          <text>A_Complete</text>
+        </name>
+      </transition>
+      <transition id="O_Create Offer_55">
+        <name>
+          <text>O_Create Offer</text>
+        </name>
+      </transition>
+      <transition id="O_Sent (mail and online)_14">
+        <name>
+          <text>O_Sent (mail and online)</text>
+        </name>
+      </transition>
+      <transition id="O_Cancelled_24">
+        <name>
+          <text>O_Cancelled</text>
+        </name>
+      </transition>
+      <transition id="A_Cancelled_40">
+        <name>
+          <text>A_Cancelled</text>
+        </name>
+      </transition>
+      <transition id="O_Returned_86">
+        <name>
+          <text>O_Returned</text>
+        </name>
+      </transition>
+      <transition id="A_Cancelled_78">
+        <name>
+          <text>A_Cancelled</text>
+        </name>
+      </transition>
+      <transition id="A_Validating_43">
+        <name>
+          <text>A_Validating</text>
+        </name>
+      </transition>
+      <transition id="O_Sent (mail and online)_47">
+        <name>
+          <text>O_Sent (mail and online)</text>
+        </name>
+      </transition>
+      <transition id="A_Denied_61">
+        <name>
+          <text>A_Denied</text>
+        </name>
+      </transition>
+      <transition id="O_Create Offer_75">
+        <name>
+          <text>O_Create Offer</text>
+        </name>
+      </transition>
+      <transition id="O_Cancelled_84">
+        <name>
+          <text>O_Cancelled</text>
+        </name>
+      </transition>
+      <transition id="O_Create Offer_13">
+        <name>
+          <text>O_Create Offer</text>
+        </name>
+      </transition>
+      <transition id="A_Concept_30">
+        <name>
+          <text>A_Concept</text>
+        </name>
+      </transition>
+      <transition id="O_Create Offer_7">
+        <name>
+          <text>O_Create Offer</text>
+        </name>
+      </transition>
+      <transition id="A_Cancelled_19">
+        <name>
+          <text>A_Cancelled</text>
+        </name>
+      </transition>
+      <transition id="O_Returned_38">
+        <name>
+          <text>O_Returned</text>
+        </name>
+      </transition>
+      <transition id="O_Sent (mail and online)_56">
+        <name>
+          <text>O_Sent (mail and online)</text>
+        </name>
+      </transition>
+      <transition id="O_Create Offer_66">
+        <name>
+          <text>O_Create Offer</text>
+        </name>
+      </transition>
+      <transition id="A_Validating_53">
+        <name>
+          <text>A_Validating</text>
+        </name>
+      </transition>
+      <transition id="O_Cancelled_12">
+        <name>
+          <text>O_Cancelled</text>
+        </name>
+      </transition>
+      <transition id="O_Accepted_23">
+        <name>
+          <text>O_Accepted</text>
+        </name>
+      </transition>
+      <transition id="A_Cancelled_31">
+        <name>
+          <text>A_Cancelled</text>
+        </name>
+      </transition>
+      <transition id="A_Denied_10">
+        <name>
+          <text>A_Denied</text>
+        </name>
+      </transition>
+      <transition id="O_Create Offer_37">
+        <name>
+          <text>O_Create Offer</text>
+        </name>
+      </transition>
+      <transition id="O_Cancelled_74">
+        <name>
+          <text>O_Cancelled</text>
+        </name>
+      </transition>
+      <transition id="A_Validating_11">
+        <name>
+          <text>A_Validating</text>
+        </name>
+      </transition>
+      <transition id="A_Pending_39">
+        <name>
+          <text>A_Pending</text>
+        </name>
+      </transition>
+      <transition id="A_Incomplete_52">
+        <name>
+          <text>A_Incomplete</text>
+        </name>
+      </transition>
+      <transition id="O_Cancelled_36">
+        <name>
+          <text>O_Cancelled</text>
+        </name>
+      </transition>
+      <transition id="O_Refused_18">
+        <name>
+          <text>O_Refused</text>
+        </name>
+      </transition>
+      <transition id="O_Refused_59">
+        <name>
+          <text>O_Refused</text>
+        </name>
+      </transition>
+      <transition id="O_Cancelled_65">
+        <name>
+          <text>O_Cancelled</text>
+        </name>
+      </transition>
+      <transition id="O_Accepted_83">
+        <name>
+          <text>O_Accepted</text>
+        </name>
+      </transition>
+      <transition id="A_Cancelled_5">
+        <name>
+          <text>A_Cancelled_5</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="4017fc33-2a0e-4c0d-a144-3e63d7c1f2bb"/>
+      </transition>
+      <transition id="A_Validating_72">
+        <name>
+          <text>A_Validating</text>
+        </name>
+      </transition>
+      <arc id="2181634455552" source="A_Incomplete" target="A_Incomplete_21"/>
+      <arc id="2181634493952" source="O_Cancelled" target="A_Incomplete_42"/>
+      <arc id="2181634500096" source="O_Refused_59" target="O_Refused"/>
+      <arc id="2181634504704" source="O_Accepted_73" target="O_Accepted"/>
+      <arc id="2181634523648" source="A_Validating_82" target="A_Validating"/>
+      <arc id="2181634446864" source="A_Cancelled" target="A_Cancelled_5"/>
+      <arc id="2181634456080" source="A_Incomplete" target="O_Accepted_23"/>
+      <arc id="2181634447392" source="A_Denied" target="A_Denied_6"/>
+      <arc id="2181634455072" source="A_Create Application" target="A_Submitted_17"/>
+      <arc id="2181634504224" source="A_Validating_72" target="A_Validating"/>
+      <arc id="2181634444848" source="A_Denied_10" target="A_Denied"/>
+      <arc id="2181634441776" source="A_Validating_22" target="A_Validating"/>
+      <arc id="2181634492464" source="O_Create Offer_37" target="O_Create Offer"/>
+      <arc id="2181634498608" source="O_Created" target="O_Create Offer_55"/>
+      <arc id="2181634501680" source="O_Accepted_64" target="O_Accepted"/>
+      <arc id="2181634504752" source="O_Sent (mail and online)" target="O_Cancelled_74"/>
+      <arc id="2181634523696" source="O_Sent (online only)" target="O_Accepted_83"/>
+      <arc id="2181634448448" source="A_Concept" target="A_Accepted_15"/>
+      <arc id="2181634456128" source="O_Accepted_23" target="O_Accepted"/>
+      <arc id="2181634491456" source="A_Validating_34" target="A_Validating"/>
+      <arc id="2181634497600" source="O_Created" target="A_Incomplete_52"/>
+      <arc id="2181634524224" source="O_Sent (online only)" target="O_Create Offer_85"/>
+      <arc id="2181634491984" source="O_Accepted_35" target="O_Accepted"/>
+      <arc id="2181634445904" source="A_Create Application_1" target="A_Create Application"/>
+      <arc id="2181634444368" source="A_Accepted" target="O_Create Offer_7"/>
+      <arc id="2181631211088" source="O_Sent (online only)_28" target="O_Sent (online only)"/>
+      <arc id="2181634446432" source="A_Pending_4" target="sink"/>
+      <arc id="2181634454112" source="A_Complete" target="A_Validating_11"/>
+      <arc id="2181634457184" source="O_Returned_26" target="O_Returned"/>
+      <arc id="2181634497120" source="A_Cancelled_50" target="A_Cancelled"/>
+      <arc id="2181634500192" source="O_Returned" target="A_Cancelled_60"/>
+      <arc id="2181634501728" source="O_Returned" target="O_Cancelled_65"/>
+      <arc id="2181634531424" source="O_Sent (online only)" target="A_Incomplete_81"/>
+      <arc id="2181634523744" source="O_Accepted_83" target="O_Accepted"/>
+      <arc id="2181634443888" source="A_Cancelled" target="O_Cancelled_8"/>
+      <arc id="2181634447488" source="A_Complete" target="O_Sent (mail and online)_14"/>
+      <arc id="2181634492032" source="A_Validating" target="O_Cancelled_36"/>
+      <arc id="2181634501248" source="A_Validating_63" target="A_Validating"/>
+      <arc id="2181634532480" source="O_Sent (online only)" target="A_Denied_80"/>
+      <arc id="2181634523264" source="A_Incomplete_81" target="A_Incomplete"/>
+      <arc id="2181634524800" source="O_Returned_86" target="O_Returned"/>
+      <arc id="2181634454160" source="A_Denied_20" target="A_Denied"/>
+      <arc id="2181634492560" source="A_Validating" target="O_Create Offer_37"/>
+      <arc id="2181634491024" source="A_Incomplete_33" target="A_Incomplete"/>
+      <arc id="2181634501776" source="O_Cancelled_65" target="O_Cancelled"/>
+      <arc id="2181634445472" source="O_Cancelled_2" target="sink"/>
+      <arc id="2181631335584" source="A_Pending" target="O_Cancelled_29"/>
+      <arc id="2181634503840" source="A_Incomplete_71" target="A_Incomplete"/>
+      <arc id="2181634506480" source="A_Cancelled_78" target="A_Cancelled"/>
+      <arc id="2181634492080" source="O_Cancelled_36" target="O_Cancelled"/>
+      <arc id="2181634496688" source="O_Created_49" target="O_Created"/>
+      <arc id="2181634499760" source="A_Denied_58" target="A_Denied"/>
+      <arc id="2181634502832" source="A_Cancelled_68" target="A_Cancelled"/>
+      <arc id="2181634504368" source="O_Sent (mail and online)" target="O_Accepted_73"/>
+      <arc id="2181634524848" source="O_Sent (online only)" target="O_Sent (online only)_87"/>
+      <arc id="2181634503360" source="A_Complete_69" target="A_Complete"/>
+      <arc id="2181634491600" source="A_Validating" target="O_Accepted_35"/>
+      <arc id="2181634443984" source="A_Complete" target="A_Denied_10"/>
+      <arc id="2181634500816" source="A_Validating" target="A_Cancelled_31"/>
+      <arc id="2181634493136" source="A_Cancelled_31" target="A_Cancelled"/>
+      <arc id="2181634496208" source="O_Sent (mail and online)_47" target="O_Sent (mail and online)"/>
+      <arc id="2181634524368" source="O_Create Offer_85" target="O_Create Offer"/>
+      <arc id="2181634446048" source="A_Pending" target="A_Pending_4"/>
+      <arc id="2181634455264" source="A_Incomplete" target="A_Cancelled_19"/>
+      <arc id="2181634490592" source="A_Validating" target="A_Denied_32"/>
+      <arc id="2181634499808" source="O_Refused" target="A_Denied_58"/>
+      <arc id="2181634501344" source="O_Returned" target="O_Accepted_64"/>
+      <arc id="2181634505952" source="O_Sent (mail and online)_77" target="O_Sent (mail and online)"/>
+      <arc id="2181634524896" source="O_Sent (online only)_87" target="O_Sent (online only)"/>
+      <arc id="2181634448112" source="A_Concept_16" target="A_Concept"/>
+      <arc id="2181634455792" source="A_Submitted_17" target="A_Submitted"/>
+      <arc id="2181634457328" source="A_Incomplete" target="O_Sent (mail and online)_27"/>
+      <arc id="2181631335152" source="O_Cancelled_29" target="O_Cancelled"/>
+      <arc id="2181634491120" source="A_Validating" target="A_Incomplete_33"/>
+      <arc id="2181634492656" source="A_Validating" target="O_Returned_38"/>
+      <arc id="2181634494192" source="A_Incomplete_42" target="A_Incomplete"/>
+      <arc id="2181634495728" source="O_Returned_46" target="O_Returned"/>
+      <arc id="2181634497264" source="O_Created" target="A_Denied_51"/>
+      <arc id="2181634503408" source="O_Sent (mail and online)" target="A_Denied_70"/>
+      <arc id="2181634445568" source="O_Create Offer_13" target="O_Create Offer"/>
+      <arc id="2181634454784" source="A_Incomplete" target="A_Denied_20"/>
+      <arc id="2181634496256" source="O_Cancelled" target="O_Sent (online only)_48"/>
+      <arc id="2181634500864" source="A_Incomplete_62" target="A_Incomplete"/>
+      <arc id="2181634503936" source="O_Sent (mail and online)" target="A_Incomplete_71"/>
+      <arc id="2181634444560" source="A_Complete" target="A_Cancelled_9"/>
+      <arc id="2181634446096" source="A_Create Application" target="A_Concept_16"/>
+      <arc id="2181634455312" source="O_Refused_18" target="O_Refused"/>
+      <arc id="2181634456848" source="O_Create Offer_25" target="O_Create Offer"/>
+      <arc id="2181634490640" source="A_Denied_32" target="A_Denied"/>
+      <arc id="2181634493712" source="A_Denied_41" target="A_Denied"/>
+      <arc id="2181634495248" source="O_Create Offer_45" target="O_Create Offer"/>
+      <arc id="2181634496784" source="O_Create Offer" target="O_Created_49"/>
+      <arc id="2181634523408" source="O_Sent (online only)" target="A_Validating_82"/>
+      <arc id="2181634448160" source="A_Complete" target="O_Create Offer_13"/>
+      <arc id="2181634442016" source="A_Incomplete" target="A_Validating_22"/>
+      <arc id="2181634498848" source="O_Create Offer_55" target="O_Create Offer"/>
+      <arc id="2181634503456" source="A_Denied_70" target="A_Denied"/>
+      <arc id="2181634506528" source="O_Sent (online only)" target="A_Complete_79"/>
+      <arc id="2181634447152" source="O_Refused" target="O_Refused_3"/>
+      <arc id="2181634456368" source="O_Cancelled_24" target="O_Cancelled"/>
+      <arc id="2181634493232" source="A_Concept_30" target="A_Concept"/>
+      <arc id="2181634494768" source="A_Validating_43" target="A_Validating"/>
+      <arc id="2181634496304" source="O_Sent (online only)_48" target="O_Sent (online only)"/>
+      <arc id="2181634499376" source="O_Sent (mail and online)_56" target="O_Sent (mail and online)"/>
+      <arc id="2181634505520" source="O_Returned_76" target="O_Returned"/>
+      <arc id="2181634456896" source="A_Incomplete" target="O_Create Offer_25"/>
+      <arc id="2181634498368" source="O_Cancelled_54" target="O_Cancelled"/>
+      <arc id="2181634499904" source="O_Refused" target="O_Refused_59"/>
+      <arc id="2181634502976" source="O_Sent (mail and online)" target="A_Complete_69"/>
+      <arc id="2181634502544" source="O_Returned" target="O_Returned_67"/>
+      <arc id="2181634491216" source="A_Validating" target="A_Validating_34"/>
+      <arc id="2181634445136" source="O_Cancelled" target="O_Cancelled_2"/>
+      <arc id="2181634446672" source="A_Cancelled_5" target="sink"/>
+      <arc id="2181634443600" source="O_Cancelled_8" target="O_Cancelled"/>
+      <arc id="2181634444128" source="O_Refused_3" target="sink"/>
+      <arc id="2181634493280" source="A_Pending_39" target="A_Pending"/>
+      <arc id="2181634494816" source="O_Cancelled" target="O_Cancelled_44"/>
+      <arc id="2181634499424" source="O_Created" target="O_Sent (online only)_57"/>
+      <arc id="2181634500960" source="O_Returned" target="A_Incomplete_62"/>
+      <arc id="2181634502496" source="O_Returned_67" target="O_Returned"/>
+      <arc id="2181634504032" source="O_Sent (mail and online)" target="A_Validating_72"/>
+      <arc id="2181634505568" source="O_Sent (mail and online)" target="O_Returned_76"/>
+      <arc id="2181634524512" source="O_Sent (online only)" target="O_Returned_86"/>
+      <arc id="2181634444656" source="A_Cancelled_9" target="A_Cancelled"/>
+      <arc id="2181634455408" source="A_Denied" target="O_Refused_18"/>
+      <arc id="2181634495344" source="O_Cancelled" target="O_Create Offer_45"/>
+      <arc id="2181634496880" source="O_Created" target="A_Cancelled_50"/>
+      <arc id="2181634506096" source="O_Sent (online only)" target="A_Cancelled_78"/>
+      <arc id="2181634442112" source="A_Incomplete_21" target="A_Incomplete"/>
+      <arc id="2181634457472" source="O_Sent (mail and online)_27" target="O_Sent (mail and online)"/>
+      <arc id="2181634492800" source="O_Returned_38" target="O_Returned"/>
+      <arc id="2181634494336" source="O_Cancelled" target="A_Validating_43"/>
+      <arc id="2181634495872" source="O_Cancelled" target="O_Sent (mail and online)_47"/>
+      <arc id="2181634500480" source="A_Cancelled_60" target="A_Cancelled"/>
+      <arc id="2181634502016" source="O_Create Offer_66" target="O_Create Offer"/>
+      <arc id="2181634505088" source="O_Cancelled_74" target="O_Cancelled"/>
+      <arc id="2181634524032" source="O_Cancelled_84" target="O_Cancelled"/>
+      <arc id="2181634445712" source="source" target="A_Create Application_1"/>
+      <arc id="2181634444176" source="O_Create Offer_7" target="O_Create Offer"/>
+      <arc id="2181634448784" source="A_Accepted_15" target="A_Accepted"/>
+      <arc id="2181634454928" source="A_Cancelled_19" target="A_Cancelled"/>
+      <arc id="2181634456464" source="A_Incomplete" target="O_Cancelled_24"/>
+      <arc id="2181632594320" source="A_Incomplete" target="O_Sent (online only)_28"/>
+      <arc id="2181634493328" source="O_Cancelled" target="A_Cancelled_40"/>
+      <arc id="2181634494864" source="O_Cancelled_44" target="O_Cancelled"/>
+      <arc id="2181634497936" source="A_Incomplete_52" target="A_Incomplete"/>
+      <arc id="2181634499472" source="O_Sent (online only)_57" target="O_Sent (online only)"/>
+      <arc id="2181634447776" source="O_Cancelled_12" target="O_Cancelled"/>
+      <arc id="2181634456992" source="A_Incomplete" target="O_Returned_26"/>
+      <arc id="2181634500000" source="A_Submitted" target="A_Concept_30"/>
+      <arc id="2181634493856" source="O_Cancelled" target="A_Denied_41"/>
+      <arc id="2181634443696" source="A_Denied_6" target="sink"/>
+      <arc id="2181634498992" source="O_Created" target="O_Sent (mail and online)_56"/>
+      <arc id="2181634500528" source="O_Returned" target="A_Denied_61"/>
+      <arc id="2181634505136" source="O_Sent (mail and online)" target="O_Create Offer_75"/>
+      <arc id="2181634506672" source="A_Complete_79" target="A_Complete"/>
+      <arc id="2181634524080" source="A_Denied_80" target="A_Denied"/>
+      <arc id="2181634448832" source="A_Validating_11" target="A_Validating"/>
+      <arc id="2181634447296" source="A_Complete" target="O_Cancelled_12"/>
+      <arc id="2181634493376" source="A_Cancelled_40" target="A_Cancelled"/>
+      <arc id="2181634497984" source="O_Created" target="A_Validating_53"/>
+      <arc id="2181634501056" source="O_Returned" target="A_Validating_63"/>
+      <arc id="2181634505664" source="O_Sent (mail and online)" target="O_Sent (mail and online)_77"/>
+      <arc id="2181634495440" source="O_Cancelled" target="O_Returned_46"/>
+      <arc id="2181634498512" source="O_Created" target="O_Cancelled_54"/>
+      <arc id="2181634492896" source="O_Accepted" target="A_Pending_39"/>
+      <arc id="2181634497504" source="A_Denied_51" target="A_Denied"/>
+      <arc id="2181634500576" source="A_Denied_61" target="A_Denied"/>
+      <arc id="2181634502112" source="O_Returned" target="O_Create Offer_66"/>
+      <arc id="2181634505184" source="O_Create Offer_75" target="O_Create Offer"/>
+      <arc id="2181634524128" source="O_Sent (online only)" target="O_Cancelled_84"/>
+      <arc id="2181634444272" source="O_Sent (mail and online)_14" target="O_Sent (mail and online)"/>
+      <arc id="2181634498032" source="A_Validating_53" target="A_Validating"/>
+      <arc id="2181634502640" source="O_Sent (mail and online)" target="A_Cancelled_68"/>
+    </page>
+    <finalmarkings>
+      <marking>
+        <place idref="sink">
+          <text>1</text>
+        </place>
+      </marking>
+    </finalmarkings>
+  </net>
+</pnml>

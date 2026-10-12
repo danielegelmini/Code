@@ -44,7 +44,15 @@ python 3_plot_pareto.py --case_study "BPI12" --method exhaustive --k 5 --gamma_c
 python 3_plot_pareto.py --case_study "bpi17_before" --method exhaustive --k 5 --gamma_cls 0.5 --gamma_reg 0.5
 python 3_plot_pareto.py --case_study "bpi17_after" --method exhaustive --k 5 --gamma_cls 0.5 --gamma_reg 0.5
 
-# --- 4. Simulazioni 
+# --- 4a. Reti di Petri (in case_studies/<cs>/discovery_output/; qualita' in discovery/petri_net_quality.csv)
+# Dal 09/10 lo step 4 simula la rete con fitness 1 (petri_net_fitness1_<cs>.pnml): tutte le raccomandazioni
+# viste nel log sono applicabili. La rete Split Miner con miglior F-score (petri_net_bestfscore_<cs>.pnml) resta
+# disponibile con --petri_net bestfscore. Ogni rete ha la sua cache dei parametri (simulator_params_<cs>_<rete>.json).
+python discovery/petri_net_discovery_fitness1.py
+# (solo se si vuole rifare la rete Split Miner; lenta: 30 trial con allineamenti)
+# python discovery/petri_net_discovery.py
+
+# --- 4. Simulazioni
 python 4_run_recommendation_simulation.py --case_study BAC --n_sim 10 --k 5  --force_rediscover
 python 4_run_recommendation_simulation.py --case_study BPI12 --n_sim 10 --k 5 --force_rediscover
 python 4_run_recommendation_simulation.py --case_study bpi17_before --n_sim 10 --k 5 --force_rediscover
