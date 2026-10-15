@@ -26,11 +26,10 @@ What it produces (under case_studies/<target_case_study>/)
                                           the whole point: no train/test split is
                                           applied to the synthetic data)
   * test_data.csv / test_log.csv /
-    test_log_with_last_act.csv         -- copied from the REAL source case study,
-                                          with sigmoid_mm / outcome recomputed
-                                          from the simulated-train scaler so the
-                                          regression target lives in the same
-                                          space the model is trained on
+    test_log_with_last_act.csv         -- copied unchanged from the REAL source
+                                          case study (the time target is the raw
+                                          remaining time in days since 2026-10-12,
+                                          no sigmoid_mm to recompute)
                                           (--no-reuse_source_test to skip)
 
 It does NOT create the case-study folder skeleton (discovery_output/, model/,
@@ -61,14 +60,12 @@ from pm4py.objects.log.importer.xes import importer as xes_importer
 from prosit.simulator import SimulatorParameters, SimulatorEngine
 
 from utils.get_features import get_features
-from utils.data_normalization import fit_remaining_time_scalers, remaining_time_to_sigmoid_mm
 from utils.pre_processing_functions import (
     getting_total_time,
     preprocessing_activity_frequency,
     add_next_act_res,
     prepare_data_and_add_features,
     data_labelling,
-    linear_combination,
 )
 
 warnings.filterwarnings("ignore")
@@ -79,7 +76,6 @@ END_DATE_NAME = "time:timestamp"
 ACTIVITY_COLUMN_NAME = "concept:name"
 RESOURCE_COLUMN_NAME = "org:resource"
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
-LAMBDA_VALUE = 0.5  # linear_combination weight, matching 1_data_preprocessing.py's default
 
 
 def parse_args():
@@ -119,8 +115,7 @@ def parse_args():
                              "as well if you need bit-for-bit reproducibility.")
     parser.add_argument("--reuse_source_test", dest="reuse_source_test", action="store_true", default=True,
                         help="Copy the source case study's test_data.csv / test_log.csv / "
-                             "test_log_with_last_act.csv into the target, recomputing "
-                             "sigmoid_mm/outcome from the simulated-train scaler (default: on).")
+                             "test_log_with_last_act.csv into the target (default: on).")
     parser.add_argument("--no-reuse_source_test", dest="reuse_source_test", action="store_false",
                         help="Do not touch the target's test files.")
     parser.add_argument("--force_rediscover", action="store_true",
@@ -363,22 +358,18 @@ def trim_to_exact(df: pd.DataFrame, n_target: int, seed: int) -> pd.DataFrame:
     return df[df[CASE_ID_NAME].isin(keep)].reset_index(drop=True)
 
 
-def build_test_files(target_dir: Path, source_dir: Path, std_scaler, mm_scaler) -> None:
-    """Copy the source case study's test frames into the target, recomputing sigmoid_mm
-    (and the derived outcome) from the simulated-train scaler so the regression target
-    is in the same space the model trained on BPI12_sim will predict in. Raw
-    remaining_time and the classification label are left untouched."""
+def build_test_files(target_dir: Path, source_dir: Path) -> None:
+    """Copy the source case study's test frames into the target unchanged. The time target is
+    the raw remaining time in days (since 2026-10-12), the same for every model: no sigmoid_mm /
+    outcome to recompute from the simulated-train scaler any more."""
     for name in ("test_data.csv", "test_log.csv", "test_log_with_last_act.csv"):
         src = source_dir / name
         if not src.exists():
             print(f"NOTE: {src} not found -- skipping {name}.")
             continue
         df = pd.read_csv(src)
-        if "remaining_time" in df.columns:
-            df["sigmoid_mm"] = remaining_time_to_sigmoid_mm(df["remaining_time"], std_scaler, mm_scaler)
-            df = linear_combination(df, lambda_weight=LAMBDA_VALUE)
         df.to_csv(target_dir / name, index=False)
-        print(f"Wrote {target_dir / name}  (from {src.name}, sigmoid_mm/outcome recomputed)")
+        print(f"Wrote {target_dir / name}  (copied from {src.name})")
 
 
 def main():
@@ -431,11 +422,8 @@ def main():
     print(f"Wrote {target_dir / 'preprocessed_data.csv'}  "
           f"({feats[CASE_ID_NAME].nunique()} traces, {len(feats)} events)")
 
-    # --- targets: normalise remaining_time on the simulated training set --
+    # --- training set (the time target is the raw remaining time, no normalization since 2026-10-12) --
     train_data = feats.copy()
-    std_scaler, mm_scaler = fit_remaining_time_scalers(train_data)
-    train_data["sigmoid_mm"] = remaining_time_to_sigmoid_mm(train_data["remaining_time"], std_scaler, mm_scaler)
-    train_data = linear_combination(train_data, lambda_weight=LAMBDA_VALUE)
     train_data = match_column_order(train_data, source_dir / "train_data.csv")
     train_data.to_csv(target_dir / "train_data.csv", index=False)
     print(f"Wrote {target_dir / 'train_data.csv'}  "
@@ -446,7 +434,7 @@ def main():
         print("\n" + "=" * 60)
         print(" TEST SET (from real source case study) ")
         print("=" * 60)
-        build_test_files(target_dir, source_dir, std_scaler, mm_scaler)
+        build_test_files(target_dir, source_dir)
 
     print("\n" + "*" * 60)
     print(" DONE ")

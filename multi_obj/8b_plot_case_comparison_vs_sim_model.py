@@ -20,7 +20,7 @@ model), so it is built here: the same query instance and the same recommended
 predictive_outcome_model / predictive_time_model, the same way
 5_result_computation.py's predict_batch does it for the real model. This
 requires --sim_case_study's models file (case_studies/<sim_case_study>/model/
-catboost_model_{label,sigmoid_mm}.joblib) and --case_study's own test_data
+catboost_model_{label,remaining_time}.joblib) and--case_study's own test_data
 (for the query instance) -- both already exist once 2_training_predictive_model.py
 has been run for --sim_case_study.
 
@@ -46,6 +46,7 @@ from utils.get_features import load_case_study, get_case_study_features
 from utils.recommendation_functions import (build_query_instances, align_query_instance_with_model, predict_outcome_proba,
                                             predict_time_and_uncertainty)
 from utils.simulation_functions import case_id_name
+from utils.predictive_models_functions import SECONDS_PER_DAY
 from utils.pre_processing_functions import convert_dtypes_bpi12, NO_NEXT_TOKEN
 
 METHODS = ["exhaustive", "nsga2"]
@@ -98,7 +99,7 @@ def get_prefix_length(test_log: pd.DataFrame, case_id: str) -> int | None:
 
 
 def predict_batch(query_instances, acts, resources, predictive_outcome_model, predictive_time_model):
-    """Predicted (status, remaining_time_sigmoid_mm) for many (query_instance, act, res) triples,
+    """Predicted (status, remaining time in DAYS) for many (query_instance, act, res) triples,
     one model call per target instead of one pair per row. Mirrors
     5_result_computation.py's predict_batch exactly (duplicated here, not imported, since that
     module's name starts with a digit and isn't meant to be imported from)."""
@@ -116,8 +117,10 @@ def predict_batch(query_instances, acts, resources, predictive_outcome_model, pr
 
     predicted_status = predict_outcome_proba(predictive_outcome_model, pd.DataFrame(outcome_rows))
     # virtual-ensemble mean, as 5_result_computation.py and the recommender use it
-    predicted_rt_sigmoid_mm, _ = predict_time_and_uncertainty(predictive_time_model, pd.DataFrame(time_rows))
-    return np.asarray(predicted_status, dtype=float), np.asarray(predicted_rt_sigmoid_mm, dtype=float)
+    predicted_rt_seconds, _ = predict_time_and_uncertainty(predictive_time_model, pd.DataFrame(time_rows))
+    # the model predicts seconds; days, as on the plot
+    return (np.asarray(predicted_status, dtype=float),
+            np.asarray(predicted_rt_seconds, dtype=float) / SECONDS_PER_DAY)
 
 
 def predict_with_sim_model(
@@ -132,8 +135,8 @@ def predict_with_sim_model(
     through a *different* pair of predictive models (predictive_outcome_model /
     predictive_time_model, e.g. the ones trained on BPI12_sim).
 
-    Returns (status_per_rank, remaining_time_sigmoid_mm_per_rank, baseline_status,
-    baseline_remaining_time_sigmoid_mm) -- status_per_rank/remaining_time_per_rank aligned
+    Returns (status_per_rank, remaining_time_days_per_rank, baseline_status,
+    baseline_remaining_time_days) -- status_per_rank/remaining_time_per_rank aligned
     1:1 with rows' row order; baseline values are NaN if this case has no query instance.
     """
     qi = query_instances_by_case.get(str(case_id))
@@ -148,7 +151,7 @@ def predict_with_sim_model(
     # on categories built from the raw, non-numeric-inferred log) has never seen. Round-trip
     # through int() first so it matches the "10972" the model actually knows.
     resources = [str(int(r)) if pd.notna(r) else r for r in rows["rec_resource"]]
-    status_arr, rt_sigmoid_arr = predict_batch(
+    status_arr, rt_days_arr = predict_batch(
         [qi] * len(rows), acts, resources, predictive_outcome_model, predictive_time_model
     )
 
@@ -157,7 +160,7 @@ def predict_with_sim_model(
     baseline_status_arr, baseline_rt_arr = predict_batch(
         [qi], [NO_NEXT_TOKEN], [NO_NEXT_TOKEN], predictive_outcome_model, predictive_time_model
     )
-    return status_arr, rt_sigmoid_arr, float(baseline_status_arr[0]), float(baseline_rt_arr[0])
+    return status_arr, rt_days_arr, float(baseline_status_arr[0]), float(baseline_rt_arr[0])
 
 
 def plot_case_comparison_vs_sim_model(
@@ -174,8 +177,8 @@ def plot_case_comparison_vs_sim_model(
     case_dir = base_dir / "case_studies" / case_study
 
     # 5_result_computation.py already stores predicted (real model) and simulated remaining time
-    # on the sigmoid_mm scale for `case_study` -- test_data/test_log are only needed here for the
-    # query instance (panel 2) and the prefix length (title).
+    # in seconds for `case_study` (converted to days below) -- test_data/test_log are only needed here
+    # for the query instance (panel 2) and the prefix length (title).
     train_data, test_data, test_log = load_case_study(case_study)
     if case_study in BPI12_DTYPE_CASE_STUDIES:
         test_data = convert_dtypes_bpi12(test_data, "experiment")
@@ -211,30 +214,29 @@ def plot_case_comparison_vs_sim_model(
 
     for row_idx, (method, rows) in enumerate(method_rows.items()):
         ranks = rows["rank"].tolist()
-        # x = outcome (maximize), y = 1 - sigmoid_mm(remaining time) (maximize) -- the objective
-        # space the Pareto search reasons in, on the same sigmoid_mm scale as the time model's
-        # offline MAE. Panel 1 and 3 come straight from 5_result_computation.py; panel 2 is
-        # computed here against sim_case_study's models on the same (case, rank -> act/res) pairs.
+        # x = outcome (maximize), y = remaining time in days (minimize) -- the objective space the
+        # Pareto search reasons in. Panel 1 and 3 come straight from 5_result_computation.py (seconds);
+        # panel 2 is computed here against sim_case_study's models on the same (case, rank -> act/res) pairs.
         pred_x = rows["pred_status_with_rec"].to_numpy(dtype=float)
-        pred_y = 1.0 - rows["pred_remaining_time_with_rec_sigmoid_mm"].to_numpy(dtype=float)
+        pred_y = rows["pred_remaining_time_with_rec"].to_numpy(dtype=float) / SECONDS_PER_DAY
         sim_x = rows["sim_status_method_mean"].to_numpy(dtype=float)
-        sim_y = 1.0 - rows["sim_remaining_time_method_mean_sigmoid_mm"].to_numpy(dtype=float)
+        sim_y = rows["sim_remaining_time_method_mean"].to_numpy(dtype=float) / SECONDS_PER_DAY
 
-        sim_model_status, sim_model_rt_sigmoid, sim_model_base_status, sim_model_base_rt_sigmoid = (
+        sim_model_status, sim_model_rt_days, sim_model_base_status, sim_model_base_rt_days = (
             predict_with_sim_model(case_id, rows, query_instances_by_case,
                                     sim_predictive_outcome_model, sim_predictive_time_model)
         )
         sim_model_x = sim_model_status
-        sim_model_y = 1.0 - sim_model_rt_sigmoid
+        sim_model_y = sim_model_rt_days
 
         # Baseline (no recommendation) is rank/method independent -- every row carries the same
         # value (see 5_result_computation.py), so any row's first entry is representative.
         baseline_pred_x = float(rows["pred_status_no_rec"].iloc[0])
-        baseline_pred_y = 1.0 - float(rows["pred_remaining_time_no_rec_sigmoid_mm"].iloc[0])
+        baseline_pred_y = float(rows["pred_remaining_time_no_rec"].iloc[0]) / SECONDS_PER_DAY
         baseline_sim_x = float(rows["sim_status_baseline_mean"].iloc[0])
-        baseline_sim_y = 1.0 - float(rows["sim_remaining_time_baseline_mean_sigmoid_mm"].iloc[0])
+        baseline_sim_y = float(rows["sim_remaining_time_baseline_mean"].iloc[0]) / SECONDS_PER_DAY
         baseline_sim_model_x = sim_model_base_status
-        baseline_sim_model_y = 1.0 - sim_model_base_rt_sigmoid
+        baseline_sim_model_y = sim_model_base_rt_days
 
         panels = (
             (axes[row_idx, 0], pred_x, pred_y, baseline_pred_x, baseline_pred_y,
@@ -258,7 +260,7 @@ def plot_case_comparison_vs_sim_model(
                     label="No recommendation (baseline)", zorder=5,
                 )
             ax.set_title(title)
-            ax.set_ylabel("1 - sigmoid_mm(remaining time)  (maximize)")
+            ax.set_ylabel("Remaining time (days, minimize)")
             ax.tick_params(axis="y", labelleft=True)  # sharey hides these by default on non-first columns
             ax.tick_params(axis="x", labelbottom=True)  # sharex hides these by default on non-last rows
             ax.set_xlabel("Outcome (maximize)")

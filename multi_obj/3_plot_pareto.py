@@ -46,6 +46,7 @@ import time
 import tqdm
 
 from utils.pre_processing_functions import convert_dtypes_bpi12, NO_NEXT_TOKEN
+from utils.predictive_models_functions import SECONDS_PER_DAY
 from utils.get_features import load_case_study, get_case_study_features
 from utils.setup_cache import get_transition_graph
 from utils.recommendation_functions import (
@@ -283,7 +284,8 @@ def _run_and_plot_nsga2(
 def _draw_2d_confidence(ax, fig, *, discarded_x, discarded_y, confident_x, confident_y,
                          front_x, front_y, top_k_x, top_k_y, baseline_x, baseline_y,
                          gamma_cls, gamma_reg):
-    """Single 2D view: outcome vs 1 - time, four colour-coded categories."""
+    """Single 2D view: outcome (max) vs predicted remaining time in days (min), four colour-coded
+    categories; the ideal point is (1, 0)."""
     ax.scatter(discarded_x, discarded_y, color="lightgrey", alpha=0.65, s=35, zorder=2)
     ax.scatter(confident_x, confident_y, color="#4C72B0", alpha=0.8, s=45, zorder=3)
     ax.plot(front_x, front_y, color="#DD8452", linestyle="--", alpha=0.5, zorder=4)
@@ -291,11 +293,11 @@ def _draw_2d_confidence(ax, fig, *, discarded_x, discarded_y, confident_x, confi
                linewidths=1.2, zorder=5)
     ax.scatter(top_k_x, top_k_y, facecolors="none", edgecolors="crimson", marker="P",
                s=190, linewidths=1.9, zorder=8)
-    ax.scatter(1.0, 1.0, color="green", marker="X", s=110, zorder=10)
+    ax.scatter(1.0, 0.0, color="green", marker="X", s=110, zorder=10)  # ideal point: outcome 1, time 0
     ax.scatter(baseline_x, baseline_y, color="black", marker="D", s=110,
                edgecolors="white", linewidths=0.8, zorder=10)
     ax.set_xlabel("Predicted Outcome (Probability, Maximize)")
-    ax.set_ylabel("1 - Predicted Time (Maximize)")
+    ax.set_ylabel("Predicted Remaining Time (days, Minimize)")
     ax.set_title(
         f"Confidence-as-KPI filtered Pareto front (exhaustive)\n"
         f"gamma_cls={gamma_cls}   gamma_reg={gamma_reg}",
@@ -310,7 +312,7 @@ def _draw_2d_confidence(ax, fig, *, discarded_x, discarded_y, confident_x, confi
     margin_x = (plot_x_max - plot_x_min) * 0.05 if plot_x_max != plot_x_min else 0.05
     margin_y = (plot_y_max - plot_y_min) * 0.05 if plot_y_max != plot_y_min else 0.05
     ax.set_xlim(min(plot_x_min - margin_x, -0.05), max(plot_x_max + margin_x, 1.05))
-    ax.set_ylim(min(plot_y_min - margin_y, -0.05), max(plot_y_max + margin_y, 1.05))
+    ax.set_ylim(min(plot_y_min, 0.0) - margin_y, plot_y_max + margin_y)  # days: from the ideal 0 upwards
 
 
 def _run_and_plot_exhaustive(
@@ -318,8 +320,8 @@ def _run_and_plot_exhaustive(
     baseline_row, predictive_outcome_model, predictive_time_model,
     gamma_cls, gamma_reg, k, save_dir,
 ):
-    """Exhaustive branch: scores every valid pair on 2 objectives (outcome,
-    1 - time), filters by confidence against the baseline -- the query
+    """Exhaustive branch: scores every valid pair on 2 objectives (outcome: max,
+    remaining time in days: min), filters by confidenceagainst the baseline -- the query
     instance with NEXT_ACTIVITY/NEXT_RESOURCE set to NO_NEXT_TOKEN, see
     build_no_recommendation_baseline_instances -- and plots ALL evaluated candidates in four
     colour-coded categories: discarded by the confidence filter, confident
@@ -332,12 +334,12 @@ def _run_and_plot_exhaustive(
 
     all_evals = _evaluate_candidates(valid_pairs, query_instance, predictive_outcome_model, predictive_time_model)
     all_x = all_evals[:, 0]
-    all_y = 1.0 - all_evals[:, 1]
+    all_y = all_evals[:, 1] / SECONDS_PER_DAY  # the model predicts seconds; days on the plot
 
     baseline_row_df = _to_row_df(baseline_row)
     baseline_x = float(predict_outcome_proba(predictive_outcome_model, baseline_row_df)[0])
     baseline_time_arr, _ = predict_time_and_uncertainty(predictive_time_model, baseline_row_df)
-    baseline_y = 1.0 - float(baseline_time_arr[0])
+    baseline_y = float(baseline_time_arr[0]) / SECONDS_PER_DAY
 
     prob_outcome_better, prob_time_better = _compute_confidence_probabilities(
         valid_pairs, baseline_row, query_instance,
@@ -357,7 +359,7 @@ def _run_and_plot_exhaustive(
     survivor_x = all_x[survivors_idx]
     survivor_y = all_y[survivors_idx]
 
-    is_front = paretoset(np.column_stack([survivor_x, survivor_y]), sense=["max", "max"])
+    is_front = paretoset(np.column_stack([survivor_x, survivor_y]), sense=["max", "min"])
     front_x = survivor_x[is_front]
     front_y = survivor_y[is_front]
     confident_x = survivor_x[~is_front]
@@ -377,7 +379,7 @@ def _run_and_plot_exhaustive(
     ]
     top_k_pairs = select_top_k_pareto_actions(survivor_tuples, k=k)
     pair_to_xy = {
-        (act, res): (float(all_evals[i, 0]), 1.0 - float(all_evals[i, 1]))
+        (act, res): (float(all_evals[i, 0]), float(all_evals[i, 1]) / SECONDS_PER_DAY)
         for i, (act, res) in enumerate(valid_pairs)
     }
     top_k_x = np.array([pair_to_xy[p][0] for p in top_k_pairs], dtype=float)
@@ -410,7 +412,7 @@ def _run_and_plot_exhaustive(
         mlines.Line2D([], [], marker="P", color="none", markeredgecolor="crimson",
                       markerfacecolor="none", markersize=13, label=f"Top-{k} selected (p-dispersion)"),
         mlines.Line2D([], [], marker="X", color="none", markerfacecolor="green",
-                      markersize=11, label="Ideal point (1, 1)"),
+                      markersize=11, label="Ideal point (1, 0)"),
         mlines.Line2D([], [], marker="D", color="none", markerfacecolor="black",
                       markeredgecolor="white", markersize=9,
                       label="No recommendation (baseline)"),
@@ -543,7 +545,7 @@ def run_and_plot_comparison(
 
     # Automatic selection of the case whose Pareto front -- built, like the plot,
     # only on the candidates that pass the confidence filter -- spans the largest
-    # area (outcome range x (1 - time) range); ties broken by the number of front points.
+    # area (outcome range x time range); ties broken by the number of front points.
     if target_case_id is None or target_case_id not in unique_cases:
         print("Searching for the case whose confidence-filtered Pareto front spans the largest area...")
         best_score = (-1.0, -1)
@@ -566,7 +568,7 @@ def run_and_plot_comparison(
 
             all_evals = _evaluate_candidates(valid_pairs, query_instance, predictive_outcome_model, predictive_time_model)
             all_x = all_evals[:, 0]
-            all_y = 1.0 - all_evals[:, 1]
+            all_y = all_evals[:, 1] / SECONDS_PER_DAY  # predicted remaining time in days
 
             try:
                 if method == "exhaustive":
@@ -579,7 +581,7 @@ def run_and_plot_comparison(
                         continue
                     all_x, all_y = all_x[keep], all_y[keep]
 
-                is_pareto = paretoset(np.column_stack((all_x, all_y)), sense=["max", "max"])
+                is_pareto = paretoset(np.column_stack((all_x, all_y)), sense=["max", "min"])
                 front_x = all_x[is_pareto]
                 front_y = all_y[is_pareto]
 

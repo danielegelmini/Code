@@ -12,7 +12,8 @@ def load_case_study(case_study):
 def get_case_study_features(case_study):
     # Loading predictive model
     predictive_outcome_model = joblib.load(f'./case_studies/{case_study}/model/catboost_model_label.joblib')
-    predictive_time_model = joblib.load(f'./case_studies/{case_study}/model/catboost_model_sigmoid_mm.joblib')
+    # remaining time in days (catboost_model_sigmoid_mm.joblib before 2026-10-12)
+    predictive_time_model = joblib.load(f'./case_studies/{case_study}/model/catboost_model_remaining_time.joblib')
     # Loading features
     case_id_name, activity_column_name, resource_column_name, continuous_features, categorical_features, columns_to_remove = get_features(case_study)
     return predictive_outcome_model, predictive_time_model, case_id_name, activity_column_name, resource_column_name, continuous_features, categorical_features, columns_to_remove
@@ -137,17 +138,11 @@ def get_features(case_study: str) -> Tuple[str, str, str, List[str], List[str], 
         },
     }
 
-    _BPI12_TO_REORDERED_ACTIVITY = {
-        "# ACTIVITY=W_Completeren aanvraag": "# ACTIVITY=W_Complete_preaccepted_appl",
-        "# ACTIVITY=W_Nabellen offertes": "# ACTIVITY=W_Call_after_offer",
-        "# ACTIVITY=W_Valideren aanvraag": "# ACTIVITY=W_Assess_application",
-        "# ACTIVITY=W_Afhandelen leads": "# ACTIVITY=W_Fix_incoplete_submission",
-        "# ACTIVITY=W_Beoordelen fraude": "# ACTIVITY=W_Assess_fraud",
-        "# ACTIVITY=W_Nabellen incomplete dossiers": "# ACTIVITY=W_Call_missing_information",
-    }
+    # BPI12 / BPI12_sim: since 2026-10-12 the log has no W_ activities (0_filtering_W_activities.py), so
+    # their counters are not features (9_generate_simulated_training_set.py would add them as all-zero columns)
     _reordered_config = {
         "continuous": [
-            _BPI12_TO_REORDERED_ACTIVITY.get(f, f) for f in CONFIG["BPI12_not_reordered"]["continuous"]
+            f for f in CONFIG["BPI12_not_reordered"]["continuous"] if not f.startswith("# ACTIVITY=W_")
         ],
         "categorical": list(CONFIG["BPI12_not_reordered"]["categorical"]),
     }

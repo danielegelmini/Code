@@ -80,7 +80,7 @@ FORBIDDEN = {
 
 
 def front_size(objs: np.ndarray) -> int:
-    """Size of the 2-D Pareto front (max outcome, max 1 - time) of the given candidates, built as
+    """Size of the 2-D Pareto front (max outcome, min remaining time)of the given candidates, built as
     select_top_k_pareto_actions builds it (same objective matrix, same paretoset call)."""
     if len(objs) == 0:
         return 0
@@ -278,7 +278,7 @@ def main():
              "pass/case   : candidates per case passing the filter of step 3 (P_out > gamma OR P_time > gamma).",
              "% pass ...  : share of all the candidates with P(beats the no-recommendation baseline) > gamma on the",
              "              outcome, on the time, and passing the filter (either of the two).",
-             "front/case  : size of the 2-D Pareto front (outcome, 1 - time) of the surviving candidates.",
+             "front/case  : size of the 2-D Pareto front (outcome: max, remaining time: min)of the surviving candidates.",
              "% rank r    : share of ALL the test cases with a recommendation at rank r, i.e. with at least r",
              "              recommendations (min(k, front size)): the cases simulated at rank r in step 4.",
              "", ""]

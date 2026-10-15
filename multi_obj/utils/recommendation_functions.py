@@ -44,10 +44,10 @@ def predict_time_and_uncertainty(predictive_time_model, rows_df):
     Run the time model on rows_df and return (mean, uncertainty), both 1-D
     numpy arrays.
 
-    `mean` is the predicted 'sigmoid_mm' remaining time -- exactly what
-    predictive_time_model.predict(rows_df) returned before. `uncertainty` is the
-    recalibrated TOTAL predictive standard deviation of that prediction
-    (aleatoric + epistemic).
+    `mean` is the predicted remaining time in SECONDS (virtual-ensemble average;
+    with a log-space model the log-normal mean, see UncertaintyRegressor). `uncertainty`
+    is the recalibrated TOTAL predictive standard deviation of that prediction
+    (aleatoric + epistemic), in seconds.
 
     Works whether predictive_time_model is a bare estimator or an sklearn
     Pipeline whose final "prediction" step is an UncertaintyRegressor. If the
@@ -717,7 +717,7 @@ def exhaustive_pareto_search(
     """
     Computes predictions for all valid combinations of possible next activities and resources,
     filters them by confidence against a "no recommendation" baseline, and returns the
-    survivors for the caller to build a 2D Pareto front from (outcome, 1 - time).
+    survivors for the caller to build a 2D Pareto front from (outcome: max, remaining time in seconds: min).
 
     The confidence filter (see _compute_confidence_probabilities /
     _filter_by_confidence) is applied here, BEFORE the caller builds the
@@ -897,22 +897,26 @@ def nsga2_pareto_search(
 def _front_objective_matrix(pareto_set):
     """(..., outcome, time, ...) tuples -> raw objective matrix plus the paretoset sense list.
 
+    The time is the predicted remaining time in SECONDS (since 2026-10-12; before, the
+    normalized sigmoid_mm entered as 1 - time with sense max): it is minimized as it is,
+    so the ideal point is (outcome = 1, time = 0).
+
     Dispatches on tuple length: nsga2_pareto_search's 5-tuples (activity,
-    resource, outcome, time, uncertainty) keep the ORIGINAL 3-objective
-    [outcome, 1 - time, uncertainty] behaviour (senses max/max/min) -- NSGA2
+    resource, outcome, time, uncertainty) keep the 3-objective
+    [outcome, time, uncertainty] behaviour (senses max/min/min) -- NSGA2
     is untouched by the confidence-as-KPI change. exhaustive_pareto_search's
-    7-tuples (..., prob_outcome_better, prob_time_better) use the new
-    2-objective [outcome, 1 - time] behaviour (senses max/max), since the
+    7-tuples (..., prob_outcome_better, prob_time_better) use the
+    2-objective [outcome, time] behaviour (senses max/min), since the
     confidence filter has already been applied upstream and predictive
     uncertainty is no longer a Pareto axis for that method."""
     outcome_vals = np.array([item[2] for item in pareto_set], dtype=float)
-    inv_time_vals = 1.0 - np.array([item[3] for item in pareto_set], dtype=float)
+    time_vals = np.array([item[3] for item in pareto_set], dtype=float)
 
     if len(pareto_set[0]) >= 7:
-        return np.column_stack([outcome_vals, inv_time_vals]), ["max", "max"]
+        return np.column_stack([outcome_vals, time_vals]), ["max", "min"]
 
     uncertainty_vals = np.array([item[4] for item in pareto_set], dtype=float)
-    return np.column_stack([outcome_vals, inv_time_vals, uncertainty_vals]), ["max", "max", "min"]
+    return np.column_stack([outcome_vals, time_vals, uncertainty_vals]), ["max", "min", "min"]
 
 
 def select_top_k_pareto_actions(pareto_set, k=5):
@@ -940,7 +944,7 @@ def select_top_k_pareto_actions(pareto_set, k=5):
     if not pareto_set:
         return []
 
-    raw_vals, sense = _front_objective_matrix(pareto_set)  # [outcome, 1 - time, uncertainty]
+    raw_vals, sense = _front_objective_matrix(pareto_set)  # [outcome, time (seconds), (uncertainty)]
     is_pareto = paretoset(raw_vals, sense=sense)
     front = [item for item, keep in zip(pareto_set, is_pareto) if keep]
     front_vals = raw_vals[is_pareto]
@@ -949,10 +953,10 @@ def select_top_k_pareto_actions(pareto_set, k=5):
     if n_front <= k:
         return [(item[0], item[1]) for item in front]
 
-    # Min-max normalize the three objectives before measuring pairwise
-    # distances, so the p-dispersion spread is even across all three axes
-    # rather than dominated by whichever objective has the widest raw range
-    # (uncertainty is on a different scale than outcome / 1 - time).
+    # Min-max normalize the objectives before measuring pairwise distances, so the
+    # p-dispersion spread is even across the axes rather than dominated by the one
+    # with the widest raw range (a probability in [0, 1] vs a time in seconds). The
+    # normalization is only for the distances: the front itself is built on the raw values.
     norm = _minmax_columns(front_vals)
     diff = norm[:, None, :] - norm[None, :, :]
     cost_matrix = np.linalg.norm(diff, axis=2)

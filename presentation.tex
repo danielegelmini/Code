@@ -37,7 +37,7 @@
 }
 
 % --- INFORMAZIONI DELLA TESI ---
-\title[Multi-Objective PrPA]{Balancing KPIs through Multi-Objective\\Prescriptive Process Analytics}
+\title[Multi-Objective PrPA]{Supporting Users in Multi-Objective\\Prescriptive Analytics via Pareto Exploration}
 \subtitle{Master's Thesis Presentation}
 \author{Daniele Gelmini}
 \institute[UniPD - Daniele Gelmini]{Mathematic's Department “Tullio Levi-Civita”\\Università degli Studi di Padova}
@@ -107,28 +107,6 @@
 % =====================================================================
 % START-TIME ESTIMATION
 % =====================================================================
-\begin{frame}{Start-Time Estimation: the Problem}
-  \small
-  \begin{itemize}
-    \item Each event has a \texttt{start:timestamp} and a \texttt{time:timestamp}
-      (completion); the model \textbf{features} and the \textbf{simulator}
-      (execution vs.\ waiting times) both rely on the start.
-    \item In \textbf{BPI12}, \textbf{bpi17-before}, \textbf{bpi17-after} the recorded
-      start is \alert{fake}: a copy of the completion of the previous event of the
-      same case.
-    \item Consequences:
-      \begin{itemize}
-        \item every activity starts the instant its predecessor ends
-          $\Rightarrow$ \alert{waiting time always 0};
-        \item the whole gap (queueing, off-hours, customer delays) is counted as
-          \alert{processing time}, and the simulator learns it as such;
-        \item \texttt{time\_from\_previous\_event(start)} just repeats the duration of
-          the previous event.
-      \end{itemize}
-    \item \textbf{BAC} records real starts $\Rightarrow$ left untouched.
-  \end{itemize}
-\end{frame}
-
 \begin{frame}{Removing the \texttt{W\_} Work Items (BPI12, bpi17)}
   \small
   \begin{itemize}
@@ -152,13 +130,15 @@
   \end{center}
   \begin{itemize}
     \item Six \texttt{W\_} activities per dataset. The filtered log is the input of the
-      start-time estimation (next slides), which uses only its completion times.
+      start-time estimation (next slide), which uses only its completion times.
   \end{itemize}
   {\scriptsize Script: \texttt{0\_filtering\_W\_activities.py} $\rightarrow$ \texttt{log\_<case>\_no\_start\_W\_filtered.xes}.}
 \end{frame}
 
 \begin{frame}{Start-Time Estimation: the Technique}
   \footnotesize
+  \textbf{Problem:} in BPI12 and bpi17 the recorded start is \alert{fake} (a copy of the previous completion)
+  $\Rightarrow$ waiting time always 0. BAC records real starts (untouched).\par
   {\scriptsize Vinci et al., \textit{Improving organizational processes in healthcare through
   simulation-driven resource allocation}, Artif.\ Intell.\ Med.\ 176 (2026), Appendix A ---
   extending Fracca et al.\ (CAiSE 2022).}
@@ -198,73 +178,6 @@
   \end{tikzpicture}
 \end{frame}
 
-\begin{frame}{Start-Time Estimation: Searching the $\alpha$}
-  \footnotesize
-  \begin{itemize}
-    \item The $\alpha$ are chosen so that a \alert{simulation} of the process reproduces the
-      real log. At every iteration:
-      \begin{enumerate}
-        \item the log is enriched with the start times given by the current $\alpha$;
-        \item the duration distribution of each activity is refitted on it and given to the
-          simulation model;
-        \item a log is simulated (Prosimos);
-        \item for each activity, the error is the \alert{Wasserstein distance} between the real
-          and the simulated \emph{inter-event times} (time between consecutive completions of
-          a case) --- quantities that do not depend on the unknown starts.
-      \end{enumerate}
-    \item \textbf{Search} (Algorithm 1 of the paper): for each activity, $\alpha$ starts in the
-      interval $[0, 1]$; after evaluating both endpoints, every iteration tries the midpoint and
-      moves the endpoint with the larger error to it, so the interval halves towards the
-      smaller error.
-    \item Every activity has its own interval, but all are evaluated in the \emph{same}
-      simulation, so activities influence each other through resources and waiting.
-    \item \textbf{Result:} for each activity, the $\alpha$ with the smallest error among
-      those tried; it gives the start times of the final log.
-  \end{itemize}
-\end{frame}
-
-\begin{frame}{Start-Time Estimation: the Simulation Model}
-  \small
-  \begin{itemize}
-    \item \textbf{Input:} the log without \texttt{W\_} activities, completion times only.
-      \textbf{BAC} records real starts $\Rightarrow$ left untouched.
-    \item \textbf{Simulation model} (Prosimos: BPMN + parameters), recipe of Fracca et al.\
-      (Sec.~5), discovered from the completion events:
-      \begin{itemize}
-        \item control flow: the \alert{fitness-1 Petri net} used by the simulator
-          (directly-follows), converted to BPMN;
-        \item resource pools: roles of Burattin et al.\ (pm4py);
-        \item calendars: per role, the weekdays and hours with the most completions
-          (covering 95\% of them);
-        \item inter-arrival time: best-fitting distribution of the time between case arrivals;
-        \item branching probabilities of every XOR split, from the log.
-      \end{itemize}
-    \item \textbf{Activity durations:} not discovered here --- refitted at every iteration on
-      the current start times (best fit among fixed, normal, exponential, uniform,
-      log-normal, gamma).
-  \end{itemize}
-\end{frame}
-
-\begin{frame}{Start-Time Estimation: Settings}
-  \small
-  \begin{itemize}
-    \item \textbf{Search:} 20 iterations (one simulation each); 10\% extra simulated cases,
-      discarded at the head (warm-up) and at the tail; fixed seed.
-    \item \textbf{Implementation choices:}
-      \begin{itemize}
-        \item the first event of a case stays instantaneous (case arrivals unchanged);
-        \item $e^{r}_{\text{prev}}$ is the latest event of the resource that ended
-          \emph{strictly} before $e$.
-      \end{itemize}
-    \item \textbf{Replaces} the previous estimator (Chapela-Campa \& Dumas,
-      \texttt{pix-framework}), which gave a duration only to the \texttt{W\_} items and kept
-      \texttt{A\_}/\texttt{O\_} instantaneous: without \texttt{W\_} it would leave every event
-      instantaneous.
-    \item The repaired log \texttt{log\_<case>.xes} is the input of the whole pipeline.
-  \end{itemize}
-  {\scriptsize Script: \texttt{0\_estimate\_start\_times\_vinci.py} (code in \texttt{start\_time\_estimator/}).}
-\end{frame}
-
 % =====================================================================
 % ENCODING & TRAINING INPUT
 % =====================================================================
@@ -292,7 +205,7 @@
     \node[box, fill=gray!15, right=of hist] (time) {\textbf{Time}\\since start,\\since prev.\ event,\\event duration};
     \node[box, fill=gray!15, right=of time] (attr) {\textbf{Case}\\\textbf{attributes}\\dataset-specific};
     \node[box, fill=Darkcandyapplered!15, right=0.3cm of attr, text width=2.3cm] (next) {\textbf{Next step}\\\texttt{NEXT\_ACTIVITY}\\\texttt{NEXT\_RESOURCE}};
-    \node[box, fill=Darkcandyapplered!75, text=white, right=0.5cm of next, text width=1.7cm] (y) {\textbf{Targets}\\\texttt{label}\\\texttt{sigmoid\_mm}};
+    \node[box, fill=Darkcandyapplered!75, text=white, right=0.5cm of next, text width=1.7cm] (y) {\textbf{Targets}\\\texttt{label}\\\texttt{remaining\_}\\\texttt{time}};
     \draw[-{Latex}] (next) -- (y);
     \draw[decorate,decoration={brace,amplitude=5pt,mirror}]
       ([yshift=-3pt]cur.south west) -- ([yshift=-3pt]attr.south east)
@@ -312,11 +225,10 @@
       \begin{itemize}
         \item \texttt{label}: case outcome (1 $=$ positive, defined per dataset),
           the same for all rows of a case $\rightarrow$ classifier;
-        \item \texttt{sigmoid\_mm}: remaining time after $e_i$, z-normalised
-          $\rightarrow$ sigmoid $\rightarrow$ min-max to $[0,1]$ $\rightarrow$ regressor.
+        \item \texttt{remaining\_time}: time from the completion of $e_i$ to the end of the case, in
+          seconds $\rightarrow$ regressor (learned as $\log(1+\text{days})$, see the time-target slides).
       \end{itemize}
     \item Case id and timestamps are not model inputs.
-    
   \end{itemize}
 \end{frame}
 
@@ -329,19 +241,20 @@
     \toprule
     \textbf{Column} & \textbf{Value} & \textbf{Meaning} \\
     \midrule
-    \texttt{concept:name}      & \texttt{W\_Complete\_preaccepted\_appl} & activity just completed \\
-    \texttt{org:resource}      & \texttt{10939}  & who executed it \\
+    \texttt{concept:name}      & \texttt{O\_SENT\_BACK} & activity just completed \\
+    \texttt{org:resource}      & \texttt{11029}  & who executed it \\
     \texttt{weekday}           & Saturday        & day of its start \\
     \texttt{AMOUNT\_REQ}       & 9000            & requested amount (case attr.) \\
-    \texttt{\# ACTIVITY=A\_SUBMITTED}, \dots & 1 (8 counters), 0 (15) & activities before $e_i$ \\
+    \texttt{\# ACTIVITY=A\_SUBMITTED}, \dots & 1 (8 counters), 0 (9) & activities before $e_i$ \\
     \texttt{time\_from\_start} & 794.8\,s & start($e_i$) - start($e_1$) \\
-    \texttt{time\_from\_previous\_event(start)} & 0.03\,s & start($e_i$) - start($e_{i-1}$) \\
-    \texttt{event\_duration}   & 1.3\,s & end($e_i$)  - start($e_i$) \\
+    \texttt{time\_from\_previous\_event(start)} & 0.02\,s & start($e_i$) - start($e_{i-1}$) \\
+    \texttt{event\_duration}   & 4.94\,d & end($e_i$)  - start($e_i$) (estimated start) \\
     \midrule
-    \texttt{NEXT\_ACTIVITY} / \texttt{NEXT\_RESOURCE} & \texttt{W\_Call\_after\_offer} / \texttt{10939} & step that followed \\
+    \texttt{NEXT\_ACTIVITY} / \texttt{NEXT\_RESOURCE} & \texttt{A\_DECLINED} / \texttt{11009} & step that followed \\
     \midrule
     \texttt{label}            & 0     & \texttt{O\_ACCEPTED} never occurs \\
-    \texttt{remaining\_time} $\rightarrow$ \texttt{sigmoid\_mm} & 9.2 d $\rightarrow$ 0.239 & regression target \\
+    \texttt{remaining\_time}  & 369\,519\,s $=$ 4.28 d & regression target \\
+     & $\log(1 + 4.28) = 1.66$ & what the regressor learns \\
     \bottomrule
   \end{tabular}
   \end{center}
@@ -392,10 +305,10 @@
   \scriptsize
   \begin{tabular}{llllcc}
     \toprule
-     & \textbf{State} $e_1,\dots,e_i$ & \texttt{NEXT\_ACTIVITY} & \texttt{NEXT\_RESOURCE} & \texttt{label} & \texttt{sigmoid\_mm} \\
+     & \textbf{State} $e_1,\dots,e_i$ & \texttt{NEXT\_ACTIVITY} & \texttt{NEXT\_RESOURCE} & \texttt{label} & \texttt{remaining\_time} \\
     \midrule
-    original & BPI12 case \texttt{173721}, $i=9$ & \texttt{W\_Call\_after\_offer} & \texttt{10939} & 0 & 0.239 \\
-    copy     & (identical)                      & \texttt{\_\_NO\_NEXT\_\_} & \texttt{\_\_NO\_NEXT\_\_} & 0 & 0.239 \\
+    original & BPI12 case \texttt{173721}, $i=9$ & \texttt{A\_DECLINED} & \texttt{11009} & 0 & 4.28 d \\
+    copy     & (identical)                      & \texttt{\_\_NO\_NEXT\_\_} & \texttt{\_\_NO\_NEXT\_\_} & 0 & 4.28 d \\
     \bottomrule
   \end{tabular}
   \end{center}
@@ -440,8 +353,8 @@
 
 \begin{frame}{Training Input: BPI12}
   \footnotesize
-  \textbf{Process:} loan applications of a Dutch bank (BPIC 2012). 23 activities,
-  61 resources; \texttt{W\_} labels translated to English.
+  \textbf{Process:} loan applications of a Dutch bank (BPIC 2012). 17 activities,
+  60 resources; the \texttt{W\_} work items are removed (offline phase).
   \begin{center}
   \begin{tabular}{lp{9.2cm}}
     \toprule
@@ -450,7 +363,6 @@
     \texttt{AMOUNT\_REQ} (continuous) & loan amount requested by the customer \\
     \texttt{A\_} counters & application state changes (e.g.\ \texttt{A\_SUBMITTED}, \texttt{A\_PREACCEPTED}) \\
     \texttt{O\_} counters & offer state changes (e.g.\ \texttt{O\_CREATED}, \texttt{O\_SENT}) \\
-    \texttt{W\_} counters & manual work items (e.g.\ \texttt{W\_Call\_after\_offer}, \texttt{W\_Assess\_fraud}) \\
     \midrule
     \texttt{label} $=1$ & an offer is accepted: \texttt{O\_ACCEPTED} occurs in the case \\
     \bottomrule
@@ -458,7 +370,7 @@
   \end{center}
   \begin{itemize}
     \item \texttt{O\_ACCEPTED} is \alert{forbidden} as a recommendation.
-    \item Most balanced outcome ($48.3\%$ positive), longest cases (median 22 events),
+    \item Most balanced outcome ($47.9\%$ positive), median 13 events per case,
       no categorical case attributes.
   \end{itemize}
 \end{frame}
@@ -466,7 +378,7 @@
 \begin{frame}{Training Input: bpi17-before \& bpi17-after}
   \footnotesize
   \textbf{Process:} loan applications of the same bank (BPIC 2017), two sub-logs with
-  their own models. 24 activities, 98 / 107 resources.
+  their own models. 18 activities, 103 / 119 resources; the \texttt{W\_} work items are removed.
   \begin{center}
   \begin{tabular}{lp{8.5cm}}
     \toprule
@@ -475,9 +387,9 @@
     \texttt{RequestedAmount} (continuous) & loan amount requested \\
     \texttt{LoanGoal} (13 / 14 values) & purpose of the loan (Car, Home improvement, \dots) \\
     \texttt{ApplicationType} (2 values) & New credit / Limit raise \\
-    \texttt{EventOrigin} (3 values) & object the event refers to: Application, Offer, Workflow \\
-    \texttt{Action} (3 values) & Created, statechange, Deleted \\
-    24 \texttt{\# ACTIVITY} counters & \texttt{A\_}, \texttt{O\_}, \texttt{W\_} activities, as in BPI12 \\
+    \texttt{EventOrigin} (2 values) & object the event refers to: Application, Offer \\
+    \texttt{Action} (2 values) & Created, statechange \\
+    18 \texttt{\# ACTIVITY} counters & \texttt{A\_} and \texttt{O\_} activities, as in BPI12 \\
     \midrule
     \texttt{label} $=1$ & \texttt{O\_Accepted} occurs in the case \\
     \bottomrule
@@ -539,7 +451,7 @@
     \item At inference a \alert{virtual ensemble} is read from the single trained
       model, using truncations of its tree sequence --- an ensemble at the cost
       of one model.
-    \item \textbf{Regressor} (\texttt{RMSEWithUncertainty}), law of total
+    \item \textbf{Regressor} (\texttt{RMSEWithUncertainty}, in the space it learns), law of total
       variance:
       \[
         \underbrace{\sigma_{\text{tot}}^{2}}_{\text{total}} =
@@ -560,136 +472,200 @@
       $p_{\text{cal}} = \sigma\!\left(\sigma^{-1}(p)/T\right)$, $T$ minimising
       log-loss. Monotone $\Rightarrow$ predicted label unchanged, only the
       probability is rescaled. Diagnostic: ECE, before vs after.
-    \item \textbf{Regressor $ \rightarrow$ $\sigma$-scaling:} every predicted $\sigma$ is
-      multiplied by $s$, minimising the Gaussian NLL; closed form
+    \item \textbf{Regressor $ \rightarrow$ $\sigma$-scaling:} every predicted $\sigma$ (in the space the
+      model learns) is multiplied by $s$, minimising the Gaussian NLL; closed form
       $s = \bigl(\tfrac{1}{L}\sum_{j}(y_{j}-\hat y_{j})^{2}/\sigma_{j}^{2}\bigr)^{1/2}$.
       Diagnostics: ENCE and $\pm1\sigma$ / $\pm2\sigma$ coverage
       (target $68\%$ / $95\%$).
   \end{itemize}
 \end{frame}
 
-\begin{frame}{Predictive Models: Fit on Train and Test}
-  \small
-  Classifier: Logloss. Regressor: RMSE and MAE on the normalised
-  \texttt{sigmoid\_mm} scale $[0,1]$.
-  \begin{center}
-  \begin{tabular}{lccccc}
-    \hline
-     & \multicolumn{2}{c}{Logloss (train / test)} & \multicolumn{2}{c}{RMSE (train / test)} & \multicolumn{1}{c}{Regressor} \\
-    \cline{2-3}\cline{4-5}
-    Dataset & \multicolumn{2}{c}{Outcome classifier} & \multicolumn{2}{c}{Remaining-time regressor} & \multicolumn{1}{c}{MAE}\\
-    \hline
-    BAC          & 0.192 & 0.214 & 0.145 & 0.147 & 0.076\\
-    BPI12        & 0.501 & 0.530 & 0.198 & 0.242 & 0.183\\
-    bpi17-before & 0.473 & 0.488 & 0.201 & 0.248 & 0.189\\
-    bpi17-after  & 0.476 & 0.482 & 0.201 & 0.233 & 0.178\\
-    \hline
+\begin{frame}{Remaining-Time Target: Four Candidates}
+  \scriptsize
+  Time regressor trained as in step 2 (Optuna 80 trials, \texttt{RMSEWithUncertainty}, $\sigma$-scaling); only the
+  space it learns in changes. Predictions back in seconds (log spaces: plain log-normal \alert{mean});
+  errors in \alert{days}.
+  \begin{center}\tiny\setlength{\tabcolsep}{4pt}\setlength{\aboverulesep}{0pt}\setlength{\belowrulesep}{1pt}
+  \begin{tabular}{lcccc}
+    \toprule
+    Test MAE / RMSE (d) & \texttt{sigmoid\_mm}$^{*}$ & seconds (\texttt{none}) & $\log(1+\text{seconds})$ & $\log(1+\text{days})$ \\
+    \midrule
+    BAC          & 4.94 / 18.39 & 5.65 / 18.23 & 5.61 / \alert{44.94}   & 5.10 / 18.05 \\
+    BPI12        & 8.29 / 12.47 & 7.82 / 11.96 & 8.47 / 15.47           & 7.86 / 11.94 \\
+    bpi17-before & 9.62 / 14.34 & 9.32 / 13.80 & 9.11 / 13.20           & \alert{15.91 / 684.3} \\
+    bpi17-after  & 8.84 / 13.54 & 8.77 / 13.38 & \alert{22.86 / 1651}   & 8.31 / 12.79 \\
+    \midrule
+    ENCE / cov.\ $\pm2\sigma$ (\%) & & & & \\
+    \midrule
+    BAC          & 35.4 / 96.0 & 36.0 / 98.5 & 21.9 / 97.9 & 28.4 / 97.8 \\
+    BPI12        & 15.1 / 94.6 & 28.4 / 93.8 & 14.9 / 97.1 & 14.1 / 95.8 \\
+    bpi17-before & 27.7 / 95.3 & 32.1 / 91.9 & 19.1 / 98.8 & 13.7 / 95.7 \\
+    bpi17-after  & 23.6 / 94.6 & 43.3 / 90.4 & 25.0 / 98.5 & 17.3 / 97.6 \\
+    \bottomrule
   \end{tabular}
   \end{center}
+  \vspace{-0.2cm}
+  \begin{itemize}
+    \item Log spaces: best uncertainty (lower ENCE, coverage target 95.4\%), but the mean \alert{explodes} on a
+      few test cases (red, next slide). Seconds: stable mean, worst calibration.
+  \end{itemize}
+  {\tiny $^{*}$Models of 2026-10-07: same data only for BAC; BPI12/bpi17 then still had the \texttt{W\_}
+  activities and the previous start times (indicative). Source: \texttt{2b\_time\_target\_comparison.txt}.}
+\end{frame}
+
+\begin{frame}{Log-Space Target: Back to Days}
+  \scriptsize
+  The model learns $X = \log(1 + T/\text{86\,400})$, $T$ the remaining time in seconds, and predicts
+  $X \sim \mathcal{N}(\mu, \sigma^2)$ per prefix: $T = \text{86\,400}\,(e^X - 1)$ is \alert{log-normal}.
+  \begin{itemize}
+    \item \textbf{Naive inverse} $e^{\mu}-1$: $e^x$ is monotone, so it maps the median of $X$ to the
+      \alert{median} of $T$ ($P(X \le \mu) = 1/2$), not to its mean.
+    \item \textbf{Mean} (what the recommender minimises): integrate $e^x$ against the Gaussian density
+      \[
+        \mathbb{E}[e^X] = \int_{-\infty}^{+\infty} e^{x}\,\frac{1}{\sigma\sqrt{2\pi}}\,
+          e^{-\frac{(x-\mu)^2}{2\sigma^2}}\,dx,
+        \qquad
+        x - \frac{(x-\mu)^2}{2\sigma^2} = -\frac{\bigl(x-(\mu+\sigma^2)\bigr)^2}{2\sigma^2} + \mu + \frac{\sigma^2}{2}
+      \]
+      (completing the square). The first term is the exponent of a Gaussian $\mathcal{N}(\mu+\sigma^2,\sigma^2)$,
+      whose density integrates to 1:
+      \[
+        \mathbb{E}[e^X] = e^{\mu + \sigma^2/2}\int_{-\infty}^{+\infty}\mathcal{N}(x;\,\mu+\sigma^2,\sigma^2)\,dx
+          = e^{\mu}\cdot e^{\sigma^2/2},
+        \qquad
+        \mathbb{E}[T] = \text{86\,400}\bigl(e^{\mu}e^{\sigma^2/2} - 1\bigr)
+      \]
+    \item The mean is the median scaled by $e^{\sigma^2/2} \ge 1$ (on $1 + T/\text{86\,400}$): $e^x$ is convex,
+      so the naive inverse underestimates the expected time (Jensen), most where $\sigma$ is large.
+    \item \textbf{Why it explodes:} $\sigma^2$ is in the exponent. Typical prefix $\sigma^2 \approx 0.4$, factor
+      $e^{0.2} \approx 1.2$. A prefix with two very different outcomes (\texttt{A\_Incomplete}: closed now or
+      cancelled after $\sim$30 d) is bimodal in log space; a single Gaussian covers both modes with
+      $\sigma^2 \approx 13$, factor $\approx 840$: \alert{2142 d} predicted (true 15.9, longest case 135).
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Log-Space Target: the Truncated Log-Normal}
+  \scriptsize\setlength{\abovedisplayskip}{2pt}\setlength{\belowdisplayskip}{2pt}
+  No remaining time can exceed the longest one of the training set, $U$: we use the distribution of $T$
+  \alert{given $T \le U$}, i.e.\ $X \le u$ with $u = \log(1 + U/\text{86\,400})$.
+  \begin{enumerate}
+    \item \textbf{Condition on $X \le u$:} integrate the density $f$ only up to $u$, divide by
+      $P(X \le u) = \Phi\bigl(\frac{u-\mu}{\sigma}\bigr)$:
+      \[
+        \mathbb{E}[e^X \mid X \le u] = \frac{1}{\Phi\bigl(\frac{u-\mu}{\sigma}\bigr)}\int_{-\infty}^{u} e^{x}\, f(x)\,dx
+      \]
+    \item \textbf{Same completed square}, but the integral now stops at $u$, so it is the CDF of
+      $\mathcal{N}(\mu+\sigma^2,\sigma^2)$ at $u$:\;
+      $\int_{-\infty}^{u} e^{x} f(x)\,dx = e^{\mu + \sigma^2/2}\,\Phi\bigl(\frac{u - \mu - \sigma^2}{\sigma}\bigr)$.
+  \end{enumerate}
+  \begin{block}{Correction: log-normal truncated at $U$}
+    \centering
+    $\mathbb{E}[T \mid T \le U] = \text{86\,400}\Bigl(e^{\mu + \sigma^2/2}\,
+      \Phi\bigl(\tfrac{u - \mu - \sigma^2}{\sigma}\bigr) \big/ \Phi\bigl(\tfrac{u - \mu}{\sigma}\bigr) - 1\Bigr)$
+  \end{block}
+  \begin{itemize}
+    \item \textbf{Typical prefix:} $u$ far above $\mu + \sigma^2$, both $\Phi \approx 1$ $\Rightarrow$ the plain mean
+      (17.6 d $\rightarrow$ 17.6 d). \textbf{Large $\sigma^2$:} $(u-\mu-\sigma^2)/\sigma$ very negative, the
+      $\Phi$ in the numerator cancels $e^{\sigma^2/2}$ (2142 d $\rightarrow$ \alert{11.1 d}). Never above $U$.
+    \item Same for the median, $\mu + \sigma\,\Phi^{-1}\bigl(\Phi(\frac{u-\mu}{\sigma})/2\bigr)$, and the std
+      (via $\mathbb{E}[e^{2X} \mid X \le u]$); checked by Monte Carlo. The confidence filter is unchanged
+      ($P(A<B)$ in log space). Post-hoc: the model is fitted untruncated; $U$ exceeded by 47 of 26\,095 test
+      rows (bpi17-after).
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Log-Space Target: With and Without the Truncation}
+  \scriptsize
+  Same saved models, only the transformation back to days changes. $>U$: test predictions longer than the
+  longest remaining time of the training set (largest prediction in brackets).
+  \begin{center}\tiny\setlength{\tabcolsep}{3.5pt}\setlength{\aboverulesep}{0pt}\setlength{\belowrulesep}{1pt}
+  \begin{tabular}{lccccc}
+    \toprule
+     & seconds & \multicolumn{2}{c}{$\log(1+\text{days})$} & \multicolumn{2}{c}{$\log(1+\text{seconds})$} \\
+    \cmidrule(lr){3-4}\cmidrule(lr){5-6}
+    Test MAE / RMSE (d) & (\texttt{none}) & plain & \alert{truncated} & plain & \alert{truncated} \\
+    \midrule
+    BAC ($U$ = 504 d)          & 5.65 / 18.23 & 5.10 / 18.05    & \textbf{5.09 / 18.05} & 5.61 / 44.94  & 5.19 / 18.03 \\
+    BPI12 ($U$ = 91 d)         & \textbf{7.82 / 11.96} & 7.86 / 11.94 & 7.91 / 12.03 & 8.47 / 15.47 & 8.05 / 12.20 \\
+    bpi17-before ($U$ = 136 d) & 9.32 / 13.80 & 15.91 / 684.3   & 9.15 / 13.67          & 9.11 / 13.20  & \textbf{8.96 / 13.16} \\
+    bpi17-after ($U$ = 101 d)  & 8.77 / 13.38 & 8.31 / 12.79    & 8.42 / 12.96          & 22.86 / 1651  & 8.47 / 12.88 \\
+    \midrule
+    Predictions $> U$ & & & & & \\
+    \midrule
+    BAC          & 0 & 0 (39)     & 0 (33) & 1 (4\,910)     & 0 (47) \\
+    BPI12        & 0 & 0 (31)     & 0 (27) & 9 (603)        & 0 (24) \\
+    bpi17-before & 0 & 19 (89\,029) & 0 (40) & 1 (142)      & 0 (38) \\
+    bpi17-after  & 0 & 0 (34)     & 0 (34) & 31 (255\,225)  & 0 (29) \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+  \vspace{-0.2cm}
+  \begin{itemize}
+    \item The truncation removes every absurd prediction and leaves the well-behaved cases unchanged.
+      Truncated log spaces beat seconds on BAC and bpi17 (MAE $-$0.3 to $-$0.6 d), BPI12 $+$0.09 d.
+    \item Chosen: \alert{$\log(1+\text{days})$ truncated}: needs the truncation least (absurd predictions on one
+      dataset, not three) and has the best calibration.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Predictive Models: Fit on Train and Test}
+  \small
+  Classifier: Logloss. Regressor: $\log(1+\text{days})$ with the truncated log-normal mean, errors in
+  \alert{days}. Train: the doubled training set (with the no-recommendation copies).
+  \begin{center}\setlength{\tabcolsep}{5pt}
+  \begin{tabular}{lcccccc}
+    \toprule
+     & \multicolumn{2}{c}{Outcome classifier} & \multicolumn{4}{c}{Remaining-time regressor} \\
+    \cmidrule(lr){2-3}\cmidrule(lr){4-7}
+     & \multicolumn{2}{c}{Logloss} & \multicolumn{2}{c}{RMSE (d)} & \multicolumn{2}{c}{MAE (d)} \\
+    \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+    Dataset & train & test & train & test & train & test \\
+    \midrule
+    BAC          & 0.192 & 0.214 & 17.65 & 18.05 & 4.70 & 5.09 \\
+    BPI12        & 0.469 & 0.494 &  9.05 & 12.03 & 5.99 & 7.91 \\
+    bpi17-before & 0.469 & 0.482 &  9.76 & 13.67 & 6.93 & 9.15 \\
+    bpi17-after  & 0.479 & 0.477 &  9.42 & 12.96 & 6.88 & 8.42 \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+  \footnotesize
+  \begin{itemize}
+    \item Test: every prefix of the test cases. Classifier: test Logloss at most $0.025$ above train (none on
+      bpi17-after). Regressor: test MAE above train by $1.5$--$2.2$ d on BPI12 and bpi17, $0.4$ d on BAC.
+  \end{itemize}
 \end{frame}
 
 \begin{frame}{Predictive Models: Uncertainty \& Calibration}
   \footnotesize
-  Test set. Arrows: raw $\rightarrow$ calibrated. ECE / ENCE in \%.
-  \begin{center}
-  \begin{tabular}{lccccc}
-    \hline
-    Dataset & ECE & $T$ & ENCE & $s$ & cov.\ $\pm1\sigma$ / $\pm2\sigma$ \\
-    \hline
-    BAC          & $2.4 \rightarrow$ \textbf{1.9}   & 1.06 & $35.5 \rightarrow 35.4$          & 1.01 & $90 \rightarrow 91$ / $96$\% \\
-    BPI12        & $6.5 \rightarrow 6.5$            & 1.00 & $24.2 \rightarrow$ \textbf{15.1} & 1.10 & $60 \rightarrow$ \textbf{65} / $95$\% \\
-    bpi17-before & $8.0 \rightarrow 8.4$            & 0.94 & $33.7 \rightarrow$ \textbf{27.7} & 1.07 & $55 \rightarrow$ \textbf{61} / $95$\% \\
-    bpi17-after  & $4.3 \rightarrow$ \textbf{4.1}   & 1.06 & $26.6 \rightarrow$ \textbf{23.6} & 1.03 & $59 \rightarrow$ \textbf{62} / $95$\% \\
-    \hline
-  \end{tabular}
-  \end{center}
-  \begin{itemize}
-    \item \alert{Epistemic} uncertainty is negligible on every dataset
-      ($\le 0.1\%$ of the total) --- expected on one-hot tabular inputs; kept
-      only as an out-of-domain flag.
-    \item Without class weighting the classifiers are already close to calibrated
-      ($T = 0.94$--$1.06$): temperature scaling changes ECE little (on bpi17-before
-      it rises slightly, $8.0 \rightarrow 8.4\%$, as $T$ is fitted on a held-out slice, not on the test set).
-    \item $\sigma$-scaling lowers ENCE (most on BPI12, $24.2 \rightarrow 15.1\%$) and pulls
-      $\pm1\sigma$ coverage toward the nominal $68\%$, but on bpi17 it stays below it ($61$--$62\%$).
-    \item \textbf{BAC regressor} is the exception: intervals already over-wide
-      ($\pm1\sigma$ cov.\ $91\%$), and a single global $s$ cannot fix a
-      bin-dependent gap, so ENCE stays $\sim\!35\%$.
-  \end{itemize}
-\end{frame}
-
-\begin{frame}{Remaining-Time Target: \texttt{sigmoid\_mm} vs.\ Raw Days -- Train \& Test}
-  \scriptsize
-  Same step-2 training (Optuna 80 trials, \texttt{RMSEWithUncertainty}, $\sigma$-scaling,
-  no-recommendation copies); only the regression target changes. No \texttt{idle\_days}.
-  Errors in \alert{days} for both targets, computed as the recommender uses the model
-  (virtual-ensemble mean; \texttt{sigmoid\_mm} decoded to days, raw days clipped at 0).
-  \begin{center}\setlength{\tabcolsep}{5pt}\setlength{\aboverulesep}{0pt}\setlength{\belowrulesep}{1pt}
-  \begin{tabular}{llrrrr}
+  Test set. Arrows: raw $\rightarrow$ calibrated. ECE / ENCE in \%. Regressor diagnostics in the space it
+  learns, $\log(1+\text{days})$: a $\pm k\sigma$ interval there is the same quantile interval in days.
+  \begin{center}\setlength{\tabcolsep}{4pt}
+  \begin{tabular}{lcccccc}
     \toprule
-     & & \multicolumn{2}{c}{MAE (d)} & \multicolumn{2}{c}{RMSE (d)} \\
-    \cmidrule(lr){3-4}\cmidrule(lr){5-6}
-    Dataset (train / test rows) & Target & train & test & train & test \\
+     & \multicolumn{2}{c}{Classifier} & \multicolumn{4}{c}{Regressor} \\
+    \cmidrule(lr){2-3}\cmidrule(lr){4-7}
+    Dataset & ECE & $T$ & ENCE & $s$ & cov.\ $\pm1\sigma$ & cov.\ $\pm2\sigma$ \\
     \midrule
-    BAC (164257 / 14147)          & sigmoid\_mm & 4.57 & 4.94 & 17.88 & 18.39 \\
-                                  & raw days    & 4.96 & 5.60 & 16.21 & 18.16 \\
-    \midrule
-    BPI12 (91056 / 17119)         & sigmoid\_mm & 6.08 & 8.29 & 9.36  & 12.47 \\
-                                  & raw days    & 5.97 & 7.93 & 8.90  & 11.82 \\
-    \midrule
-    bpi17-before (145832 / 19904) & sigmoid\_mm & 6.75 & 9.62 & 9.73  & 14.34 \\
-                                  & raw days    & 6.54 & 9.29 & 9.20  & 13.84 \\
-    \midrule
-    bpi17-after (166924 / 28394)  & sigmoid\_mm & 6.69 & 8.84 & 9.37  & 13.54 \\
-                                  & raw days    & 6.49 & 8.83 & 8.91  & 13.39 \\
+    BAC          & $2.5 \rightarrow$ \textbf{2.0} & 1.057 & $27.1 \rightarrow 28.4$          & 1.039 & $86.5 \rightarrow 87.8$ & $97.6 \rightarrow 97.8$ \\
+    BPI12        & $7.0 \rightarrow 7.0$          & 0.933 & $20.1 \rightarrow$ \textbf{14.1} & 1.075 & $59.4 \rightarrow 63.7$ & $94.8 \rightarrow 95.8$ \\
+    bpi17-before & $8.4 \rightarrow 8.5$          & 0.959 & $13.4 \rightarrow 13.7$          & 0.997 & $58.9 \rightarrow 58.7$ & $95.8 \rightarrow 95.7$ \\
+    bpi17-after  & $4.2 \rightarrow$ \textbf{3.8} & 1.091 & $16.6 \rightarrow 17.3$          & 1.053 & $70.8 \rightarrow 74.1$ & $96.6 \rightarrow 97.6$ \\
     \bottomrule
   \end{tabular}
   \end{center}
   \vspace{-0.2cm}
-  \begin{itemize}
-    \item Same accuracy: test MAE differs by at most $0.66$ d, test RMSE by at most $0.65$ d.
-    \item On the test cases at the split (the recommender's query) the test MAE is
-      BAC 11.05 / 10.68, BPI12 6.04 / 6.23, bpi17-before 12.44 / 12.07, bpi17-after 10.09 / 10.19 d
-      (\texttt{sigmoid\_mm} / raw days).
-  \end{itemize}
-  {\scriptsize Train: training rows with their real next step (no-recommendation copies excluded).
-  Source: \texttt{2\_training\_results\_realtime.txt}.}
-\end{frame}
-
-\begin{frame}{\texttt{sigmoid\_mm} vs.\ Raw Days -- Uncertainty \& Calibration}
   \scriptsize
-  Test set. Arrows: raw $\rightarrow$ recalibrated ($\sigma$-scaling). Coverage targets $68\%$ / $95\%$.
-  \begin{center}\setlength{\tabcolsep}{5pt}\setlength{\aboverulesep}{0pt}\setlength{\belowrulesep}{1pt}
-  \begin{tabular}{llrrrrr}
-    \toprule
-    Dataset & Target & $s$ & ENCE (\%) & $c_v$ & cov.\ $\pm1\sigma$ (\%) & cov.\ $\pm2\sigma$ (\%) \\
-    \midrule
-    BAC          & sigmoid\_mm & 1.005 & $35.5 \rightarrow 35.4$ & 0.79 & $90.4 \rightarrow 90.5$ & 96.0 \\
-                 & raw days    & 1.071 & $39.3 \rightarrow 38.0$ & 1.03 & $95.9 \rightarrow 96.3$ & 98.5 \\
-    \midrule
-    BPI12        & sigmoid\_mm & 1.100 & $24.2 \rightarrow 15.1$ & 0.40 & $59.5 \rightarrow 64.6$ & 94.6 \\
-                 & raw days    & 1.254 & $39.5 \rightarrow 20.9$ & 0.41 & $70.2 \rightarrow 80.8$ & 94.0 \\
-    \midrule
-    bpi17-before & sigmoid\_mm & 1.068 & $33.7 \rightarrow 27.7$ & 0.53 & $54.9 \rightarrow 60.5$ & 95.3 \\
-                 & raw days    & 1.245 & $55.2 \rightarrow 32.6$ & 0.54 & $62.7 \rightarrow 74.6$ & 91.6 \\
-    \midrule
-    bpi17-after  & sigmoid\_mm & 1.031 & $26.6 \rightarrow 23.6$ & 0.51 & $58.8 \rightarrow 62.3$ & 94.6 \\
-                 & raw days    & 1.175 & $60.1 \rightarrow 42.2$ & 0.49 & $62.7 \rightarrow 73.3$ & 91.0 \\
-    \bottomrule
-  \end{tabular}
-  \end{center}
-  \vspace{-0.2cm}
   \begin{itemize}
-    \item With raw days the $\pm1\sigma$ coverage rises everywhere: closer to 68\% on bpi17
-      (where \texttt{sigmoid\_mm} is overconfident), further above it on BAC and BPI12;
-      $\pm2\sigma$ drops to $\sim\!91\%$ on bpi17.
-    \item ENCE is worse with raw days on every dataset (larger $s$); $c_v$ is about the same,
-      so the uncertainty discriminates between cases equally well.
-    \item The time confidence filter uses these $\sigma$: changing target changes which
-      candidates pass it.
+    \item \alert{Epistemic} uncertainty negligible ($\le 0.1\%$ of the classifier's entropy, $\le 0.2\%$ of the
+      regressor's variance): kept only as an out-of-domain flag.
+    \item \textbf{Classifier:} $T = 0.93$--$1.09$, already close to calibrated; temperature scaling lowers ECE on
+      BAC and bpi17-after and leaves it unchanged on BPI12 and bpi17-before ($T$ is fitted on a held-out slice).
+    \item \textbf{Regressor:} $s \approx 1$; $\pm2\sigma$ covers $95.7$--$97.8\%$ (target $95.4\%$). $\sigma$-scaling
+      lowers ENCE only on BPI12; elsewhere $< 1.3$ points ($s$ minimises the NLL, not the ENCE). $\pm1\sigma$
+      above $68\%$ on BAC, below on BPI12 and bpi17-before: residuals more peaked and heavier-tailed than a
+      Gaussian.
   \end{itemize}
 \end{frame}
-
 
 \section{Online Phase}
 
@@ -704,15 +680,15 @@
   \begin{itemize}
     \item For a running case, the feasibility module returns the valid
       \texttt{(activity, resource)} candidates --- on average
-      $\sim\!290\text{--}470$ per prefix, depending on the dataset.
+      $\sim\!140\text{--}400$ per prefix, depending on the dataset.
     \item Each candidate is scored by the two models, by placing it in the
       \texttt{NEXT\_ACTIVITY} / \texttt{NEXT\_RESOURCE} columns of the query instance.
     \item \alert{Confidence filter:} a candidate is kept only if it is likely enough
       to beat the \emph{no-recommendation} baseline on at least one KPI (next slides).
     \item The survivors are compared on \alert{two objectives}, optimised jointly:
       \begin{itemize}
-        \item outcome probability;
-        \item $1 -$ predicted remaining time, normalised to $[0,1]$.
+        \item outcome probability (maximised);
+        \item expected remaining time in days (minimised).
       \end{itemize}
     \item The \alert{non-dominated} candidates form the Pareto front.
     \item Exhaustive evaluation: a single vectorised pass over all feasible pairs — exact and, at this scale, fast.
@@ -764,7 +740,7 @@
           so a Gaussian model is sensible (the probability is bounded in $[0,1]$);
           the logit is monotone in the probability, so $P(\text{logit}_A >
           \text{logit}_B) = P(p_A > p_B)$;
-        \item \textbf{time}: predicted mean $a_m, b_m$ of \texttt{sigmoid\_mm}, plus each   member's own (aleatoric) variance $\sigma^2_{A,m}$, $\sigma^2_{B,m}$;   the resulting std is multiplied by the $\sigma$-scaling factor $s$ (calibrated).
+        \item \textbf{time}: predicted mean $a_m, b_m$ in the space the regressor learns, $\log(1+\text{days})$, plus each member's own (aleatoric) variance $\sigma^2_{A,m}$, $\sigma^2_{B,m}$; the resulting std is multiplied by the $\sigma$-scaling factor $s$ (calibrated).
 
       \end{itemize}
   \end{itemize}
@@ -780,7 +756,7 @@
     s_{AB} = \tfrac{1}{M-1}\textstyle\sum_{m}(a_m-\bar a)(b_m-\bar b)
   \]
   \begin{itemize}
-    \item \textbf{time}: predicted mean $a_m, b_m$ of \texttt{sigmoid\_mm}, plus each   member's own (aleatoric) variance $\sigma^2_{A,m}$, $\sigma^2_{B,m}$;   the resulting std is multiplied by the $\sigma$-scaling factor $s$ (calibrated).
+    \item \textbf{time}: predicted mean $a_m, b_m$ in the space the regressor learns, $\log(1+\text{days})$, plus each member's own (aleatoric) variance $\sigma^2_{A,m}$, $\sigma^2_{B,m}$; the resulting std is multiplied by the $\sigma$-scaling factor $s$ (calibrated). Monotone way back to days: same $P(\text{time}_A < \text{time}_B)$.
 
     \item Posterior predictive of a new difference (normal population, unknown mean
       and variance): $D \sim t_{M-1}\bigl(\bar d,\ s_d^2 (1 + 1/M)\bigr)$, hence
@@ -826,7 +802,7 @@
     \node[stage] (c) {feasible\\\texttt{(activity, resource)}\\candidates};
     \node[stage, right=of c] (s) {score $A$ and $B$\\on every member};
     \node[stage, fill=Darkcandyapplered!20, right=of s] (f) {filter\\$p_{\text{out}} > \gamma$ or\\$p_{\text{time}} > \gamma$};
-    \node[stage, right=of f] (p) {2-D Pareto front\\(outcome, $1-$time)};
+    \node[stage, right=of f] (p) {2-D Pareto front\\(outcome, time)};
     \node[stage, right=of p] (k) {$k$ diverse picks\\($p$-dispersion)};
     \draw[-{Latex}] (c) -- (s); \draw[-{Latex}] (s) -- (f);
     \draw[-{Latex}] (f) -- (p); \draw[-{Latex}] (p) -- (k);
@@ -882,8 +858,8 @@
 \begin{frame}{Confidence Filter in Practice: BAC}
   \small
   1876 test cases, \alert{all} with at least one feasible candidate from the transition system
-  (497.7 per case): every case without a recommendation is removed by the filter. The same $\gamma$ is used for both
-  KPIs; $\gamma = 0$: no filter. $\gamma = 0.9$ is omitted: no case has a recommendation, as at 0.8.
+  (403.5 per case): every case without a recommendation is removed by the filter. The same $\gamma$ is used for
+  both KPIs; $\gamma = 0$: no filter.
 
   \textbf{Candidates passing the filter, Pareto front, \% of test cases with a recommendation at rank $r$ (at least $r$ recommendations) and with none}
   \begin{center}\setlength{\tabcolsep}{4pt}\setlength{\aboverulesep}{0pt}\setlength{\belowrulesep}{1pt}
@@ -891,23 +867,24 @@
     \toprule
      & \multicolumn{3}{c}{\% candidates passing} & Front & \multicolumn{5}{c}{\% test cases with rank $r$} & No rec. \\
     \cmidrule(lr){2-4}\cmidrule(lr){6-10}
-    $\gamma$ & outcome & time & both & size & 1 & 2 & 3 & 4 & 5 & (\% cases) \\
+    $\gamma$ & outcome & time & filter & size & 1 & 2 & 3 & 4 & 5 & (\% cases) \\
     \midrule
-    0 (none) & 100.0 & 100.0 & 100.0 & 1.70 & 100.0 & 44.7 & 18.5 & 4.9 & 1.2 & 0.0 \\
-    0.5      & 48.7  & 54.1  & 24.0  & 1.28 & 95.1  & 28.0 & 5.0  & 0.1 & 0.0 & 4.9 \\
-    0.6      & 47.5  & 0.3   & 0.3   & 0.39 & 38.3  & 0.6  & 0.0  & 0.0 & 0.0 & 61.7 \\
-    0.7      & 47.1  & 0.0   & 0.0   & 0.00 & 0.2   & 0.0  & 0.0  & 0.0 & 0.0 & 99.8 \\
-    0.8      & 43.1  & 0.0   & 0.0   & 0.00 & 0.0   & 0.0  & 0.0  & 0.0 & 0.0 & 100.0 \\
+    0 (none) & 100.0 & 100.0 & 100.0 & 1.54 & 100.0 & 37.8 & 15.3 & 1.1 & 0.0 & 0.0 \\
+    0.5      & 54.2  & 58.8  & 82.3  & 1.54 & 99.8  & 37.4 & 15.3 & 1.1 & 0.0 & 0.2 \\
+    0.6      & 54.0  & 0.1   & 54.0  & 1.36 & 96.5  & 33.3 & 6.1  & 0.1 & 0.0 & 3.5 \\
+    0.7      & 53.7  & 0.0   & 53.7  & 1.36 & 96.4  & 33.2 & 6.1  & 0.1 & 0.0 & 3.6 \\
+    0.8      & 51.7  & 0.0   & 51.7  & 1.34 & 96.4  & 31.9 & 6.1  & 0.1 & 0.0 & 3.6 \\
     \bottomrule
   \end{tabular}
   \end{center}
+  {\scriptsize filter: $p_{\text{out}} > \gamma$ \textbf{or} $p_{\text{time}} > \gamma$.}
 \end{frame}
 
 \begin{frame}{Confidence Filter in Practice: BPI12}
   \small
   623 test cases, \alert{all} with at least one feasible candidate from the transition system
-  (218.5 per case): every case without a recommendation is removed by the filter. The same $\gamma$ is used for both
-  KPIs; $\gamma = 0$: no filter. $\gamma = 0.9$ is omitted: no case has a recommendation, as at 0.8.
+  (139.2 per case): every case without a recommendation is removed by the filter. The same $\gamma$ is used for
+  both KPIs; $\gamma = 0$: no filter.
 
   \textbf{Candidates passing the filter, Pareto front, \% of test cases with a recommendation at rank $r$ (at least $r$ recommendations) and with none}
   \begin{center}\setlength{\tabcolsep}{4pt}\setlength{\aboverulesep}{0pt}\setlength{\belowrulesep}{1pt}
@@ -915,23 +892,25 @@
     \toprule
      & \multicolumn{3}{c}{\% candidates passing} & Front & \multicolumn{5}{c}{\% test cases with rank $r$} & No rec. \\
     \cmidrule(lr){2-4}\cmidrule(lr){6-10}
-    $\gamma$ & outcome & time & both & size & 1 & 2 & 3 & 4 & 5 & (\% cases) \\
+    $\gamma$ & outcome & time & filter & size & 1 & 2 & 3 & 4 & 5 & (\% cases) \\
     \midrule
-    0 (none) & 100.0 & 100.0 & 100.0 & 2.95 & 100.0 & 99.8 & 64.4 & 17.5 & 12.8 & 0.0 \\
-    0.5      & 30.8  & 82.6  & 23.9  & 1.93 & 99.4  & 93.3 & 0.3  & 0.0  & 0.0 & 0.6 \\
-    0.6      & 16.4  & 2.3   & 2.3   & 0.45 & 24.7  & 20.4 & 0.0  & 0.0  & 0.0 & 75.3 \\
-    0.7      & 16.1  & 0.0   & 0.0   & 0.00 & 0.0   & 0.0  & 0.0  & 0.0  & 0.0 & 100.0 \\
-    0.8      & 15.4  & 0.0   & 0.0   & 0.00 & 0.0   & 0.0  & 0.0  & 0.0  & 0.0 & 100.0 \\
+    0 (none) & 95.4  & 100.0 & 100.0 & 2.53 & 100.0 & 48.6 & 34.3 & 32.1 & 16.1 & 0.0 \\
+    0.5      & 30.2  & 55.8  & 71.9  & 2.43 & 100.0 & 48.0 & 34.3 & 32.1 & 14.9 & 0.0 \\
+    0.6      & 27.9  & 1.6   & 29.0  & 1.62 & 100.0 & 45.6 & 14.0 & 2.7  & 0.0  & 0.0 \\
+    0.7      & 27.2  & 0.0   & 27.2  & 1.50 & 100.0 & 45.1 & 4.2  & 0.5  & 0.0  & 0.0 \\
+    0.8      & 26.5  & 0.0   & 26.5  & 1.49 & 100.0 & 45.1 & 3.9  & 0.5  & 0.0  & 0.0 \\
     \bottomrule
   \end{tabular}
   \end{center}
+  {\scriptsize filter: $p_{\text{out}} > \gamma$ \textbf{or} $p_{\text{time}} > \gamma$. At $\gamma = 0$ the outcome
+  share is below 100\% because some candidates have $p_{\text{out}} = 0$ exactly.}
 \end{frame}
 
 \begin{frame}{Confidence Filter in Practice: bpi17-before}
   \small
   1218 test cases, \alert{all} with at least one feasible candidate from the transition system
-  (424.1 per case): every case without a recommendation is removed by the filter. The same $\gamma$ is used for both
-  KPIs; $\gamma = 0$: no filter. $\gamma = 0.9$ is omitted: no case has a recommendation, as at 0.8.
+  (238.8 per case): every case without a recommendation is removed by the filter. The same $\gamma$ is used for
+  both KPIs; $\gamma = 0$: no filter.
 
   \textbf{Candidates passing the filter, Pareto front, \% of test cases with a recommendation at rank $r$ (at least $r$ recommendations) and with none}
   \begin{center}\setlength{\tabcolsep}{4pt}\setlength{\aboverulesep}{0pt}\setlength{\belowrulesep}{1pt}
@@ -939,25 +918,24 @@
     \toprule
      & \multicolumn{3}{c}{\% candidates passing} & Front & \multicolumn{5}{c}{\% test cases with rank $r$} & No rec. \\
     \cmidrule(lr){2-4}\cmidrule(lr){6-10}
-    $\gamma$ & outcome & time & both & size & 1 & 2 & 3 & 4 & 5 & (\% cases) \\
+    $\gamma$ & outcome & time & filter & size & 1 & 2 & 3 & 4 & 5 & (\% cases) \\
     \midrule
-    0 (none) & 100.0 & 100.0 & 100.0 & 5.85 & 100.0 & 100.0 & 96.6 & 87.6 & 78.8 & 0.0 \\
-    0.5      & 60.0  & 70.3  & 39.3  & 2.61 & 99.6  & 96.4  & 61.2 & 2.7  & 0.5 & 0.4 \\
-    0.6      & 28.3  & 23.3  & 0.6   & 0.68 & 53.7  & 12.1  & 2.4  & 0.0  & 0.0 & 46.3 \\
-    0.7      & 28.0  & 12.0  & 0.0   & 0.00 & 0.0   & 0.0   & 0.0  & 0.0  & 0.0 & 100.0 \\
-    0.8      & 28.0  & 3.2   & 0.0   & 0.00 & 0.0   & 0.0   & 0.0  & 0.0  & 0.0 & 100.0 \\
+    0 (none) & 95.0  & 100.0 & 100.0 & 4.53 & 100.0 & 100.0 & 90.6 & 83.9 & 74.9 & 0.0 \\
+    0.5      & 50.5  & 62.4  & 76.2  & 4.50 & 100.0 & 99.8  & 90.3 & 82.1 & 74.0 & 0.0 \\
+    0.6      & 47.8  & 23.5  & 71.0  & 4.48 & 100.0 & 98.7  & 90.2 & 81.8 & 73.7 & 0.0 \\
+    0.7      & 47.7  & 22.2  & 69.9  & 4.36 & 100.0 & 93.6  & 87.4 & 79.6 & 72.7 & 0.0 \\
+    0.8      & 41.9  & 20.4  & 62.3  & 4.23 & 100.0 & 93.5  & 85.7 & 74.1 & 68.1 & 0.0 \\
     \bottomrule
   \end{tabular}
   \end{center}
+  {\scriptsize filter: $p_{\text{out}} > \gamma$ \textbf{or} $p_{\text{time}} > \gamma$.}
 \end{frame}
 
 \begin{frame}{Confidence Filter in Practice: bpi17-after}
   \small
-  1840 test cases, \alert{4 with no feasible candidate}: the transition system knows no next
-  activity for their prefix, so they get no recommendation for any $\gamma$ (they are the 0.2\%
-  of ``No rec.'' at $\gamma = 0$); 502.4 candidates per case. The same
-  $\gamma$ is used for both KPIs; $\gamma = 0$: no filter. $\gamma = 0.9$ is omitted: no case has a
-  recommendation, as at 0.8.
+  1840 test cases, \alert{3 with no feasible candidate}: the transition system knows no next
+  activity for their prefix, so they get no recommendation for any $\gamma$ (the 0.2\% of ``No rec.'');
+  344.9 candidates per case. The same $\gamma$ is used for both KPIs; $\gamma = 0$: no filter.
 
   \textbf{Candidates passing the filter, Pareto front, \% of test cases with a recommendation at rank $r$ (at least $r$ recommendations) and with none}
   \begin{center}\setlength{\tabcolsep}{4pt}\setlength{\aboverulesep}{0pt}\setlength{\belowrulesep}{1pt}
@@ -965,93 +943,54 @@
     \toprule
      & \multicolumn{3}{c}{\% candidates passing} & Front & \multicolumn{5}{c}{\% test cases with rank $r$} & No rec. \\
     \cmidrule(lr){2-4}\cmidrule(lr){6-10}
-    $\gamma$ & outcome & time & both & size & 1 & 2 & 3 & 4 & 5 & (\% cases) \\
+    $\gamma$ & outcome & time & filter & size & 1 & 2 & 3 & 4 & 5 & (\% cases) \\
     \midrule
-    0 (none) & 100.0 & 100.0 & 100.0 & 4.88 & 99.8 & 98.0 & 86.4 & 75.7 & 56.4 & 0.2 \\
-    0.5      & 59.2  & 73.7  & 42.2  & 1.81 & 99.8 & 70.5 & 8.8  & 1.6  & 0.0 & 0.2 \\
-    0.6      & 37.1  & 23.1  & 0.0   & 0.01 & 0.8  & 0.1  & 0.0  & 0.0  & 0.0 & 99.2 \\
-    0.7      & 37.0  & 18.7  & 0.0   & 0.00 & 0.0  & 0.0  & 0.0  & 0.0  & 0.0 & 100.0 \\
-    0.8      & 35.8  & 9.2   & 0.0   & 0.00 & 0.0  & 0.0  & 0.0  & 0.0  & 0.0 & 100.0 \\
+    0 (none) & 93.1  & 100.0 & 100.0 & 2.52 & 99.8 & 97.1 & 43.4 & 10.1 & 0.6 & 0.2 \\
+    0.5      & 38.5  & 79.9  & 86.0  & 2.51 & 99.8 & 97.1 & 43.0 & 10.1 & 0.6 & 0.2 \\
+    0.6      & 35.9  & 16.6  & 52.4  & 2.13 & 99.8 & 78.8 & 29.0 & 5.2  & 0.1 & 0.2 \\
+    0.7      & 35.7  & 0.1   & 35.8  & 1.38 & 99.8 & 37.1 & 0.9  & 0.1  & 0.1 & 0.2 \\
+    0.8      & 35.6  & 0.0   & 35.6  & 1.38 & 99.8 & 36.8 & 0.7  & 0.0  & 0.0 & 0.2 \\
     \bottomrule
   \end{tabular}
   \end{center}
+  {\scriptsize filter: $p_{\text{out}} > \gamma$ \textbf{or} $p_{\text{time}} > \gamma$.}
 \end{frame}
 
 \begin{frame}{Confidence Filter: Effect of $\gamma$}
   \footnotesize
   \begin{itemize}
-    \item \textbf{$\gamma = 0.5$} keeps 24--42\% of the candidates, yet almost every case
-      still gets a recommendation (no recommendation: 0.2\% bpi17-after -- 4.9\% BAC).
-    \item \textbf{$\gamma = 0.6$} is already too strict: the cases left without a
-      recommendation jump to 46\% (bpi17-before), 62\% (BAC), 75\% (BPI12), 99\% (bpi17-after);
-      from $\gamma = 0.7$ practically none has one (0.2\% on BAC, 0 elsewhere).
-    \item \textbf{The time condition is the bottleneck.} On BAC and BPI12 almost no
-      candidate passes it at 0.6 (0.3\%, 2.3\%): the time probabilities sit close to 0.5,
-      as the aleatoric noise dominates the difference between candidate and baseline.
-      On bpi17 23\% pass on time and 28--37\% on outcome, but almost none on \emph{both}
-      (0.6\% and 0.0\%, against 6.6\% and 8.6\% if independent): the candidates
-      better on one KPI are rarely better on the other.
-    \item \textbf{Fronts are small:} 1.3--2.6 points per case at $\gamma = 0.5$ (1.7--5.9
-      without filter), so with $k = 5$ ranks 4--5 are almost always empty; $k = 3$ would
-      cover nearly every case.
-    \item \textbf{No candidate at all} from the transition system: only 4 cases (bpi17-after);
-      every other case without a recommendation is due to the filter.
+    \item \textbf{$\gamma = 0.5$} keeps 72--86\% of the candidates (a candidate passes if it is likely better on
+      \emph{at least one} KPI), and practically every case gets a recommendation (no recommendation: 0.2\% on
+      BAC and bpi17-after, none on BPI12 and bpi17-before).
+    \item \textbf{The time condition collapses above 0.5.} At $\gamma = 0.6$ only 0.1\% (BAC) and 1.6\% (BPI12)
+      of the candidates pass it, 16.6\% on bpi17-after (0.1\% at 0.7); only bpi17-before keeps $\sim$20\% up to
+      0.8. The time probabilities sit close to 0.5: the aleatoric noise dominates the difference between
+      candidate and baseline.
+    \item \textbf{The outcome condition barely moves} from 0.5 to 0.8 (BAC 54 $\rightarrow$ 52\%, BPI12
+      30 $\rightarrow$ 27\%, bpi17 39--51 $\rightarrow$ 36--42\%): only the (negligible) epistemic spread enters,
+      so $p_{\text{out}}$ is mostly close to 0 or 1.
+    \item Hence, with the \textbf{or} rule, for $\gamma > 0.5$ the filter is almost the outcome condition alone:
+      few cases lose every recommendation (at most 3.6\%, BAC), but the fronts shrink and the lower ranks empty
+      (BPI12 rank 3: 34 $\rightarrow$ 4\%; bpi17-after rank 2: 97 $\rightarrow$ 37\% at $\gamma = 0.7$).
+    \item \textbf{Fronts are small:} 1.5--4.5 points per case at $\gamma = 0.5$; with $k = 5$ rank 5 is reached
+      only on bpi17-before (74\%) and BPI12 (15\%).
   \end{itemize}
   {\scriptsize Source: \texttt{3\_confidence\_filter\_sweep.txt}.}
 \end{frame}
 
-\begin{frame}{Why Exhaustive Search, Not a Genetic Algorithm}
-  A heuristic multi-objective search (genetic / NSGA-II) was implemented and
-  compared, then dropped.
-  \begin{itemize}
-    \item \textbf{Small search space:} on average $\sim\!290\text{--}470$ feasible
-      \texttt{(activity, resource)} pairs per prefix. Exhaustive search scores
-      each pair \alert{once} and returns the \alert{exact} front.
-    \item \textbf{Genetic search pays a warm-up cost:} the front (and its
-      hypervolume) only stabilises after several generations, and each
-      generation evaluates a whole population through both models --- so
-      $\mathrm{pop\_size} \times n_{\text{gen}}$ model calls quickly exceed the
-      single exhaustive pass, for a result that is still approximate.
-
-  \end{itemize}
-
-\end{frame}
-
-\begin{frame}{Why Exhaustive Search, Not a Genetic Algorithm}
+\begin{frame}{Exploring the Pareto Front}
     \begin{itemize}
-        \item \textbf{Measured (per case, EXHAUSTIVE vs NSGA-II):}
-    \end{itemize}
-    \begin{center}
-      \begin{tabular}{lcc}
-        \hline
-        Case study & Exhaustive & NSGA-II \\
-        \hline
-        BAC          & $0.31$\,s & $0.55$\,s \\
-        BPI12        & $0.16$\,s & $0.98$\,s \\
-        bpi17-before & $0.08$\,s & $0.41$\,s \\
-        bpi17-after  & $0.09$\,s & $0.42$\,s \\
-        \hline
-      \end{tabular}
-    \end{center}
-    \begin{block}{}
-        At this scale exhaustive search wins on both quality (exact front) and time.
-        A genetic search would only pay off with thousands of candidates
-        (e.g.\ hundreds of eligible resources per activity).
-    \end{block}
-\end{frame}
-
-
-\begin{frame}{Exploring the Pareto Front \& Time Normalization}
-    \begin{itemize}
-        \item \textbf{Time Transformation Pipeline:} To harmonize scales and enable multi-objective optimization, raw remaining time undergoes:
-        \begin{enumerate}
-            \item \textbf{Z-normalization:} Standardizes skewed temporal distributions.
-            \item \textbf{Sigmoid Transformation:} Smooths extreme outliers.
-            \item \textbf{Min-Max Scaling:} Maps values into the $[0, 1]$ interval.
-        \end{enumerate}
-        \item \textbf{Inversion ($1 - \text{Time}$):} Converts time minimization into maximization, placing the ideal theoretical point at $(1,1)$ for intuitive visual trade-off analysis.
+        \item \textbf{Two objectives:} outcome probability (\alert{maximised}) and expected remaining time in
+          days (\alert{minimised}), the truncated log-normal mean of the regressor.
+        \item \textbf{No normalisation of the time:} Pareto dominance only compares values, so the front
+          does not depend on the scale of the axes. The ideal point is $(1, 0)$: positive outcome
+          for sure, no remaining time.
+        \item \textbf{Before:} the time was the \texttt{sigmoid\_mm} target (z-normalisation $\rightarrow$
+          sigmoid $\rightarrow$ min-max) and entered as $1 - \text{time}$, ideal point $(1,1)$; now the
+          model predicts the time itself.
+        \item Min-max normalisation is used only for the distances of the $p$-dispersion (next slide).
         \item Predictive uncertainty does not add an axis: it has already been used by
-          the confidence filter, so the front lives in $[0,1]^2$.
+          the confidence filter.
     \end{itemize}
 \end{frame}
 
@@ -1059,7 +998,7 @@
     \begin{itemize}
         \item Once the Pareto front is computed for a case, the framework selects $k$ representative (activity, resource) candidates to be evaluated in simulation, instead of the whole front.
         \item \textbf{Goal:} spread the $k$ selected points as evenly as possible across the front, rather than clustering them in one region of the objective space.
-        \item \textbf{Formulation:} the \textit{max-min dispersion} (\textit{p}-dispersion) problem -- select the subset of $k$ points that maximizes the minimum pairwise distance among the selected points, computed in the min-max normalised (outcome, $1-$time) objective space.
+        \item \textbf{Formulation:} the \textit{max-min dispersion} (\textit{p}-dispersion) problem -- select the subset of $k$ points that maximizes the minimum pairwise distance among the selected points, computed in the (outcome, time) objective space, each axis min-max normalised over the front.
         \item \textbf{Exact solution:} solved to optimality as a MILP (\texttt{spopt.locate.PDispersion}), built from the pairwise Euclidean distance matrix of the front and solved with the CBC solver.
         \item If the front has $k$ points or fewer, all of them are kept.
     \end{itemize}
@@ -1068,28 +1007,28 @@
 \begin{frame}{Experimental Results: Pareto Fronts (BAC)}
     \begin{figure}
         \centering
-        \includegraphics[width=0.5\linewidth]{pareto_front_images/pareto_BAC_20191010593_exhaustive.jpg}
+        \includegraphics[width=0.5\linewidth]{pareto_front_images/pareto_BAC_201812007319_exhaustive.jpg}
     \end{figure}
 \end{frame}
 
 \begin{frame}{Experimental Results: Pareto Fronts (BPI12)}
     \begin{figure}
         \centering
-        \includegraphics[width=0.5\linewidth]{pareto_front_images/pareto_BPI12_195082_exhaustive.jpg}
+        \includegraphics[width=0.5\linewidth]{pareto_front_images/pareto_BPI12_199014_exhaustive.jpg}
     \end{figure}
 \end{frame}
 
 \begin{frame}{Experimental Results: Pareto Fronts (bpi17-before)}
     \begin{figure}
         \centering
-        \includegraphics[width=0.5\linewidth]{pareto_front_images/pareto_bpi17_before_Application_1290192129_exhaustive.jpg}
+        \includegraphics[width=0.5\linewidth]{pareto_front_images/pareto_bpi17_before_Application_1023449033_exhaustive.jpg}
     \end{figure}
 \end{frame}
 
 \begin{frame}{Experimental Results: Pareto Fronts (bpi17-after)}
     \begin{figure}
         \centering
-        \includegraphics[width=0.5\linewidth]{pareto_front_images/pareto_bpi17_after_Application_429482627_exhaustive.jpg}
+        \includegraphics[width=0.5\linewidth]{pareto_front_images/pareto_bpi17_after_Application_216754029_exhaustive.jpg}
     \end{figure}
 \end{frame}
 
@@ -1186,9 +1125,9 @@
     Dataset & Fitness & Fit.\ tr. & Prec. & Fitness & Prec. & Fitness & Prec. \\
     \midrule
     BAC          & 0.992 & 90.3\% & 0.911 & 1.000 & 0.504 & 1.000 & 0.866 \\
-    BPI12        & 0.953 &  3.8\% & 0.678 & 1.000 & 0.226 & 1.000 & 0.431 \\
-    bpi17-before & 0.982 & 68.3\% & 0.835 & 1.000 & 0.275 & 1.000 & 0.466 \\
-    bpi17-after  & 0.974 & 57.6\% & 0.849 & 1.000 & 0.266 & 1.000 & 0.486 \\
+    BPI12        & 0.953 &  3.8\% & 0.678 & 1.000 & 0.226 & 1.000 & 0.877 \\
+    bpi17-before & 0.982 & 68.3\% & 0.835 & 1.000 & 0.275 & 1.000 & 0.556 \\
+    bpi17-after  & 0.974 & 57.6\% & 0.849 & 1.000 & 0.266 & 1.000 & 0.566 \\
     \bottomrule
   \end{tabular}
   \end{center}
@@ -1196,10 +1135,10 @@
   \begin{itemize}
     \item \textbf{Inductive Miner:} handles concurrency in principle, but to reach fitness 1 on
       these loop-rich logs it falls back to flower-like blocks (many silent transitions, e.g.\
-      54 against 7 on BAC): \alert{precision about halved} with respect to the directly-follows net.
+      54 against 7 on BAC): \alert{precision about halved} on BAC.
     \item \textbf{Directly-follows:} fitness 1 on every dataset (100\% of the traces), the
       highest precision among the fitness-1 nets; used by the simulator.
-      Source: \texttt{discovery/petri\_net\_quality.csv} (Inductive Miner: separate test).
+      Source: \texttt{discovery/petri\_net\_quality.csv}. Split Miner and Inductive Miner: BPI12/bpi17 logs \emph{with} \texttt{W\_}, not recomputed.
   \end{itemize}
 \end{frame}
 
@@ -1245,48 +1184,42 @@
 
 \begin{frame}{Simulation: How Many Recommendations Can Be Applied}
   \footnotesize
-  Per rank: test cases \alert{usable} (recommendation applied in the simulation) / test
-  cases \alert{simulated} (with a recommendation at that rank), $\gamma = 0.5$, $k = 5$.
-  \begin{center}\setlength{\tabcolsep}{4pt}
-  \begin{tabular}{lrrrr}
+  Test cases \alert{simulated} at each rank (with a recommendation at that rank), $\gamma = 0.5$, $k = 5$,
+  10 runs. All of them are \alert{usable}: the recommendation is applied in every run.
+  \begin{center}\setlength{\tabcolsep}{5pt}
+  \begin{tabular}{lrrrrrr}
     \toprule
-    Dataset (test cases) & Rank 1 & Rank 2 & Rank 3 & Rank 1 usable, \% of test \\
+    Dataset (test cases) & Rank 1 & Rank 2 & Rank 3 & Rank 4 & Rank 5 & \shortstack{R-1 usable,\\ \% of test} \\
     \midrule
-    BAC (1876)          & 1179 / 1785 (66\%) & 69 / 525 (13\%)    & 4 / 94 (4\%)     & 62.8\% \\
-    BPI12 (623)         & 107 / 619 (17\%)   & 102 / 581 (18\%)   & 2 / 2            & 17.2\% \\
-    bpi17-before (1218) & 1132 / 1213 (93\%) & 1099 / 1174 (94\%) & 695 / 745 (93\%) & 92.9\% \\
-    bpi17-after (1840)  & 1441 / 1836 (78\%) & 1047 / 1297 (81\%) & 121 / 162 (75\%) & 78.3\% \\
+    BAC (1876)          & 1872 &  702 &  287 &   20 &   0 &  99.8\% \\
+    BPI12 (623)         &  623 &  299 &  214 &  200 &  93 & 100.0\% \\
+    bpi17-before (1218) & 1218 & 1216 & 1100 & 1000 & 901 & 100.0\% \\
+    bpi17-after (1840)  & 1837 & 1786 &  791 &  186 &  11 &  99.8\% \\
     \bottomrule
   \end{tabular}
   \end{center}
-  \vspace{-0.2cm}
   \begin{itemize}
-    \item Most frequent unreachable recommendations (rank 1, cases): BAC
-      \emph{Pending Request for Reservation Closure} (233), \emph{Authorization Requested}
-      (172); BPI12 \texttt{O\_SENT\_BACK} (455); bpi17 \texttt{A\_Validating} (51 before, 281 after).
-    \item On \alert{BPI12} only 17\% of the test cases can be evaluated; on BAC a third
-      of rank 1 is lost. Ranks 4--5 are almost empty (at most 33 cases).
-    \item No case is truncated (0 runaway cases); the baseline is simulated for every test case.
+    \item \alert{No unreachable recommendation} in any run or rank, no non-fitting prefix, no truncated case:
+      the fitness-1 directly-follows net replays every prefix and allows every step of the log.
+    \item Before, with the Split Miner net: only 17\% of rank 1 usable on BPI12, 66\% on BAC.
+    \item Most frequent rank-1 recommendations: BAC \emph{Pending Liquidation Request} (34\%); BPI12
+      \texttt{O\_SENT\_BACK} (61\%); bpi17 \texttt{A\_Validating} (87\%).
   \end{itemize}
-  {\scriptsize Source: \texttt{4\_simulation\_summary\_<case>.txt}.}
+  {\scriptsize Source: \texttt{4\_simulation\_summary\_<case>.txt}, \texttt{3\_recommendations\_summary.csv}.}
 \end{frame}
 
-\begin{frame}{Open Question: Unreachable Recommendations}
+\begin{frame}{Open Question: Recommending Customer Events}
   \small
   \begin{itemize}
-    \item \textbf{Why:} the recommender proposes activities that followed the same recent
-      history in the training log (transition system, window 5); the simulator uses a
-      \emph{different} model, the discovered Petri net, which may not allow them as the
-      next step. The recommender is deliberately kept independent of the simulator.
-    \item The most frequent ones (\texttt{O\_SENT\_BACK}, \texttt{A\_Validating}) are
-      events that follow a \alert{customer} action, not a bank activity.
-    \item \textbf{In the evaluation} they are excluded (reported, not hidden).
-    \item \textbf{In production} a recommendation cannot simply be ``impossible''. Options:
+    \item With the fitness-1 net every recommendation can be applied in the simulation (previous slide).
+    \item But the most frequent ones (\texttt{O\_SENT\_BACK}, 61\% of rank 1 on BPI12; \texttt{A\_Validating},
+      87\% on bpi17) are events that follow a \alert{customer} action, not a bank activity: the simulator
+      executes them, the bank could not simply do so.
+    \item The recommender proposes what followed the same recent history in the training log (transition
+      system, window 5), and it is deliberately kept independent of the simulator.
+    \item \textbf{In production}, options:
       \begin{enumerate}
         \item recommend only activities the bank can execute (no customer events);
-        \item execute the intermediate activities needed to reach it (then the next step
-          is no longer the recommendation);
-        \item recommend the first activity on that path instead;
         \item fall back to the next point of the Pareto front, or to no recommendation.
       \end{enumerate}
   \end{itemize}
@@ -1295,7 +1228,7 @@
 \begin{frame}{Result Computation \& Validation}
     \begin{itemize}
         \item For each case, the \textbf{outcome} and \textbf{remaining time} are averaged over the 10 simulation runs, separately for the baseline and for each recommendation method/rank.
-        \item The same quantities are also computed \textit{without simulating}, directly from the \textbf{offline-phase} CatBoost regressor and classifier, applied to the prefix with the recommended next step and with \texttt{\_\_NO\_NEXT\_\_} (the same ``no recommendation'' baseline used by the confidence filter); the remaining time is the virtual-ensemble mean, as in the recommender.
+        \item The same quantities are also computed \textit{without simulating}, directly from the \textbf{offline-phase} CatBoost regressor and classifier, applied to the prefix with the recommended next step and with \texttt{\_\_NO\_NEXT\_\_} (the same ``no recommendation'' baseline used by the confidence filter); the remaining time is the expected value in days (truncated log-normal mean), as in the recommender.
         \item Comparing simulated vs.\ predicted values makes it possible to assess how well the offline predictive models agree with the actual stochastic behavior reproduced by the simulator.
     \end{itemize}
 \end{frame}
@@ -1305,17 +1238,17 @@
 
     \begin{minipage}{0.45\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{predicted_vs_simulated/BAC_plots/BAC_20191001846_exhaustive_predicted_vs_simulated.png}
+        \includegraphics[width=\linewidth]{predicted_vs_simulated/BAC_plots/BAC_20191008566_exhaustive_predicted_vs_simulated.png}
     \end{minipage}
     \hfill
     \begin{minipage}{0.45\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{predicted_vs_simulated/BAC_plots/BAC_20191012606_exhaustive_predicted_vs_simulated.png}
+        \includegraphics[width=\linewidth]{predicted_vs_simulated/BAC_plots/BAC_20191007560_exhaustive_predicted_vs_simulated.png}
     \end{minipage}
     \vspace{0.4cm}
     \begin{minipage}{0.45\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{predicted_vs_simulated/BAC_plots/BAC_20191002825_exhaustive_predicted_vs_simulated.png}
+        \includegraphics[width=\linewidth]{predicted_vs_simulated/BAC_plots/BAC_20191007587_exhaustive_predicted_vs_simulated.png}
     \end{minipage}
 \end{frame}
 
@@ -1323,17 +1256,17 @@
     \centering
     \begin{minipage}{0.45\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{predicted_vs_simulated/BPI12_plots/BPI12_207674_exhaustive_predicted_vs_simulated.png}
+        \includegraphics[width=\linewidth]{predicted_vs_simulated/BPI12_plots/BPI12_199014_exhaustive_predicted_vs_simulated.png}
     \end{minipage}
     \hfill
     \begin{minipage}{0.45\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{predicted_vs_simulated/BPI12_plots/BPI12_209087_exhaustive_predicted_vs_simulated.png}
+        \includegraphics[width=\linewidth]{predicted_vs_simulated/BPI12_plots/BPI12_206147_exhaustive_predicted_vs_simulated.png}
     \end{minipage}
     \vspace{0.4cm}
     \begin{minipage}{0.45\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{predicted_vs_simulated/BPI12_plots/BPI12_207440_exhaustive_predicted_vs_simulated.png}
+        \includegraphics[width=\linewidth]{predicted_vs_simulated/BPI12_plots/BPI12_207266_exhaustive_predicted_vs_simulated.png}
     \end{minipage}
 \end{frame}
 
@@ -1341,17 +1274,17 @@
     \centering
     \begin{minipage}{0.45\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{predicted_vs_simulated/bpi17_before_plots/bpi17_before_Application_997160076_exhaustive_predicted_vs_simulated.png}
+        \includegraphics[width=\linewidth]{predicted_vs_simulated/bpi17_before_plots/bpi17_before_Application_240232555_exhaustive_predicted_vs_simulated.png}
     \end{minipage}
     \hfill
     \begin{minipage}{0.45\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{predicted_vs_simulated/bpi17_before_plots/bpi17_before_Application_569667899_exhaustive_predicted_vs_simulated.png}
+        \includegraphics[width=\linewidth]{predicted_vs_simulated/bpi17_before_plots/bpi17_before_Application_209668210_exhaustive_predicted_vs_simulated.png}
     \end{minipage}
     \vspace{0.4cm}
     \begin{minipage}{0.45\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{predicted_vs_simulated/bpi17_before_plots/bpi17_before_Application_505298319_exhaustive_predicted_vs_simulated.png}
+        \includegraphics[width=\linewidth]{predicted_vs_simulated/bpi17_before_plots/bpi17_before_Application_357958889_exhaustive_predicted_vs_simulated.png}
     \end{minipage}
 \end{frame}
 
@@ -1359,17 +1292,17 @@
     \centering
     \begin{minipage}{0.45\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{predicted_vs_simulated/bpi17_after_plots/bpi17_after_Application_1621901239_exhaustive_predicted_vs_simulated.png}
+        \includegraphics[width=\linewidth]{predicted_vs_simulated/bpi17_after_plots/bpi17_after_Application_1003146166_exhaustive_predicted_vs_simulated.png}
     \end{minipage}
     \hfill
     \begin{minipage}{0.45\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{predicted_vs_simulated/bpi17_after_plots/bpi17_after_Application_413226186_exhaustive_predicted_vs_simulated.png}
+        \includegraphics[width=\linewidth]{predicted_vs_simulated/bpi17_after_plots/bpi17_after_Application_1356606116_exhaustive_predicted_vs_simulated.png}
     \end{minipage}
     \vspace{0.4cm}
     \begin{minipage}{0.45\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{predicted_vs_simulated/bpi17_after_plots/bpi17_after_Application_681547497_exhaustive_predicted_vs_simulated.png}
+        \includegraphics[width=\linewidth]{predicted_vs_simulated/bpi17_after_plots/bpi17_after_Application_1438619325_exhaustive_predicted_vs_simulated.png}
     \end{minipage}
 \end{frame}
 
@@ -1393,21 +1326,20 @@
     \cmidrule(lr){2-4}\cmidrule(lr){5-6}
     Case study & Whole log & Test cases & Baseline sim. & vs.\ log & vs.\ test \\
     \midrule
-    BAC          & 84.3 & 78.1 & 77.2 & $-7.0$  & $-0.9$ \\
-    BPI12        & 47.9 & 38.7 & 44.2 & $-3.7$  & $+5.5$ \\
-    bpi17-before & 56.4 & 42.0 & 39.7 & $-16.8$ & $-2.3$ \\
-    bpi17-after  & 54.7 & 47.9 & 44.8 & $-9.9$  & $-3.1$ \\
+    BAC          & 84.3 & 78.1 & 80.1 & $-4.2$ & $+2.0$  \\
+    BPI12        & 47.9 & 38.7 & 51.1 & $+3.2$ & $+12.4$ \\
+    bpi17-before & 56.4 & 42.0 & 60.0 & $+3.5$ & $+18.0$ \\
+    bpi17-after  & 54.7 & 47.9 & 61.7 & $+6.9$ & $+13.7$ \\
     \bottomrule
   \end{tabular}
   \end{center}
   \footnotesize
   \begin{itemize}
-    \item The test cases are the ones \alert{still running at the split}: they are
-      less often positive than the average case of the log ($-6$ to $-15$ pp).
-    \item Against the whole log the baseline seems far off (up to $-16.8$ pp), but
-      most of that gap is this selection effect: against the \alert{same test
-      cases} it stays within $\pm 3.1$ pp, except BPI12 ($+5.5$ pp, the simulator
-      over-predicts acceptance).
+    \item The test cases are the ones \alert{still running at the split}: they are less often positive than the
+      average case of the log ($-6$ to $-14$ pp).
+    \item The baseline does \alert{not} reproduce this: on BPI12 and bpi17 it is even more positive than the
+      whole log, $+12$ to $+18$ pp above the same test cases; only BAC stays close ($+2.0$ pp). The simulated
+      continuations behave like an average case, not like a case running for a while (next slide).
   \end{itemize}
 \end{frame}
 
@@ -1419,27 +1351,69 @@
     \toprule
     Case study & Whole log & Test cases & Baseline sim. & $\Delta$ median vs.\ test \\
     \midrule
-    BAC          & 7.7 (15.5)  & 10.5 (20.9) & 11.1 (22.6) & $+0.5$ d \\
-    BPI12        & 15.1 (18.6) & 22.9 (24.4) & 29.6 (30.2) & $+6.7$ d \\
-    bpi17-before & 16.1 (20.2) & 30.8 (29.0) & 30.8 (29.7) & $0.0$ d \\
-    bpi17-after  & 19.9 (21.9) & 30.8 (28.4) & 30.9 (30.1) & $+0.1$ d \\
+    BAC          & 7.7 (15.5)  & 10.5 (20.9) & 7.0 (11.7)  & $-3.6$ d  \\
+    BPI12        & 15.1 (18.6) & 22.9 (24.4) & 17.6 (21.5) & $-5.3$ d  \\
+    bpi17-before & 16.1 (20.2) & 30.8 (29.0) & 19.8 (23.0) & $-11.0$ d \\
+    bpi17-after  & 19.9 (21.9) & 30.8 (28.4) & 22.4 (24.5) & $-8.3$ d  \\
     \bottomrule
   \end{tabular}
   \end{center}
-  \footnotesize
+  \scriptsize
   \begin{itemize}
-    \item Same selection effect: the cases running at the split are \alert{longer}
-      than the average case (median $+3$ to $+15$ d), so the whole log is not the
-      right reference for the baseline.
-    \item Against the same test cases the median duration matches within one day,
-      except \alert{BPI12}, where the simulated continuations are about one week
-      too long.
-    \item BPI12 fully simulated log (3748 traces generated from the arrival process,
-      no real prefix): 49.9\% positive, median 18.2 d (mean 21.3), close to the
-      whole log (47.9\%, 15.1 d).
-    \item Absolute $\Delta$ values of the simulation-based evaluation, especially on
-      BPI12, should be read with this residual gap in mind.
+    \item The cases running at the split are \alert{longer} than the average case (median $+3$ to $+15$ d); the
+      simulated traces are \alert{too short} ($-4$ to $-11$ d), close to the whole log instead.
+    \item By age at the split: for cases older than 21 days the median simulated end is \alert{before the split}
+      (median remaining time $< 0$), while the real ones still last 4--14 days: the continuation starts from the
+      last completed activity, with no constraint to end after the split.
+    \item BPI12 fully simulated log (3748 traces, training set of \texttt{BPI12\_sim}): 46.7\% positive, median
+      16.7 d (mean 19.9), close to the whole log. Read the absolute $\Delta$ of the evaluation with this gap in mind.
   \end{itemize}
+\end{frame}
+
+% =====================================================================
+% BPI12 vs BPI12_sim (8b_plot_case_comparison_vs_sim_model.py) -- to be filled
+% =====================================================================
+\begin{frame}{BPI12 vs.\ \texttt{BPI12\_sim}: Setup}
+  \footnotesize
+  \textbf{Goal:} separate the error of the predictive models from that of the simulator: models trained on the
+  simulator's \emph{own} data should agree with it, unless the gap comes from elsewhere.
+  \begin{enumerate}
+    \item \textbf{Simulated training set:} ProSiT with the parameters of the evaluation (whole BPI12 log), as
+      many cases as the real training set (3748), from the first timestamp of the real log; no real prefix.
+    \item \textbf{Preprocessing and training} of both models on it (all simulated cases are training data).
+    \item \textbf{Same recommendations} (Pareto front of the real models), re-scored by the \texttt{BPI12\_sim}
+      models and compared with the simulated continuations (mean over 10 runs).
+  \end{enumerate}
+  \begin{center}\scriptsize\setlength{\tabcolsep}{5pt}
+  \begin{tabular}{lcccccc}
+    \toprule
+     & \multicolumn{3}{c}{Training set} & \multicolumn{3}{c}{Real BPI12 test set} \\
+    \cmidrule(lr){2-4}\cmidrule(lr){5-7}
+    Trained on & \% positive & \shortstack{case duration,\\ median (d)} & \shortstack{remaining time,\\ mean (d)}
+      & Logloss & MAE (d) & RMSE (d) \\
+    \midrule
+    real BPI12            & 48.2 & 15.0 & 12.8 & 0.494 & 7.91 & 12.03 \\
+    \texttt{BPI12\_sim}   & 45.9 & 16.9 & 13.8 & 0.486 & 7.89 & 11.78 \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+  {\scriptsize Scripts: \texttt{9\_generate\_simulated\_training\_set.py}, \texttt{2\_training\_predictive\_model.py},
+  \texttt{8b\_plot\_case\_comparison\_vs\_sim\_model.py}.}
+\end{frame}
+
+\begin{frame}{BPI12 vs.\ \texttt{BPI12\_sim}: Case 199014 (prefix of 9 events)}
+  \centering
+  \includegraphics[width=\linewidth]{BPI12_vs_BPI12sim/BPI12_199014_exhaustive_predicted_vs_simmodel_vs_simulated.png}
+\end{frame}
+
+\begin{frame}{BPI12 vs.\ \texttt{BPI12\_sim}: Case 206147 (prefix of 12 events)}
+  \centering
+  \includegraphics[width=\linewidth]{BPI12_vs_BPI12sim/BPI12_206147_exhaustive_predicted_vs_simmodel_vs_simulated.png}
+\end{frame}
+
+\begin{frame}{BPI12 vs.\ \texttt{BPI12\_sim}: Case 207266 (prefix of 16 events)}
+  \centering
+  \includegraphics[width=\linewidth]{BPI12_vs_BPI12sim/BPI12_207266_exhaustive_predicted_vs_simmodel_vs_simulated.png}
 \end{frame}
 
 

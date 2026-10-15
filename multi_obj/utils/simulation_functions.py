@@ -3,7 +3,6 @@ import numpy as np
 from tqdm import tqdm
 
 from utils.pre_processing_functions import convert_dtypes_bpi12
-from utils.data_normalization import remaining_time_to_sigmoid_mm
 
 import sys
 import warnings
@@ -42,7 +41,7 @@ def to_be_named(case_study, method, n_sim, folder_path, encoded_activity=None):
 
     rec_df = preparing_data_for_simulation(result_df, test_log, case_id_name, end_date_name, case_study)
 
-    res, _, res_status, _ = compute_res_and_status(case_study, rec_df, test_data_simulation, n_sim)
+    res, res_status, _ = compute_res_and_status(case_study, rec_df, test_data_simulation, n_sim)
 
     return res, res_status
 
@@ -250,8 +249,7 @@ def status_encoding(df: pd.DataFrame, case_study: str, encoded_activity: str | N
 
     return df.sort_values(by=["case:concept:name", "time:timestamp"]).reset_index(drop=True)
 
-def compute_res_and_status(case_study, rec_df, test_simu, n_sim,
-                           std_scaler=None, mm_scaler=None, excluded_by_run=None):
+def compute_res_and_status(case_study, rec_df, test_simu, n_sim, excluded_by_run=None):
     """
     Per trace_id, aggregate remaining_time and status over the n_sim simulation runs.
 
@@ -263,14 +261,9 @@ def compute_res_and_status(case_study, rec_df, test_simu, n_sim,
     the first post-prefix event (which in BAC can be months) and break the
     comparison with the model prediction.
 
-    Returns four dicts keyed by trace_id:
+    Returns three dicts keyed by trace_id (the sigmoid_mm average was removed on
+    2026-10-12 with the sigmoid_mm target: the time model predicts days):
       - res_seconds : mean remaining_time in seconds (np.nan if no usable run).
-      - res_sigmoid : mean over runs of ``remaining_time_to_sigmoid_mm(rt_run)``
-                      -- i.e. the Monte-Carlo estimate of ``E[sigmoid_mm(RT)]``,
-                      the quantity comparable to the offline "true" sigmoid_mm
-                      (a per-row nonlinear map, averaged -- NOT
-                      sigmoid_mm(mean(seconds))). np.nan when std_scaler/mm_scaler
-                      are not supplied or no run is usable.
       - res_status  : mean status (np.nan if no usable run).
       - res_applied_fraction : fraction of the runs that had data for the case in
                       which the recommendation was actually applied (1.0 for the
@@ -288,10 +281,8 @@ def compute_res_and_status(case_study, rec_df, test_simu, n_sim,
         rec_df = convert_dtypes_bpi12(rec_df, 'simulation_')
 
     excluded_by_run = excluded_by_run or {}
-    have_scalers = std_scaler is not None and mm_scaler is not None
 
     res_seconds = {}
-    res_sigmoid = {}
     res_status = {}
     res_applied_fraction = {}
     trace_ids = rec_df[case_id_name].unique()
@@ -337,18 +328,12 @@ def compute_res_and_status(case_study, rec_df, test_simu, n_sim,
         if remaining_times:
             res_seconds[trace_id] = float(np.mean(remaining_times))
             res_status[trace_id] = float(np.mean(statuses))
-            if have_scalers:
-                per_run_sigmoid = remaining_time_to_sigmoid_mm(remaining_times, std_scaler, mm_scaler)
-                res_sigmoid[trace_id] = float(np.mean(per_run_sigmoid))
-            else:
-                res_sigmoid[trace_id] = np.nan
         else:
             res_seconds[trace_id] = np.nan
-            res_sigmoid[trace_id] = np.nan
             res_status[trace_id] = np.nan
 
         res_applied_fraction[trace_id] = (
             n_runs_applied / n_runs_with_data if n_runs_with_data else np.nan
         )
 
-    return res_seconds, res_sigmoid, res_status, res_applied_fraction
+    return res_seconds, res_status, res_applied_fraction

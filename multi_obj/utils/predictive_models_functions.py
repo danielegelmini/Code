@@ -16,11 +16,34 @@ from catboost import CatBoostRegressor, CatBoostClassifier
 import optuna
 from optuna.integration import CatBoostPruningCallback
 from scipy.optimize import minimize_scalar
+from scipy.stats import norm
 
 from utils.train_test_split import extract_internal_running_validation
 
 DEFAULT_VIRTUAL_ENSEMBLES_COUNT = 50
 DEFAULT_CALIB_BINS = 15
+
+# Time target (since 2026-10-12; it replaces sigmoid_mm): the remaining time in SECONDS, the column
+# remaining_time of the data. The regressor learns it in one of three "model spaces" (the transformation is
+# internal to the model; UncertaintyRegressor always returns seconds, and the errors are reported in days):
+#   "none"          -> seconds as they are
+#   "log1p_seconds" -> log(1 + seconds): a pure log, every error relative
+#   "log1p_days"    -> log(1 + seconds / 86400): linear below about one day, relative above
+TIME_TARGET = "remaining_time"
+SECONDS_PER_DAY = 86400.0
+TIME_TARGET_TRANSFORMS = ("none", "log1p_seconds", "log1p_days")
+_LOG_UNIT_SECONDS = {"log1p_seconds": 1.0, "log1p_days": SECONDS_PER_DAY}  # unit of x in log(1 + x)
+
+
+def time_target_from_seconds(seconds, transform="none"):
+    """Remaining time in seconds -> the regressor's training target, in its model space (see
+    TIME_TARGET_TRANSFORMS)."""
+    seconds = np.asarray(seconds, dtype=float)
+    if transform == "none":
+        return seconds
+    if transform in _LOG_UNIT_SECONDS:
+        return np.log1p(np.clip(seconds, 0.0, None) / _LOG_UNIT_SECONDS[transform])
+    raise ValueError(f"time target transform must be one of {TIME_TARGET_TRANSFORMS}, got {transform!r}")
 
 # Classification
 def _expected_calibration_error(y_true, proba, n_bins=10):
@@ -184,9 +207,16 @@ class UncertaintyRegressor:
     sklearn Pipeline while exposing the full predictive-uncertainty decomposition
     (Malinin et al., "Uncertainty in Gradient Boosting via Ensembles", ICLR 2021).
 
-    - predict(X) returns only the mean prediction (column 0 of CatBoost's output),
-      so every caller expecting a plain 1-D array of 'sigmoid_mm' values keeps
-      working unchanged.
+    - predict(X) returns the point prediction of the remaining time in SECONDS.
+
+    The CatBoost model works in its own "model space" (target_transform, see
+    TIME_TARGET_TRANSFORMS): seconds ("none"), log(1 + seconds) ("log1p_seconds") or
+    log(1 + seconds / 86400) ("log1p_days"). Every output in seconds is decoded from it:
+    with a log space the predictive distribution is log-normal, so the mean is
+    unit * expm1(mu + var/2) (log_point="mean", default) or the median unit * expm1(mu)
+    (log_point="median"), and the std is the log-normal one. predict_members
+    and predict_members_var stay in model space: the confidence filter only needs
+    P(time_A < time_B), which a monotone transformation does not change.
     - predict_uncertainty(X) runs the virtual ensemble and returns, via the law
       of total variance:
         data_std       = sqrt( mean_m sigma_m^2 )            (aleatoric)
@@ -203,7 +233,8 @@ class UncertaintyRegressor:
     by uncertainty; only the interval width moves.
     """
 
-    def __init__(self, fitted_model, sigma_scale=1.0, virtual_ensembles_count=DEFAULT_VIRTUAL_ENSEMBLES_COUNT):
+    def __init__(self, fitted_model, sigma_scale=1.0, virtual_ensembles_count=DEFAULT_VIRTUAL_ENSEMBLES_COUNT,
+                 target_transform="none", log_point="mean", max_seconds=None):
         """Stores the already-fitted CatBoost regressor and its post-hoc calibration factor.
 
         Args:
@@ -215,10 +246,76 @@ class UncertaintyRegressor:
                 ensemble members for uncertainty estimation. Defaults to
                 DEFAULT_VIRTUAL_ENSEMBLES_COUNT (10); the number actually used may
                 be lower, see _ve_count.
+            target_transform (str, optional): model space of the CatBoost model, one of
+                TIME_TARGET_TRANSFORMS. Defaults to "none" (seconds).
+            log_point (str, optional): with a log space, the point prediction in seconds:
+                "mean" (log-normal mean, default) or "median".
+            max_seconds (float, optional): upper bound U of the remaining time (the maximum
+                observed in the training set). With a log space the predictive log-normal is
+                TRUNCATED at U: mean, median and std are those of T given T <= U. Without it a
+                very large model-space variance (a few cases with two very different outcomes,
+                e.g. A_Incomplete) makes the plain log-normal mean e^(mu + var/2) explode.
+                None (default) = no truncation.
         """
         self.fitted_model = fitted_model
         self.sigma_scale = float(sigma_scale)
         self.virtual_ensembles_count = int(virtual_ensembles_count)
+        self.target_transform = target_transform
+        self.log_point = log_point
+        self.max_seconds = max_seconds
+
+    def _transform(self):
+        # models pickled before 2026-10-12 have no target_transform
+        return getattr(self, "target_transform", "none")
+
+    def _log_bound(self, unit):
+        """u = log(1 + U / unit), the truncation point in model space, or None (no truncation)."""
+        max_seconds = getattr(self, "max_seconds", None)  # models pickled before 2026-10-13 have none
+        return None if max_seconds is None else float(np.log1p(max_seconds / unit))
+
+    def _to_seconds(self, mu, var):
+        """Model-space mean and variance -> point prediction in seconds (floored at 0, and at most U).
+
+        Log space, X = log(1 + T/unit) ~ N(mu, var) truncated at u = log(1 + U/unit):
+            mean:   E[e^X | X <= u] = e^(mu + var/2) * Phi((u - mu - var)/s) / Phi((u - mu)/s)
+            median: mu + s * Phi^-1(Phi((u - mu)/s) / 2)
+        with s = sqrt(var); then T = unit * (e^X - 1). Without U, the plain log-normal ones."""
+        unit = _LOG_UNIT_SECONDS.get(self._transform())
+        if unit is None:  # "none": the model space is already seconds
+            return np.clip(mu, 0.0, None)
+        mu, var = np.asarray(mu, dtype=float), np.asarray(var, dtype=float)
+        u = self._log_bound(unit)
+        median = getattr(self, "log_point", "mean") == "median"
+        if u is None:
+            log_e = mu if median else mu + var / 2.0
+        else:
+            s = np.sqrt(np.clip(var, 1e-12, None))
+            b = (u - mu) / s
+            if median:
+                log_e = mu + s * norm.ppf(np.clip(0.5 * norm.cdf(b), 1e-300, 1.0))
+            else:
+                # in logs, for numerical stability: Phi(a) can be ~1e-300 while e^(mu + var/2) overflows
+                log_e = mu + var / 2.0 + norm.logcdf((u - mu - var) / s) - norm.logcdf(b)
+        seconds = unit * np.expm1(log_e)
+        upper = getattr(self, "max_seconds", None)
+        return np.clip(seconds, 0.0, upper if upper is not None else None)
+
+    def _std_seconds(self, mu, var):
+        """Model-space mean and variance -> std in seconds (log-normal std for a log space, truncated at U
+        when max_seconds is set: Var = E[e^2X | X <= u] - E[e^X | X <= u]^2, with
+        E[e^2X | X <= u] = e^(2 mu + 2 var) * Phi((u - mu - 2 var)/s) / Phi((u - mu)/s))."""
+        unit = _LOG_UNIT_SECONDS.get(self._transform())
+        if unit is None:
+            return np.sqrt(var)
+        mu, var = np.asarray(mu, dtype=float), np.asarray(var, dtype=float)
+        u = self._log_bound(unit)
+        if u is None:
+            return unit * np.sqrt(np.expm1(var) * np.exp(2.0 * mu + var))
+        s = np.sqrt(np.clip(var, 1e-12, None))
+        log_phi_b = norm.logcdf((u - mu) / s)
+        log_m1 = mu + var / 2.0 + norm.logcdf((u - mu - var) / s) - log_phi_b
+        log_m2 = 2.0 * mu + 2.0 * var + norm.logcdf((u - mu - 2.0 * var) / s) - log_phi_b
+        return unit * np.sqrt(np.clip(np.exp(log_m2) - np.exp(2.0 * log_m1), 0.0, None))
 
     def fit(self, X, y=None):
         """No-op fit, kept only so this wrapper satisfies scikit-learn's Pipeline/
@@ -281,9 +378,12 @@ class UncertaintyRegressor:
                 earlier steps).
 
         Returns:
-            numpy.ndarray: 1-D array of predicted 'sigmoid_mm' means, one per row of X.
+            numpy.ndarray: 1-D array of predicted remaining times in seconds, one per row of X
+            (full model, not the virtual-ensemble average; see predict_uncertainty for that).
         """
-        return self._two_col(self.fitted_model.predict(X))[:, 0] #return the mean
+        preds = self._two_col(self.fitted_model.predict(X))
+        var = (self.sigma_scale ** 2) * np.clip(preds[:, 1], 0.0, None)
+        return self._to_seconds(preds[:, 0], var)
 
     def predict_uncertainty(self, X):
         """Predicts the mean and its aleatoric/epistemic/total uncertainty via the
@@ -294,12 +394,17 @@ class UncertaintyRegressor:
 
         Returns:
             dict: {
-                "mean" (numpy.ndarray): Predicted 'sigmoid_mm' mean, one per row of X.
-                "data_std" (numpy.ndarray): Aleatoric (data-noise) component of std.
-                "knowledge_std" (numpy.ndarray): Epistemic (model-knowledge) component.
-                "total_std" (numpy.ndarray): sqrt(data_var + knowledge_var).
+                "mean" (numpy.ndarray): Predicted remaining time in seconds, one per row of X.
+                "data_std" (numpy.ndarray): Aleatoric (data-noise) component of std, in seconds.
+                "knowledge_std" (numpy.ndarray): Epistemic (model-knowledge) component, in seconds.
+                "total_std" (numpy.ndarray): total std in seconds.
                 "std" (numpy.ndarray): Alias of total_std, kept for backward compatibility.
+                "mean_model", "std_model", "data_std_model", "knowledge_std_model": the same in
+                    the model space (see TIME_TARGET_TRANSFORMS), where the predictive
+                    distribution is Gaussian -- used for the calibration diagnostics.
             }
+            With a log space the components in seconds are the log-normal std of each
+            model-space variance alone, so data and knowledge do not add up exactly to the total.
             Every std component is scaled by self.sigma_scale. If the model has too
             few trees for even one virtual ensemble, all std arrays are returned as
             zeros (with a warning printed) instead of raising.
@@ -310,10 +415,11 @@ class UncertaintyRegressor:
             n_trees = getattr(self.fitted_model, "tree_count_", 0) or 0
             print(f"WARNING: final model has only {n_trees} tree(s) -- too few for "
                   f"virtual-ensemble uncertainty. Reporting zero std.")
-            mean = self.predict(X)
-            zeros = np.zeros_like(mean)
-            return {"mean": mean, "data_std": zeros, "knowledge_std": zeros,
-                    "total_std": zeros, "std": zeros}
+            mu = self._two_col(self.fitted_model.predict(X))[:, 0]
+            zeros = np.zeros_like(mu)
+            mean = self._to_seconds(mu, zeros)
+            return {"mean": mean, "data_std": zeros, "knowledge_std": zeros, "total_std": zeros, "std": zeros,
+                    "mean_model": mu, "std_model": zeros, "data_std_model": zeros, "knowledge_std_model": zeros}
 
         # mean, knowledge var, data var
         out = np.asarray(
@@ -323,22 +429,29 @@ class UncertaintyRegressor:
             ),
             dtype=float,
         )
-        mean = out[:, 0]
-        knowledge_var = np.clip(out[:, 1], 0.0, None)
-        data_var = np.clip(out[:, 2], 0.0, None)
-        s = self.sigma_scale
-        total_std = s * np.sqrt(data_var + knowledge_var)
+        mu = out[:, 0]
+        s2 = self.sigma_scale ** 2
+        knowledge_var = s2 * np.clip(out[:, 1], 0.0, None)
+        data_var = s2 * np.clip(out[:, 2], 0.0, None)
+        total_var = data_var + knowledge_var
+        total_std = self._std_seconds(mu, total_var)
         return {
-            "mean": mean,
-            "data_std": s * np.sqrt(data_var),
-            "knowledge_std": s * np.sqrt(knowledge_var),
+            "mean": self._to_seconds(mu, total_var),
+            "data_std": self._std_seconds(mu, data_var),
+            "knowledge_std": self._std_seconds(mu, knowledge_var),
             "total_std": total_std,
             "std": total_std,
+            "mean_model": mu,
+            "std_model": np.sqrt(total_var),
+            "data_std_model": np.sqrt(data_var),
+            "knowledge_std_model": np.sqrt(knowledge_var),
         }
 
     def predict_members(self, X):
         """Returns each virtual-ensemble member's predicted mean separately (not
-        aggregated), so two rows can be compared member-by-member elsewhere. 
+        aggregated), so two rows can be compared member-by-member elsewhere, in the
+        MODEL space (see TIME_TARGET_TRANSFORMS): the comparison only needs P(A < B),
+        which the monotone log1p does not change.
 
         Used by the confidence-as-KPI filter (see
         utils/recommendation_functions.py) to compare a baseline row and a
@@ -425,12 +538,16 @@ class UncertaintyRegressor:
                 into). Present only for interface compatibility. Defaults to True.
 
         Returns:
-            dict: {"fitted_model", "sigma_scale", "virtual_ensembles_count"}.
+            dict: {"fitted_model", "sigma_scale", "virtual_ensembles_count", "target_transform",
+            "log_point", "max_seconds"}.
         """
         return {
             "fitted_model": self.fitted_model,
             "sigma_scale": self.sigma_scale,
             "virtual_ensembles_count": self.virtual_ensembles_count,
+            "target_transform": self._transform(),
+            "log_point": getattr(self, "log_point", "mean"),
+            "max_seconds": getattr(self, "max_seconds", None),
         }
 
     def set_params(self, **params):
@@ -690,34 +807,37 @@ class UncertaintyClassifier:
             setattr(self, key, value)
         return self
 
-def prepare_df_for_ml(df, case_id_name, columns_to_remove=None):
+def prepare_df_for_ml(df, case_id_name, columns_to_remove=None, time_transform="none"):
     """
     Prepares the dataframe for machine learning by separating features and targets.
 
-    This function extracts the targets 'label' and 'sigmoid_mm', drops the specified case ID column, 
-    and optionally removes other specified columns.
+    This function extracts the targets 'label' and the remaining time (TIME_TARGET, from the column
+    remaining_time in seconds, in the model space of time_transform -- see time_target_from_seconds), drops the
+    specified case ID column, and optionally removes other specified columns.
 
     Args:
         df (pandas.DataFrame): The input dataframe to process.
         case_id_name (str): The name of the column containing the case identifier to drop.
         columns_to_remove (list of str, optional): A list of additional column names to drop. Defaults to None.
+        time_transform (str, optional): model space of the time target, one of TIME_TARGET_TRANSFORMS.
 
     Returns:
         tuple: A tuple containing:
             - pandas.DataFrame: The feature matrix (X).
             - pandas.Series: The 'label' target variable (y1).
-            - pandas.Series: The 'sigmoid_mm' target variable (y2).
+            - pandas.Series: The remaining-time target in model space (y2), named TIME_TARGET.
     """
     df = df.drop(columns=[case_id_name], errors='ignore')
-    
+
     y1 = df.label
-    y2 = df.sigmoid_mm
+    y2 = pd.Series(time_target_from_seconds(df["remaining_time"], time_transform), index=df.index, name=TIME_TARGET)
 
     if columns_to_remove is not None:
         df = df.drop(columns=columns_to_remove, axis="columns", errors='ignore')
 
-    X = df.drop(columns=["label", "sigmoid_mm", "outcome"], errors='ignore')
-    
+    # sigmoid_mm / outcome: columns of the data files written before 2026-10-12, never features
+    X = df.drop(columns=["label", "remaining_time", "sigmoid_mm", "outcome"], errors='ignore')
+
     return X, y1, y2
 
 def filter_features(features, dataset_columns, feature_type):
@@ -746,8 +866,9 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
     Trains and optimizes machine learning models using CatBoost and Optuna.
 
     This function processes the data, sets up a scikit-learn ColumnTransformer pipeline for continuous 
-    and categorical features, and runs hyperparameter optimization via Optuna for both classification 
-    ('label') and regression ('sigmoid_mm') targets. It then trains final models, evaluates their 
+    and categorical features, and runs hyperparameter optimization via Optuna for both classification
+    ('label') and regression (TIME_TARGET: remaining time in seconds, learned in the model space of
+    params['time_target_transform']) targets. The time errors are reported in days.It then trains final models, evaluates their 
     performance, and serializes the resulting pipelines and best parameters to disk.
 
     Args:
@@ -759,9 +880,12 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
         categorical_features (list of str): A list of categorical feature names.
         case_study (str, optional): The name of the case study, used to define the output directory path. Defaults to None.
         params (dict, optional): A dictionary of configuration parameters including 'optuna_trials', 'early_stopping_rounds', and 'search_spaces'. Defaults to None.
+            Optional keys: 'time_target_transform' (one of TIME_TARGET_TRANSFORMS, default "none"), 'targets' (subset of
+            ["label", TIME_TARGET] to train, default both), 'output_dir' (where the models are saved,
+            default case_studies/<case_study>/model).
 
     Returns:
-        dict: {"label": {...}, "sigmoid_mm": {...}}, one entry per target with
+        dict: {"label": {...}, TIME_TARGET: {...}}, one entry per target with
         the metric name used for the train/test scores (Logloss/RMSE), the
         Optuna selection metric (Logloss/RMSEWithUncertainty), the winning
         Optuna trial number and its validation score on the selection metric, the best hyperparameters, the number of trees
@@ -779,12 +903,24 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
     optuna_timeout = params.get("optuna_timeout", 1200)
     early_stopping_rounds = params.get("early_stopping_rounds", 50)
     
-    all_search_spaces = params.get("search_spaces", {})
-    if all_search_spaces and not any(k in ("label", "sigmoid_mm") for k in all_search_spaces):
-        all_search_spaces = {"label": all_search_spaces, "sigmoid_mm": all_search_spaces}
+    time_transform = params.get("time_target_transform", "none")
+    if time_transform not in TIME_TARGET_TRANSFORMS:
+        raise ValueError(f"time_target_transform must be one of {TIME_TARGET_TRANSFORMS}, got {time_transform!r}")
+    targets = params.get("targets", ["label", TIME_TARGET])
+    output_dir = Path(params.get("output_dir", f"./case_studies/{case_study}/model"))
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-    X_train_raw, y_train1, y_train2 = prepare_df_for_ml(train_data, case_id_name,  columns_to_remove)
-    X_test_raw,  y_test1,  y_test2 = prepare_df_for_ml(test_data, case_id_name,  columns_to_remove)
+    all_search_spaces = params.get("search_spaces", {})
+    if all_search_spaces and not any(k in ("label", TIME_TARGET, "sigmoid_mm") for k in all_search_spaces):
+        all_search_spaces = {"label": all_search_spaces, TIME_TARGET: all_search_spaces}
+    if TIME_TARGET not in all_search_spaces and "sigmoid_mm" in all_search_spaces:  # configs written before 2026-10-12
+        all_search_spaces[TIME_TARGET] = all_search_spaces["sigmoid_mm"]
+
+    X_train_raw, y_train1, y_train2 = prepare_df_for_ml(train_data, case_id_name,  columns_to_remove, time_transform)
+    X_test_raw,  y_test1,  y_test2 = prepare_df_for_ml(test_data, case_id_name,  columns_to_remove, time_transform)
+    # remaining time in days, for the metrics (whatever the model space)
+    y_train_days = train_data["remaining_time"].to_numpy(dtype=float) / SECONDS_PER_DAY
+    y_test_days = test_data["remaining_time"].to_numpy(dtype=float) / SECONDS_PER_DAY
 
     continuous_features = filter_features(continuous_features, X_train_raw.columns, "continuous")
     categorical_features = filter_features(categorical_features, X_train_raw.columns, "categorical")
@@ -811,9 +947,12 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
     ##########################################
     results = {}
     for y_train, y_test in [(y_train1, y_test1), (y_train2, y_test2)]:
-        print(f"\n--- Optuna Hyperparameter Optimization for: {y_train.name} ---")
+        if y_train.name not in targets:
+            continue
+        print(f"\n--- Optuna Hyperparameter Optimization for: {y_train.name}"
+              + (f" (model space: {time_transform})" if y_train.name == TIME_TARGET else "") + " ---")
 
-        is_regression_target = (y_train.name == "sigmoid_mm")
+        is_regression_target = (y_train.name == TIME_TARGET)
         search_spaces_config = all_search_spaces.get(y_train.name, {})
 
         # No class weighting (scale_pos_weight) for the classifier: a weight w on the positive class
@@ -957,7 +1096,10 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
         # We reuse the sigma and temperature fitted on the validation set of the best iteration
         if is_regression_target:
             sigma_scale = float(study.best_trial.user_attrs.get("sigma_scale", 1.0))
-            prediction_step = UncertaintyRegressor(final_model, sigma_scale=sigma_scale)
+            # U: the maximum remaining time of the training set, the upper bound of the predictive log-normal
+            max_seconds = float(train_data["remaining_time"].max())
+            prediction_step = UncertaintyRegressor(final_model, sigma_scale=sigma_scale,
+                                                   target_transform=time_transform, max_seconds=max_seconds)
         else:
             temperature = float(study.best_trial.user_attrs.get("temperature", 1.0))
             prediction_step = UncertaintyClassifier(final_model, temperature=temperature)
@@ -1003,33 +1145,49 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
                 f"ECE {uncertainty_report['ece_raw']:.4f} -> {uncertainty_report['ece_calibrated']:.4f}"
             )
         else:
-            metric_name = "RMSEWithUncertainty"
-            y_train_pred = prediction_step.predict(X_train_trans)
-            y_test_pred = prediction_step.predict(X_test_trans)
-            train_score = float(np.sqrt(mean_squared_error(y_train, y_train_pred)))
-            test_score = float(np.sqrt(mean_squared_error(y_test, y_test_pred)))
-            train_mae = float(mean_absolute_error(y_train, y_train_pred))
-            test_mae = float(mean_absolute_error(y_test, y_test_pred))
-            print(f"RMSE / MAE of training set: {train_score:.5f} / {train_mae:.5f}")
-            print(f"RMSE / MAE of test set:     {test_score:.5f} / {test_mae:.5f}")
+            metric_name = "RMSE (days)"
+            # point predictions in seconds (log spaces: log-normal mean), converted to days for the errors,
+            # whatever the model space
+            y_train_pred = prediction_step.predict(X_train_trans) / SECONDS_PER_DAY
+            y_test_pred = prediction_step.predict(X_test_trans) / SECONDS_PER_DAY
+            train_score = float(np.sqrt(mean_squared_error(y_train_days, y_train_pred)))
+            test_score = float(np.sqrt(mean_squared_error(y_test_days, y_test_pred)))
+            train_mae = float(mean_absolute_error(y_train_days, y_train_pred))
+            test_mae = float(mean_absolute_error(y_test_days, y_test_pred))
+            print(f"RMSE / MAE (days) of training set: {train_score:.5f} / {train_mae:.5f}")
+            print(f"RMSE / MAE (days) of test set:     {test_score:.5f} / {test_mae:.5f}")
+            test_rmse_median = test_mae_median = float("nan")
+            if time_transform in _LOG_UNIT_SECONDS:
+                # the other natural point prediction of a log-normal: the median unit * expm1(mu)
+                median_step = UncertaintyRegressor(final_model, sigma_scale=sigma_scale,
+                                                   target_transform=time_transform, log_point="median",
+                                                   max_seconds=max_seconds)
+                y_test_median = median_step.predict(X_test_trans) / SECONDS_PER_DAY
+                test_rmse_median = float(np.sqrt(mean_squared_error(y_test_days, y_test_median)))
+                test_mae_median = float(mean_absolute_error(y_test_days, y_test_median))
+                print(f"RMSE / MAE (days) of test set, median prediction: {test_rmse_median:.5f} / {test_mae_median:.5f}")
 
-            # Uncertainty diagnostics on the test set
+            # Uncertainty diagnostics on the test set, in the MODEL space, where the predictive distribution is
+            # Gaussian; a +/- k sigma interval there is the same quantile interval in seconds or days
             unc = prediction_step.predict_uncertainty(X_test_trans)
-            resid = y_test.to_numpy(dtype=float) - unc["mean"]
+            resid = y_test.to_numpy(dtype=float) - unc["mean_model"]
             abs_err = np.abs(resid)
-            std_cal = unc["total_std"]
+            std_cal = unc["std_model"]
             std_raw = std_cal / sigma_scale
             mean_total_var = float(np.mean(std_cal ** 2))
-            
+
             calib_cal = _regression_calibration_metrics(resid, std_cal)
             calib_raw = _regression_calibration_metrics(resid, std_raw)
             uncertainty_report = {
                 "sigma_scale": sigma_scale,
-                "mean_data_std": float(np.mean(unc["data_std"])),
-                "mean_knowledge_std": float(np.mean(unc["knowledge_std"])),
-                "mean_std": float(np.mean(std_cal)),
+                "time_target_transform": time_transform,
+                # std in days (log spaces: log-normal std of each component)
+                "mean_data_std": float(np.mean(unc["data_std"])) / SECONDS_PER_DAY,
+                "mean_knowledge_std": float(np.mean(unc["knowledge_std"])) / SECONDS_PER_DAY,
+                "mean_std": float(np.mean(unc["total_std"])) / SECONDS_PER_DAY,
+                # share of the model-space variance (additive there)
                 "epistemic_var_fraction": (
-                    float(np.mean(unc["knowledge_std"] ** 2) / mean_total_var) if mean_total_var > 0 else 0.0
+                    float(np.mean(unc["knowledge_std_model"] ** 2) / mean_total_var) if mean_total_var > 0 else 0.0
                 ),
                 "ence_raw": calib_raw["ence"],
                 "ence": calib_cal["ence"],
@@ -1043,7 +1201,10 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
                 "coverage_2sigma_raw": float(np.mean(abs_err <= 2.0 * std_raw)),
                 "coverage_1sigma": float(np.mean(abs_err <= std_cal)),
                 "coverage_2sigma": float(np.mean(abs_err <= 2.0 * std_cal)),
+                "train_mae": train_mae,
                 "test_mae": test_mae,
+                "test_rmse_median": test_rmse_median,
+                "test_mae_median": test_mae_median,
             }
             print(
                 f"Uncertainty (test avg): data/aleatoric std = {uncertainty_report['mean_data_std']:.5f}, "
@@ -1065,7 +1226,6 @@ def train_ml_model(train_data, test_data, case_id_name, columns_to_remove,
             ("prediction", prediction_step)
         ])
 
-        output_dir = Path(f"./case_studies/{case_study}/model")
         joblib.dump(best_pipeline, output_dir / f"catboost_model_{y_train.name}.joblib")
 
         with open(output_dir / f"best_hyperparams_{y_train.name}.json", 'w') as f:

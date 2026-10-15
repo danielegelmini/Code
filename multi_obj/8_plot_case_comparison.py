@@ -3,27 +3,21 @@
 Builds, for a single (case_study, case_id), one figure comparing the k recommended actions
 (+ the no-recommendation baseline) in
 
-    x = outcome (maximize), y = 1 - sigmoid_mm(remaining_time) (maximize)
+    x = outcome (maximize), y = remaining time in days (minimize)
 
 -- the exact objective space the Pareto search itself reasons in (see
-exhaustive_pareto_search / nsga2_pareto_search / select_top_k_pareto_actions in
-utils/recommendation_functions.py, which run on the .joblib time model's raw sigmoid_mm
-output). The figure has ONE row for the requested method (--method, default "exhaustive";
+exhaustive_pareto_search / select_top_k_pareto_actions in utils/recommendation_functions.py,
+which run on the .joblib time model's prediction in days).The figure has ONE row for the requested method (--method, default "exhaustive";
 "nsga2" is parked) and two columns -- predicted (.joblib models) vs. simulated (ProSiT, mean
 over n_sim runs) -- so you can see where a given rank's recommendation lands in the model's
 predicted space vs. where it actually lands once simulated. So --method exhaustive gives a
 single 1x2 figure (two panels), not a 2x2 grid.
 
-Why sigmoid_mm and not raw seconds: seconds is unbounded and its scale is specific to each
-case's own trace length, so it makes a poor axis. sigmoid_mm is the bounded, dataset-consistent
-scale the Pareto search reasons in AND the scale the time model's offline MAE is measured on, so
-plotting here in sigmoid_mm makes "predicted vs simulated" directly comparable to the offline
-numbers. 5_result_computation.py stores the values already in that scale, so nothing is re-scaled
-here: pred_remaining_time_*_sigmoid_mm is the time model's raw output (no seconds round-trip), and
-sim_remaining_time_*_mean_sigmoid_mm is E[sigmoid_mm(RT)] averaged over the n_sim runs (each run
-mapped to sigmoid_mm, then averaged -- the Monte-Carlo analogue of the per-row nonlinear map the
-offline "true" sigmoid_mm applies). Both sides are measured from the same reference point, the end
-of the case's replayed prefix (the decision point). Each panel is annotated with the MAE between
+The remaining time is in days (since 2026-10-12 the time model learns days, not sigmoid_mm), the
+same unit the time model's offline MAE is measured in: pred_remaining_time_* is the model's
+prediction and sim_remaining_time_*_mean the mean over the n_sim runs, both stored in seconds by
+5_result_computation.py and divided by 86400 here. Both sides are measured from the same reference
+point, the end of the case's replayed prefix (the decision point).Each panel is annotated with the MAE between
 its predicted and simulated points over the ranks shown.
 
 Colors are assigned per rank (a fixed color per rank number, not per case or method), and are
@@ -52,6 +46,7 @@ import pandas as pd
 
 from utils.get_features import load_case_study
 from utils.simulation_functions import case_id_name
+from utils.predictive_models_functions import SECONDS_PER_DAY
 
 METHODS = ["exhaustive", "nsga2"]
 DEFAULT_METHOD = "exhaustive"
@@ -106,8 +101,8 @@ def plot_case_comparison(
     with one row per method in `methods` that has evaluation data for this case_id."""
     case_dir = base_dir / "case_studies" / case_study
 
-    # 5_result_computation.py already stores predicted and simulated remaining time on the
-    # sigmoid_mm scale, so nothing is re-scaled here -- test_log is only needed for the prefix length.
+    # 5_result_computation.py stores predicted and simulated remaining times in seconds; they are only
+    # converted to days here -- test_log is only needed for the prefix length.
     _, _, test_log = load_case_study(case_study)
     prefix_length = get_prefix_length(test_log, case_id)
 
@@ -125,21 +120,20 @@ def plot_case_comparison(
 
     for row_idx, (method, rows) in enumerate(method_rows.items()):
         ranks = rows["rank"].tolist()
-        # x = outcome (maximize), y = 1 - sigmoid_mm(remaining time) (maximize) -- the objective
-        # space the Pareto search reasons in, on the same sigmoid_mm scale as the time model's
-        # offline MAE. Predicted y = the model's raw sigmoid_mm output; simulated y = mean over
-        # the n_sim runs of sigmoid_mm(RT_run). Both from 5_result_computation.py, no re-scaling.
+        # x = outcome (maximize), y = remaining time in days (minimize) -- the objective space the
+        # Pareto search reasons in (since 2026-10-12, when the time model moved from sigmoid_mm to days).
+        # Predicted y = the time model's prediction; simulated y = mean over the n_sim runs.
         pred_x = rows["pred_status_with_rec"].to_numpy(dtype=float)
-        pred_y = 1.0 - rows["pred_remaining_time_with_rec_sigmoid_mm"].to_numpy(dtype=float)
+        pred_y = rows["pred_remaining_time_with_rec"].to_numpy(dtype=float) / SECONDS_PER_DAY
         sim_x = rows["sim_status_method_mean"].to_numpy(dtype=float)
-        sim_y = 1.0 - rows["sim_remaining_time_method_mean_sigmoid_mm"].to_numpy(dtype=float)
+        sim_y = rows["sim_remaining_time_method_mean"].to_numpy(dtype=float) / SECONDS_PER_DAY
 
         # Baseline (no recommendation) is rank/method independent -- every row carries the same
         # value (see 5_result_computation.py), so any row's first entry is representative.
         baseline_pred_x = float(rows["pred_status_no_rec"].iloc[0])
-        baseline_pred_y = 1.0 - float(rows["pred_remaining_time_no_rec_sigmoid_mm"].iloc[0])
+        baseline_pred_y = float(rows["pred_remaining_time_no_rec"].iloc[0]) / SECONDS_PER_DAY
         baseline_sim_x = float(rows["sim_status_baseline_mean"].iloc[0])
-        baseline_sim_y = 1.0 - float(rows["sim_remaining_time_baseline_mean_sigmoid_mm"].iloc[0])
+        baseline_sim_y = float(rows["sim_remaining_time_baseline_mean"].iloc[0]) / SECONDS_PER_DAY
 
         panels = (
             (axes[row_idx, 0], pred_x, pred_y, baseline_pred_x, baseline_pred_y,
@@ -161,7 +155,7 @@ def plot_case_comparison(
                     label="No recommendation (baseline)", zorder=5,
                 )
             ax.set_title(title)
-            ax.set_ylabel("1 - sigmoid_mm(remaining time)  (maximize)")
+            ax.set_ylabel("Remaining time (days, minimize)")
             ax.tick_params(axis="y", labelleft=True)  # sharey hides these by default on non-first columns
             ax.tick_params(axis="x", labelbottom=True)  # sharex hides these by default on non-last rows
             ax.set_xlabel("Outcome (maximize)")
@@ -177,7 +171,7 @@ def plot_case_comparison(
                 0.03, 0.03,
                 f"predicted vs simulated ({int(finite.sum())} rank(s))\n"
                 f"MAE outcome = {mae_outcome:.3f}\n"
-                f"MAE 1-sigmoid_mm = {mae_time:.3f}",
+                f"MAE remaining time = {mae_time:.2f} days",
                 transform=axes[row_idx, 1].transAxes, fontsize=9, va="bottom", ha="left",
                 bbox=dict(boxstyle="round,pad=0.4", facecolor="white", alpha=0.85, edgecolor="gray"),
             )

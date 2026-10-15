@@ -1,6 +1,7 @@
 import warnings
 warnings.filterwarnings("ignore")
 
+import argparse
 import pandas as pd
 from pathlib import Path
 from datetime import datetime
@@ -18,7 +19,13 @@ params = {
     "optuna_trials": 80,
     "optuna_timeout": None,  # None/0 -> no wall-clock cap, run all optuna_trials
     "early_stopping_rounds": 50,
-    
+    # Time target: remaining time in seconds (sigmoid_mm removed on 2026-10-12); errors reported in days.
+    # Model space of the regressor (predictions always transformed back to seconds):
+    #   "none" = seconds as they are | "log1p_seconds" = log(1 + seconds) | "log1p_days" = log(1 + seconds/86400)
+    # chosen with 2b_compare_time_target.py on 2026-10-13: log1p_days, with the predictive log-normal truncated at the
+    # maximum remaining time of the training set (UncertaintyRegressor.max_seconds, set automatically)
+    "time_target_transform": "log1p_days",
+
     "search_spaces": {
         "label": {
             "learning_rate": {"type": "float", "min": 0.02, "max": 0.3, "log": True},
@@ -29,7 +36,7 @@ params = {
             "grow_policy": {"type": "categorical", "choices": ["SymmetricTree", "Depthwise"]},
         },
 
-        "sigmoid_mm": {
+        "remaining_time": {
             "learning_rate": {"type": "float", "min": 0.02, "max": 0.3, "log": True},
             "depth": {"type": "int", "min": 3, "max": 12},
             "l2_leaf_reg": {"type": "float", "min": 1.0, "max": 50.0, "log": True},
@@ -115,7 +122,7 @@ def _format_best_params(best_params):
 def write_training_report(all_results, runtime_params, output_path):
     """
     Writes one aggregated txt report with, for every trained case study and
-    every target (label/sigmoid_mm): the search space used, the winning
+    every target (label/remaining_time): the search space used, the winning
     Optuna trial and its validation score, the best hyperparameters, the
     number of trees in the final model, and the train/test scores -- so
     the whole run can be reviewed without opening any per-model file.
@@ -128,7 +135,7 @@ def write_training_report(all_results, runtime_params, output_path):
     """
     model_labels = {
         "label": "Model 1 (label - Classifier with uncertainty)",
-        "sigmoid_mm": "Model 2 (sigmoid_mm - Regressor with uncertainty)",
+        "remaining_time": "Model 2 (remaining time - Regressor with uncertainty)",
     }
 
     lines = []
@@ -154,7 +161,7 @@ def write_training_report(all_results, runtime_params, output_path):
         )
         lines.append("")
 
-        for target_name in ["label", "sigmoid_mm"]:
+        for target_name in ["label", "remaining_time"]:
             res = case_results.get(target_name)
             if res is None:
                 continue
@@ -175,8 +182,18 @@ def write_training_report(all_results, runtime_params, output_path):
             lines.append(f"  - {res['metric_name']} score of training set: {res['train_score']:.5f}")
             lines.append(f"  - {res['metric_name']} score of test set: {res['test_score']:.5f}")
             unc = res.get("uncertainty")
-            if unc and target_name == "sigmoid_mm":
-                lines.append(f"  - MAE score of test set: {unc['test_mae']:.5f}")
+            if unc and target_name == "remaining_time":
+                transform = unc.get("time_target_transform", "none")
+                space = {"none": "seconds", "log1p_seconds": "log(1 + seconds)",
+                         "log1p_days": "log(1 + seconds / 86400)"}.get(transform, transform)
+                lines.append(f"  - Model space: {space} (time_target_transform = {transform}); "
+                             f"predictions back in seconds; errors and std below in days")
+                lines.append(f"  - MAE of training set: {unc.get('train_mae', float('nan')):.5f} d | MAE of test set: {unc['test_mae']:.5f} d")
+                if transform != "none":
+                    lines.append(f"  - Test set with the log-normal median instead of the mean: "
+                                 f"RMSE {unc.get('test_rmse_median', float('nan')):.5f} d, MAE {unc.get('test_mae_median', float('nan')):.5f} d")
+                    lines.append(f"  - Calibration diagnostics below in the model space {space}: a +/- k sigma interval "
+                                 "there is the same quantile interval in seconds")
                 lines.append(
                     f"  - Predictive uncertainty (test avg): data/aleatoric std = {unc['mean_data_std']:.5f}, "
                     f"knowledge/epistemic std = {unc['mean_knowledge_std']:.5f}, total std = {unc['mean_std']:.5f}"
@@ -245,10 +262,20 @@ def write_training_report(all_results, runtime_params, output_path):
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Train the outcome classifier and the remaining-time regressor (step 2).")
+    parser.add_argument("--case_studies", default=None,
+                        help="Comma-separated case studies (default: params['case_study']).")
+    parser.add_argument("--targets", default="label,remaining_time",
+                        help="Comma-separated models to train: label (outcome classifier), remaining_time "
+                             "(time regressor). Default: both.")
+    args = parser.parse_args()
+
     runtime_params = params.copy()
-    case_studies = runtime_params["case_study"]
+    runtime_params["targets"] = [t.strip() for t in args.targets.split(",") if t.strip()]
+    case_studies = (args.case_studies.split(",") if args.case_studies else runtime_params["case_study"])
     if isinstance(case_studies, str):
         case_studies = [case_studies]
+    case_studies = [c.strip() for c in case_studies]
 
     all_results = {}
     for case_study in case_studies:
@@ -264,6 +291,7 @@ if __name__ == "__main__":
 
 # Running commands:
 # python 2_training_predictive_model.py
+# python 2_training_predictive_model.py --targets label --case_studies "BAC,BPI12,bpi17_before,bpi17_after"
 # In params, "case_study" can be a single string (e.g. "BAC") or a list of
 # strings (e.g. ["BAC", "BPI12", "bpi17_before", "bpi17_after"]) to train
 # all of them one after another with the same optuna/search_spaces settings.

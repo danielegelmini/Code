@@ -6,7 +6,6 @@ import argparse
 import pandas as pd
 import numpy as np
 import pm4py
-from utils.data_normalization import normalize_remaining_time
 from utils.pre_processing_functions import (
     prepare_data_and_add_features,
     add_next_act_res,
@@ -14,7 +13,6 @@ from utils.pre_processing_functions import (
     getting_total_time,
     data_labelling,
     data_pre_processing,
-    linear_combination,
 )
 from datetime import datetime
 from pathlib import Path
@@ -38,14 +36,12 @@ def main():
                         help="The split time t_split is the earliest time at which this share of the traces is "
                              "completed (default: 0.8). Traces completed by t_split -> train; traces running at "
                              "t_split -> test; traces starting after t_split -> excluded.")
-    parser.add_argument("--lambda_value", type=float, default=0.5, help="Weight for linear combination of normalized remaining time and case outcome (default: 0.5)")
     parser.add_argument("--output_suffix", type=str, default="",
                         help="Suffix appended to every output CSV file name (e.g. '_new'). "
                              "Use it to avoid overwriting existing files while validating.")
 
     args = parser.parse_args()
     case_study = args.case_study
-    lambda_value = args.lambda_value
     output_suffix = args.output_suffix
 
     # ==========================================
@@ -71,15 +67,11 @@ def main():
     train_data, test_data = train_test_split(df, case_study, split_time, "case:concept:name",
                                              output_suffix=output_suffix)
 
-    # ==========================================
-    # [ STEP 3: NORMALIZATION ]
-    # ==========================================
-    print("\n" + "="*50)
-    print(" >>> NORMALIZING REMAINING TIME <<< ")
-    print("="*50)
-    train_data, test_data = normalize_remaining_time(case_study, train_data, test_data, save_plot=False)
+    # (no normalization of the remaining time since 2026-10-12: the time model learns the remaining time in days,
+    #  computed in step 2 from the column remaining_time in seconds; the sigmoid_mm target and the 'outcome'
+    #  linear combination built on it are gone)
 
-    # ==========================================
+# ==========================================
     # [ STEP 4: FILTERING TEST LOGS ]
     # ==========================================
     print("\n" + "="*50)
@@ -113,18 +105,7 @@ def main():
 
     print("Test log filtering completed. Number of traces in test log:", n_test_log)
 
-    # ==========================================
-    # [ STEP 5: LINEAR COMBINATION ]
-    # ==========================================
-    print("\n" + "="*50)
-    print(f" >>> COMPUTING LINEAR COMBINATIONS (lambda = {lambda_value}) <<< ")
-    print("="*50)
-    train_data = linear_combination(train_data, lambda_weight=lambda_value)
-    test_data = linear_combination(test_data, lambda_weight=lambda_value)
-    test_log = linear_combination(test_log, lambda_weight=lambda_value)
-    test_log_with_last_act = linear_combination(test_log_with_last_act, lambda_weight=lambda_value)
-
-    # ==========================================
+# ==========================================
     # [ STEP 6: EXPORT DATA ]
     # ==========================================
     output_dir = Path(f"./case_studies/{case_study}")
@@ -144,7 +125,7 @@ if __name__ == "__main__":
     main()
 
 # Running commands:
-# python 1_data_preprocessing.py --case_study "BPI12"        --lambda_value 0.5
-# python 1_data_preprocessing.py --case_study "BAC"          --lambda_value 0.5
-# python 1_data_preprocessing.py --case_study "bpi17_before" --lambda_value 0.5
-# python 1_data_preprocessing.py --case_study "bpi17_after"  --lambda_value 0.5
+# python 1_data_preprocessing.py --case_study "BPI12"
+# python 1_data_preprocessing.py --case_study "BAC"
+# python 1_data_preprocessing.py --case_study "bpi17_before"
+# python 1_data_preprocessing.py --case_study "bpi17_after"

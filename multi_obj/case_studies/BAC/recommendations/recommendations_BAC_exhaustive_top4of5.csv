@@ -2,12 +2,12 @@ case:concept:name,Next_activity,Next_resource
 201810001660,,
 201810002650,,
 201810006512,,
-201810008108,,
+201810008108,Evaluating Request (WITH registered letter),00491
 201810008268,,
 201810008485,,
 201810008899,,
 20181000902,,
-201810010740,,
+201810010740,Service closure Request with BO responsibility,00828
 201810010965,,
 201810011081,,
 201810011583,,
@@ -49,7 +49,7 @@ case:concept:name,Next_activity,Next_resource
 201811011715,,
 201811011742,,
 201811011907,,
-201811011916,,
+201811011916,Service closure Request with BO responsibility,00850
 201812000179,,
 201812000181,,
 201812000186,,
@@ -71,7 +71,7 @@ case:concept:name,Next_activity,Next_resource
 201812004065,,
 201812004155,,
 201812004198,,
-201812004271,,
+201812004271,Evaluating Request (WITH registered letter),00491
 201812004422,,
 201812004433,,
 201812004478,,
@@ -167,9 +167,9 @@ case:concept:name,Next_activity,Next_resource
 20188002645,,
 20188005486,,
 20189001829,,
-20189003084,,
+20189003084,Evaluating Request (WITH registered letter),00491
 20189003486,,
-20189004803,,
+20189004803,Service closure Request with BO responsibility,00828
 20189006540,,
 20189007102,,
 20189007821,,
@@ -243,7 +243,7 @@ case:concept:name,Next_activity,Next_resource
 20191002552,,
 20191002594,,
 20191002706,,
-20191002742,,
+20191002742,Service closure Request with BO responsibility,00828
 20191002745,,
 20191002751,,
 20191002759,,
@@ -336,7 +336,7 @@ case:concept:name,Next_activity,Next_resource
 20191005186,,
 20191005248,,
 20191005294,,
-20191005303,,
+20191005303,Evaluating Request (WITH registered letter),00491
 20191005314,,
 20191005347,,
 20191005360,,
@@ -363,7 +363,7 @@ case:concept:name,Next_activity,Next_resource
 20191005769,,
 20191005791,,
 20191005816,,
-20191005838,,
+20191005838,Evaluating Request (WITH registered letter),00491
 20191005893,,
 20191005903,,
 20191005916,,
@@ -562,11 +562,11 @@ case:concept:name,Next_activity,Next_resource
 20191008751,,
 20191008755,,
 20191008759,,
-20191008774,,
+20191008774,Service closure Request with BO responsibility,00850
 20191008797,,
 20191008805,,
 20191008808,,
-20191008812,,
+20191008812,Service closure Request with BO responsibility,BOC
 20191008816,,
 20191008827,,
 20191008833,,
@@ -584,7 +584,7 @@ case:concept:name,Next_activity,Next_resource
 20191008932,,
 20191008940,,
 20191008953,,
-20191008960,,
+20191008960,Service closure Request with BO responsibility,00831
 20191008965,,
 20191008973,,
 20191008981,,
@@ -853,7 +853,7 @@ case:concept:name,Next_activity,Next_resource
 20191010546,,
 20191010547,,
 20191010554,,
-20191010555,,
+20191010555,Evaluating Request (WITH registered letter),00491
 20191010559,,
 20191010560,,
 20191010563,,
@@ -929,7 +929,7 @@ case:concept:name,Next_activity,Next_resource
 20191010834,,
 20191010840,,
 20191010841,,
-20191010843,,
+20191010843,Evaluating Request (WITH registered letter),00491
 20191010846,,
 20191010850,,
 20191010854,,
@@ -945,7 +945,7 @@ case:concept:name,Next_activity,Next_resource
 20191010894,,
 20191010896,,
 20191010897,,
-20191010902,,
+20191010902,Service closure Request with BO responsibility,00835
 20191010904,,
 20191010906,,
 20191010908,,
@@ -1233,7 +1233,7 @@ case:concept:name,Next_activity,Next_resource
 20191011673,,
 20191011674,,
 20191011675,,
-20191011677,,
+20191011677,Evaluating Request (WITH registered letter),00491
 20191011678,,
 20191011680,,
 20191011684,,
@@ -1439,7 +1439,7 @@ case:concept:name,Next_activity,Next_resource
 20191012137,,
 20191012141,,
 20191012142,,
-20191012148,,
+20191012148,Service closure Request with BO responsibility,00828
 20191012149,,
 20191012152,,
 20191012154,,
@@ -1511,7 +1511,7 @@ case:concept:name,Next_activity,Next_resource
 20191012304,,
 20191012305,,
 20191012307,,
-20191012313,,
+20191012313,Service closure Request with BO responsibility,00828
 20191012315,,
 20191012317,,
 20191012318,,
@@ -1567,7 +1567,7 @@ case:concept:name,Next_activity,Next_resource
 20191012461,,
 20191012463,,
 20191012464,,
-20191012468,,
+20191012468,Service closure Request with BO responsibility,00828
 20191012469,,
 20191012473,,
 20191012474,,
@@ -1873,5 +1873,5 @@ case:concept:name,Next_activity,Next_resource
 20191013179,,
 20191013180,,
 20191013183,,
-20191013185,,
+20191013185,Evaluating Request (WITH registered letter),00491
 20191013186,,

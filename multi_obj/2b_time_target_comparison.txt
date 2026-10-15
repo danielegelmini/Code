@@ -1,0 +1,63 @@
+==============================================================================================================
+REMAINING TIME: SECONDS vs LOG(1 + SECONDS) vs LOG(1 + DAYS) AS MODEL SPACE (time regressor only, as in step 2)
+Written by 2b_compare_time_target.py - 2026-10-13 08:27:38 | Optuna trials 80 | data train_data.csv / test_data.csv
+==============================================================================================================
+RMSE / MAE      : in days, on the test set (train: on the doubled training set). log spaces: log-normal mean;
+                  'median' columns: the log-normal median as point prediction.
+cov +/-1s, +/-2s: share of test rows inside the predictive interval (targets 68.3% / 95.4%), recalibrated;
+                  computed in each model's space = the same quantile interval in seconds.
+ENCE            : expected normalized calibration error (recalibrated, model space). std: mean predictive std in days.
+
+BAC  (train rows 328514, test rows 14147)
+    transform test RMSE test MAE RMSE median MAE median train MAE cov +/-1s cov +/-2s ENCE % std d  trees  min
+         none    18.234    5.649           -          -     5.079      96.2      98.5   36.0 11.84    294 49.0
+log1p_seconds    44.944    5.610      18.608      4.612   101.736      84.0      97.9   21.9 83.02     41 49.2
+   log1p_days    18.047    5.097      18.574      4.599     4.706      87.8      97.8   28.4  6.85     65 41.2
+
+BPI12  (train rows 99070, test rows 8441)
+    transform test RMSE test MAE RMSE median MAE median train MAE cov +/-1s cov +/-2s ENCE %  std d  trees  min
+         none    11.959    7.819           -          -     5.779      74.8      93.8   28.4   9.07    136 17.6
+log1p_seconds    15.473    8.468      13.710      8.816     6.620      67.4      97.1   14.9 550.91     39 15.5
+   log1p_days    11.942    7.859      13.248      8.494     6.015      63.7      95.8   14.1   9.71     32 14.6
+
+bpi17_before  (train rows 263268, test rows 18085)
+    transform test RMSE test MAE RMSE median MAE median train MAE cov +/-1s cov +/-2s ENCE %  std d  trees  min
+         none    13.802    9.322           -          -     6.887      76.4      91.9   32.1   9.97     22 40.2
+log1p_seconds    13.202    9.106      15.698     10.473     8.050      80.2      98.8   19.1  88.36     89 60.9
+   log1p_days   684.322   15.912      15.247     10.062    14.356      58.7      95.7   13.7 142.70    140 61.9
+
+bpi17_after  (train rows 306728, test rows 26095)
+    transform test RMSE test MAE RMSE median MAE median train MAE cov +/-1s cov +/-2s ENCE %    std d  trees  min
+         none    13.375    8.773           -          -     6.482      72.4      90.4   43.3     8.78    130 86.1
+log1p_seconds  1650.862   22.856      15.331     10.135    10.160      84.1      98.5   25.0 4.42e+06    118 53.6
+   log1p_days    12.788    8.308      14.623      9.516     6.919      74.1      97.6   17.3    12.07     53 49.5
+
+==============================================================================================================
+TRUNCATED LOG-NORMAL (added 2026-10-13 10:01:05, 2b_compare_time_target.py --truncation_only;
+the same saved models as above, no retraining; only the conversion from the model space to days changes)
+==============================================================================================================
+U        : maximum remaining time of the training set (days); the predictive log-normal is truncated at U:
+           mean = E[T | T <= U], median = median of T given T <= U (see UncertaintyRegressor).
+plain    : log-normal without truncation (as in the tables above; 'mean' = the 'test MAE/RMSE' columns there).
+>U       : test predictions above U (days); max: largest test prediction (days).
+Calibration (coverage, ENCE) is in the model space and does not change with the truncation.
+
+BAC  (U = 503.6 days)
+          transform MAE mean MAE mean trunc RMSE mean RMSE mean trunc  >U mean max mean max trunc MAE median trunc RMSE median trunc train MAE trunc std d trunc
+log1p_seconds+trunc    5.610          5.188    44.944          18.028        1   4910.3      46.8            4.612            18.608           4.782        7.41
+   log1p_days+trunc    5.097          5.091    18.047          18.046        0     38.7      33.0            4.599            18.575           4.704        6.72
+
+BPI12  (U = 91.4 days)
+          transform MAE mean MAE mean trunc RMSE mean RMSE mean trunc  >U mean max mean max trunc MAE median trunc RMSE median trunc train MAE trunc std d trunc
+log1p_seconds+trunc    8.468          8.048    15.473          12.196        9    602.6      23.7            8.846            13.755           6.103       10.17
+   log1p_days+trunc    7.859          7.905    11.942          12.027        0     30.6      26.5            8.507            13.267           5.990        9.05
+
+bpi17_before  (U = 135.5 days)
+          transform MAE mean MAE mean trunc RMSE mean RMSE mean trunc  >U mean max mean max trunc MAE median trunc RMSE median trunc train MAE trunc std d trunc
+log1p_seconds+trunc    9.106          8.960    13.202          13.160        1    142.3      38.2           10.522            15.771           7.337       15.80
+   log1p_days+trunc   15.912          9.148   684.322          13.665       19  89029.2      40.2           10.066            15.253           6.932        9.94
+
+bpi17_after  (U = 101.0 days)
+          transform MAE mean MAE mean trunc RMSE mean RMSE mean trunc  >U mean max mean max trunc MAE median trunc RMSE median trunc train MAE trunc std d trunc
+log1p_seconds+trunc   22.856          8.467  1650.862          12.884       31 255224.7      29.2           10.336            15.594           7.202       14.36
+   log1p_days+trunc    8.308          8.423    12.788          12.958        0     33.5      33.5            9.540            14.657           6.883       10.81

@@ -3,7 +3,7 @@
 Find case_ids that have COMPLETE data in the "Simulated" panel of
 8_plot_case_comparison.py / 8b_plot_case_comparison_vs_sim_model.py: all k
 ranks have a usable ProSiT simulation result (sim_status_method_mean and
-sim_remaining_time_method_mean_sigmoid_mm both non-null) AND the
+sim_remaining_time_method_mean both non-null) AND the
 no-recommendation baseline is present too.
 
 Why this is needed: a rank's simulated point is missing whenever every one of
@@ -19,7 +19,7 @@ there is to show for that case.
 
 Among the qualifying (complete-data) case_ids, results are additionally
 ranked by a "spread" score -- rewarding cases whose k ranks and baseline land
-in visually separated positions in the (outcome, 1-sigmoid_mm) plane, since
+in visually separated positions in the (outcome, remaining time) plane, since
 (per prior experience picking examples for these figures) a case where every
 point coincides makes for an uninformative plot. Grouped into short/medium/
 long prefix-length bands (tertiles among the qualifying cases) so you can
@@ -39,6 +39,7 @@ import pandas as pd
 
 from utils.get_features import load_case_study
 from utils.simulation_functions import case_id_name
+from utils.predictive_models_functions import SECONDS_PER_DAY
 
 EVAL_TABLES_SUBDIR = "evaluation_tables"
 DEFAULT_CASE_STUDY = "BPI12"
@@ -56,8 +57,8 @@ def get_prefix_lengths(test_log: pd.DataFrame) -> pd.Series:
 
 def find_complete_cases(eval_table: pd.DataFrame, min_ranks: int = 2) -> pd.DataFrame:
     """One row per case_id that has a finite sim_status_method_mean AND
-    sim_remaining_time_method_mean_sigmoid_mm for EVERY rank it was recommended at, plus a finite
-    baseline (sim_status_baseline_mean / sim_remaining_time_baseline_mean_sigmoid_mm).
+    sim_remaining_time_method_mean for EVERY rank it was recommended at, plus a finite
+    baseline (sim_status_baseline_mean / sim_remaining_time_baseline_mean).
 
     The table only has a row for the ranks the case actually got a recommendation at: with the
     confidence filter a case often has fewer than k (the Pareto front of the surviving candidates
@@ -65,9 +66,14 @@ def find_complete_cases(eval_table: pd.DataFrame, min_ranks: int = 2) -> pd.Data
     min_ranks recommended ranks, all of them simulated.
 
     Returns a DataFrame with case_id, k_total, n_ranks and a 'spread_score' column (higher = more
-    visually separated rank/baseline points in the (outcome, 1-sigmoid_mm) plane -- range of
-    the ranks' positions plus their mean distance from the baseline).
+    visually separated rank/baseline points in the (outcome, remaining time) plane -- range of
+    the ranks' positions plus their mean distance from the baseline). The remaining time (days) is
+    divided by the 95th percentile of the simulated baseline remaining time of the table, so that it
+    weighs about as much as the outcome (in [0, 1]) in the distances.
     """
+    baseline_days = eval_table["sim_remaining_time_baseline_mean"].to_numpy(dtype=float) / SECONDS_PER_DAY
+    time_scale = float(np.nanpercentile(baseline_days, 95)) if np.isfinite(baseline_days).any() else 1.0
+    time_scale = time_scale if time_scale > 0 else 1.0
     rows = []
     for cid, g in eval_table.groupby(case_id_name):
         g = g.sort_values("rank")
@@ -76,12 +82,12 @@ def find_complete_cases(eval_table: pd.DataFrame, min_ranks: int = 2) -> pd.Data
             continue  # too few recommended ranks to compare
 
         sim_x = g["sim_status_method_mean"].to_numpy(dtype=float)
-        sim_y = 1.0 - g["sim_remaining_time_method_mean_sigmoid_mm"].to_numpy(dtype=float)
+        sim_y = g["sim_remaining_time_method_mean"].to_numpy(dtype=float) / SECONDS_PER_DAY / time_scale
         if not np.all(np.isfinite(sim_x)) or not np.all(np.isfinite(sim_y)):
             continue  # at least one rank has no usable simulation run
 
         base_x = float(g["sim_status_baseline_mean"].iloc[0])
-        base_y = 1.0 - float(g["sim_remaining_time_baseline_mean_sigmoid_mm"].iloc[0])
+        base_y = float(g["sim_remaining_time_baseline_mean"].iloc[0]) / SECONDS_PER_DAY / time_scale
         if not (np.isfinite(base_x) and np.isfinite(base_y)):
             continue  # baseline itself missing
 

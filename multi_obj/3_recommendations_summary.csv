@@ -1,21 +1,21 @@
 case_study,method,rank,test_cases,with_recommendation,pct_with_recommendation,top_activities
-BAC,exhaustive,1,1876,1397,74.46695095948827,Pending Liquidation Request (32%); Service closure Request with BO responsibility (27%); Service closure Request with network responsibility (19%)
-BAC,exhaustive,2,1876,261,13.912579957356076,Service closure Request with BO responsibility (68%); Authorization Requested (28%); Request completed with account closure (3%)
-BAC,exhaustive,3,1876,10,0.5330490405117271,Service closure Request with BO responsibility (100%)
-BAC,exhaustive,4,1876,0,0.0,
+BAC,exhaustive,1,1876,1872,99.7867803837953,Pending Liquidation Request (34%); Service closure Request with BO responsibility (25%); Service closure Request with network responsibility (13%)
+BAC,exhaustive,2,1876,702,37.42004264392324,Evaluating Request (WITH registered letter) (43%); Service closure Request with network responsibility (26%); Service closure Request with BO responsibility (16%)
+BAC,exhaustive,3,1876,287,15.298507462686567,Service closure Request with BO responsibility (83%); Evaluating Request (WITH registered letter) (16%); Authorization Requested (1%)
+BAC,exhaustive,4,1876,20,1.0660980810234542,Service closure Request with BO responsibility (55%); Evaluating Request (WITH registered letter) (45%)
 BAC,exhaustive,5,1876,0,0.0,
-BPI12,exhaustive,1,623,616,98.87640449438203,O_SENT_BACK (84%); W_Assess_application (13%); A_ACCEPTED (2%)
-BPI12,exhaustive,2,623,579,92.93739967897271,O_SENT_BACK (88%); W_Assess_application (10%); W_Fix_incoplete_submission (1%)
-BPI12,exhaustive,3,623,2,0.32102728731942215,A_ACCEPTED (50%); W_Complete_preaccepted_appl (50%)
-BPI12,exhaustive,4,623,0,0.0,
-BPI12,exhaustive,5,623,0,0.0,
-bpi17_before,exhaustive,1,1218,1195,98.11165845648604,A_Validating (91%); A_Accepted (7%); A_Incomplete (1%)
-bpi17_before,exhaustive,2,1218,1159,95.1559934318555,A_Validating (92%); A_Accepted (6%); A_Incomplete (1%)
-bpi17_before,exhaustive,3,1218,734,60.26272577996716,A_Validating (90%); A_Accepted (7%); W_Call incomplete files (2%)
-bpi17_before,exhaustive,4,1218,23,1.8883415435139572,A_Validating (70%); W_Call incomplete files (26%); O_Cancelled (4%)
-bpi17_before,exhaustive,5,1218,0,0.0,
-bpi17_after,exhaustive,1,1840,1836,99.78260869565217,A_Validating (93%); A_Incomplete (4%); A_Accepted (2%)
-bpi17_after,exhaustive,2,1840,1251,67.98913043478261,A_Validating (93%); O_Returned (2%); W_Call incomplete files (2%)
-bpi17_after,exhaustive,3,1840,144,7.826086956521739,A_Validating (64%); W_Call incomplete files (21%); O_Returned (14%)
-bpi17_after,exhaustive,4,1840,40,2.1739130434782608,W_Call incomplete files (72%); O_Returned (18%); A_Validating (8%)
-bpi17_after,exhaustive,5,1840,0,0.0,
+BPI12,exhaustive,1,623,623,100.0,O_SENT_BACK (61%); A_DECLINED (35%); A_ACCEPTED (4%)
+BPI12,exhaustive,2,623,299,47.99357945425361,A_DECLINED (44%); O_SENT_BACK (27%); O_CANCELLED (22%)
+BPI12,exhaustive,3,623,214,34.34991974317817,O_SENT_BACK (49%); O_CANCELLED (48%); A_CANCELLED (3%)
+BPI12,exhaustive,4,623,200,32.102728731942214,O_SENT_BACK (50%); O_CANCELLED (32%); A_CANCELLED (18%)
+BPI12,exhaustive,5,623,93,14.92776886035313,A_CANCELLED (83%); O_CANCELLED (11%); O_SENT_BACK (6%)
+bpi17_before,exhaustive,1,1218,1218,100.0,A_Validating (87%); A_Accepted (7%); A_Denied (4%)
+bpi17_before,exhaustive,2,1218,1216,99.83579638752053,A_Validating (88%); A_Accepted (7%); A_Denied (4%)
+bpi17_before,exhaustive,3,1218,1100,90.311986863711,A_Validating (89%); A_Cancelled (6%); A_Incomplete (3%)
+bpi17_before,exhaustive,4,1218,1000,82.10180623973727,A_Cancelled (94%); A_Validating (3%); A_Incomplete (2%)
+bpi17_before,exhaustive,5,1218,901,73.97372742200328,A_Cancelled (98%); A_Validating (1%); O_Returned (0%)
+bpi17_after,exhaustive,1,1840,1837,99.83695652173913,A_Validating (87%); A_Denied (7%); O_Cancelled (2%)
+bpi17_after,exhaustive,2,1840,1786,97.06521739130434,A_Cancelled (55%); A_Validating (37%); A_Incomplete (2%)
+bpi17_after,exhaustive,3,1840,791,42.98913043478261,A_Cancelled (82%); O_Create Offer (7%); A_Validating (5%)
+bpi17_after,exhaustive,4,1840,186,10.108695652173912,A_Cancelled (69%); O_Create Offer (17%); A_Incomplete (7%)
+bpi17_after,exhaustive,5,1840,11,0.5978260869565217,A_Cancelled (73%); O_Create Offer (27%)

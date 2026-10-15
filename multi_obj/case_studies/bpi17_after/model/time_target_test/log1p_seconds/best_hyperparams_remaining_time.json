@@ -1,0 +1,10 @@
+{
+    "learning_rate": 0.06390059181667312,
+    "depth": 8,
+    "l2_leaf_reg": 2.5400180021718772,
+    "colsample_bylevel": 0.9606947835715721,
+    "bootstrap_type": "MVS",
+    "grow_policy": "Depthwise",
+    "subsample": 0.5225945988072376,
+    "min_data_in_leaf": 23
+}

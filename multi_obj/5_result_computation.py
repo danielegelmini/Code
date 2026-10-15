@@ -12,26 +12,21 @@ one row per case_id:
   - case_study, method, rank, k_total
   - case:concept:name, rec_activity, rec_resource
   - sim_status_method_mean
-  - sim_remaining_time_method_mean (seconds) and
-    sim_remaining_time_method_mean_sigmoid_mm
+  - sim_remaining_time_method_mean (seconds)
       (averaged over that rank's n_sim simulation runs; see below)
   - sim_rec_applied_fraction
       (fraction of that case's simulation runs in which the recommended
       activity was actually applied -- runs where it was reported unreachable,
       sim_<i>_unreachable_recommendations.csv, are excluded from the two
-      sim_*_method_mean* columns above)
-  - sim_status_baseline_mean, sim_remaining_time_baseline_mean (seconds),
-    sim_remaining_time_baseline_mean_sigmoid_mm
-      (averaged over the baseline's n_sim runs -- rank/method independent,
+      sim_*_method_mean columns above)
+  - sim_status_baseline_mean, sim_remaining_time_baseline_mean (seconds)
+      (averagedover the baseline's n_sim runs -- rank/method independent,
       computed once per case study and reused)
   - pred_status_with_rec
-  - pred_remaining_time_with_rec_sigmoid_mm (the time model's raw output, the
-    exact quantity the offline MAE of the time model is measured on) and
-    pred_remaining_time_with_rec (that value decoded to seconds, for reading)
-      (predictive_outcome_model / predictive_time_model .joblib predictions
+  - pred_remaining_time_with_rec (seconds, as the time model predicts)
+      (predictive_outcome_model/ predictive_time_model .joblib predictions
       on the case's prefix with NEXT_ACTIVITY/NEXT_RESOURCE = the recommendation)
-  - pred_status_no_rec, pred_remaining_time_no_rec_sigmoid_mm,
-    pred_remaining_time_no_rec
+  - pred_status_no_rec, pred_remaining_time_no_rec (seconds)
       (same models on the prefix with NEXT_ACTIVITY = NEXT_RESOURCE = NO_NEXT_TOKEN,
       the "no recommendation" baseline of the confidence filter -- rank/method
       independent, computed once and reused)
@@ -41,11 +36,9 @@ simulated remaining time are measured from the SAME point, the end of the
 case's replayed historical prefix (the decision point): that is what the time
 model's training target is (case_end - end of the prefix's last event), and
 compute_res_and_status reads the simulated remaining_time at positional index
-repl_id (the prefix's last event) to match. The *_sigmoid_mm columns are on the
-bounded StandardScaler->sigmoid->MinMaxScaler "sigmoid_mm" scale the time model
-is trained on; the simulated one is E[sigmoid_mm(RT)] averaged over the runs
-(each run mapped to sigmoid_mm, then averaged -- not sigmoid_mm of the mean),
-the Monte-Carlo analogue of the per-row map the offline "true" sigmoid_mm uses.
+repl_id (the prefix's last event) to match. Every remaining-time column is in
+seconds (the *_sigmoid_mm columns were removed on 2026-10-12 with the sigmoid_mm
+target: the time model now predicts seconds).
 
 Only the method passed with --method is processed (default "exhaustive";
 "nsga2" is parked). Saves both the per-rank tables and, stacked across all
@@ -68,7 +61,6 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from utils.data_normalization import fit_remaining_time_scalers, sigmoid_mm_to_remaining_time
 from utils.simulation_functions import (
     getting_remaining_time,
     status_encoding,
@@ -187,9 +179,7 @@ def compute_sim_averages(
     encoded_activity,
     repl_id_map: pd.Series,
     case_ids: list[str],
-    rt_std_scaler=None,
-    rt_mm_scaler=None,
-) -> tuple[dict, dict, dict, dict]:
+) -> tuple[dict, dict, dict]:
     """Per-case simulation aggregates over every sim_<i>.csv found in sim_folder.
 
     Args:
@@ -198,19 +188,15 @@ def compute_sim_averages(
         encoded_activity: activity name marking a positive case outcome.
         repl_id_map: case_id (str) -> prefix cut-point, from build_repl_id_map.
         case_ids: case ids (str) to compute averages for.
-        rt_std_scaler, rt_mm_scaler: the remaining-time StandardScaler/MinMaxScaler
-            pair (from fit_remaining_time_scalers); when given, the per-run
-            remaining times are also averaged in sigmoid_mm space.
 
     Returns:
-        (mean_seconds, mean_sigmoid_mm, mean_status, applied_fraction), each
-        {case_id: float}. All four empty if sim_folder has no sim_<i>.csv. See
-        compute_res_and_status for the exact semantics (reference point, the
-        sigmoid_mm averaging, the unreachable-run exclusion).
+        (mean_seconds, mean_status, applied_fraction), each {case_id: float}. All three
+        empty if sim_folder has no sim_<i>.csv. See compute_res_and_status for the exact
+        semantics (reference point, the unreachable-run exclusion).
     """
     n_sim = _detect_n_sim(sim_folder)
     if n_sim == 0:
-        return {}, {}, {}, {}
+        return {}, {}, {}
 
     test_simu = load_simulation_runs(sim_folder, case_study, n_sim, encoded_activity)
     excluded_by_run = _load_unreachable_by_run(sim_folder)
@@ -231,10 +217,7 @@ def compute_sim_averages(
         )
         rec_df = rec_df.loc[~missing].reset_index(drop=True)
 
-    return compute_res_and_status(
-        case_study, rec_df, test_simu, n_sim,
-        std_scaler=rt_std_scaler, mm_scaler=rt_mm_scaler, excluded_by_run=excluded_by_run,
-    )
+    return compute_res_and_status(case_study, rec_df, test_simu, n_sim, excluded_by_run=excluded_by_run)
 
 
 # ---------------------------------------------------------------------------
@@ -247,7 +230,7 @@ def predict_batch(
     predictive_outcome_model,
     predictive_time_model,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Predicted (status, remaining_time) for many (query_instance, act, res) triples via two model
+    """Predicted (status, remaining time in SECONDS) for many (query_instance, act, res) triples via two model
     calls total -- one outcome-probability and one time predict over the whole batch -- instead of
     one pair of calls per row. Each call into the sklearn/CatBoost pipelines pays a fixed overhead
     (ColumnTransformer fit-time transform, CatBoost's own per-call setup) that's roughly constant
@@ -275,7 +258,8 @@ def predict_batch(
     # predict_time_and_uncertainty), not the full model's .predict(): the "predicted" points are then
     # exactly the ones the Pareto front was built from
     predicted_rt, _ = predict_time_and_uncertainty(predictive_time_model, pd.DataFrame(time_rows))
-    return predicted_status, predicted_rt
+    # seconds, as the simulated remaining times
+    return predicted_status, np.asarray(predicted_rt, dtype=float)
 
 
 # ---------------------------------------------------------------------------
@@ -309,13 +293,6 @@ def compute_case_study_tables(base_dir: Path, case_study: str, output_subdir: st
         test_data = convert_dtypes_bpi12(test_data, "experiment")
         test_log = convert_dtypes_bpi12(test_log, "experiment")
 
-    # The .joblib time model predicts in "sigmoid_mm" space (see get_case_study_features).
-    # fit_remaining_time_scalers reconstructs the StandardScaler/MinMaxScaler pair that produced
-    # that space, so predictions can be decoded to seconds (sigmoid_mm_to_remaining_time) for the
-    # human-readable columns AND the simulated seconds can be encoded into the same sigmoid_mm
-    # scale (remaining_time_to_sigmoid_mm, inside compute_sim_averages) for the comparison columns.
-    rt_std_scaler, rt_mm_scaler = fit_remaining_time_scalers(train_data)
-
     (
         predictive_outcome_model,
         predictive_time_model,
@@ -338,16 +315,15 @@ def compute_case_study_tables(base_dir: Path, case_study: str, output_subdir: st
     # -------------------------------------------------------------------
     print("  Computing baseline simulation averages (rank/method independent)...")
     baseline_folder = case_dir / SIM_SUBDIR / BASELINE_FOLDER_NAME
-    baseline_rt, baseline_rt_sigmoid, baseline_status, _baseline_applied = compute_sim_averages(
+    baseline_rt, baseline_status, _baseline_applied = compute_sim_averages(
         baseline_folder, case_study, encoded_activity, repl_id_map, all_case_ids,
-        rt_std_scaler=rt_std_scaler, rt_mm_scaler=rt_mm_scaler,
     )
     if not baseline_rt:
         print(f"    [WARNING] No baseline simulation runs found at {baseline_folder}.")
 
     print("  Computing 'no recommendation' .joblib predictions (rank/method independent)...")
     no_rec_ids = [cid for cid in all_case_ids if query_instances_by_case.get(cid) is not None]
-    pred_no_rec: dict[str, tuple[float, float, float]] = {}
+    pred_no_rec: dict[str, tuple[float, float]] = {}
     if no_rec_ids:
         no_rec_qis = [query_instances_by_case[cid] for cid in no_rec_ids]
         # "no recommendation" = NO_NEXT_TOKEN as next step: the baseline the confidence filter of step 3
@@ -356,17 +332,12 @@ def compute_case_study_tables(base_dir: Path, case_study: str, output_subdir: st
         # really followed the split, known only afterwards, so it is not used here.
         no_rec_acts = [NO_NEXT_TOKEN] * len(no_rec_qis)
         no_rec_ress = [NO_NEXT_TOKEN] * len(no_rec_qis)
-        pred_status_no_arr, pred_rt_no_sigmoid_arr = predict_batch(
+        pred_status_no_arr, pred_rt_no_seconds_arr = predict_batch(
             no_rec_qis, no_rec_acts, no_rec_ress, predictive_outcome_model, predictive_time_model
         )
-        # pred_rt_no_sigmoid_arr is the time model's raw sigmoid_mm output (the offline-MAE scale);
-        # keep it, and separately decode a seconds copy for the human-readable column.
-        pred_rt_no_seconds_arr = sigmoid_mm_to_remaining_time(pred_rt_no_sigmoid_arr, rt_std_scaler, rt_mm_scaler)
         pred_no_rec = {
-            cid: (float(status), float(sig), float(sec))
-            for cid, status, sig, sec in zip(
-                no_rec_ids, pred_status_no_arr, pred_rt_no_sigmoid_arr, pred_rt_no_seconds_arr
-            )
+            cid: (float(status), float(sec))
+            for cid, status, sec in zip(no_rec_ids, pred_status_no_arr, pred_rt_no_seconds_arr)
         }
 
     # -------------------------------------------------------------------
@@ -405,9 +376,8 @@ def compute_case_study_tables(base_dir: Path, case_study: str, output_subdir: st
                 rec_df = rec_df.loc[~missing].reset_index(drop=True)
 
             case_ids_rank = rec_df[case_id_name_local].tolist()
-            method_rt, method_rt_sigmoid, method_status, method_applied = compute_sim_averages(
+            method_rt, method_status, method_applied = compute_sim_averages(
                 sim_folder, case_study, encoded_activity, repl_id_map, case_ids_rank,
-                rt_std_scaler=rt_std_scaler, rt_mm_scaler=rt_mm_scaler,
             )
 
             valid_rows = []
@@ -422,17 +392,14 @@ def compute_case_study_tables(base_dir: Path, case_study: str, output_subdir: st
             rows = []
             if valid_rows:
                 rec_cids, rec_acts, rec_resources, rec_qis = zip(*valid_rows)
-                pred_status_with_arr, pred_rt_with_sigmoid_arr = predict_batch(
+                pred_status_with_arr, pred_rt_with_seconds_arr = predict_batch(
                     list(rec_qis), list(rec_acts), list(rec_resources), predictive_outcome_model, predictive_time_model
                 )
-                # raw sigmoid_mm output (offline-MAE scale) + a decoded seconds copy for reading.
-                pred_rt_with_seconds_arr = sigmoid_mm_to_remaining_time(pred_rt_with_sigmoid_arr, rt_std_scaler, rt_mm_scaler)
 
-                for cid, act, res, pred_status_with, pred_rt_with_sig, pred_rt_with_sec in zip(
-                    rec_cids, rec_acts, rec_resources,
-                    pred_status_with_arr, pred_rt_with_sigmoid_arr, pred_rt_with_seconds_arr,
+                for cid, act, res, pred_status_with, pred_rt_with_sec in zip(
+                    rec_cids, rec_acts, rec_resources, pred_status_with_arr, pred_rt_with_seconds_arr,
                 ):
-                    pred_status_no, pred_rt_no_sig, pred_rt_no_sec = pred_no_rec.get(cid, (np.nan, np.nan, np.nan))
+                    pred_status_no, pred_rt_no_sec = pred_no_rec.get(cid, (np.nan, np.nan))
                     rows.append({
                         "case_study": case_study,
                         "method": method,
@@ -442,17 +409,13 @@ def compute_case_study_tables(base_dir: Path, case_study: str, output_subdir: st
                         "rec_activity": act,
                         "rec_resource": res,
                         "sim_status_method_mean": method_status.get(cid, np.nan),
-                        "sim_remaining_time_method_mean_sigmoid_mm": method_rt_sigmoid.get(cid, np.nan),
                         "sim_remaining_time_method_mean": method_rt.get(cid, np.nan),
                         "sim_rec_applied_fraction": method_applied.get(cid, np.nan),
                         "sim_status_baseline_mean": baseline_status.get(cid, np.nan),
-                        "sim_remaining_time_baseline_mean_sigmoid_mm": baseline_rt_sigmoid.get(cid, np.nan),
                         "sim_remaining_time_baseline_mean": baseline_rt.get(cid, np.nan),
                         "pred_status_with_rec": float(pred_status_with),
-                        "pred_remaining_time_with_rec_sigmoid_mm": float(pred_rt_with_sig),
                         "pred_remaining_time_with_rec": float(pred_rt_with_sec),
                         "pred_status_no_rec": pred_status_no,
-                        "pred_remaining_time_no_rec_sigmoid_mm": pred_rt_no_sig,
                         "pred_remaining_time_no_rec": pred_rt_no_sec,
                     })
 
