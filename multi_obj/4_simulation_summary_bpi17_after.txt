@@ -1,6 +1,6 @@
 ==============================================================================================================
 SIMULATION SUMMARY - bpi17_after (exhaustive)
-Written by 4_run_recommendation_simulation.py - 2026-10-13 14:41:11
+Written by 4_run_recommendation_simulation.py - 2026-10-20 20:18:26
 Test cases (prefixes in test_log.csv): 1840
 ==============================================================================================================
 simulated          : test cases with a recommendation at this rank (step 3): only these are continued

@@ -90,7 +90,7 @@ case:concept:name,Next_activity,Next_resource
 202397,,
 202457,,
 202479,,
-202536,O_CANCELLED,11049
+202536,,
 202539,,
 202542,,
 202569,,
@@ -262,14 +262,14 @@ case:concept:name,Next_activity,Next_resource
 206105,,
 206108,,
 206111,,
-206123,,
+206123,A_CANCELLED,10972
 206132,,
 206135,,
 206141,,
 206147,,
 206150,,
 206165,,
-206180,O_CANCELLED,11049
+206180,,
 206198,,
 206201,,
 206216,,
@@ -283,7 +283,7 @@ case:concept:name,Next_activity,Next_resource
 206258,,
 206261,,
 206279,,
-206285,,
+206285,O_CANCELLED,11009
 206291,,
 206294,,
 206300,,
@@ -307,7 +307,7 @@ case:concept:name,Next_activity,Next_resource
 206441,,
 206444,,
 206447,,
-206453,,
+206453,O_CANCELLED,11302
 206477,,
 206504,,
 206510,,
@@ -322,7 +322,7 @@ case:concept:name,Next_activity,Next_resource
 206606,,
 206609,,
 206615,,
-206621,O_CANCELLED,11049
+206621,,
 206624,,
 206627,,
 206633,,
@@ -394,7 +394,7 @@ case:concept:name,Next_activity,Next_resource
 207464,,
 207467,,
 207470,,
-207482,,
+207482,O_CANCELLED,10982
 207485,,
 207488,,
 207503,,
@@ -441,7 +441,7 @@ case:concept:name,Next_activity,Next_resource
 207873,,
 207882,,
 207894,,
-207912,,
+207912,A_CANCELLED,11009
 207945,,
 207966,,
 207969,,
@@ -449,11 +449,11 @@ case:concept:name,Next_activity,Next_resource
 208002,,
 208022,,
 208025,,
-208028,O_CANCELLED,11049
+208028,,
 208031,,
-208034,O_CANCELLED,11049
+208034,O_CANCELLED,11009
 208049,,
-208052,,
+208052,O_CANCELLED,11009
 208055,,
 208064,,
 208067,,
@@ -554,7 +554,7 @@ case:concept:name,Next_activity,Next_resource
 209135,,
 209138,,
 209179,,
-209188,,
+209188,O_CANCELLED,11302
 209200,,
 209206,,
 209221,,
@@ -621,4 +621,4 @@ case:concept:name,Next_activity,Next_resource
 209913,,
 209939,,
 209957,,
-210008,,
+210008,O_CANCELLED,11009
