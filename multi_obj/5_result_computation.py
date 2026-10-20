@@ -30,6 +30,20 @@ one row per case_id:
       (same models on the prefix with NEXT_ACTIVITY = NEXT_RESOURCE = NO_NEXT_TOKEN,
       the "no recommendation" baseline of the confidence filter -- rank/method
       independent, computed once and reused)
+  - pred_remaining_time_{with,no}_rec_{lower,upper} (seconds), pred_interval_level
+      (equal-tailed PRED_INTERVAL_LEVEL predictive interval of the time model around
+      the two predictions above -- total, recalibrated uncertainty; see
+      predict_time_interval -- drawn by 8_plot_case_comparison.py)
+  - prob_outcome_better, prob_time_better
+      (the confidence filter's probabilities of step 3 for the recommended pair:
+      P(outcome with the recommendation > without) and P(remaining time with the
+      recommendation < without), see confidence_probabilities_by_case)
+
+Besides, one table per method with the SINGLE simulation runs the sim_* averages are
+made of, <method>_runs.csv: one row per (rank, case, run) -- rank 0 is the baseline --
+with the run's status (0/1), remaining_time (seconds, same reference point) and
+applied (False for a run where the recommendation was unreachable). Used by
+9_prediction_vs_simulation_agreement.py.
 
 Remaining time -- reference point and scale. Both the predicted and the
 simulated remaining time are measured from the SAME point, the end of the
@@ -60,6 +74,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 
 from utils.simulation_functions import (
     getting_remaining_time,
@@ -76,7 +91,9 @@ from utils.recommendation_functions import (
     build_query_instances,
     align_query_instance_with_model,
     predict_outcome_proba,
-    predict_time_and_uncertainty,
+    predict_time_interval,
+    build_no_recommendation_baseline_instances,
+    _compute_confidence_probabilities,
 )
 from utils.get_features import load_case_study, get_case_study_features
 
@@ -89,6 +106,8 @@ DEFAULT_METHOD = "exhaustive"
 BASELINE_FOLDER_NAME = "baseline"
 SIM_SUBDIR = "prosit_simulation_results"
 OUTPUT_SUBDIR = "evaluation_tables"
+# level of the time model's predictive interval saved next to each predicted remaining time
+PRED_INTERVAL_LEVEL = 0.95
 
 # Activity marking a *positive* case outcome. Not needed for BAC, whose
 # outcome logic (forbidden-activity set) is already hardcoded inside
@@ -179,8 +198,8 @@ def compute_sim_averages(
     encoded_activity,
     repl_id_map: pd.Series,
     case_ids: list[str],
-) -> tuple[dict, dict, dict]:
-    """Per-case simulation aggregates over every sim_<i>.csv found in sim_folder.
+) -> tuple[dict, dict, dict, pd.DataFrame]:
+    """Per-case simulation aggregates over every sim_<i>.csv found in sim_folder, and the single runs.
 
     Args:
         sim_folder: directory containing sim_<i>.csv (a <method>/<rank>/ folder, or the baseline/ folder).
@@ -190,13 +209,15 @@ def compute_sim_averages(
         case_ids: case ids (str) to compute averages for.
 
     Returns:
-        (mean_seconds, mean_status, applied_fraction), each {case_id: float}. All three
-        empty if sim_folder has no sim_<i>.csv. See compute_res_and_status for the exact
-        semantics (reference point, the unreachable-run exclusion).
+        (mean_seconds, mean_status, applied_fraction, runs): the first three {case_id: float}, runs a
+        DataFrame with one row per (case, run) -- case id (str), run, status (0/1), remaining_time
+        (seconds), applied -- the values the averages are made of. All empty if sim_folder has no
+        sim_<i>.csv. See compute_res_and_status for the exact semantics (reference point, the
+        unreachable-run exclusion).
     """
     n_sim = _detect_n_sim(sim_folder)
     if n_sim == 0:
-        return {}, {}, {}
+        return {}, {}, {}, pd.DataFrame()
 
     test_simu = load_simulation_runs(sim_folder, case_study, n_sim, encoded_activity)
     excluded_by_run = _load_unreachable_by_run(sim_folder)
@@ -217,7 +238,14 @@ def compute_sim_averages(
         )
         rec_df = rec_df.loc[~missing].reset_index(drop=True)
 
-    return compute_res_and_status(case_study, rec_df, test_simu, n_sim, excluded_by_run=excluded_by_run)
+    runs: list = []
+    mean_seconds, mean_status, applied_fraction = compute_res_and_status(
+        case_study, rec_df, test_simu, n_sim, excluded_by_run=excluded_by_run, runs_out=runs
+    )
+    runs_df = pd.DataFrame(runs)
+    if not runs_df.empty:
+        runs_df[case_id_name] = runs_df[case_id_name].astype(str)
+    return mean_seconds, mean_status, applied_fraction, runs_df
 
 
 # ---------------------------------------------------------------------------
@@ -229,8 +257,9 @@ def predict_batch(
     resources: list,
     predictive_outcome_model,
     predictive_time_model,
-) -> tuple[np.ndarray, np.ndarray]:
-    """Predicted (status, remaining time in SECONDS) for many (query_instance, act, res) triples via two model
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Predicted (status, remaining time in SECONDS, and the lower/upper bounds of its PRED_INTERVAL_LEVEL
+    predictive interval, in SECONDS) for many (query_instance, act, res) triples via two model
     calls total -- one outcome-probability and one time predict over the whole batch -- instead of
     one pair of calls per row. Each call into the sklearn/CatBoost pipelines pays a fixed overhead
     (ColumnTransformer fit-time transform, CatBoost's own per-call setup) that's roughly constant
@@ -257,9 +286,36 @@ def predict_batch(
     # virtual-ensemble mean, the remaining time the recommender ranks the candidates on (step 3,
     # predict_time_and_uncertainty), not the full model's .predict(): the "predicted" points are then
     # exactly the ones the Pareto front was built from
-    predicted_rt, _ = predict_time_and_uncertainty(predictive_time_model, pd.DataFrame(time_rows))
+    predicted_rt, rt_lower, rt_upper = predict_time_interval(
+        predictive_time_model, pd.DataFrame(time_rows), PRED_INTERVAL_LEVEL
+    )
     # seconds, as the simulated remaining times
-    return predicted_status, np.asarray(predicted_rt, dtype=float)
+    return predicted_status, predicted_rt, rt_lower, rt_upper
+
+
+def confidence_probabilities_by_case(
+    pairs_by_case: dict,
+    query_instances_by_case: dict,
+    predictive_outcome_model,
+    predictive_time_model,
+) -> dict:
+    """(case_id, rank) -> (prob_outcome_better, prob_time_better): the confidence-filter probabilities
+    step 3 computed for the recommended pair against the "no recommendation" baseline (the same query
+    instance with NEXT_ACTIVITY = NEXT_RESOURCE = NO_NEXT_TOKEN), via the same
+    _compute_confidence_probabilities. pairs_by_case: case_id -> [(rank, activity, resource), ...]; one
+    call per case scores all its ranks at once, since they share the baseline."""
+    baseline_by_case = build_no_recommendation_baseline_instances(
+        {cid: query_instances_by_case[cid] for cid in pairs_by_case}
+    )
+    probs = {}
+    for cid, entries in tqdm(pairs_by_case.items(), desc="      confidence probabilities", leave=False):
+        p_out, p_time = _compute_confidence_probabilities(
+            [(act, res) for _, act, res in entries], baseline_by_case[cid], query_instances_by_case[cid],
+            predictive_outcome_model, predictive_time_model,
+        )
+        for (rank, _, _), po, pt in zip(entries, p_out, p_time):
+            probs[(cid, rank)] = (float(po), float(pt))
+    return probs
 
 
 # ---------------------------------------------------------------------------
@@ -315,7 +371,7 @@ def compute_case_study_tables(base_dir: Path, case_study: str, output_subdir: st
     # -------------------------------------------------------------------
     print("  Computing baseline simulation averages (rank/method independent)...")
     baseline_folder = case_dir / SIM_SUBDIR / BASELINE_FOLDER_NAME
-    baseline_rt, baseline_status, _baseline_applied = compute_sim_averages(
+    baseline_rt, baseline_status, _baseline_applied, baseline_runs = compute_sim_averages(
         baseline_folder, case_study, encoded_activity, repl_id_map, all_case_ids,
     )
     if not baseline_rt:
@@ -323,7 +379,7 @@ def compute_case_study_tables(base_dir: Path, case_study: str, output_subdir: st
 
     print("  Computing 'no recommendation' .joblib predictions (rank/method independent)...")
     no_rec_ids = [cid for cid in all_case_ids if query_instances_by_case.get(cid) is not None]
-    pred_no_rec: dict[str, tuple[float, float]] = {}
+    pred_no_rec: dict[str, tuple[float, float, float, float]] = {}
     if no_rec_ids:
         no_rec_qis = [query_instances_by_case[cid] for cid in no_rec_ids]
         # "no recommendation" = NO_NEXT_TOKEN as next step: the baseline the confidence filter of step 3
@@ -332,12 +388,14 @@ def compute_case_study_tables(base_dir: Path, case_study: str, output_subdir: st
         # really followed the split, known only afterwards, so it is not used here.
         no_rec_acts = [NO_NEXT_TOKEN] * len(no_rec_qis)
         no_rec_ress = [NO_NEXT_TOKEN] * len(no_rec_qis)
-        pred_status_no_arr, pred_rt_no_seconds_arr = predict_batch(
+        pred_status_no_arr, pred_rt_no_seconds_arr, pred_rt_no_lower_arr, pred_rt_no_upper_arr = predict_batch(
             no_rec_qis, no_rec_acts, no_rec_ress, predictive_outcome_model, predictive_time_model
         )
         pred_no_rec = {
-            cid: (float(status), float(sec))
-            for cid, status, sec in zip(no_rec_ids, pred_status_no_arr, pred_rt_no_seconds_arr)
+            cid: (float(status), float(sec), float(lower), float(upper))
+            for cid, status, sec, lower, upper in zip(
+                no_rec_ids, pred_status_no_arr, pred_rt_no_seconds_arr, pred_rt_no_lower_arr, pred_rt_no_upper_arr
+            )
         }
 
     # -------------------------------------------------------------------
@@ -350,14 +408,15 @@ def compute_case_study_tables(base_dir: Path, case_study: str, output_subdir: st
             print(f"  [SKIPPED] {case_study}/{method}: no recommendations_{case_study}_{method}_top*of*.csv found.")
             continue
 
-        rank_tables = []
+        # First pass: the recommendations of every simulated rank, so that the confidence-filter
+        # probabilities can be computed once per case for all its ranks (they share the baseline).
+        rank_recs = {}
         for rank, (k_total, rec_path) in rank_files.items():
             sim_folder = case_dir / SIM_SUBDIR / method / str(rank)
             if not sim_folder.exists() or _detect_n_sim(sim_folder) == 0:
                 print(f"    [SKIPPED] {case_study}/{method} rank {rank}/{k_total}: no simulations at {sim_folder}.")
                 continue
 
-            print(f"    Processing {case_study}/{method} rank {rank}/{k_total}...")
             # Next_activity/Next_resource read as str, as 4_run_recommendation_simulation.py does: with missing
             # values (cases with no recommendation at this rank) and numeric-looking resource ids (BPI12's),
             # pandas would infer float64 and "10972" would become "10972.0", a resource the models never saw --
@@ -374,11 +433,29 @@ def compute_case_study_tables(base_dir: Path, case_study: str, output_subdir: st
                     f"and will be skipped: {bad_ids[:10]}" + (" ..." if len(bad_ids) > 10 else "")
                 )
                 rec_df = rec_df.loc[~missing].reset_index(drop=True)
+            rank_recs[rank] = (k_total, rec_df)
 
+        pairs_by_case: dict[str, list] = {}
+        for rank, (_, rec_df) in rank_recs.items():
+            for cid, act, res in zip(rec_df[case_id_name_local], rec_df["Next_activity"], rec_df["Next_resource"]):
+                if cid in query_instances_by_case:
+                    pairs_by_case.setdefault(cid, []).append((rank, act, res))
+        print(f"    Computing the confidence-filter probabilities of the recommended pairs ({len(pairs_by_case)} cases)...")
+        conf_probs = confidence_probabilities_by_case(
+            pairs_by_case, query_instances_by_case, predictive_outcome_model, predictive_time_model
+        )
+
+        rank_tables = []
+        run_tables = [baseline_runs.assign(rank=0)] if not baseline_runs.empty else []
+        for rank, (k_total, rec_df) in rank_recs.items():
+            sim_folder = case_dir / SIM_SUBDIR / method / str(rank)
+            print(f"    Processing {case_study}/{method} rank {rank}/{k_total}...")
             case_ids_rank = rec_df[case_id_name_local].tolist()
-            method_rt, method_status, method_applied = compute_sim_averages(
+            method_rt, method_status, method_applied, method_runs = compute_sim_averages(
                 sim_folder, case_study, encoded_activity, repl_id_map, case_ids_rank,
             )
+            if not method_runs.empty:
+                run_tables.append(method_runs.assign(rank=rank))
 
             valid_rows = []
             for _, r in rec_df.iterrows():
@@ -392,14 +469,19 @@ def compute_case_study_tables(base_dir: Path, case_study: str, output_subdir: st
             rows = []
             if valid_rows:
                 rec_cids, rec_acts, rec_resources, rec_qis = zip(*valid_rows)
-                pred_status_with_arr, pred_rt_with_seconds_arr = predict_batch(
-                    list(rec_qis), list(rec_acts), list(rec_resources), predictive_outcome_model, predictive_time_model
+                pred_status_with_arr, pred_rt_with_seconds_arr, pred_rt_with_lower_arr, pred_rt_with_upper_arr = (
+                    predict_batch(list(rec_qis), list(rec_acts), list(rec_resources),
+                                  predictive_outcome_model, predictive_time_model)
                 )
 
-                for cid, act, res, pred_status_with, pred_rt_with_sec in zip(
+                for cid, act, res, pred_status_with, pred_rt_with_sec, pred_rt_with_lower, pred_rt_with_upper in zip(
                     rec_cids, rec_acts, rec_resources, pred_status_with_arr, pred_rt_with_seconds_arr,
+                    pred_rt_with_lower_arr, pred_rt_with_upper_arr,
                 ):
-                    pred_status_no, pred_rt_no_sec = pred_no_rec.get(cid, (np.nan, np.nan))
+                    pred_status_no, pred_rt_no_sec, pred_rt_no_lower, pred_rt_no_upper = pred_no_rec.get(
+                        cid, (np.nan, np.nan, np.nan, np.nan)
+                    )
+                    prob_outcome_better, prob_time_better = conf_probs.get((cid, rank), (np.nan, np.nan))
                     rows.append({
                         "case_study": case_study,
                         "method": method,
@@ -417,6 +499,13 @@ def compute_case_study_tables(base_dir: Path, case_study: str, output_subdir: st
                         "pred_remaining_time_with_rec": float(pred_rt_with_sec),
                         "pred_status_no_rec": pred_status_no,
                         "pred_remaining_time_no_rec": pred_rt_no_sec,
+                        "pred_remaining_time_with_rec_lower": float(pred_rt_with_lower),
+                        "pred_remaining_time_with_rec_upper": float(pred_rt_with_upper),
+                        "pred_remaining_time_no_rec_lower": pred_rt_no_lower,
+                        "pred_remaining_time_no_rec_upper": pred_rt_no_upper,
+                        "pred_interval_level": PRED_INTERVAL_LEVEL,
+                        "prob_outcome_better": prob_outcome_better,
+                        "prob_time_better": prob_time_better,
                     })
 
             rank_df = pd.DataFrame(rows)
@@ -433,6 +522,16 @@ def compute_case_study_tables(base_dir: Path, case_study: str, output_subdir: st
             stacked_path = out_dir / f"{method}_all_ranks.csv"
             stacked.to_csv(stacked_path, index=False)
             print(f"  [OK] {case_study}/{method}: saved {len(stacked)} rows ({len(rank_tables)} ranks) to {stacked_path}")
+
+        if run_tables:
+            runs = pd.concat(run_tables, ignore_index=True).rename(columns={case_id_name: case_id_name_local})
+            runs.insert(0, "case_study", case_study)
+            runs.insert(1, "method", method)
+            runs = runs[["case_study", "method", "rank", case_id_name_local, "run", "status", "remaining_time", "applied"]]
+            out_dir.mkdir(parents=True, exist_ok=True)
+            runs_path = out_dir / f"{method}_runs.csv"
+            runs.to_csv(runs_path, index=False)
+            print(f"  [OK] {case_study}/{method}: saved {len(runs)} single runs (rank 0 = baseline) to {runs_path}")
 
 
 def main():

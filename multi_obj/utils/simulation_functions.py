@@ -249,7 +249,7 @@ def status_encoding(df: pd.DataFrame, case_study: str, encoded_activity: str | N
 
     return df.sort_values(by=["case:concept:name", "time:timestamp"]).reset_index(drop=True)
 
-def compute_res_and_status(case_study, rec_df, test_simu, n_sim, excluded_by_run=None):
+def compute_res_and_status(case_study, rec_df, test_simu, n_sim, excluded_by_run=None, runs_out=None):
     """
     Per trace_id, aggregate remaining_time and status over the n_sim simulation runs.
 
@@ -275,6 +275,10 @@ def compute_res_and_status(case_study, rec_df, test_simu, n_sim, excluded_by_run
       run therefore continued as a free simulation -- see
       sim_<i>_unreachable_recommendations.csv. Those runs do not measure "the
       recommendation applied" and are excluded.
+
+    runs_out : optional list; when given, one dict per (trace_id, run) with data is appended
+      to it -- {case id, "run", "status", "remaining_time", "applied"} (applied False for the
+      runs excluded above) -- i.e. the single runs the averages are made of.
     """
     if case_study in {"BPI12_not_reordered", "BPI12_not_reordered_sim", "BPI12", "BPI12_sim", "BPI12_time", "BPI12_status", "BPI12_025", "BPI12_075", "consulta", "BPI12_0", "BPI12_039"}:
         test_simu = convert_dtypes_bpi12(test_simu, 'simulation')
@@ -313,13 +317,17 @@ def compute_res_and_status(case_study, rec_df, test_simu, n_sim, excluded_by_run
             if trace_df is None or trace_df.empty:
                 continue
             n_runs_with_data += 1
-            if str(trace_id) in excluded_by_run.get(run_index, ()):
-                continue  # recommendation not applied this run -> not a "rec applied" measurement
-            n_runs_applied += 1
             if rec_index >= len(trace_df):
                 remaining_time = 0.0  # replayed prefix already at case end
             else:
                 remaining_time = float(trace_df['remaining_time'].iloc[rec_index])
+            applied = str(trace_id) not in excluded_by_run.get(run_index, ())
+            if runs_out is not None:
+                runs_out.append({case_id_name: trace_id, "run": run_index, "status": int(trace_df['status'].iloc[0]),
+                                 "remaining_time": remaining_time, "applied": applied})
+            if not applied:
+                continue  # recommendation not applied this run -> not a "rec applied" measurement
+            n_runs_applied += 1
             if remaining_time < 0:
                 print(idx_sim)
             remaining_times.append(remaining_time)

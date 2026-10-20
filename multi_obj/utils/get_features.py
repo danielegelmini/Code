@@ -139,7 +139,7 @@ def get_features(case_study: str) -> Tuple[str, str, str, List[str], List[str], 
     }
 
     # BPI12 / BPI12_sim: since 2026-10-12 the log has no W_ activities (0_filtering_W_activities.py), so
-    # their counters are not features (9_generate_simulated_training_set.py would add them as all-zero columns)
+    # their counters are not features (1b_generate_simulated_training_set.py would add them as all-zero columns)
     _reordered_config = {
         "continuous": [
             f for f in CONFIG["BPI12_not_reordered"]["continuous"] if not f.startswith("# ACTIVITY=W_")

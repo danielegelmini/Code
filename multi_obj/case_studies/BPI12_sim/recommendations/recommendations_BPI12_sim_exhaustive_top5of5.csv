@@ -90,7 +90,7 @@ case:concept:name,Next_activity,Next_resource
 202397,,
 202457,,
 202479,,
-202536,,
+202536,O_CANCELLED,11049
 202539,,
 202542,,
 202569,,
@@ -269,7 +269,7 @@ case:concept:name,Next_activity,Next_resource
 206147,,
 206150,,
 206165,,
-206180,,
+206180,O_CANCELLED,11049
 206198,,
 206201,,
 206216,,
@@ -322,7 +322,7 @@ case:concept:name,Next_activity,Next_resource
 206606,,
 206609,,
 206615,,
-206621,,
+206621,O_CANCELLED,11049
 206624,,
 206627,,
 206633,,
@@ -449,9 +449,9 @@ case:concept:name,Next_activity,Next_resource
 208002,,
 208022,,
 208025,,
-208028,,
+208028,O_CANCELLED,11049
 208031,,
-208034,,
+208034,O_CANCELLED,11049
 208049,,
 208052,,
 208055,,

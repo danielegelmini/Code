@@ -40,10 +40,10 @@ net / params cache under discovery_output/ are expected to be in place already
 
 Usage
 -----
-    python 9_generate_simulated_training_set.py
-    python 9_generate_simulated_training_set.py --source_case_study BPI12 --target_case_study BPI12_sim
-    python 9_generate_simulated_training_set.py --n_train_traces 3737 --seed 7
-    python 9_generate_simulated_training_set.py --force_rediscover   # ignore the params cache
+    python 1b_generate_simulated_training_set.py
+    python 1b_generate_simulated_training_set.py --source_case_study BPI12 --target_case_study BPI12_sim
+    python 1b_generate_simulated_training_set.py --n_train_traces 3737 --seed 7
+    python 1b_generate_simulated_training_set.py --force_rediscover   # ignore the params cache
 """
 import argparse
 import math
@@ -267,6 +267,9 @@ def write_xes(sim: pd.DataFrame, path: Path) -> None:
         sim.copy(), case_id=CASE_ID_NAME, activity_key=ACTIVITY_COLUMN_NAME,
         timestamp_key=END_DATE_NAME, start_timestamp_key=START_DATE_NAME,
     )
+    # format_dataframe's helper columns (row indices, and a start_timestamp copy of start:timestamp) are not
+    # attributes of the log: written to the .xes, the simulator's discovery (step 4) would take them as features
+    formatted = formatted.drop(columns=["@@index", "@@case_index", "start_timestamp"], errors="ignore")
     pm4py.write_xes(formatted, str(path))
     print(f"Wrote {path}")
 
@@ -449,4 +452,4 @@ if __name__ == "__main__":
     main()
 
 # Running commands:
-# python 9_generate_simulated_training_set.py --source_case_study BPI12 --target_case_study BPI12_sim
+# python 1b_generate_simulated_training_set.py --source_case_study BPI12 --target_case_study BPI12_sim

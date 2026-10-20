@@ -317,6 +317,36 @@ class UncertaintyRegressor:
         log_m2 = 2.0 * mu + 2.0 * var + norm.logcdf((u - mu - 2.0 * var) / s) - log_phi_b
         return unit * np.sqrt(np.clip(np.exp(log_m2) - np.exp(2.0 * log_m1), 0.0, None))
 
+    def _quantile_seconds(self, mu, var, q):
+        """Model-space mean and variance -> q-quantile in seconds of the predictive distribution.
+
+        Log space, X ~ N(mu, var) truncated at u: X_q = mu + s * Phi^-1(q * Phi((u - mu)/s)), then
+        T_q = unit * (e^X_q - 1) (a monotone map, so quantiles carry over). Seconds space: mu + s * Phi^-1(q).
+        Floored at 0 and at most U, as the point prediction."""
+        mu, var = np.asarray(mu, dtype=float), np.asarray(var, dtype=float)
+        s = np.sqrt(np.clip(var, 1e-12, None))
+        unit = _LOG_UNIT_SECONDS.get(self._transform())
+        if unit is None:
+            return np.clip(mu + s * norm.ppf(q), 0.0, None)
+        u = self._log_bound(unit)
+        p = q if u is None else q * norm.cdf((u - mu) / s)
+        seconds = unit * np.expm1(mu + s * norm.ppf(np.clip(p, 1e-300, 1.0)))
+        upper = getattr(self, "max_seconds", None)
+        return np.clip(seconds, 0.0, upper if upper is not None else None)
+
+    def predictive_interval(self, mean_model, std_model, level=0.95):
+        """Equal-tailed `level` predictive interval in seconds, from predict_uncertainty's
+        "mean_model" and "std_model" (total, sigma-scaled). With a log space it is asymmetric
+        around the point prediction (the log-normal mean), which it may not even contain when
+        the model-space variance is very large.
+
+        Returns:
+            tuple: (lower, upper), numpy arrays in seconds.
+        """
+        var = np.asarray(std_model, dtype=float) ** 2
+        tail = (1.0 - level) / 2.0
+        return self._quantile_seconds(mean_model, var, tail), self._quantile_seconds(mean_model, var, 1.0 - tail)
+
     def fit(self, X, y=None):
         """No-op fit, kept only so this wrapper satisfies scikit-learn's Pipeline/
         Estimator interface -- the wrapped model is already trained.

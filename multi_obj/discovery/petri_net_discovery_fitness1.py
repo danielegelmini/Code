@@ -81,8 +81,14 @@ def _ensure_graphviz_on_path():
 def process_case_study(base_dir: Path, case_study: str):
     xes_path = base_dir / "case_studies" / case_study / LOG_FILE_NAME_TEMPLATE.format(dataset=case_study)
     if not xes_path.exists():
-        print(f"[!] {case_study}: no log at {xes_path}, skipped")
-        return
+        # a simulated case study (1b_generate_simulated_training_set.py, e.g. BPI12_sim) has only its simulated
+        # log_<dataset>.xes, already without W_ activities (it is simulated from a net discovered without them)
+        fallback = base_dir / "case_studies" / case_study / f"log_{case_study}.xes"
+        if not fallback.exists():
+            print(f"[!] {case_study}: no log at {xes_path} nor {fallback}, skipped")
+            return
+        print(f"[i] {case_study}: no {xes_path.name}, using {fallback.name}")
+        xes_path = fallback
     t0 = time.time()
     print(f"=== {case_study} ({xes_path}) ===")
     log = pnd.load_event_log(str(xes_path))

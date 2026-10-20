@@ -20,7 +20,7 @@ deltas come from the simulator itself or from something upstream
 (recommendation injection, indexing, alignment...).
 
 ALSO validates, separately, the FULLY SIMULATED dataset (an entire training
-set simulated from scratch by 9_generate_simulated_training_set.py, e.g.
+set simulated from scratch by 1b_generate_simulated_training_set.py, e.g.
 case_studies/BPI12_sim/simulated_event_log.csv) against the same
 real log -- a different comparison from the baseline one above: the baseline
 runs replay each real case's own PREFIX and simulate only its continuation,
@@ -71,7 +71,7 @@ ENCODED_ACTIVITY_BY_CASE_STUDY = {
 }
 BPI12_DTYPE_CASE_STUDIES = {"BPI12_not_reordered", "BPI12_not_reordered_sim", "BPI12", "BPI12_sim"}
 
-# Naming convention already used across the pipeline (9_generate_simulated_training_set.py
+# Naming convention already used across the pipeline (1b_generate_simulated_training_set.py
 # and friends): a fully-simulated case study is named "<source_case_study>_sim".
 FULLY_SIMULATED_SUFFIX = "_sim"
 TRAIN_DATA_FILENAME = "train_data.csv"
@@ -103,12 +103,12 @@ def load_baseline_sim(case_dir: Path, case_study: str, n_sim: int, encoded_activ
 
 def load_fully_simulated_log(sim_case_dir: Path, sim_case_study: str, encoded_activity) -> pd.DataFrame:
     """Load a fully-simulated dataset built from scratch by
-    9_generate_simulated_training_set.py (one flat CSV, not n_sim separate runs like the
+    1b_generate_simulated_training_set.py (one flat CSV, not n_sim separate runs like the
     baseline: every trace is generated from the arrival process onward, no real prefix).
 
     Reads train_data.csv, NOT simulated_event_log.csv: the latter is the raw, oversampled
     simulation output BEFORE the '>3 events' filter and the trim back to the target training
-    size (see 9_generate_simulated_training_set.py's --oversample, default 1.4x), so its trace
+    size (see 1b_generate_simulated_training_set.py's --oversample, default 1.4x), so its trace
     count doesn't match anything meaningful on its own. train_data.csv is that same simulated
     log already trimmed to exactly the real training set's trace count -- the comparison this
     function feeds is only meaningful against that count, not the inflated raw one. train_data.csv

@@ -7,8 +7,8 @@ side, step by step:
   - the real prefix (test_log.csv)
   - what REALLY happened next (test_data.csv, the ground-truth continuation)
   - what each of the n_sim simulations generated next, for a chosen method
-      (case_studies/<case_study>/prosit_simulation_results/<method>/<rank>/sim_i.csv
-      for 'exhaustive'/'nsga2', or .../baseline/sim_i.csv for 'baseline')
+      (case_studies/<case_study>/prosit_simulation_results/exhaustive/<rank>/sim_i.csv
+      for 'exhaustive', or .../baseline/sim_i.csv for 'baseline')
   - the recommended (activity / resource) pair for that case, taken from
       recommendations_<case_study>_<method>_top<rank>of<k>.csv, so it is easy
       to eyeball whether the simulated continuation actually follows it.
@@ -32,10 +32,10 @@ from the replayed prefix). No files are written; exit code is 1 on FAIL.
 
 Usage:
     python 7_inspect_baseline_traces.py --case_study BAC --n_cases 5
-    python 7_inspect_baseline_traces.py --case_study BAC --method exhaustive --n_cases 5
-    python 7_inspect_baseline_traces.py --case_study BAC --method nsga2 --rank 2 --n_cases 5
-    python 7_inspect_baseline_traces.py --case_study BAC --method nsga2 --case_ids 201810001660,201810002650
-    python 7_inspect_baseline_traces.py --case_study BAC --method nsga2 --validate
+    python 7_inspect_baseline_traces.py --case_study BAC --rank 2 --n_cases 5
+    python 7_inspect_baseline_traces.py --case_study BAC --case_ids 201810001660,201810002650
+    python 7_inspect_baseline_traces.py --case_study BAC --method baseline --n_cases 5
+    python 7_inspect_baseline_traces.py --case_study BAC --validate
 """
 
 import argparse
@@ -218,7 +218,7 @@ def run_dataset_validation(case_study: str, method: str, rank: int, is_baseline:
     print("=" * 100)
 
     if is_baseline or not recommendations:
-        print("Validation only applies to 'exhaustive'/'nsga2' with a recommendation file. Nothing to check.")
+        print("Validation only applies to 'exhaustive' with a recommendation file. Nothing to check.")
         return True
 
     excluded_ids = load_diagnostic_case_ids(sim_folder, "excluded_no_recommendation.csv")
@@ -340,11 +340,10 @@ def main():
     parser.add_argument("--base_dir", type=str, default=".",
                          help="Directory that contains case_studies/ (run from multi_obj/).")
     parser.add_argument("--case_study", type=str, required=True)
-    parser.add_argument("--method", type=str, default="nsga2",
-                         choices=["baseline", "exhaustive", "nsga2"],
+    parser.add_argument("--method", type=str, default="exhaustive",
+                         choices=["baseline", "exhaustive"],
                          help="Which simulation folder to compare against the real "
-                              "continuation: 'baseline' (no recommendation), "
-                              "'exhaustive', or 'nsga2' (default: nsga2).")
+                              "continuation: 'exhaustive' (default) or 'baseline' (no recommendation).")
     parser.add_argument("--rank", type=int, default=1,
                          help="Pareto rank of the recommendation to inspect (top<rank>of<k>). "
                               "Defaults to 1; ignored for --method baseline.")
@@ -381,7 +380,7 @@ def main():
     if is_baseline:
         print(f"Loading {args.n_sim} 'baseline' simulation file(s) from {sim_folder}...")
         print("NOTE: 'baseline' is the no-recommendation simulation; use "
-              "'--method exhaustive' or '--method nsga2' to inspect recommendation-aware behavior.")
+              "'--method exhaustive' to inspect recommendation-aware behavior.")
     else:
         print(f"Loading {args.n_sim} '{args.method}' rank-{rank} simulation file(s) from {sim_folder}...")
     if not sim_folder.exists():

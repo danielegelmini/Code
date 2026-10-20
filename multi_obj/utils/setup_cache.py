@@ -3,7 +3,7 @@
 `transition_system()` iterates the training log row by row and takes tens of
 seconds to a couple of minutes per case study. Its result depends only on the
 training data and the window size -- neither changes between repeated runs of
-3_plot_pareto / 3_run_experiment / 3_tune_nsga2_params -- so it is cached here
+3_plot_pareto / 3_run_experiment -- so it is cached here
 and reloaded instead of recomputed.
 """
 

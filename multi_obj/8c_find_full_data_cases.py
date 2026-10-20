@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Find case_ids that have COMPLETE data in the "Simulated" panel of
-8_plot_case_comparison.py / 8b_plot_case_comparison_vs_sim_model.py: all k
+8_plot_case_comparison.py: all k
 ranks have a usable ProSiT simulation result (sim_status_method_mean and
 sim_remaining_time_method_mean both non-null) AND the
 no-recommendation baseline is present too.
@@ -153,8 +153,11 @@ def main():
         ("long", complete["prefix_length"] > q2),
     ]
 
+    best_per_band = []
     for band_name, mask in bands:
         band_df = complete.loc[mask].sort_values("spread_score", ascending=False).head(args.top_n)
+        if not band_df.empty:
+            best_per_band.append(band_df[case_id_name].iloc[0])
         print(f"--- {band_name} prefix (<= {q1:.0f} / <= {q2:.0f} / > {q2:.0f} events) "
               f"-- top {len(band_df)} by spread ---")
         if band_df.empty:
@@ -165,10 +168,10 @@ def main():
                   .to_string(index=False, float_format=lambda v: f"{v:.3f}"))
         print()
 
-    print("Try one with:")
-    example_cid = complete.sort_values("spread_score", ascending=False)[case_id_name].iloc[0]
-    print(f"  python 8_plot_case_comparison.py --case_study {args.case_study} --method {args.method} --case_id {example_cid}")
-    print(f"  python 8b_plot_case_comparison_vs_sim_model.py --case_study {args.case_study} --method {args.method} --case_id {example_cid}")
+    # the best case of each prefix band, in one command (each run of 8 replaces the previous figures)
+    ids = ",".join(best_per_band)
+    print("Plot the best case of each band with:")
+    print(f"  python 8_plot_case_comparison.py --case_study {args.case_study} --method {args.method} --case_ids {ids}")
 
 
 if __name__ == "__main__":

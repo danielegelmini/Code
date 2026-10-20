@@ -21,17 +21,23 @@ recommendation" point is the same NO_NEXT_TOKEN baseline.
 Both methods need models trained on the no-recommendation copy of the
 training set (2_training_predictive_model.py).
 
-For a given case study this script picks one test-set case (either a case id
-passed on the command line or, by default, the case whose front has the most
-solutions and the widest spread), then builds the transition system and (for
+For each case study (--case_studies, by default the four main ones) this script
+picks one test-set case (either a case id passed on the command line, with a
+single case study, or, by default, the case whose front has the most solutions
+and the widest spread), then builds the transition system and (for
 "exhaustive") the pair-frequency system from the training log -- both cached
 on disk per case study + window size, see utils/setup_cache; pass
 --rebuild-cache to force a recompute.
 
+The figures go to pareto_fronts/pareto_fronts_dataset_predicted/<case_study>/ (see
+utils/pareto_fronts_paths.py). Before plotting a case study its old figures there are
+deleted, so the folder holds only the last run (--keep_old to keep them).
+
 Example usage:
-    python 3_plot_pareto.py --case_study "BAC" --k 5
-    python 3_plot_pareto.py --case_study "BAC" --k 5 --method exhaustive --gamma_cls 0.5 --gamma_reg 0.5
-    python 3_plot_pareto.py --case_study "BAC" --k 5 --method nsga2
+    python 3_plot_pareto.py
+    python 3_plot_pareto.py --case_studies "BPI12_sim"
+    python 3_plot_pareto.py --case_studies "BAC" --case_id 201812007319
+    python 3_plot_pareto.py --k 5 --method exhaustive --gamma_cls 0.5 --gamma_reg 0.5
 """
 
 import os
@@ -49,6 +55,7 @@ from utils.pre_processing_functions import convert_dtypes_bpi12, NO_NEXT_TOKEN
 from utils.predictive_models_functions import SECONDS_PER_DAY
 from utils.get_features import load_case_study, get_case_study_features
 from utils.setup_cache import get_transition_graph
+from utils.pareto_fronts_paths import DATASET_PREDICTED_DIR, clear_old_figures
 from utils.recommendation_functions import (
     act_with_res_func,
     build_query_instances,
@@ -68,6 +75,8 @@ from mpl_toolkits.mplot3d import Axes3D  # noqa: F401  (registers the 3d project
 
 import warnings
 warnings.filterwarnings("ignore")
+
+DEFAULT_CASE_STUDIES = "BAC,BPI12,bpi17_before,bpi17_after"
 
 def _default_forbidden_map():
     """Return the per-case-study map of activities that must never be recommended.
@@ -484,9 +493,8 @@ def run_and_plot_comparison(
         elev, azim: elevation and azimuth (degrees) of the 3D camera
             (method="nsga2" only).
         save_dir: directory where the output .jpg figure is written (created
-            if missing). Defaults to case_studies/<case_study>/pareto_front_images
-            so each case study's plots stay together instead of a single shared
-            folder outside case_studies/.
+            if missing). Defaults to
+            pareto_fronts/pareto_fronts_dataset_predicted/<case_study>/.
     Output:
         None. The figure is written to disk and progress is printed to stdout.
         The function returns early (printing a message) if the case has no
@@ -495,7 +503,7 @@ def run_and_plot_comparison(
         confidence filter.
     """
     if save_dir is None:
-        save_dir = os.path.join("case_studies", case_study, "pareto_front_images")
+        save_dir = str(DATASET_PREDICTED_DIR / case_study)
 
     np.random.seed(random_state)
     random.seed(random_state)
@@ -647,8 +655,13 @@ def run_and_plot_comparison(
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Plot Pareto comparison with execution times.')
-    parser.add_argument('--case_study', type=str, required=True, help='Dataset name')
-    parser.add_argument('--case_id', type=str, default=None, help='Specific case ID (optional)')
+    parser.add_argument('--case_studies', type=str, default=DEFAULT_CASE_STUDIES,
+                        help=f'Comma-separated datasets, one figure each (default: "{DEFAULT_CASE_STUDIES}")')
+    parser.add_argument('--case_id', type=str, default=None,
+                        help='Specific case ID (optional, only with a single dataset in --case_studies)')
+    parser.add_argument('--keep_old', action='store_true',
+                        help="Do not delete the dataset's old figures in "
+                             "pareto_fronts/pareto_fronts_dataset_predicted/<case_study>/ before plotting")
     parser.add_argument('--k', type=int, default=5, help='Number of top-k points to highlight (default: 5)')
     parser.add_argument('--method', type=str, default='exhaustive', choices=['exhaustive', 'nsga2'],
                         help="Search method whose front is plotted (default: exhaustive; nsga2 is parked)")
@@ -667,17 +680,25 @@ if __name__ == '__main__':
     parser.add_argument('--min_next_share', type=float, default=0.01,
                         help="Same as 3_run_experiment.py: rarer next activities of a window are not candidates")
 
-    try:
-        args = parser.parse_args()
-        run_and_plot_comparison(case_study=args.case_study, target_case_id=args.case_id, k=args.k,
-                                method=args.method, gamma_cls=args.gamma_cls, gamma_reg=args.gamma_reg,
-                                elev=args.elev, azim=args.azim, rebuild_cache=args.rebuild_cache,
-                                min_next_share=args.min_next_share)
-    except Exception as e:
-        print(f"Error during execution: {e}")
+    args = parser.parse_args()
+    case_studies = [cs.strip() for cs in args.case_studies.split(",") if cs.strip()]
+    if args.case_id is not None and len(case_studies) != 1:
+        parser.error("--case_id needs a single dataset in --case_studies")
+
+    for case_study in case_studies:
+        print(f"\n===== {case_study} =====")
+        if not args.keep_old:
+            clear_old_figures(DATASET_PREDICTED_DIR / case_study, f"pareto_*_{args.method}.jpg")
+        try:
+            run_and_plot_comparison(case_study=case_study, target_case_id=args.case_id, k=args.k,
+                                    method=args.method, gamma_cls=args.gamma_cls, gamma_reg=args.gamma_reg,
+                                    elev=args.elev, azim=args.azim, rebuild_cache=args.rebuild_cache,
+                                    min_next_share=args.min_next_share)
+        except Exception as e:  # one dataset failing does not stop the others
+            print(f"Error during execution ({case_study}): {e}")
 
 
 # example usage:
-# python 3_plot_pareto.py --case_study "BAC" --k 5
-# python 3_plot_pareto.py --case_study "BAC" --k 5 --method exhaustive --gamma_cls 0.5 --gamma_reg 0.5
-# python 3_plot_pareto.py --case_study "BAC" --k 5 --method nsga2 --elev 30 --azim 45
+# python 3_plot_pareto.py
+# python 3_plot_pareto.py --case_studies "BPI12_sim"
+# python 3_plot_pareto.py --case_studies "BAC" --k 5 --method nsga2 --elev 30 --azim 45

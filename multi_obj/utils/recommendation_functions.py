@@ -79,6 +79,33 @@ def predict_time_and_uncertainty(predictive_time_model, rows_df):
         _UNCERTAINTY_WARNED = True
     return mean, np.zeros_like(mean)
 
+
+def predict_time_interval(predictive_time_model, rows_df, level=0.95):
+    """
+    Run the time model on rows_df and return (mean, lower, upper), 1-D numpy
+    arrays in SECONDS: `mean` is the same point prediction predict_time_and_uncertainty
+    returns, [lower, upper] the equal-tailed `level` predictive interval of the
+    recalibrated total (aleatoric + epistemic) predictive distribution
+    (UncertaintyRegressor.predictive_interval). For a model with no uncertainty
+    support lower and upper are NaN.
+    """
+    predictor = predictive_time_model
+    predictor_input = rows_df
+    if hasattr(predictive_time_model, "named_steps"):
+        steps = predictive_time_model.named_steps
+        predictor = steps.get("prediction", predictive_time_model)
+        if "transformation" in steps:
+            predictor_input = steps["transformation"].transform(rows_df)
+
+    if hasattr(predictor, "predict_uncertainty") and hasattr(predictor, "predictive_interval"):
+        out = predictor.predict_uncertainty(predictor_input)
+        lower, upper = predictor.predictive_interval(out["mean_model"], out["std_model"], level)
+        return np.asarray(out["mean"], dtype=float), np.asarray(lower, dtype=float), np.asarray(upper, dtype=float)
+
+    mean, _ = predict_time_and_uncertainty(predictive_time_model, rows_df)
+    nan = np.full_like(mean, np.nan)
+    return mean, nan, nan.copy()
+
 def predict_outcome_proba(predictive_outcome_model, rows_df):
     """
     Return P(y = positive class) for rows_df as a 1-D numpy array, using the
@@ -725,8 +752,7 @@ def exhaustive_pareto_search(
     gate rather than as a third Pareto objective. It is skipped entirely
     (every valid pair is kept, prob_outcome_better = prob_time_better = 1.0)
     when baseline_row is None -- lets this function still be called without
-    it (e.g. multi_obj/3_tune_nsga2_params.py's NSGA2-vs-exhaustive benchmark,
-    which is untouched by this change).
+    it.
 
     Args:
         query_instance (pandas.DataFrame, pandas.Series, or dict): The current state features of the case.
