@@ -1,6 +1,6 @@
 import random
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from copy import copy
 
 import pm4py
@@ -161,6 +161,9 @@ def return_resource(resource_weights: dict, enabled_resources: list) -> str:
         cumulative_weight += resource_weights[s]
         if random_value <= cumulative_weight:
             return s
+    # rounding can leave random_value just above the last cumulative weight: take the last resource
+    # instead of returning None (as Vinci's prosit since commit 037dd95)
+    return enabled_resources[-1]
 
 
 def compute_proba(models_t: dict, t: PetriNet.Transition, X:pd.DataFrame) -> float:
@@ -196,6 +199,50 @@ def count_false_hours(calendar: dict, start_ts: datetime, end_ts: datetime) -> i
         current_time += timedelta(hours=1)
 
     return false_hours_count
+
+
+def calendar_to_working_set(calendar: dict) -> frozenset:
+    """The (weekday, hour) slots in which `calendar` works."""
+    return frozenset((wd, h) for wd, hours in calendar.items() for h, active in hours.items() if active)
+
+
+def count_working_minutes(start_ts: datetime, end_ts: datetime, calendar: dict, _working_set: frozenset = None) -> int:
+    """Working minutes of `calendar` between start_ts and end_ts: the inverse of add_minutes_with_calendar.
+
+    From Vinci's prosit 1.0.4 (commits 037dd95, ab03b16, b4ed0da). It replaces
+    (end - start) - 60 * count_false_hours(...), which classified whole hours stepping from start_ts
+    rather than from the top of the hour, so it was off by up to an hour at both ends of every interval
+    (08:50-09:10 with the working day starting at 9:00 gave 0 minutes instead of 10).
+    """
+    if end_ts <= start_ts:
+        return 0
+    working_set = _working_set if _working_set is not None else calendar_to_working_set(calendar)
+    minutes_per_week = len(working_set) * 60
+
+    working_minutes = 0
+    current_time = start_ts
+    if minutes_per_week > 0:
+        # every full week holds the same working minutes: skip the full weeks in one jump
+        full_weeks = int((end_ts - current_time).total_seconds() // (7 * 24 * 3600))
+        if full_weeks > 0:
+            working_minutes += full_weeks * minutes_per_week
+            current_time = current_time + timedelta(weeks=full_weeks)
+
+    while current_time < end_ts:
+        if (current_time.weekday(), current_time.hour) in working_set:
+            end_of_hour = current_time.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+            working_minutes += max(0, (min(end_ts, end_of_hour) - current_time).total_seconds() / 60)
+            current_time = end_of_hour
+        else:
+            current_time = (current_time + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
+
+    return round(working_minutes)
+
+
+def wall_clock_epoch(ts) -> float:
+    """Seconds since the epoch of the wall-clock time of ts read as UTC (its time zone, if any, dropped).
+    Works on datetime and pandas Timestamp alike."""
+    return ts.replace(tzinfo=timezone.utc).timestamp()
 
 
 def count_concurrent_events(schedule, t_enabled) -> int:
@@ -264,8 +311,12 @@ def get_transition_from_name(t_fired_name: str, net: PetriNet) -> PetriNet.Trans
 def build_df_features(log, net, im, fm, act_to_resources_prob, net_transition_labels, resources, label_data_attributes=[]):
 
     df_log = pm4py.convert_to_dataframe(log)
-    df_log["start:timestamp"] = df_log["start:timestamp"].apply(lambda x: datetime.fromisoformat(str(x)[:-6]).timestamp())
-    df_log["time:timestamp"] = df_log["time:timestamp"].apply(lambda x: datetime.fromisoformat(str(x)[:-6]).timestamp())
+    # The two sides of the workload test below both read the wall clock as UTC (as Vinci's prosit 1.0.4).
+    # This used datetime.fromisoformat(str(x)[:-6]).timestamp(), which reads the wall clock in the
+    # computer's time zone, against enabled_t.timestamp(), which keeps the log's offset: on a UTC+1/+2
+    # computer every workload was counted 1-2 hours after the instant it was meant for.
+    df_log["start:timestamp"] = df_log["start:timestamp"].apply(wall_clock_epoch)
+    df_log["time:timestamp"] = df_log["time:timestamp"].apply(wall_clock_epoch)
 
 
     aligned_traces = alignments.apply_log(log, net, im, fm, parameters={"ret_tuple_as_trans_desc": True})
@@ -292,7 +343,8 @@ def build_df_features(log, net, im, fm, act_to_resources_prob, net_transition_la
         transition_enabled_times = dict()
         current_t = trace[0]["start:timestamp"]
         for step in trace_aligned:
-            if step[0][1] == ">>": # log move
+            if step[0][1] == ">>": # log move: no model counterpart, but it uses up its log event --
+                j += 1             # without this the next sync moves read the resource and times of the wrong event
                 continue
 
             transition = get_transition_from_name(step[0][1], net)
@@ -311,7 +363,8 @@ def build_df_features(log, net, im, fm, act_to_resources_prob, net_transition_la
                 end_t = trace[j]["time:timestamp"]
                 enabled_t = transition_enabled_times[transition]
                 current_t = end_t
-                df_log_filtered = df_log[(df_log["time:timestamp"] > enabled_t.timestamp()) & (df_log["start:timestamp"] < enabled_t.timestamp())]
+                enabled_ts = wall_clock_epoch(enabled_t)
+                df_log_filtered = df_log[(df_log["time:timestamp"] > enabled_ts) & (df_log["start:timestamp"] < enabled_ts)]
                 res_workload = (df_log_filtered['org:resource']==resource).sum()
                 prev_enabled_resources = act_to_resources[transition_label]
                 j += 1

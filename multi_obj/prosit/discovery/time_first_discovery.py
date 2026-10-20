@@ -16,7 +16,9 @@ For every place of the net the simulator learns two things from the aligned log:
 
 Drawing the time before the branch mirrors how these processes evolve: a case waits, and
 what happens next depends on how long it has waited (e.g. an application with no answer
-from the customer after 30 days is cancelled).
+from the customer after 30 days is cancelled). When the branch is known in advance (a
+recommended activity), the time is drawn knowing it, by weighting the leaf's waits with the
+route model (sample_wait_days_given_transition).
 """
 
 import numpy as np
@@ -121,10 +123,10 @@ def feature_vector(models: dict, case_attributes: dict, case_history: dict, age_
     return out
 
 
-def sample_wait_days(models: dict, place_name: str, x: list, min_days: float, rng, max_days: float = None) -> float:
-    """Draws the waiting time (days) of a case in a place from the waiting times observed in the
-    leaf of its time tree, keeping only those >= min_days (and <= max_days when given); falls back
-    to the whole place, then to min_days itself."""
+def _candidate_waits(models: dict, place_name: str, x: list, min_days: float, max_days: float = None) -> np.ndarray:
+    """The waiting times (days) a case in a place can be given: those observed in the leaf of its time
+    tree, keeping only those >= min_days (and <= max_days when given); those of the whole place when
+    none of the leaf's is kept."""
     tm = models["time"][place_name]
     values = tm["leaf"].get(tm["tree"].apply(np.array([x]))[0], tm["all"])
 
@@ -137,7 +139,42 @@ def sample_wait_days(models: dict, place_name: str, x: list, min_days: float, rn
     candidates = keep(values)
     if len(candidates) == 0:
         candidates = keep(tm["all"])
+    return candidates
+
+
+def sample_wait_days(models: dict, place_name: str, x: list, min_days: float, rng, max_days: float = None) -> float:
+    """Draws the waiting time (days) of a case in a place from the waiting times observed in the
+    leaf of its time tree, keeping only those >= min_days (and <= max_days when given); falls back
+    to the whole place, then to min_days itself."""
+    candidates = _candidate_waits(models, place_name, x, min_days, max_days)
     return float(rng.choice(list(candidates))) if len(candidates) else float(min_days)
+
+
+def sample_wait_days_given_transition(models: dict, place_name: str, x: list, transition_name: str, min_days: float,
+                                      rng, max_days: float = None) -> float:
+    """Like sample_wait_days, for a step whose transition out of the place is known in advance (a
+    recommendation): each candidate wait w is weighted by P(transition | x, w) from the route model of
+    the place, so the wait is drawn from P(w | transition, x), proportional to P(transition | x, w) * P(w | x).
+
+    Without it the recommended activity got the wait of whatever usually comes next: e.g. in bpi17_after
+    an A_Cancelled recommended after A_Complete started after a median of 9 days (the mix of all the
+    branches), while in the log it comes after a median of 31 (the timeout of the cancellation branch).
+    When the recommendation is reached through silent transitions, the transition is the first of them,
+    the one leaving the place.
+
+    Same draw as sample_wait_days when the place has no choice (no route model, or a constant one), when
+    the route model never saw the transition, or when every weight is 0.
+    """
+    candidates = _candidate_waits(models, place_name, x, min_days, max_days)
+    rm = models["route"].get(place_name)
+    if len(candidates) == 0 or rm is None or "constant" in rm or transition_name not in rm["tree"].classes_:
+        return float(rng.choice(list(candidates))) if len(candidates) else float(min_days)
+    # one row per candidate wait, laid out as the route model was trained: the case features, then the wait
+    rows = np.column_stack([np.tile(np.asarray(x, dtype=float), (len(candidates), 1)), candidates])
+    weights = rm["tree"].predict_proba(rows)[:, list(rm["tree"].classes_).index(transition_name)]
+    if weights.sum() <= 0:
+        return float(rng.choice(list(candidates)))
+    return float(rng.choices(list(candidates), weights=list(weights))[0])
 
 
 def route_probabilities(models: dict, place_name: str, x: list, wait_days: float) -> dict:

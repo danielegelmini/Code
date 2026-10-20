@@ -6,9 +6,9 @@ def discover_arrival_calendar(log: EventLog, thr_h: float = 0.95, thr_wd: float 
     N_events_per_hour = {wd: {h: 0 for h in range(24)} for wd in range(7)}
 
     for trace in log:
+        # only the start of the case is an arrival (as Vinci's prosit since commit 037dd95): the end of
+        # the first event was counted too
         ts = trace[0]['start:timestamp']
-        N_events_per_hour[ts.weekday()][ts.hour] += 1
-        ts = trace[0]['time:timestamp']
         N_events_per_hour[ts.weekday()][ts.hour] += 1
 
     N_events_per_hour_perc = {wd: {h: 0 for h in range(24)} for wd in range(7)}

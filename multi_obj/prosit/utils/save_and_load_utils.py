@@ -1,7 +1,7 @@
 from prosit.utils.rule_utils import DecisionRules
 from pm4py.objects.petri_net.obj import PetriNet
 import copy
-from prosit.utils.distribution_utils import sampling_from_dist
+from prosit.utils.distribution_utils import sampling_from_dist, EMPIRICAL
 import scipy.stats as stats
 
 
@@ -41,22 +41,24 @@ def _make_json_safe(obj):
 
 
 def transition_to_name(t: PetriNet.Transition) -> str:
-
-    if t.label is not None:
-        name = t.label
-    else:
-        name = t.name
-
-    return name
+    # The transition's name, unique in the net (as Vinci's prosit since commit 6abb8ab). Its label was used
+    # for visible transitions: transitions sharing a label (fitness-1 nets have many) went under one key,
+    # and after a reload only one of them had a weight model.
+    return t.name
 
 
 def name_to_transition(s: str, net: PetriNet) -> PetriNet.Transition:
-
+    """The transition named s, None if there is none (e.g. a cache keyed by label, see transition_to_name)."""
     for t in net.transitions:
         if s == t.name:
             return t
-        if s == t.label:
-            return t
+    return None
+
+
+def _is_empirical_leaf(node: dict) -> bool:
+    """A tree leaf drawing among its observed values: they are its 'sampled' list, saved as they are."""
+    dist = node.get("dist")
+    return isinstance(dist, (tuple, list)) and len(dist) > 0 and dist[0] == EMPIRICAL
 
 
 def decision_rules_to_dict(d: DecisionRules) -> dict:
@@ -65,8 +67,8 @@ def decision_rules_to_dict(d: DecisionRules) -> dict:
         if isinstance(obj, dict):
             new_obj = {}
             for k, v in obj.items():
-                if k == "sampled":
-                    continue  # Remove the 'sampled' key
+                if k == "sampled" and not _is_empirical_leaf(obj):
+                    continue  # Remove the 'sampled' key: regenerated from 'dist' when loading
                 safe_key = k
                 if isinstance(k, tuple):
                     safe_key = str(k)
@@ -141,7 +143,9 @@ def dict_to_decrules(d: dict) -> DecisionRules:
                         pass
                 if k == "dist":
                     new_obj[k] = fromstr_to_scipy(obj[k]["dist_name"]), tuple(obj[k]["params"]), obj[k]["min_value"], obj[k]["max_value"]
-                    new_obj["sampled"] = sampling_from_dist(new_obj[k][0], new_obj[k][1], new_obj[k][2], new_obj[k][3], new_obj["value"])
+                    # an empirical leaf keeps the observed values saved under 'sampled' (restored below)
+                    if new_obj[k][0] != EMPIRICAL:
+                        new_obj["sampled"] = sampling_from_dist(new_obj[k][0], new_obj[k][1], new_obj[k][2], new_obj[k][3], new_obj["value"])
                 else:
                     new_obj[new_k] = convert(v)
             return new_obj
@@ -154,7 +158,7 @@ def dict_to_decrules(d: dict) -> DecisionRules:
     
 
 def fromstr_to_scipy(s):
-    if s == "fixed":
+    if s in ("fixed", EMPIRICAL):
         return s
     else:
         return getattr(stats, s)

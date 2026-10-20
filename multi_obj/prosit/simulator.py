@@ -17,7 +17,7 @@ from pm4py.algo.conformance.alignments.petri_net import algorithm as alignments
 
 from prosit.discovery.cf_discovery import discover_weight_transitions
 from prosit.discovery.time_first_discovery import (
-    discover_time_first_models, feature_vector, sample_wait_days, route_probabilities,
+    discover_time_first_models, feature_vector, sample_wait_days, sample_wait_days_given_transition, route_probabilities,
 )
 from prosit.discovery.time_discovery import discover_execution_time_distributions, discover_arrival_time, discover_waiting_time
 from prosit.discovery.calendar_discovery import discover_res_calendars, discover_arrival_calendar
@@ -517,6 +517,10 @@ class SimulatorParameters:
             act_resource_prob, multitasking_resources, calendars, arrival_calendar,
             transition_weights, execution_time_distributions, waiting_time_distributions,
             arrival_time_distribution).
+
+        Raises:
+            ValueError: the transition weights are keyed by label (a cache written before they
+                were keyed by transition name, see transition_to_name).
         """
 
         dict_params = self._restore_from_json(dict_params)
@@ -532,6 +536,16 @@ class SimulatorParameters:
 
         self.calendars = {r: convert_calendar_names(cal, to_number=True) for r, cal in dict_params["resource_params"]["calendars"].items()}
         self.arrival_calendar = convert_calendar_names(dict_params["arrival_params"]["arrival_calendar"], to_number=True)
+
+        # the weights are keyed by transition name (see transition_to_name); a cache keyed by label cannot be
+        # mapped back -- the transitions sharing a label had a single weight model -- so it is rediscovered
+        unknown = [t_name for t_name in dict_params["transition_params"]["transition_weights"]
+                   if name_to_transition(t_name, self.net) is None]
+        if unknown:
+            raise ValueError(
+                f"the transition weights of the cached parameters are keyed by label, not by transition name "
+                f"(e.g. {unknown[:3]}): discover the parameters again"
+            )
 
         if self.rules_mode:
             self.transition_weights = {name_to_transition(t_name, self.net): dict_to_decrules(value) for t_name, value in dict_params["transition_params"]["transition_weights"].items()}
@@ -615,6 +629,21 @@ def resource_free_time(schedule: list, t):
         t = max(covering_ends)
 
 
+def same_category(value, category) -> bool:
+    """Whether a prefix's attribute value is the category `category` of a categorical attribute.
+
+    Compared as text: the categories come from the .xes log (strings, e.g. '20000' for BPI12's AMOUNT_REQ),
+    the prefix values from a CSV read by pandas (the integer 20000), and 20000 == '20000' is False, so every
+    one-hot column of the attribute was 0. A float holding an integer is written without decimals
+    (20000.0 -> '20000').
+    """
+    def text(v):
+        if isinstance(v, float) and v.is_integer():
+            v = int(v)
+        return str(v)
+    return text(value) == text(category)
+
+
 class SimulatorEngine:
 
     def __init__(
@@ -684,6 +713,11 @@ class SimulatorEngine:
         # carry the models; set to False to simulate with the per-transition routing weights and
         # per-resource waiting times instead (the previous behaviour).
         self.use_time_first = simulation_parameters.time_first_models is not None
+        # With the time-first models, when the recommended activity starts (it fixes only WHAT happens next):
+        # "transition" (default) draws the wait of the place knowing the recommended transition (each observed wait
+        # weighted by how likely that transition is after it), "place" draws it as for any other step, whatever
+        # comes next, "resource" takes the waiting time of the recommended resource, as in Vinci's prosit.
+        self.recommendation_wait = "transition"
         # Per-run counts of how the time-first steps were taken (reset by apply()).
         self.last_time_first_stats = {}
 
@@ -1185,9 +1219,11 @@ class SimulatorEngine:
                     return place
         return None
 
-    def _fix_next_event_time(self, case, place, enabled_transitions):
+    def _fix_next_event_time(self, case, place, enabled_transitions, transition=None):
         """Draws, once per visible event, how long after the case arrived in `place` its next visible
         event starts, and stores it as case["forced_start"] (consumed when that event is executed).
+        When `transition` is given (the recommended step), the wait is drawn knowing that this
+        transition leaves the place (sample_wait_days_given_transition).
 
         The first step after the train/test split is measured from the case's last logged event:
         - a case idle at the split (nothing in progress) is known to have started nothing up to the split,
@@ -1215,7 +1251,10 @@ class SimulatorEngine:
             self.last_time_first_stats["idle_conditioned"] += 1
         start = case.get("first_start") or case["arrival_time"]
         x = feature_vector(models, case["attributes"], case["history"], max((t0 - start).total_seconds() / 86400, 0.0))
-        wait = sample_wait_days(models, place.name, x, min_days, random, max_days=max_days)
+        if transition is not None:
+            wait = sample_wait_days_given_transition(models, place.name, x, transition.name, min_days, random, max_days=max_days)
+        else:
+            wait = sample_wait_days(models, place.name, x, min_days, random, max_days=max_days)
         case["pending_wait_days"], case["pending_features"] = wait, x
         case["forced_start"] = t0 + timedelta(days=wait)
 
@@ -1540,7 +1579,7 @@ class SimulatorEngine:
                     for  a in self.simulation_parameters.label_data_attributes:
                         if a in self.simulation_parameters.label_data_attributes_categorical: #one-hot encoding
                             for v in self.simulation_parameters.attribute_values_label_categorical[a]:
-                                trace_attributes_c[a+' = '+str(v)] = int(trace_attributes[a] == v)
+                                trace_attributes_c[a+' = '+str(v)] = int(same_category(trace_attributes[a], v))
                         else:
                             trace_attributes_c[a] = trace_attributes[a]
 
@@ -1711,12 +1750,15 @@ class SimulatorEngine:
                 t_enabled = case["enabled"][chosen_transition]
             else:
                 chosen_transition, activity, t_enabled, flag_rec = self._resolve_recommended_transition(case, enabled_transitions) #look if there is recommendation, flag_reg true if the rec is possible
-                if flag_rec and time_first and chosen_transition is not None:
-                    # a recommendation changes WHAT happens next, not WHEN: the next event time is drawn
-                    # exactly as for the baseline (same time model, same idle-time condition)
+                if flag_rec and time_first and chosen_transition is not None and self.recommendation_wait != "resource":
+                    # a recommendation fixes WHAT happens next; WHEN comes from the time model of the place, knowing
+                    # the recommended transition ("transition") or as for the baseline ("place"). With "resource"
+                    # nothing is fixed here: the step takes the waiting time of the recommended resource below,
+                    # as in Vinci's prosit
                     place = self._marked_place_with_time_model(case, chosen_transition)
                     if place is not None:
-                        self._fix_next_event_time(case, place, enabled_transitions)
+                        self._fix_next_event_time(case, place, enabled_transitions,
+                                                  transition=chosen_transition if self.recommendation_wait == "transition" else None)
 
                 #flag_rec true if we have the rec (possible) or an invisible transition needed to get to the rec
                 if not flag_rec: #if the next activity is not the rec or the baseline

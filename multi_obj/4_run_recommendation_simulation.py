@@ -102,6 +102,14 @@ def parse_args():
              "progress at the split.",
     )
     parser.add_argument(
+        "--recommendation_wait", choices=("transition", "place", "resource"), default="transition",
+        help="With 'time first, then route', when the recommended activity starts: 'transition' (default) draws "
+             "the wait of the place knowing the recommended transition (the waits observed in the place weighted "
+             "by how likely that transition is after each of them); 'place' draws it as for any other step, "
+             "whatever comes next (the behaviour before 2026-10-20); 'resource' takes the waiting time of the "
+             "recommended resource, as in Vinci's prosit.",
+    )
+    parser.add_argument(
         "--decision_at_split", action="store_true",
         help="Treat t_split as the decision instant: nothing is simulated before it for a case idle at the split (its "
              "first event waits at least the idle time), while a case busy at the split (an activity in progress, "
@@ -239,7 +247,12 @@ def load_inputs(case_dir: Path, case_study: str, case_ids_path: Optional[str]) -
     """
     test_log_path = case_dir / "test_log.csv"
     print(f"Loading test log (running traces): {test_log_path}")
-    prev_log = pd.read_csv(test_log_path, parse_dates=[END_DATE_NAME, START_DATE_NAME])
+    # case ids and resources as text for every scenario: the simulator's resources come from the .xes log
+    # (strings), and BPI12's numeric resource ids read as integers matched none of them in the baseline,
+    # which (unlike the recommendation runs) does not go through convert_dtypes_bpi12 -- so there the
+    # prefix events did not occupy the resources
+    prev_log = pd.read_csv(test_log_path, parse_dates=[END_DATE_NAME, START_DATE_NAME],
+                           dtype={CASE_ID_NAME: str, RESOURCE_COLUMN_NAME: str})
 
     base_columns = [
         CASE_ID_NAME, ACTIVITY_COLUMN_NAME, RESOURCE_COLUMN_NAME,
@@ -725,6 +738,9 @@ def main():
         return
 
     sim_engine = setup_simulator(case_dir, args.case_study, args.force_rediscover, args.legacy_routing, args.petri_net)
+    sim_engine.recommendation_wait = args.recommendation_wait
+    if not args.legacy_routing:
+        print(f"Wait before a recommended activity: {args.recommendation_wait}\n")
     clean_prev_log, case_ids = load_inputs(case_dir, args.case_study, args.case_ids)
     split_time = load_split_time(case_dir)
     resume, running, busy = None, None, None
