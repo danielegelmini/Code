@@ -475,7 +475,7 @@ def _simulate_recommendation_file(
     on stdout and as excluded_no_recommendation.csv under sim_folder, so the
     exclusion is visible rather than silent. This means the recommender found
     no valid next action for them at all (empty possible-activities set --
-    even after next_possible_activities' trace-suffix fallback -- or empty
+    the case's window was never a training state -- or empty
     Pareto front); it's a genuine cold-start gap in the training data, not
     something simulating around it can fix.
 

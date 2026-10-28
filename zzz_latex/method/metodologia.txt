@@ -1,0 +1,51 @@
+Scaletta del capitolo di metodologia
+3.1 Panoramica del metodo
+Una figura della pipeline:
+parte offline: log → preparazione dati → due modelli con incertezza;
+parte online: caso in corso → candidati → valutazione → filtro di confidenza → fronte di Pareto → top-k.
+Poche righe di testo. Il grosso lo fa la figura. una spiegazione con magari un esempio di quello che si vuole andare a fare senza entrare troppo nel dettaglio. 
+tipo: il problema affrontato da questa tesi è legato alla prescriptive analytics, nello specifico vogliamo andare consigliare all'utente le migliori azioni da compiere rispetto ai suoi migliori obiettivi. il problema lo dividiamo in due fasi una offline e una online. nella prima andiamo ad addestrare dei modelli di machine learning in modo che imparino dai dati a estimare l'estio dei vari obiettivi in base alla azione e altre proprietà di quello che si sta facendo, nella fase online dato un precesso in corso andiamo a interrogare quei modelli in modo che ci forniscano tutte le possibili coppie di attività e risorsa che si potrebbero avere e attraverso un sistema di filtri andare a suggerire all'utente quelle che con un certo livello di certezza essere sicuri che lo portino al suo obiettivo desiderato. 
+o qualcosa del genere.
+l'immagine è diagramma_v2.drawio.png
+
+3.2 fase offline
+parlare del modello  in generale e quele è il suo obiettivo. 
+definizione del transition system o citazione di quest'ultimo, a cosa serve e perché lo usiamo (non dire che mettiamo una threshold perché ne parlerò successivamente)
+[Il transition system con finestra w (le ultime w attività) e l'insieme delle attività ammissibili.
+I due filtri sulla frequenza:
+min_next_share: si scartano le attività rare dopo quella finestra;
+min_res_share: si tengono solo le risorse frequenti per quella attività dopo quella finestra, e la più frequente resta sempre.
+Le attività proibite. Vanno spiegate: raccomandare l'attività che definisce l'outcome sarebbe banale.
+Il risultato è l'insieme di coppie (a, r) da valutare.]
+modello che predice i kpi: regressore e classificatore (modello quindi più generico perché usiamo kpi diversi e quindi devono essere trattati in modo diverso) scrivere anche il training e obiettivo 
+encoding usato -> activity frequency encoder
+dire che addestriamo il modello dandogli sia la prossima attività che dandogli niente: spiegare quindi il perché.
+
+3.3 fase online 
+dato il prefisso e i modelli della fase online che valutano tute le coppie noi applichiamo una exaustive search (spiegare bene cosa è) ovvero analizziamo tutte le possibili coppie e ne scegliamo quella migliore. 
+dobbiamo quindi andare ad introdurre il concetto di metodo e di baseline. 
+Prima di consegnare tutte le possbilità andiamo a filtrare i nostri punti usando un filtro di confidenza. spiegare il filtro di confidenza senza andare a parlare del fatto che sto usando catboost ma comunque dal mio moello ottengo un certo ensamble e da li faccio le gaussiane se il numero è sufficientemente alto eccetera. spiegare che facciamo la differenza di gaussina tra baseline e metodo e che siccome sono dipendenti (spiega anche perchè) devo fare anche covarianza (non chiamarlo a e b ma B per baseline e M per metodo) e che quindi impostando un certo filtro gamma vado a togliere le raccomandazioni che per ogni kpi la probabilità che il metodo sia migliore della baseline sia maggiore di gamma, rispettiamente 1- prob nel caso in cui il kpi deve essere minimizzato. 
+[Per ogni candidato si stima P(il candidato batte la baseline senza raccomandazione) su ciascun KPI.
+Si usano gli M membri dell'ensemble, appaiati tra candidato e baseline:
+differenza gaussiana con la covarianza stimata;
+distribuzione t di Student con M−1 gradi di libertà;
+perclassificazione binaria sulla scala dei logit;
+per regressione con la varianza totale per il sigma scale.
+Regola: un candidato resta se P_kpi1 > γ_1 oppure P_kpi2 > γ_2 (OR) oppure P_kpi3.... Questo è il punto in cui l'incertezza entra nella decisione, ed è il contributo più originale del lavoro: gli darei spazio.
+non parlare delle scelte specifiche dei dataset dobbiamo essere più generici al momento non abbiamo più generici possibili]
+c'è anche da dire che di avere il risultato noi andiamo a fare anche la calibrazione del risultato del modello quando facciamo la exaustive search
+
+una volta filtrati i candidati andiamo a costruire un fronte di pareto (definizione del fronte) 
+Dominanza e fronte riscritti sul vostro problema: f(a, r). Va spostato dal background (§2.3.2).
+Si calcola il fronte sui valori non normalizzati.
+Ricerca esaustiva
+
+nel caso in cui i punti del fronte dovessero essere tanti si vuole solo andare ad avere un subset di questi e per farlo si usa il problema min-max delle distanze tra punti
+Normalizzazione min-max degli obiettivi, solo per calcolare le distanze.
+Problema max-min dispersion sulle distanze euclidee, restiamo generici. Va spostato dal background (§2.3.3).
+Se il fronte ha k punti o meno, si restituiscono tutti.
+L'output sono k coppie (a, r) per caso.
+
+
+da mettere nel background:
+kpi e definizione di kpi - > problem defintion 

@@ -23,26 +23,34 @@ then as a compact SUMMARY:
      (2x2 table predicted improves yes/no x simulated improves yes/no), against the reference of the points
      whose prediction does NOT improve it but the simulation does anyway: if the model's yes/no carried no
      information the two shares would be equal, so their difference (yes - no) measures how informative it is;
-  2. the same for the points improving BOTH KPIs;
+  2. the same for the points improving BOTH KPIs and for the points improving AT LEAST ONE of them (the union:
+     improving the outcome + improving the time - improving both);
   3. the same for the "good" points: a point is good when it improves one KPI by at least --x (pp for the
      outcome, % for the time) and worsens the other by at most --y; judged with the same rule on the
      predicted and on the simulated changes. (x = 0, y = 0 gives back "improves both"; x = 0 with no limit
      on y "improves at least one".)
   4. expected value with the recommendation, E_p { E_r [ (sum_i S_i) / n_sim ] } (averaged over the ranks of
-     a prefix, then over the prefixes), on all the points and on the good points only (as if only those were
-     recommended, with the share of prefixes left with at least one) -- four values, simulated and predicted
-     for each KPI, where (sum_i S_i) / n_sim is:
+     a prefix, then over the prefixes), on the points of each table of sections 1-3 that the prediction judges
+     as improving: the outcome, the time, both KPIs, at least one KPI, and the good points (as if only those
+     were recommended, with the share of prefixes left with at least one) -- simulated and predicted for each
+     quantity, where (sum_i S_i) / n_sim is:
        outcome, simulated: the share of positive runs (S_i = 1 if run i is positive);
        outcome, predicted: the predicted probability of a positive outcome;
        time, simulated:    the mean remaining time over the runs (S_i = remaining time of run i);
        time, predicted:    the predicted remaining time;
-     all with the recommendation, times in days.
+     all with the recommendation, times in days; how much the recommendation shortens the time, the same
+     average of the baseline remaining time minus the one with the recommendation, in days (positive = shorter;
+     simulated: means over the runs, predicted: the predicted remaining times); and how often it shortens it:
+       time won, simulated: the share of the n_sim x n_sim (run with the recommendation, baseline run) pairs
+                            in which the run with the recommendation is shorter (ties 1/2), sim_time_win_share;
+       time won, predicted: the confidence filter's probability that the time with the recommendation is
+                            shorter than without it, prob_time_better;
+     0.5 = no effect, above 0.5 = the recommendation shortens the time.
 (Step 3's rank numbers are only the order of the candidate list, not a preference: no rank is analysed apart.)
 
 Writes 9_prediction_vs_simulation_agreement.txt (the report) and .csv (the numbers, one row per case study,
 selection and quantity) in this folder, and the per-point values and flags in
-case_studies/<cs>/evaluation_tables/<method>_agreement_points.csv (which also has sim_time_win_share, the
-share of the (run with the recommendation, baseline run) pairs won by the recommendation, not in the report).
+case_studies/<cs>/evaluation_tables/<method>_agreement_points.csv.
 
 Usage:
     python 9_prediction_vs_simulation_agreement.py
@@ -62,6 +70,10 @@ HERE = Path(__file__).resolve().parent
 DEFAULT_CASE_STUDIES = "BAC,BPI12,bpi17_before,bpi17_after"
 EVAL_TABLES_SUBDIR = "evaluation_tables"
 OUT_STEM = "9_prediction_vs_simulation_agreement"
+# section 4 selections: the points that the prediction judges as improving the outcome, the time, both, at least
+# one KPI, and the good points (pred_improves_<key>, pred_good); the values are their titles in the report
+SELECTIONS = {"outcome": "improves the outcome", "time": "improves the time", "both": "improves both KPIs",
+              "any": "improves at least one KPI", "good": "good points"}
 
 
 def load_tables(base_dir: Path, case_study: str, method: str) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -123,7 +135,7 @@ def kpi_flags(d_out: pd.Series, d_time: pd.Series, ceiling: pd.Series, x: float,
 
     Returns:
         One boolean row per point, columns: outcome (outcome improves), time (time improves),
-        both (both improve), good (good point).
+        both (both improve), any (at least one improves), good (good point).
     """
     # strict improvements: outcome higher, time shorter
     out_improves = (d_out > 0) | ceiling
@@ -134,7 +146,7 @@ def kpi_flags(d_out: pd.Series, d_time: pd.Series, ceiling: pd.Series, x: float,
     # good: outcome up by >= x with the time longer by <= y %, or time shorter by >= x % with the outcome down by <= y pp
     good = (out_by_x & (d_time <= y)) | (time_by_x & (d_out >= -y))
     return pd.DataFrame({"outcome": out_improves, "time": time_improves,
-                         "both": out_improves & time_improves, "good": good})
+                         "both": out_improves & time_improves, "any": out_improves | time_improves, "good": good})
 
 
 def per_point_simulation(points: pd.DataFrame, runs: pd.DataFrame) -> pd.DataFrame:
@@ -176,7 +188,8 @@ def build_points(points: pd.DataFrame, runs: pd.DataFrame, x: float, y: float) -
 
     Returns:
         The points with simulated means, plus: the four changes (pred_/sim_d_outcome_pp, pred_/sim_d_time_pct),
-        the flags pred_/sim_improves_{outcome,time,both}, pred_good, sim_good, and sim_time_win_share.
+        the reductions of the remaining time in seconds (pred_/sim_time_reduction, positive = shorter),
+        the flags pred_/sim_improves_{outcome,time,both,any}, pred_good, sim_good, and sim_time_win_share.
     """
     # only the points that were simulated (with and without the recommendation)
     p = points.dropna(subset=["sim_status_method_mean", "sim_remaining_time_method_mean",
@@ -187,6 +200,9 @@ def build_points(points: pd.DataFrame, runs: pd.DataFrame, x: float, y: float) -
     p["pred_d_time_pct"] = relative_change_pct(p["pred_remaining_time_with_rec"], p["pred_remaining_time_no_rec"])
     p["sim_d_outcome_pp"] = 100.0 * (p["sim_status_method_mean"] - p["sim_status_baseline_mean"])
     p["sim_d_time_pct"] = relative_change_pct(p["sim_remaining_time_method_mean"], p["sim_remaining_time_baseline_mean"])
+    # reduction of the remaining time, in seconds: without - with the recommendation (positive = shorter)
+    p["pred_time_reduction"] = p["pred_remaining_time_no_rec"] - p["pred_remaining_time_with_rec"]
+    p["sim_time_reduction"] = p["sim_remaining_time_baseline_mean"] - p["sim_remaining_time_method_mean"]
 
     # the ceiling (all runs positive both ways) exists only in the simulation: a predicted probability is never 1
     no_ceiling = pd.Series(False, index=p.index)
@@ -281,7 +297,7 @@ def detailed_tables(p: pd.DataFrame, x: float, y: float):
     Returns:
         lines: the report lines of sections 1-3.
         rows: one CSV row (dict) per table, with the agreement values.
-        summary: the agreement dict of each table, keyed "outcome", "time", "both", "good" (for the SUMMARY).
+        summary: the agreement dict of each table, keyed "outcome", "time", "both", "any", "good" (for the SUMMARY).
     """
     lines, rows = [], []
     summary = {}
@@ -296,11 +312,13 @@ def detailed_tables(p: pd.DataFrame, x: float, y: float):
         add(f"1_{kpi}", a)
         summary[kpi] = a
 
-    lines.append("2. Both KPIs")
-    a = agreement(p["pred_improves_both"], p["sim_improves_both"])
-    lines += format_agreement("improves outcome AND remaining time", a)
-    add("2_both", a)
-    summary["both"] = a
+    lines.append("2. Both KPIs, at least one KPI")
+    for kpi, label in (("both", "improves outcome AND remaining time"),
+                       ("any", "improves outcome OR remaining time (at least one)")):
+        a = agreement(p[f"pred_improves_{kpi}"], p[f"sim_improves_{kpi}"])
+        lines += format_agreement(label, a)
+        add(f"2_{kpi}", a)
+        summary[kpi] = a
 
     lines.append(f"3. Good points (one KPI improved by >= {x:g} -- pp / % -- the other worsened by <= {y:g})")
     a = agreement(p["pred_good"], p["sim_good"])
@@ -314,13 +332,18 @@ def expected_values(p: pd.DataFrame) -> dict:
     """Section 4, E_p{ E_r[...] } on the points p (mean over the ranks of a prefix, then over the prefixes),
     with the recommendation, simulated and predicted --
     outcome: share of positive runs (predicted: probability of a positive outcome);
-    time: mean remaining time over the runs (predicted: the predicted remaining time), in days.
+    time: mean remaining time over the runs (predicted: the predicted remaining time), in days;
+    time reduction: baseline remaining time minus remaining time with the recommendation, in days (positive =
+    shorter; simulated: means over the runs, predicted: the predicted remaining times);
+    time won: share of the (run with the recommendation, baseline run) pairs in which the recommendation is
+    shorter (predicted: the confidence filter's probability that the time with the recommendation is shorter).
 
     Args:
         p: the points to average over (all of them, or the good ones only).
 
     Returns:
-        A dict: out_sim, out_pred (between 0 and 1), time_sim_days, time_pred_days.
+        A dict: out_sim, out_pred (between 0 and 1), time_sim_days, time_pred_days, time_red_sim_days,
+        time_red_pred_days, time_win_sim, time_win_pred (between 0 and 1, 0.5 = no effect).
     """
     e = lambda c: expected_over_prefixes(p, c)  # shorthand: E_p{E_r[column c]}
     # each quantity simulated and predicted, side by side
@@ -328,27 +351,34 @@ def expected_values(p: pd.DataFrame) -> dict:
             "out_pred": e("pred_status_with_rec"),
             "time_sim_days": e("sim_remaining_time_method_mean") / SECONDS_PER_DAY,
             "time_pred_days": e("pred_remaining_time_with_rec") / SECONDS_PER_DAY,
+            "time_red_sim_days": e("sim_time_reduction") / SECONDS_PER_DAY,
+            "time_red_pred_days": e("pred_time_reduction") / SECONDS_PER_DAY,
+            "time_win_sim": e("sim_time_win_share"),
+            "time_win_pred": e("prob_time_better"),
             }
 
 
 def formula_lines(expected: dict, coverage: dict, n_prefixes: int) -> list[str]:
-    """Section 4 in detail: the four expected values, simulated vs predicted.
+    """Section 4 in detail: the expected values of each selection, simulated vs predicted.
 
     Args:
-        expected: {"all": ..., "good": ...}, the dicts returned by expected_values.
-        coverage: {"all": ..., "good": ...}, number of prefixes with at least one point of the selection.
+        expected: one dict returned by expected_values per selection, keyed as SELECTIONS.
+        coverage: number of prefixes with at least one point of the selection, keyed as SELECTIONS.
         n_prefixes: number of prefixes of the case study.
 
     Returns:
         The report lines of section 4, ending with an empty line.
     """
-    lines = ["4. E_p{ E_r[ (sum_i S_i) / n_sim ] } with the recommendation -- simulation vs prediction"]
-    for selection, title in (("all", "all points"), ("good", "good points only")):
+    lines = ["4. E_p{ E_r[ (sum_i S_i) / n_sim ] } with the recommendation -- simulation vs prediction,",
+             "   on the points that the prediction judges as improving / good (the ones of the tables of sections 1-3)"]
+    for selection, title in SELECTIONS.items():
         v = expected[selection]
         lines.append(f"  {title} ({coverage[selection]} of {n_prefixes} prefixes)")
         for label, sim_key, pred_key in (
                 ("outcome: share of positive runs / predicted probability", "out_sim", "out_pred"),
-                ("remaining time, days: mean over the runs / predicted", "time_sim_days", "time_pred_days")):
+                ("remaining time, days: mean over the runs / predicted", "time_sim_days", "time_pred_days"),
+                ("time reduction, days: baseline - with recommendation", "time_red_sim_days", "time_red_pred_days"),
+                ("time won: share of run pairs shorter / P(shorter)", "time_win_sim", "time_win_pred")):
             lines.append(f"    {label:58s} simulated {v[sim_key]:8.3f}   predicted {v[pred_key]:8.3f}   "
                          f"difference {v[sim_key] - v[pred_key]:+.3f}")
     return lines + [""]
@@ -358,7 +388,7 @@ def summary_block(summary: dict, expected: dict, coverage: dict, n_prefixes: int
     """The compact summary of a case study.
 
     Args:
-        summary: the agreement dicts from detailed_tables ("outcome", "time", "both", "good").
+        summary: the agreement dicts from detailed_tables ("outcome", "time", "both", "any", "good").
         expected, coverage, n_prefixes: as in formula_lines.
         x, y: the thresholds of a good point, only written in the text.
 
@@ -369,7 +399,7 @@ def summary_block(summary: dict, expected: dict, coverage: dict, n_prefixes: int
              "1-2. Is the predicted improvement seen in the simulation too? (all points)",
              "                 predicted        confirmed   if predicted NO,      discrimination",
              "                 improves         by sim      sim improves anyway   (yes - no)"]
-    for kpi in ("outcome", "time", "both"):
+    for kpi in ("outcome", "time", "both", "any"):
         a = summary[kpi]
         # fields padded to start under the header's columns (17, 34, 46, 68)
         lines.append(f"   {kpi:13s} " + f"{a['pred_yes']:5d} ({a['pred_yes_pct']:3.0f}%)".ljust(17)
@@ -383,16 +413,22 @@ def summary_block(summary: dict, expected: dict, coverage: dict, n_prefixes: int
               f"({100.0 * coverage['good'] / n_prefixes:.0f}%); good in the simulation too: {g['sim_yes_given_pred_yes_pct']:.0f}%",
               "",
               "4. Expected value with the recommendation (formula E_p{E_r[...]})",
-              "   outcome: share of positive runs / predicted probability; time: remaining time in days",
-              "                                  all points   good points only"]
+              "   outcome: share of positive runs / predicted probability; time: remaining time in days;",
+              "   time reduction: baseline - with recommendation, days (positive = shorter);",
+              "   time won: share of the (recommendation, baseline) run pairs with the recommendation shorter /",
+              "   predicted P(time with < without) -- 0.5 = no effect",
+              "   columns: the points that the prediction judges as improving the outcome / the time / both /",
+              "   at least one KPI, and the good points",
+              " " * 28 + "".join(f"{s:>10s}" for s in SELECTIONS)]
     for kpi, sim_key, pred_key, fmt in (("outcome", "out_sim", "out_pred", ".3f"),
-                                        ("time, days", "time_sim_days", "time_pred_days", ".2f")):
+                                        ("time, days", "time_sim_days", "time_pred_days", ".2f"),
+                                        ("reduction", "time_red_sim_days", "time_red_pred_days", ".2f"),
+                                        ("time won", "time_win_sim", "time_win_pred", ".3f")):
         for side, key in (("simulated", sim_key), ("predicted", pred_key)):
             name = kpi if side == "simulated" else ""
-            lines.append(f"   {name:12s} {side:12s} {expected['all'][key]:12{fmt}} {expected['good'][key]:14{fmt}}")
+            lines.append(f"   {name:12s} {side:12s}" + "".join(f"{expected[s][key]:10{fmt}}" for s in SELECTIONS))
     # share of the prefixes with at least one point of the selection
-    lines.append(f"   {'prefixes covered':25s} {100.0 * coverage['all'] / n_prefixes:11.0f}% "
-                 f"{100.0 * coverage['good'] / n_prefixes:13.0f}%")
+    lines.append(f"   {'prefixes covered':25s}" + "".join(f"{100.0 * coverage[s] / n_prefixes:9.0f}%" for s in SELECTIONS))
     return lines + [""]
 
 
@@ -411,15 +447,16 @@ def analyse_case_study(case_study: str, p: pd.DataFrame, x: float, y: float):
     n_prefixes = p[case_id_name].nunique()  # distinct cases = prefixes
     lines = [f"{case_study}  ({len(p)} recommended points, {n_prefixes} prefixes)", ""]
     detail_lines, rows, summary = detailed_tables(p, x, y)
-    # the points judged good by the prediction: the ones that would be recommended under the good rule
-    good = p[p["pred_good"]]
-    coverage = {"all": n_prefixes, "good": good[case_id_name].nunique()}
-    # no good point: all the section 4 values NaN, with the same keys
-    expected = {"all": expected_values(p), "good": expected_values(good) if not good.empty else {
-        k: np.nan for k in expected_values(p)}}
+    # the points of each table judged improving / good by the prediction: the ones that would be recommended
+    # under that rule
+    selected = {s: p[p["pred_good" if s == "good" else f"pred_improves_{s}"]] for s in SELECTIONS}
+    coverage = {s: q[case_id_name].nunique() for s, q in selected.items()}
+    # an empty selection: all the section 4 values NaN, with the same keys
+    no_points = {k: np.nan for k in expected_values(p)}
+    expected = {s: expected_values(q) if not q.empty else no_points for s, q in selected.items()}
     for selection, values in expected.items():  # one CSV row per selection for section 4
-        rows.append({"selection": selection, "section": "4_expected_values", "n_points": len(p if selection == "all" else good),
-                     "prefixes": coverage[selection], **values})
+        rows.append({"selection": selection, "section": "4_expected_values", "n_points": len(selected[selection]),
+                     "prefixes": coverage[selection], "prefixes_total": n_prefixes, **values})
     lines += (detail_lines + formula_lines(expected, coverage, n_prefixes)
               + summary_block(summary, expected, coverage, n_prefixes, x, y))
     return lines, [{"case_study": case_study, **r} for r in rows]

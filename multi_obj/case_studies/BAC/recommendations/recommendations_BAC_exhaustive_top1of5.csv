@@ -1,704 +1,704 @@
 case:concept:name,Next_activity,Next_resource
-201810001660,Evaluating Request (NO registered letter),00491
+201810001660,Evaluating Request (NO registered letter),00594
 201810002650,Service closure Request with BO responsibility,BOC
-201810006512,Evaluating Request (NO registered letter),00045
-201810008108,Authorization Requested,00491
+201810006512,Evaluating Request (NO registered letter),00594
+201810008108,Evaluating Request (WITH registered letter),00828
 201810008268,Service closure Request with BO responsibility,NotDef
 201810008485,Pending Request for Reservation Closure,BOC
-201810008899,Service closure Request with BO responsibility,00835
+201810008899,Service closure Request with BO responsibility,BOC
 20181000902,Pending Request for Reservation Closure,BOC
-201810010740,Service closure Request with network responsibility,00491
+201810010740,Service closure Request with BO responsibility,BOC
 201810010965,Pending Liquidation Request,BOC
-201810011081,Service closure Request with network responsibility,00491
-201810011583,Service closure Request with network responsibility,00491
+201810011081,Service closure Request with network responsibility,00594
+201810011583,Service closure Request with network responsibility,00594
 201810011588,Pending Liquidation Request,BOC
-20181012611,Authorization Requested,00045
-20181013679,Evaluating Request (WITH registered letter),00025
-201811000205,Evaluating Request (NO registered letter),00491
-201811001580,Service closure Request with network responsibility,00491
-201811001889,Service closure Request with network responsibility,00491
-201811002881,Evaluating Request (NO registered letter),00491
-201811003327,Service closure Request with BO responsibility,NotDef
-201811004163,Service closure Request with network responsibility,00491
-201811004205,Evaluating Request (NO registered letter),00491
-201811004338,Evaluating Request (NO registered letter),00491
-201811005226,Service closure Request with network responsibility,00491
-201811005422,Evaluating Request (NO registered letter),00491
+20181012611,Evaluating Request (WITH registered letter),00835
+20181013679,Evaluating Request (WITH registered letter),00852
+201811000205,Evaluating Request (NO registered letter),00594
+201811001580,Service closure Request with network responsibility,00594
+201811001889,Service closure Request with network responsibility,00594
+201811002881,Evaluating Request (NO registered letter),00594
+201811003327,Service closure Request with BO responsibility,BOC
+201811004163,Service closure Request with network responsibility,00594
+201811004205,Evaluating Request (NO registered letter),00594
+201811004338,Evaluating Request (NO registered letter),00594
+201811005226,Service closure Request with network responsibility,00594
+201811005422,Evaluating Request (WITH registered letter),00835
 201811005747,Pending Request for Reservation Closure,BOC
-201811005954,Evaluating Request (NO registered letter),00491
+201811005954,Evaluating Request (NO registered letter),00594
 201811006467,Service closure Request with BO responsibility,BOC
-201811006674,Evaluating Request (WITH registered letter),00019
-201811006982,Service closure Request with BO responsibility,00842
-201811007401,Evaluating Request (WITH registered letter),00019
-201811008100,Service closure Request with network responsibility,00491
-201811008330,Evaluating Request (WITH registered letter),00025
-201811008338,Evaluating Request (WITH registered letter),00019
+201811006674,Evaluating Request (WITH registered letter),00835
+201811006982,Service closure Request with BO responsibility,BOC
+201811007401,Evaluating Request (WITH registered letter),00835
+201811008100,Service closure Request with BO responsibility,00835
+201811008330,Evaluating Request (WITH registered letter),00852
+201811008338,Evaluating Request (WITH registered letter),00835
 201811008394,Pending Request for Reservation Closure,BOC
-201811008598,Evaluating Request (NO registered letter),00491
+201811008598,Evaluating Request (NO registered letter),00594
 201811008621,Request completed with account closure,BOC
-201811008631,Authorization Requested,00045
-201811008634,Evaluating Request (NO registered letter),00491
-201811009132,Evaluating Request (NO registered letter),00491
-201811009434,Evaluating Request (NO registered letter),00491
+201811008631,Evaluating Request (WITH registered letter),00835
+201811008634,Evaluating Request (NO registered letter),00594
+201811009132,Evaluating Request (NO registered letter),00594
+201811009434,Evaluating Request (NO registered letter),00594
 201811009800,Service closure Request with BO responsibility,BOC
 201811010119,Pending Request for Reservation Closure,BOC
 201811010142,Service closure Request with BO responsibility,BOC
 201811010681,Service closure Request with BO responsibility,BOC
-201811010732,Evaluating Request (NO registered letter),00491
-201811011699,Service closure Request with network responsibility,00491
-201811011715,Service closure Request with network responsibility,00491
-201811011742,Evaluating Request (NO registered letter),00491
-201811011907,Authorization Requested,00491
-201811011916,Evaluating Request (NO registered letter),00491
-201812000179,Evaluating Request (WITH registered letter),00019
-201812000181,Evaluating Request (WITH registered letter),00019
-201812000186,Evaluating Request (NO registered letter),00491
-201812000605,Service closure Request with network responsibility,00491
-201812000606,Service closure Request with network responsibility,00491
+201811010732,Evaluating Request (NO registered letter),00594
+201811011699,Service closure Request with network responsibility,00594
+201811011715,Service closure Request with network responsibility,00594
+201811011742,Evaluating Request (WITH registered letter),00835
+201811011907,Evaluating Request (WITH registered letter),00852
+201811011916,Evaluating Request (NO registered letter),00594
+201812000179,Evaluating Request (WITH registered letter),00835
+201812000181,Evaluating Request (WITH registered letter),00835
+201812000186,Evaluating Request (NO registered letter),00594
+201812000605,Service closure Request with network responsibility,00594
+201812000606,Service closure Request with network responsibility,00594
 201812000900,Service closure Request with BO responsibility,BOC
 201812001964,Pending Liquidation Request,BOC
 201812001995,Pending Liquidation Request,BOC
-201812002344,Evaluating Request (WITH registered letter),00025
-201812002552,Service closure Request with network responsibility,00045
-201812002630,Evaluating Request (WITH registered letter),00019
-201812002677,Service closure Request with network responsibility,00491
-201812002837,Service closure Request with network responsibility,00891
-201812002893,Evaluating Request (NO registered letter),00491
-201812003039,Evaluating Request (NO registered letter),00045
+201812002344,Evaluating Request (WITH registered letter),00852
+201812002552,Service closure Request with BO responsibility,00828
+201812002630,Evaluating Request (WITH registered letter),00835
+201812002677,Service closure Request with network responsibility,00594
+201812002837,Service closure Request with network responsibility,00594
+201812002893,Evaluating Request (NO registered letter),00594
+201812003039,Evaluating Request (NO registered letter),00594
 201812003088,Pending Request for Reservation Closure,BOC
 201812003246,Pending Liquidation Request,BOC
 201812003287,Pending Request for Reservation Closure,BOC
-201812004065,Service closure Request with network responsibility,00491
+201812004065,Service closure Request with network responsibility,00594
 201812004155,Pending Request for Reservation Closure,BOC
-201812004198,Service closure Request with BO responsibility,00831
-201812004271,Authorization Requested,00491
+201812004198,Service closure Request with BO responsibility,BOC
+201812004271,Evaluating Request (WITH registered letter),00852
 201812004422,Pending Request for Reservation Closure,BOC
-201812004433,Service closure Request with network responsibility,00491
-201812004478,Service closure Request with network responsibility,00491
-201812004552,Service closure Request with network responsibility,00491
+201812004433,Service closure Request with network responsibility,00594
+201812004478,Service closure Request with network responsibility,00594
+201812004552,Service closure Request with network responsibility,00594
 201812004625,Pending Request for Reservation Closure,BOC
 201812004772,,
-201812004817,Authorization Requested,00045
-201812004871,Authorization Requested,00045
+201812004817,Evaluating Request (WITH registered letter),00852
+201812004871,Evaluating Request (WITH registered letter),00852
 201812004921,Pending Liquidation Request,BOC
-201812005259,Authorization Requested,00491
-201812005350,Service closure Request with network responsibility,00491
-201812005402,Evaluating Request (NO registered letter),00491
-201812005434,Service closure Request with network responsibility,00491
-201812005461,Evaluating Request (NO registered letter),00491
+201812005259,Authorization Requested,00870
+201812005350,Service closure Request with network responsibility,00594
+201812005402,Evaluating Request (NO registered letter),00594
+201812005434,Service closure Request with network responsibility,00594
+201812005461,Evaluating Request (NO registered letter),00594
 201812005659,Pending Request for Reservation Closure,BOC
-201812005779,Service closure Request with network responsibility,00491
+201812005779,Service closure Request with network responsibility,00594
 201812005853,Service closure Request with BO responsibility,BOC
 201812005862,Pending Request for Reservation Closure,BOC
-201812005898,Authorization Requested,00491
+201812005898,Evaluating Request (WITH registered letter),00852
 201812006094,Pending Request for Reservation Closure,BOC
-201812006124,Evaluating Request (NO registered letter),00491
+201812006124,Evaluating Request (NO registered letter),00594
 201812006380,Pending Liquidation Request,BOC
-201812006485,Service closure Request with network responsibility,00491
+201812006485,Service closure Request with network responsibility,00594
 201812006628,Service closure Request with BO responsibility,BOC
-201812006707,Service closure Request with BO responsibility,00828
-201812006755,Authorization Requested,00045
-201812006820,Service closure Request with network responsibility,00491
-201812006824,Service closure Request with network responsibility,00491
+201812006707,Service closure Request with BO responsibility,BOC
+201812006755,Authorization Requested,00870
+201812006820,Service closure Request with network responsibility,00594
+201812006824,Service closure Request with network responsibility,00594
 201812006850,Pending Liquidation Request,BOC
 201812006908,Pending Liquidation Request,BOC
 201812007243,,
-201812007245,Evaluating Request (NO registered letter),00491
+201812007245,Evaluating Request (NO registered letter),00594
 201812007280,Pending Request for Reservation Closure,BOC
-201812007319,Evaluating Request (NO registered letter),00045
+201812007319,Evaluating Request (NO registered letter),00594
 201812007397,Pending Request for Reservation Closure,BOC
-201812007439,Evaluating Request (NO registered letter),00491
+201812007439,Evaluating Request (NO registered letter),00594
 201812007445,Pending Liquidation Request,BOC
 201812007596,Pending Liquidation Request,BOC
-201812007654,Evaluating Request (NO registered letter),00491
-201812007664,Evaluating Request (NO registered letter),00491
-201812007718,Service closure Request with BO responsibility,NotDef
-201812007723,Service closure Request with network responsibility,00491
+201812007654,Evaluating Request (NO registered letter),00594
+201812007664,Service closure Request with BO responsibility,NotDef
+201812007718,Service closure Request with BO responsibility,BOC
+201812007723,Service closure Request with network responsibility,00594
 201812007727,Service closure Request with BO responsibility,BOC
-201812007780,Service closure Request with BO responsibility,00831
+201812007780,Service closure Request with BO responsibility,BOC
 201812007788,Pending Request for Reservation Closure,BOC
-201812007839,Service closure Request with network responsibility,00491
+201812007839,Service closure Request with network responsibility,00594
 201812007853,Pending Request for Reservation Closure,BOC
-201812008090,Service closure Request with BO responsibility,NotDef
+201812008090,Service closure Request with BO responsibility,BOC
 201812008149,Pending Request for Reservation Closure,BOC
 201812008197,Pending Liquidation Request,BOC
 201812008346,Pending Request for Reservation Closure,BOC
 201812008603,Pending Liquidation Request,BOC
-201812008642,Authorization Requested,00491
-201812008657,Service closure Request with network responsibility,00491
+201812008642,Evaluating Request (WITH registered letter),00852
+201812008657,Service closure Request with network responsibility,00594
 201812008694,Service closure Request with BO responsibility,BOC
-201812008702,Evaluating Request (NO registered letter),00491
-201812008708,Evaluating Request (NO registered letter),00491
-201812008800,Service closure Request with network responsibility,00491
-201812008953,Service closure Request with network responsibility,00491
+201812008702,Service closure Request with BO responsibility,NotDef
+201812008708,Evaluating Request (NO registered letter),00594
+201812008800,Service closure Request with network responsibility,00594
+201812008953,Service closure Request with network responsibility,00594
 201812009238,Pending Liquidation Request,BOC
-201812009363,Authorization Requested,00491
+201812009363,Evaluating Request (WITH registered letter),00852
 201812009396,Pending Liquidation Request,BOC
 201812009485,Pending Request for Reservation Closure,BOC
-201812009515,Evaluating Request (NO registered letter),00491
-201812009556,Service closure Request with network responsibility,00491
+201812009515,Evaluating Request (NO registered letter),00594
+201812009556,Service closure Request with network responsibility,00594
 201812009573,Pending Request for Reservation Closure,BOC
-201812009645,Evaluating Request (WITH registered letter),00019
-201812009682,Authorization Requested,00045
+201812009645,Evaluating Request (WITH registered letter),00835
+201812009682,Evaluating Request (WITH registered letter),00852
 201812009703,Service closure Request with BO responsibility,BOC
-201812009725,Service closure Request with BO responsibility,NotDef
-201812009750,Authorization Requested,00045
-201812009753,Service closure Request with network responsibility,00491
-20182005961,Service closure Request with network responsibility,00491
+201812009725,Service closure Request with BO responsibility,BOC
+201812009750,Authorization Requested,00870
+201812009753,Service closure Request with network responsibility,00594
+20182005961,Service closure Request with network responsibility,00594
 20182009106,Pending Request for Reservation Closure,BOC
-20183007131,Service closure Request with network responsibility,00491
-20184001796,Service closure Request with network responsibility,00491
+20183007131,Service closure Request with network responsibility,00594
+20184001796,Service closure Request with network responsibility,00594
 20184005836,Pending Liquidation Request,BOC
 20185003342,Pending Request for Reservation Closure,BOC
 20186002647,Pending Request for Reservation Closure,BOC
-20186005840,Evaluating Request (NO registered letter),00491
-20186007767,Service closure Request with network responsibility,00491
-20187001196,Request completed with account closure,SDCRAP
-20187001795,Evaluating Request (NO registered letter),00045
-20187002397,Service closure Request with BO responsibility,NotDef
-20187003190,Authorization Requested,00045
-20187003641,Evaluating Request (NO registered letter),00491
+20186005840,Evaluating Request (NO registered letter),00594
+20186007767,Service closure Request with network responsibility,00594
+20187001196,Request completed with account closure,BOC
+20187001795,Evaluating Request (NO registered letter),00594
+20187002397,Service closure Request with BO responsibility,BOC
+20187003190,Evaluating Request (WITH registered letter),00835
+20187003641,Evaluating Request (NO registered letter),00594
 20187006392,Service closure Request with BO responsibility,BOC
-20187006846,Evaluating Request (NO registered letter),00491
-20187007250,Service closure Request with BO responsibility,NotDef
-20187010782,Service closure Request with BO responsibility,00835
-20188002087,Evaluating Request (NO registered letter),00491
-20188002441,Service closure Request with network responsibility,00491
-20188002645,Evaluating Request (WITH registered letter),00019
-20188005486,Evaluating Request (NO registered letter),00491
+20187006846,Evaluating Request (NO registered letter),00594
+20187007250,Service closure Request with BO responsibility,BOC
+20187010782,Service closure Request with BO responsibility,BOC
+20188002087,Evaluating Request (NO registered letter),00594
+20188002441,Service closure Request with network responsibility,00594
+20188002645,Evaluating Request (WITH registered letter),00835
+20188005486,Evaluating Request (NO registered letter),00594
 20189001829,Pending Request for Reservation Closure,BOC
-20189003084,Authorization Requested,00491
-20189003486,Service closure Request with network responsibility,00491
-20189004803,Service closure Request with network responsibility,00491
-20189006540,Service closure Request with network responsibility,00491
-20189007102,Service closure Request with network responsibility,00491
-20189007821,Evaluating Request (NO registered letter),00491
+20189003084,Evaluating Request (WITH registered letter),00852
+20189003486,Service closure Request with network responsibility,00594
+20189004803,Service closure Request with BO responsibility,BOC
+20189006540,Service closure Request with network responsibility,00594
+20189007102,Service closure Request with network responsibility,00594
+20189007821,Evaluating Request (NO registered letter),00594
 20189007982,Service closure Request with BO responsibility,BOC
-20189008206,Service closure Request with network responsibility,00491
-20189009645,Service closure Request with BO responsibility,NotDef
-20191000127,Service closure Request with network responsibility,00491
-20191000242,Authorization Requested,00045
-20191000255,Evaluating Request (NO registered letter),00491
-20191000260,Authorization Requested,00045
-20191000269,Evaluating Request (NO registered letter),00491
-20191000366,Evaluating Request (NO registered letter),00491
+20189008206,Service closure Request with network responsibility,00594
+20189009645,Service closure Request with BO responsibility,BOC
+20191000127,Service closure Request with network responsibility,00594
+20191000242,Evaluating Request (WITH registered letter),00835
+20191000255,Evaluating Request (WITH registered letter),00835
+20191000260,Authorization Requested,00870
+20191000269,Evaluating Request (WITH registered letter),00835
+20191000366,Evaluating Request (NO registered letter),00594
 20191000380,Service closure Request with BO responsibility,BOC
-20191000382,Evaluating Request (NO registered letter),00491
+20191000382,Evaluating Request (NO registered letter),00594
 20191000433,Pending Request for Reservation Closure,BOC
 20191000448,Request completed with account closure,BOC
 20191000490,Pending Request for Reservation Closure,BOC
-20191000535,Service closure Request with BO responsibility,00839
-20191000546,Service closure Request with network responsibility,00594
-20191000553,Service closure Request with network responsibility,00491
-20191000568,Service closure Request with network responsibility,00491
+20191000535,Service closure Request with BO responsibility,BOC
+20191000546,Service closure Request with BO responsibility,BOC
+20191000553,Service closure Request with BO responsibility,00828
+20191000568,Service closure Request with network responsibility,00594
 20191000676,Service closure Request with BO responsibility,BOC
-20191000751,Evaluating Request (NO registered letter),00491
-20191000782,Evaluating Request (NO registered letter),00491
-20191000845,Evaluating Request (WITH registered letter),00025
+20191000751,Evaluating Request (NO registered letter),00594
+20191000782,Evaluating Request (WITH registered letter),00835
+20191000845,Evaluating Request (WITH registered letter),00852
 20191000920,Pending Request for Reservation Closure,BOC
-20191000928,Service closure Request with BO responsibility,NotDef
+20191000928,Service closure Request with BO responsibility,BOC
 20191000957,Service closure Request with BO responsibility,BOC
-20191001061,Evaluating Request (NO registered letter),00491
-20191001073,Service closure Request with network responsibility,00491
+20191001061,Evaluating Request (NO registered letter),00594
+20191001073,Service closure Request with network responsibility,00594
 20191001081,Pending Liquidation Request,BOC
-20191001178,Service closure Request with network responsibility,00491
-20191001209,Authorization Requested,00491
+20191001178,Service closure Request with network responsibility,00594
+20191001209,Authorization Requested,00870
 20191001270,Pending Request for Reservation Closure,BOC
-20191001457,Service closure Request with network responsibility,00491
-20191001560,Evaluating Request (NO registered letter),00491
+20191001457,Service closure Request with network responsibility,00594
+20191001560,Evaluating Request (NO registered letter),00594
 20191001584,Pending Request for Reservation Closure,BOC
-20191001595,Service closure Request with network responsibility,00491
+20191001595,Service closure Request with network responsibility,00594
 20191001604,Service closure Request with BO responsibility,BOC
 20191001610,Pending Liquidation Request,BOC
 20191001611,Service closure Request with BO responsibility,BOC
-20191001634,Pending Liquidation Request,SDCRAP
-20191001699,Service closure Request with network responsibility,00491
-20191001826,Evaluating Request (NO registered letter),00491
+20191001634,Pending Liquidation Request,BOC
+20191001699,Service closure Request with network responsibility,00594
+20191001826,Evaluating Request (WITH registered letter),00835
 20191001846,,
-20191001877,Service closure Request with network responsibility,00491
+20191001877,Service closure Request with network responsibility,00594
 20191001909,Pending Request for Reservation Closure,BOC
 20191001991,Service closure Request with BO responsibility,BOC
-20191001992,Evaluating Request (WITH registered letter),00025
-20191002027,Evaluating Request (NO registered letter),00491
+20191001992,Evaluating Request (WITH registered letter),00835
+20191002027,Evaluating Request (WITH registered letter),00835
 20191002029,Pending Request for Reservation Closure,BOC
-20191002074,Service closure Request with network responsibility,00491
-20191002078,Service closure Request with network responsibility,00491
+20191002074,Service closure Request with network responsibility,00594
+20191002078,Service closure Request with network responsibility,00594
 20191002091,Pending Request for Reservation Closure,BOC
-20191002111,Service closure Request with network responsibility,00491
+20191002111,Service closure Request with network responsibility,00594
 20191002163,Service closure Request with BO responsibility,BOC
 20191002210,Pending Liquidation Request,BOC
-20191002211,Service closure Request with network responsibility,00491
-20191002216,Service closure Request with network responsibility,00491
-20191002277,Service closure Request with network responsibility,00491
-20191002297,Evaluating Request (NO registered letter),00491
+20191002211,Service closure Request with BO responsibility,00828
+20191002216,Service closure Request with BO responsibility,00828
+20191002277,Service closure Request with network responsibility,00594
+20191002297,Evaluating Request (NO registered letter),00594
 20191002326,Pending Liquidation Request,BOC
 20191002394,Pending Request for Reservation Closure,BOC
 20191002430,Pending Liquidation Request,BOC
-20191002483,Authorization Requested,00491
-20191002511,Evaluating Request (NO registered letter),00491
+20191002483,Authorization Requested,00870
+20191002511,Evaluating Request (NO registered letter),00594
 20191002519,Pending Liquidation Request,BOC
-20191002521,Evaluating Request (NO registered letter),00491
+20191002521,Evaluating Request (NO registered letter),00594
 20191002534,Pending Request for Reservation Closure,BOC
-20191002537,Evaluating Request (NO registered letter),00491
+20191002537,Evaluating Request (NO registered letter),00594
 20191002552,Pending Liquidation Request,BOC
 20191002594,Pending Liquidation Request,BOC
-20191002706,Evaluating Request (NO registered letter),00491
-20191002742,Service closure Request with network responsibility,00491
-20191002745,Service closure Request with network responsibility,00491
+20191002706,Evaluating Request (NO registered letter),00594
+20191002742,Service closure Request with BO responsibility,BOC
+20191002745,Service closure Request with network responsibility,00594
 20191002751,Pending Request for Reservation Closure,BOC
-20191002759,Service closure Request with network responsibility,00491
-20191002825,Pending Liquidation Request,SDCRAP
+20191002759,Service closure Request with network responsibility,00594
+20191002825,Pending Liquidation Request,BOC
 20191002864,Pending Liquidation Request,BOC
-20191002920,Service closure Request with network responsibility,00491
-20191002939,Service closure Request with network responsibility,00491
+20191002920,Service closure Request with BO responsibility,00828
+20191002939,Service closure Request with network responsibility,00594
 20191002953,Pending Request for Reservation Closure,BOC
-20191002956,Evaluating Request (NO registered letter),00491
+20191002956,Evaluating Request (NO registered letter),00594
 20191002981,Service closure Request with BO responsibility,BOC
 20191002998,Pending Liquidation Request,BOC
-20191003000,Service closure Request with network responsibility,00491
-20191003019,Service closure Request with network responsibility,00491
-20191003077,Service closure Request with BO responsibility,NotDef
+20191003000,Service closure Request with BO responsibility,00828
+20191003019,Service closure Request with network responsibility,00594
+20191003077,Service closure Request with BO responsibility,BOC
 20191003145,Pending Liquidation Request,BOC
 20191003155,Pending Liquidation Request,BOC
-20191003263,Evaluating Request (NO registered letter),00491
-20191003312,Evaluating Request (NO registered letter),00491
-20191003315,Service closure Request with BO responsibility,NotDef
-20191003440,Service closure Request with network responsibility,00491
+20191003263,Evaluating Request (WITH registered letter),00835
+20191003312,Evaluating Request (NO registered letter),00594
+20191003315,Service closure Request with BO responsibility,BOC
+20191003440,Service closure Request with network responsibility,00594
 20191003460,Pending Liquidation Request,BOC
-20191003465,Evaluating Request (NO registered letter),00491
-20191003502,Service closure Request with network responsibility,00491
-20191003540,Evaluating Request (NO registered letter),00491
-20191003568,Service closure Request with BO responsibility,00835
+20191003465,Evaluating Request (WITH registered letter),00835
+20191003502,Service closure Request with network responsibility,00594
+20191003540,Evaluating Request (NO registered letter),00594
+20191003568,Service closure Request with BO responsibility,BOC
 20191003594,Pending Request for Reservation Closure,BOC
 20191003598,Request completed with account closure,BOC
 20191003680,Service closure Request with BO responsibility,BOC
 20191003699,Pending Request for Reservation Closure,BOC
-20191003724,Service closure Request with BO responsibility,00831
+20191003724,Service closure Request with BO responsibility,BOC
 20191003726,Request completed with account closure,BOC
 20191003754,Request completed with account closure,BOC
 20191003755,Service closure Request with BO responsibility,NotDef
-20191003756,Evaluating Request (NO registered letter),00491
-20191003759,Service closure Request with network responsibility,00491
+20191003756,Service closure Request with BO responsibility,NotDef
+20191003759,Service closure Request with network responsibility,00594
 20191003785,Service closure Request with BO responsibility,BOC
 20191003819,Pending Liquidation Request,BOC
-20191003861,Service closure Request with BO responsibility,00831
+20191003861,Service closure Request with BO responsibility,BOC
 20191003872,Pending Liquidation Request,BOC
-20191003909,Pending Request for Reservation Closure,SDCRAP
-20191003938,Evaluating Request (WITH registered letter),00019
-20191004011,Evaluating Request (NO registered letter),00491
+20191003909,Service closure Request with BO responsibility,BOC
+20191003938,Evaluating Request (WITH registered letter),00835
+20191004011,Evaluating Request (NO registered letter),00594
 20191004025,Service closure Request with BO responsibility,BOC
-20191004038,Authorization Requested,00045
-20191004043,Service closure Request with network responsibility,00491
-20191004048,Authorization Requested,00045
+20191004038,Evaluating Request (WITH registered letter),00852
+20191004043,Service closure Request with network responsibility,00594
+20191004048,Authorization Requested,00439
 20191004077,Pending Liquidation Request,BOC
 20191004109,Service closure Request with BO responsibility,BOC
-20191004146,Authorization Requested,00045
-20191004208,Authorization Requested,00045
-20191004220,Service closure Request with network responsibility,00491
-20191004224,Evaluating Request (NO registered letter),00491
-20191004227,Evaluating Request (NO registered letter),00491
-20191004251,Evaluating Request (WITH registered letter),00025
-20191004267,Authorization Requested,00045
-20191004286,Authorization Requested,00045
+20191004146,Evaluating Request (WITH registered letter),00835
+20191004208,Authorization Requested,00870
+20191004220,Service closure Request with network responsibility,00594
+20191004224,Evaluating Request (NO registered letter),00594
+20191004227,Evaluating Request (WITH registered letter),00835
+20191004251,Evaluating Request (WITH registered letter),00852
+20191004267,Evaluating Request (WITH registered letter),00835
+20191004286,Authorization Requested,00870
 20191004316,Pending Liquidation Request,BOC
 20191004326,Request completed with account closure,BOC
-20191004364,Authorization Requested,00045
-20191004374,Authorization Requested,00045
-20191004402,Evaluating Request (NO registered letter),00045
+20191004364,Evaluating Request (WITH registered letter),00835
+20191004374,Evaluating Request (WITH registered letter),00835
+20191004402,Evaluating Request (NO registered letter),00594
 20191004432,Service closure Request with BO responsibility,BOC
-20191004440,Evaluating Request (NO registered letter),00491
+20191004440,Evaluating Request (NO registered letter),00594
 20191004444,Pending Liquidation Request,BOC
 20191004488,Pending Liquidation Request,BOC
-20191004500,Evaluating Request (NO registered letter),00491
+20191004500,Evaluating Request (WITH registered letter),00835
 20191004521,Pending Liquidation Request,BOC
-20191004550,Evaluating Request (NO registered letter),00491
+20191004550,Evaluating Request (NO registered letter),00594
 20191004556,Service closure Request with BO responsibility,BOC
-20191004566,Service closure Request with network responsibility,00491
+20191004566,Service closure Request with network responsibility,00594
 20191004680,Pending Request for Reservation Closure,BOC
-20191004710,Service closure Request with network responsibility,00491
+20191004710,Service closure Request with network responsibility,00594
 20191004729,Pending Liquidation Request,BOC
 20191004805,Service closure Request with BO responsibility,BOC
 20191004812,Pending Liquidation Request,BOC
-20191004843,Service closure Request with network responsibility,00491
+20191004843,Service closure Request with network responsibility,00594
 20191004845,Pending Liquidation Request,BOC
-20191004854,Authorization Requested,00045
-20191004869,Evaluating Request (NO registered letter),00491
+20191004854,Evaluating Request (WITH registered letter),00828
+20191004869,Service closure Request with BO responsibility,NotDef
 20191004891,Pending Request for Reservation Closure,BOC
 20191004898,Pending Liquidation Request,BOC
-20191004909,Service closure Request with network responsibility,00491
-20191004953,Request completed with account closure,SDCRAP
+20191004909,Service closure Request with network responsibility,00594
+20191004953,Request completed with account closure,BOC
 20191004957,Service closure Request with BO responsibility,BOC
-20191004983,Evaluating Request (WITH registered letter),00019
-20191005057,Pending Liquidation Request,SDCRAP
+20191004983,Evaluating Request (WITH registered letter),00835
+20191005057,Pending Liquidation Request,BOC
 20191005058,Request completed with account closure,BOC
-20191005120,Service closure Request with BO responsibility,00831
-20191005134,Service closure Request with BO responsibility,00831
+20191005120,Service closure Request with BO responsibility,BOC
+20191005134,Service closure Request with BO responsibility,BOC
 20191005186,Pending Liquidation Request,BOC
 20191005248,Service closure Request with BO responsibility,BOC
-20191005294,Authorization Requested,00491
-20191005303,Authorization Requested,00491
+20191005294,Evaluating Request (WITH registered letter),00852
+20191005303,Evaluating Request (WITH registered letter),00852
 20191005314,Service closure Request with BO responsibility,BOC
-20191005347,Service closure Request with network responsibility,00491
-20191005360,Evaluating Request (NO registered letter),00491
+20191005347,Service closure Request with network responsibility,00594
+20191005360,Evaluating Request (NO registered letter),00594
 20191005375,Pending Request for Reservation Closure,BOC
-20191005395,Evaluating Request (NO registered letter),00491
-20191005409,Pending Request for Reservation Closure,SDCRAP
+20191005395,Evaluating Request (WITH registered letter),00835
+20191005409,Pending Request for Reservation Closure,BOC
 20191005416,Pending Liquidation Request,BOC
 20191005427,Pending Request for Reservation Closure,BOC
-20191005428,Service closure Request with network responsibility,00491
-20191005462,Service closure Request with BO responsibility,00831
-20191005480,Authorization Requested,00045
-20191005537,Authorization Requested,00491
-20191005557,Evaluating Request (NO registered letter),00491
+20191005428,Service closure Request with network responsibility,00594
+20191005462,Service closure Request with BO responsibility,BOC
+20191005480,Authorization Requested,00439
+20191005537,Evaluating Request (WITH registered letter),00852
+20191005557,Evaluating Request (NO registered letter),00594
 20191005567,Service closure Request with BO responsibility,BOC
 20191005580,Pending Liquidation Request,BOC
 20191005632,Service closure Request with BO responsibility,BOC
-20191005637,Authorization Requested,00491
+20191005637,Evaluating Request (WITH registered letter),00852
 20191005681,Pending Request for Reservation Closure,BOC
 20191005684,Pending Liquidation Request,BOC
 20191005691,Pending Liquidation Request,BOC
-20191005698,Service closure Request with network responsibility,00491
+20191005698,Service closure Request with BO responsibility,BOC
 20191005733,Service closure Request with BO responsibility,BOC
 20191005747,Pending Liquidation Request,BOC
-20191005769,Service closure Request with network responsibility,00491
+20191005769,Service closure Request with network responsibility,00594
 20191005791,Pending Liquidation Request,BOC
 20191005816,Pending Liquidation Request,BOC
-20191005838,Authorization Requested,00491
+20191005838,Evaluating Request (WITH registered letter),00852
 20191005893,Pending Liquidation Request,BOC
 20191005903,Service closure Request with BO responsibility,BOC
 20191005916,Pending Liquidation Request,BOC
-20191005922,Evaluating Request (WITH registered letter),00491
-20191005924,Evaluating Request (WITH registered letter),00491
-20191005966,Service closure Request with network responsibility,00491
+20191005922,Evaluating Request (NO registered letter),00594
+20191005924,Evaluating Request (NO registered letter),00594
+20191005966,Service closure Request with network responsibility,00594
 20191005984,Pending Liquidation Request,BOC
 20191006023,Pending Liquidation Request,BOC
-20191006058,Evaluating Request (NO registered letter),00491
-20191006064,Service closure Request with BO responsibility,00828
-20191006077,Service closure Request with BO responsibility,NotDef
-20191006078,Evaluating Request (NO registered letter),00491
-20191006098,Evaluating Request (NO registered letter),00491
-20191006110,Service closure Request with network responsibility,00491
+20191006058,Evaluating Request (NO registered letter),00594
+20191006064,Service closure Request with BO responsibility,BOC
+20191006077,Service closure Request with BO responsibility,BOC
+20191006078,Evaluating Request (NO registered letter),00594
+20191006098,Evaluating Request (NO registered letter),00594
+20191006110,Service closure Request with network responsibility,00594
 20191006112,Pending Liquidation Request,BOC
-20191006142,Evaluating Request (WITH registered letter),00025
+20191006142,Evaluating Request (WITH registered letter),00852
 20191006145,Service closure Request with BO responsibility,BOC
-20191006157,Request completed with account closure,SDCRAP
+20191006157,Request completed with account closure,BOC
 20191006186,Pending Liquidation Request,BOC
-20191006188,Evaluating Request (NO registered letter),00491
-20191006203,Service closure Request with network responsibility,00491
-20191006207,Service closure Request with network responsibility,00491
-20191006210,Service closure Request with network responsibility,00491
-20191006217,Service closure Request with BO responsibility,00828
+20191006188,Evaluating Request (NO registered letter),00594
+20191006203,Service closure Request with network responsibility,00594
+20191006207,Service closure Request with network responsibility,00594
+20191006210,Service closure Request with BO responsibility,00828
+20191006217,Service closure Request with BO responsibility,BOC
 20191006220,Pending Liquidation Request,BOC
 20191006225,Pending Liquidation Request,BOC
-20191006233,Evaluating Request (WITH registered letter),00019
-20191006273,Evaluating Request (NO registered letter),00491
+20191006233,Evaluating Request (WITH registered letter),00835
+20191006273,Evaluating Request (NO registered letter),00594
 20191006292,Service closure Request with BO responsibility,BOC
 20191006301,Service closure Request with BO responsibility,BOC
-20191006309,Service closure Request with BO responsibility,NotDef
-20191006333,Service closure Request with network responsibility,00491
-20191006358,Evaluating Request (NO registered letter),00045
-20191006382,Service closure Request with network responsibility,00491
-20191006394,Authorization Requested,00045
-20191006436,Service closure Request with BO responsibility,NotDef
+20191006309,Service closure Request with BO responsibility,BOC
+20191006333,Service closure Request with network responsibility,00594
+20191006358,Evaluating Request (NO registered letter),00594
+20191006382,Service closure Request with network responsibility,00594
+20191006394,Evaluating Request (WITH registered letter),00852
+20191006436,Service closure Request with BO responsibility,BOC
 20191006444,Pending Liquidation Request,BOC
 20191006449,Pending Liquidation Request,BOC
-20191006478,Request completed with account closure,SDCRAP
-20191006502,Authorization Requested,00491
-20191006520,Evaluating Request (NO registered letter),00491
+20191006478,Request completed with account closure,BOC
+20191006502,Evaluating Request (WITH registered letter),00852
+20191006520,Evaluating Request (NO registered letter),00594
 20191006539,Service closure Request with BO responsibility,BOC
 20191006550,Request completed with account closure,BOC
-20191006585,Service closure Request with network responsibility,00491
+20191006585,Service closure Request with network responsibility,00594
 20191006608,Pending Request for Reservation Closure,BOC
 20191006612,Pending Liquidation Request,BOC
 20191006655,Service closure Request with BO responsibility,BOC
 20191006661,Pending Request for Reservation Closure,BOC
 20191006675,Pending Liquidation Request,BOC
-20191006747,Evaluating Request (WITH registered letter),00019
-20191006756,Evaluating Request (NO registered letter),00491
-20191006771,Evaluating Request (NO registered letter),00491
-20191006784,Service closure Request with network responsibility,00491
+20191006747,Evaluating Request (WITH registered letter),00835
+20191006756,Evaluating Request (NO registered letter),00594
+20191006771,Evaluating Request (NO registered letter),00594
+20191006784,Service closure Request with network responsibility,00594
 20191006788,Service closure Request with BO responsibility,BOC
-20191006789,Service closure Request with network responsibility,00491
+20191006789,Service closure Request with network responsibility,00594
 20191006799,Pending Liquidation Request,BOC
 20191006840,Pending Liquidation Request,BOC
-20191006870,Pending Request for Reservation Closure,SDCRAP
-20191006871,Evaluating Request (NO registered letter),00491
+20191006870,Pending Request for Reservation Closure,BOC
+20191006871,Evaluating Request (WITH registered letter),00835
 20191006878,Pending Liquidation Request,BOC
-20191006880,Service closure Request with network responsibility,00491
+20191006880,Service closure Request with network responsibility,00594
 20191006886,Pending Request for Reservation Closure,BOC
-20191006920,Authorization Requested,00491
+20191006920,Authorization Requested,00870
 20191006922,Service closure Request with BO responsibility,BOC
-20191006987,Service closure Request with network responsibility,00491
-20191007056,Evaluating Request (WITH registered letter),00019
-20191007068,Service closure Request with BO responsibility,00835
-20191007079,Service closure Request with network responsibility,00491
+20191006987,Service closure Request with network responsibility,00594
+20191007056,Evaluating Request (WITH registered letter),00852
+20191007068,Service closure Request with BO responsibility,BOC
+20191007079,Service closure Request with network responsibility,00594
 20191007144,Request completed with account closure,BOC
 20191007149,Service closure Request with BO responsibility,BOC
 20191007166,Service closure Request with BO responsibility,BOC
 20191007241,Pending Liquidation Request,BOC
-20191007291,Authorization Requested,00045
-20191007305,Service closure Request with BO responsibility,NotDef
+20191007291,Evaluating Request (WITH registered letter),00852
+20191007305,Service closure Request with BO responsibility,BOC
 20191007344,Service closure Request with BO responsibility,BOC
 20191007395,Pending Liquidation Request,BOC
-20191007413,Service closure Request with network responsibility,00491
+20191007413,Service closure Request with network responsibility,00594
 20191007430,Pending Liquidation Request,BOC
 20191007453,Pending Request for Reservation Closure,BOC
-20191007463,Evaluating Request (NO registered letter),00045
-20191007469,Evaluating Request (WITH registered letter),00019
-20191007472,Service closure Request with network responsibility,00491
-20191007481,Authorization Requested,00045
+20191007463,Evaluating Request (NO registered letter),00594
+20191007469,Evaluating Request (WITH registered letter),00835
+20191007472,Service closure Request with network responsibility,00594
+20191007481,Evaluating Request (WITH registered letter),00835
 20191007501,Service closure Request with BO responsibility,BOC
-20191007510,Service closure Request with network responsibility,00491
+20191007510,Service closure Request with BO responsibility,00828
 20191007536,Pending Liquidation Request,BOC
 20191007558,Pending Request for Reservation Closure,BOC
-20191007560,Service closure Request with network responsibility,00491
-20191007564,Service closure Request with BO responsibility,00831
-20191007570,Service closure Request with network responsibility,00491
-20191007587,Service closure Request with BO responsibility,00831
-20191007597,Evaluating Request (NO registered letter),00491
-20191007623,Service closure Request with BO responsibility,00831
+20191007560,Service closure Request with network responsibility,00594
+20191007564,Service closure Request with BO responsibility,BOC
+20191007570,Service closure Request with network responsibility,00594
+20191007587,Service closure Request with BO responsibility,BOC
+20191007597,Evaluating Request (WITH registered letter),00835
+20191007623,Service closure Request with BO responsibility,BOC
 20191007649,Request completed with account closure,BOC
 20191007651,Service closure Request with BO responsibility,BOC
 20191007656,Pending Liquidation Request,BOC
-20191007666,Service closure Request with BO responsibility,NotDef
-20191007668,Service closure Request with network responsibility,00491
+20191007666,Service closure Request with BO responsibility,BOC
+20191007668,Service closure Request with network responsibility,00594
 20191007670,Pending Liquidation Request,BOC
 20191007674,Service closure Request with BO responsibility,BOC
 20191007719,Pending Liquidation Request,BOC
 20191007799,Pending Liquidation Request,BOC
 20191007802,Request completed with account closure,BOC
-20191007810,Service closure Request with network responsibility,00491
+20191007810,Service closure Request with network responsibility,00594
 20191007847,Pending Liquidation Request,BOC
-20191007859,Service closure Request with network responsibility,00491
+20191007859,Service closure Request with network responsibility,00594
 20191007866,Pending Request for Reservation Closure,BOC
-20191007873,Service closure Request with BO responsibility,00831
+20191007873,Service closure Request with BO responsibility,BOC
 20191007889,Pending Liquidation Request,BOC
-20191007894,Evaluating Request (WITH registered letter),00491
+20191007894,Evaluating Request (WITH registered letter),00835
 20191007895,Service closure Request with BO responsibility,BOC
-20191007901,Evaluating Request (NO registered letter),00491
-20191007903,Service closure Request with network responsibility,00491
+20191007901,Evaluating Request (WITH registered letter),00835
+20191007903,Service closure Request with network responsibility,00594
 20191007906,Pending Liquidation Request,BOC
-20191007908,Evaluating Request (NO registered letter),00491
-20191007911,Service closure Request with BO responsibility,00831
+20191007908,Evaluating Request (WITH registered letter),00835
+20191007911,Service closure Request with BO responsibility,BOC
 20191007912,Service closure Request with BO responsibility,BOC
 20191007914,Pending Liquidation Request,BOC
 20191007948,Pending Request for Reservation Closure,BOC
 20191007954,Request completed with account closure,BOC
-20191007964,Service closure Request with network responsibility,00491
+20191007964,Service closure Request with network responsibility,00594
 20191007970,Pending Request for Reservation Closure,BOC
-20191007975,Service closure Request with BO responsibility,00831
+20191007975,Service closure Request with BO responsibility,BOC
 20191007978,Pending Liquidation Request,BOC
-20191007979,Pending Liquidation Request,SDCRAP
-20191007993,Service closure Request with network responsibility,00491
-20191008000,Service closure Request with network responsibility,00491
-20191008019,Authorization Requested,00045
+20191007979,Pending Liquidation Request,BOC
+20191007993,Service closure Request with network responsibility,00594
+20191008000,Service closure Request with network responsibility,00594
+20191008019,Evaluating Request (WITH registered letter),00835
 20191008035,Request completed with account closure,BOC
 20191008041,Pending Request for Reservation Closure,BOC
-20191008066,Evaluating Request (NO registered letter),00491
-20191008071,Service closure Request with network responsibility,00491
-20191008074,Service closure Request with network responsibility,00491
-20191008076,Authorization Requested,00491
-20191008079,Service closure Request with network responsibility,00491
-20191008080,Evaluating Request (NO registered letter),00491
-20191008096,Service closure Request with network responsibility,00491
-20191008111,Service closure Request with BO responsibility,00831
-20191008116,Evaluating Request (NO registered letter),00491
+20191008066,Evaluating Request (NO registered letter),00594
+20191008071,Service closure Request with network responsibility,00594
+20191008074,Service closure Request with network responsibility,00594
+20191008076,Authorization Requested,00870
+20191008079,Service closure Request with network responsibility,00594
+20191008080,Evaluating Request (NO registered letter),00594
+20191008096,Service closure Request with network responsibility,00594
+20191008111,Service closure Request with BO responsibility,BOC
+20191008116,Evaluating Request (NO registered letter),00594
 20191008138,Pending Liquidation Request,BOC
-20191008155,Service closure Request with BO responsibility,NotDef
+20191008155,Service closure Request with BO responsibility,BOC
 20191008158,Pending Liquidation Request,BOC
 20191008160,Pending Liquidation Request,BOC
-20191008169,Service closure Request with BO responsibility,00828
+20191008169,Service closure Request with BO responsibility,BOC
 20191008252,Request completed with account closure,BOC
 20191008273,Service closure Request with BO responsibility,BOC
-20191008283,Authorization Requested,00045
-20191008295,Service closure Request with BO responsibility,00831
+20191008283,Evaluating Request (WITH registered letter),00852
+20191008295,Service closure Request with BO responsibility,BOC
 20191008319,Pending Liquidation Request,BOC
-20191008323,Service closure Request with network responsibility,00491
-20191008334,Evaluating Request (NO registered letter),00491
+20191008323,Service closure Request with network responsibility,00594
+20191008334,Evaluating Request (NO registered letter),00594
 20191008335,Pending Request for Reservation Closure,BOC
-20191008349,Service closure Request with BO responsibility,00828
-20191008358,Evaluating Request (NO registered letter),00491
+20191008349,Service closure Request with BO responsibility,BOC
+20191008358,Evaluating Request (NO registered letter),00594
 20191008359,Service closure Request with BO responsibility,BOC
-20191008362,Service closure Request with network responsibility,00491
-20191008363,Evaluating Request (NO registered letter),00045
-20191008378,Authorization Requested,00491
-20191008380,Evaluating Request (NO registered letter),00491
+20191008362,Service closure Request with network responsibility,00594
+20191008363,Evaluating Request (NO registered letter),00594
+20191008378,Evaluating Request (WITH registered letter),00852
+20191008380,Evaluating Request (NO registered letter),00594
 20191008388,Service closure Request with BO responsibility,BOC
 20191008393,Service closure Request with BO responsibility,BOC
 20191008397,Request completed with account closure,BOC
 20191008402,Pending Request for Reservation Closure,BOC
 20191008415,Service closure Request with BO responsibility,BOC
-20191008420,Evaluating Request (NO registered letter),00491
+20191008420,Evaluating Request (NO registered letter),00594
 20191008442,Pending Request for Reservation Closure,BOC
 20191008443,Pending Request for Reservation Closure,BOC
-20191008445,Service closure Request with BO responsibility,NotDef
-20191008446,Evaluating Request (NO registered letter),00491
+20191008445,Service closure Request with BO responsibility,BOC
+20191008446,Service closure Request with BO responsibility,NotDef
 20191008454,Pending Request for Reservation Closure,BOC
-20191008456,Service closure Request with BO responsibility,00831
-20191008469,Service closure Request with BO responsibility,00831
-20191008473,Evaluating Request (WITH registered letter),00025
-20191008481,Service closure Request with BO responsibility,00828
-20191008500,Service closure Request with network responsibility,00491
-20191008537,Evaluating Request (NO registered letter),00491
+20191008456,Service closure Request with BO responsibility,BOC
+20191008469,Service closure Request with BO responsibility,BOC
+20191008473,Evaluating Request (WITH registered letter),00852
+20191008481,Service closure Request with BO responsibility,BOC
+20191008500,Service closure Request with BO responsibility,BOC
+20191008537,Service closure Request with BO responsibility,NotDef
 20191008538,Pending Liquidation Request,BOC
 20191008554,Pending Liquidation Request,BOC
-20191008564,Authorization Requested,00491
-20191008566,Evaluating Request (NO registered letter),00491
+20191008564,Evaluating Request (WITH registered letter),00852
+20191008566,Evaluating Request (NO registered letter),00594
 20191008580,Pending Liquidation Request,BOC
-20191008612,Evaluating Request (NO registered letter),00491
+20191008612,Evaluating Request (NO registered letter),00594
 20191008625,Pending Liquidation Request,BOC
 20191008640,Pending Liquidation Request,BOC
-20191008645,Evaluating Request (NO registered letter),00491
-20191008646,Evaluating Request (NO registered letter),00491
+20191008645,Evaluating Request (NO registered letter),00594
+20191008646,Evaluating Request (NO registered letter),00594
 20191008650,Request completed with account closure,BOC
 20191008651,Request completed with account closure,BOC
-20191008668,Evaluating Request (WITH registered letter),00025
-20191008691,Service closure Request with BO responsibility,NotDef
-20191008693,Service closure Request with BO responsibility,00828
+20191008668,Evaluating Request (WITH registered letter),00852
+20191008691,Service closure Request with BO responsibility,BOC
+20191008693,Service closure Request with BO responsibility,BOC
 20191008696,Pending Liquidation Request,BOC
-20191008720,Service closure Request with network responsibility,00491
+20191008720,Service closure Request with network responsibility,00594
 20191008732,Pending Liquidation Request,BOC
-20191008742,Evaluating Request (NO registered letter),00491
-20191008751,Service closure Request with BO responsibility,NotDef
-20191008755,Evaluating Request (NO registered letter),00491
+20191008742,Evaluating Request (NO registered letter),00594
+20191008751,Service closure Request with BO responsibility,BOC
+20191008755,Evaluating Request (NO registered letter),00594
 20191008759,Request completed with account closure,BOC
-20191008774,Evaluating Request (NO registered letter),00491
+20191008774,Evaluating Request (NO registered letter),00594
 20191008797,Pending Request for Reservation Closure,BOC
 20191008805,Pending Liquidation Request,BOC
-20191008808,Service closure Request with BO responsibility,NotDef
-20191008812,Pending Request for Network Information,SDC
-20191008816,Service closure Request with BO responsibility,NotDef
-20191008827,Authorization Requested,00491
-20191008833,Evaluating Request (NO registered letter),00491
+20191008808,Service closure Request with BO responsibility,BOC
+20191008812,Evaluating Request (NO registered letter),00594
+20191008816,Service closure Request with BO responsibility,BOC
+20191008827,Authorization Requested,00870
+20191008833,Evaluating Request (NO registered letter),00594
 20191008838,Pending Request for Reservation Closure,BOC
-20191008840,Service closure Request with BO responsibility,00828
+20191008840,Service closure Request with BO responsibility,BOC
 20191008841,Pending Liquidation Request,BOC
 20191008844,,
-20191008846,Service closure Request with network responsibility,00491
+20191008846,Service closure Request with network responsibility,00594
 20191008861,Pending Liquidation Request,BOC
-20191008862,Service closure Request with network responsibility,00491
-20191008891,Evaluating Request (WITH registered letter),00491
-20191008913,Service closure Request with network responsibility,00491
+20191008862,Service closure Request with BO responsibility,00837
+20191008891,Evaluating Request (WITH registered letter),00852
+20191008913,Service closure Request with network responsibility,00594
 20191008920,Pending Liquidation Request,BOC
-20191008924,Service closure Request with network responsibility,00491
+20191008924,Service closure Request with network responsibility,00594
 20191008932,Pending Request for Reservation Closure,BOC
-20191008940,Evaluating Request (NO registered letter),00491
+20191008940,Evaluating Request (WITH registered letter),00835
 20191008953,Pending Liquidation Request,BOC
-20191008960,Service closure Request with network responsibility,00491
+20191008960,Service closure Request with BO responsibility,BOC
 20191008965,Pending Request for Reservation Closure,BOC
-20191008973,Service closure Request with network responsibility,00491
-20191008981,Evaluating Request (NO registered letter),00491
+20191008973,Service closure Request with network responsibility,00594
+20191008981,Evaluating Request (NO registered letter),00594
 20191008983,Pending Request for Reservation Closure,BOC
-20191008985,Authorization Requested,00491
+20191008985,Authorization Requested,00870
 20191008986,Pending Liquidation Request,BOC
-20191008989,Evaluating Request (NO registered letter),00491
-20191008994,Evaluating Request (WITH registered letter),00025
-20191008995,Evaluating Request (NO registered letter),00491
+20191008989,Evaluating Request (NO registered letter),00594
+20191008994,Evaluating Request (WITH registered letter),00852
+20191008995,Evaluating Request (NO registered letter),00594
 20191009000,Request completed with account closure,BOC
-20191009007,Evaluating Request (NO registered letter),00045
-20191009058,Evaluating Request (NO registered letter),00491
+20191009007,Evaluating Request (NO registered letter),00594
+20191009058,Evaluating Request (NO registered letter),00594
 20191009071,Service closure Request with BO responsibility,BOC
-20191009078,Service closure Request with network responsibility,00491
-20191009080,Evaluating Request (WITH registered letter),00019
-20191009081,Evaluating Request (WITH registered letter),00491
-20191009087,Service closure Request with network responsibility,00491
+20191009078,Service closure Request with network responsibility,00594
+20191009080,Evaluating Request (WITH registered letter),00835
+20191009081,Evaluating Request (WITH registered letter),00852
+20191009087,Service closure Request with network responsibility,00594
 20191009089,Pending Liquidation Request,BOC
 20191009097,Pending Liquidation Request,BOC
-20191009105,Service closure Request with BO responsibility,NotDef
-20191009106,Authorization Requested,00491
+20191009105,Service closure Request with BO responsibility,BOC
+20191009106,Evaluating Request (WITH registered letter),00852
 20191009108,Request completed with account closure,BOC
-20191009120,Authorization Requested,00491
+20191009120,Evaluating Request (WITH registered letter),00852
 20191009129,Pending Liquidation Request,BOC
 20191009132,Pending Liquidation Request,BOC
 20191009139,Pending Liquidation Request,BOC
-20191009140,Authorization Requested,00491
-20191009168,Evaluating Request (WITH registered letter),00025
-20191009183,Service closure Request with network responsibility,00491
+20191009140,Evaluating Request (WITH registered letter),00852
+20191009168,Evaluating Request (WITH registered letter),00828
+20191009183,Service closure Request with BO responsibility,BOC
 20191009199,Pending Liquidation Request,BOC
 20191009223,Pending Liquidation Request,BOC
 20191009229,Request completed with account closure,BOC
-20191009239,Evaluating Request (WITH registered letter),00491
+20191009239,Evaluating Request (WITH registered letter),00828
 20191009243,Pending Liquidation Request,BOC
-20191009269,Service closure Request with BO responsibility,00828
-20191009273,Service closure Request with network responsibility,00491
+20191009269,Service closure Request with BO responsibility,BOC
+20191009273,Service closure Request with network responsibility,00594
 20191009274,Pending Liquidation Request,BOC
 20191009284,Service closure Request with BO responsibility,BOC
-20191009285,Service closure Request with network responsibility,00491
-20191009303,Evaluating Request (WITH registered letter),00491
+20191009285,Service closure Request with network responsibility,00594
+20191009303,Evaluating Request (NO registered letter),00594
 20191009316,Service closure Request with BO responsibility,BOC
-20191009322,Service closure Request with network responsibility,00491
+20191009322,Service closure Request with network responsibility,00594
 20191009324,Pending Liquidation Request,BOC
-20191009331,Service closure Request with BO responsibility,00852
+20191009331,Service closure Request with BO responsibility,BOC
 20191009351,Pending Liquidation Request,BOC
-20191009378,Evaluating Request (NO registered letter),00491
-20191009379,Evaluating Request (NO registered letter),00491
-20191009382,Evaluating Request (NO registered letter),00491
+20191009378,Evaluating Request (NO registered letter),00594
+20191009379,Evaluating Request (NO registered letter),00594
+20191009382,Evaluating Request (NO registered letter),00594
 20191009383,Pending Liquidation Request,BOC
 20191009391,Pending Request for Reservation Closure,BOC
 20191009401,Pending Liquidation Request,BOC
 20191009423,Service closure Request with BO responsibility,BOC
-20191009426,Authorization Requested,00491
-20191009436,Evaluating Request (NO registered letter),00491
-20191009437,Service closure Request with BO responsibility,00828
-20191009442,Service closure Request with network responsibility,00491
-20191009443,Service closure Request with BO responsibility,NotDef
-20191009445,Service closure Request with network responsibility,00491
+20191009426,Evaluating Request (WITH registered letter),00852
+20191009436,Evaluating Request (NO registered letter),00594
+20191009437,Service closure Request with BO responsibility,BOC
+20191009442,Service closure Request with network responsibility,00594
+20191009443,Service closure Request with BO responsibility,BOC
+20191009445,Service closure Request with network responsibility,00594
 20191009460,Request completed with account closure,BOC
 20191009465,Pending Request for Reservation Closure,BOC
 20191009491,Pending Liquidation Request,BOC
 20191009496,Service closure Request with BO responsibility,BOC
 20191009504,Pending Liquidation Request,BOC
-20191009505,Evaluating Request (NO registered letter),00491
+20191009505,Evaluating Request (NO registered letter),00594
 20191009511,Pending Liquidation Request,BOC
-20191009519,Service closure Request with BO responsibility,00828
+20191009519,Service closure Request with BO responsibility,BOC
 20191009523,Pending Liquidation Request,BOC
-20191009524,Pending Request for Reservation Closure,SDCRAP
-20191009525,Authorization Requested,00045
+20191009524,Pending Request for Reservation Closure,BOC
+20191009525,Evaluating Request (WITH registered letter),00852
 20191009527,Pending Liquidation Request,BOC
-20191009533,Pending Liquidation Request,SDCRAP
-20191009535,Service closure Request with network responsibility,00491
+20191009533,Pending Liquidation Request,BOCSER
+20191009535,Service closure Request with network responsibility,00594
 20191009542,Service closure Request with BO responsibility,BOC
 20191009559,Pending Liquidation Request,BOC
 20191009570,Pending Liquidation Request,BOC
-20191009581,Service closure Request with network responsibility,00491
-20191009585,Service closure Request with BO responsibility,00831
+20191009581,Service closure Request with network responsibility,00594
+20191009585,Service closure Request with BO responsibility,BOC
 20191009592,Service closure Request with BO responsibility,BOC
 20191009599,Service closure Request with BO responsibility,BOC
-20191009616,Service closure Request with network responsibility,00491
+20191009616,Service closure Request with network responsibility,00594
 20191009624,Pending Liquidation Request,BOC
-20191009626,Service closure Request with network responsibility,00491
-20191009630,Service closure Request with BO responsibility,00831
+20191009626,Service closure Request with network responsibility,00594
+20191009630,Service closure Request with BO responsibility,BOC
 20191009637,Request completed with account closure,BOC
-20191009638,Service closure Request with BO responsibility,00828
+20191009638,Service closure Request with BO responsibility,BOC
 20191009648,Pending Liquidation Request,BOC
-20191009677,Evaluating Request (NO registered letter),00491
+20191009677,Evaluating Request (NO registered letter),00594
 20191009680,Service closure Request with BO responsibility,NotDef
-20191009681,Evaluating Request (NO registered letter),00491
-20191009686,Authorization Requested,00491
+20191009681,Evaluating Request (NO registered letter),00594
+20191009686,Authorization Requested,00870
 20191009699,Pending Liquidation Request,BOC
-20191009711,Service closure Request with BO responsibility,00831
-20191009713,Authorization Requested,00045
-20191009721,Service closure Request with BO responsibility,00831
+20191009711,Service closure Request with BO responsibility,BOC
+20191009713,Evaluating Request (WITH registered letter),00852
+20191009721,Service closure Request with BO responsibility,BOC
 20191009722,Pending Request for Reservation Closure,BOC
 20191009727,Service closure Request with BO responsibility,NotDef
-20191009734,Service closure Request with BO responsibility,00831
-20191009739,Service closure Request with network responsibility,00491
-20191009759,Service closure Request with network responsibility,00491
-20191009788,Authorization Requested,BOC
+20191009734,Service closure Request with BO responsibility,BOC
+20191009739,Service closure Request with network responsibility,00594
+20191009759,Service closure Request with network responsibility,00594
+20191009788,Evaluating Request (WITH registered letter),00852
 20191009789,Service closure Request with BO responsibility,BOC
 20191009797,Pending Request for Reservation Closure,BOC
-20191009806,Pending Liquidation Request,SDCRAP
+20191009806,Pending Liquidation Request,BOC
 20191009815,Pending Request for Reservation Closure,BOC
-20191009817,Evaluating Request (WITH registered letter),00025
-20191009819,Service closure Request with network responsibility,00491
+20191009817,Evaluating Request (WITH registered letter),00852
+20191009819,Service closure Request with network responsibility,00594
 20191009822,Pending Liquidation Request,BOC
 20191009825,Pending Liquidation Request,BOC
 20191009830,Service closure Request with BO responsibility,BOC
 20191009831,Service closure Request with BO responsibility,BOC
 20191009834,Pending Liquidation Request,BOC
 20191009836,Service closure Request with BO responsibility,BOC
-20191009841,Service closure Request with BO responsibility,00828
-20191009850,Service closure Request with network responsibility,00491
+20191009841,Service closure Request with BO responsibility,BOC
+20191009850,Service closure Request with network responsibility,00594
 20191009868,Pending Request for Reservation Closure,BOC
 20191009890,Pending Liquidation Request,BOC
 20191009907,Pending Liquidation Request,BOC
@@ -707,79 +707,79 @@ case:concept:name,Next_activity,Next_resource
 20191009919,Request completed with account closure,BOC
 20191009924,Request completed with account closure,BOC
 20191009939,Service closure Request with BO responsibility,BOC
-20191009945,Evaluating Request (NO registered letter),00045
+20191009945,Evaluating Request (NO registered letter),00594
 20191009948,Service closure Request with BO responsibility,BOC
 20191009969,Service closure Request with BO responsibility,BOC
 20191009973,Service closure Request with BO responsibility,BOC
-20191009979,Service closure Request with network responsibility,00491
+20191009979,Service closure Request with network responsibility,00594
 20191009982,Service closure Request with BO responsibility,BOC
-20191009984,Service closure Request with BO responsibility,00831
+20191009984,Service closure Request with BO responsibility,BOC
 20191009995,Pending Liquidation Request,BOC
 20191009998,Pending Liquidation Request,BOC
 20191010020,Pending Liquidation Request,BOC
-20191010024,Evaluating Request (NO registered letter),00491
-20191010030,Authorization Requested,00045
+20191010024,Evaluating Request (NO registered letter),00594
+20191010030,Evaluating Request (WITH registered letter),00852
 20191010036,Pending Liquidation Request,BOC
 20191010039,Service closure Request with BO responsibility,BOC
 20191010040,Pending Liquidation Request,BOC
-20191010046,Authorization Requested,00491
+20191010046,Authorization Requested,00870
 20191010047,Pending Liquidation Request,BOC
 20191010048,Service closure Request with BO responsibility,BOC
-20191010053,Authorization Requested,00491
-20191010054,Authorization Requested,00045
-20191010056,Evaluating Request (NO registered letter),00491
-20191010059,Authorization Requested,00045
+20191010053,Authorization Requested,00870
+20191010054,Evaluating Request (WITH registered letter),00852
+20191010056,Evaluating Request (WITH registered letter),00835
+20191010059,Authorization Requested,00870
 20191010079,Service closure Request with BO responsibility,BOC
-20191010088,Service closure Request with BO responsibility,00828
+20191010088,Service closure Request with BO responsibility,BOC
 20191010107,Pending Liquidation Request,BOC
 20191010115,Pending Liquidation Request,BOC
 20191010116,Service closure Request with BO responsibility,BOC
 20191010118,Pending Liquidation Request,BOC
-20191010121,Evaluating Request (WITH registered letter),00019
+20191010121,Evaluating Request (WITH registered letter),00835
 20191010124,Pending Request for Reservation Closure,BOC
-20191010126,Evaluating Request (NO registered letter),00491
+20191010126,Evaluating Request (NO registered letter),00594
 20191010144,Pending Liquidation Request,BOC
-20191010151,Service closure Request with BO responsibility,00828
+20191010151,Service closure Request with BO responsibility,BOC
 20191010155,Service closure Request with BO responsibility,BOC
-20191010159,Service closure Request with network responsibility,00491
+20191010159,Service closure Request with network responsibility,00594
 20191010161,Pending Liquidation Request,BOC
 20191010174,Pending Liquidation Request,BOC
 20191010176,Pending Liquidation Request,BOC
 20191010179,Service closure Request with BO responsibility,BOC
 20191010181,Pending Liquidation Request,BOC
-20191010185,Service closure Request with network responsibility,00491
+20191010185,Service closure Request with network responsibility,00594
 20191010194,Pending Liquidation Request,BOC
 20191010195,Pending Liquidation Request,BOC
 20191010197,Pending Liquidation Request,BOC
 20191010198,Pending Liquidation Request,BOC
 20191010200,Pending Liquidation Request,BOC
 20191010206,Service closure Request with BO responsibility,BOC
-20191010208,Service closure Request with network responsibility,00491
-20191010213,Evaluating Request (NO registered letter),00491
+20191010208,Service closure Request with network responsibility,00594
+20191010213,Evaluating Request (NO registered letter),00594
 20191010218,Service closure Request with BO responsibility,BOC
 20191010222,Pending Liquidation Request,BOC
 20191010233,Pending Liquidation Request,BOC
 20191010234,Pending Liquidation Request,BOC
-20191010237,Service closure Request with BO responsibility,00831
-20191010238,Pending Liquidation Request,SDCRAP
-20191010241,Evaluating Request (NO registered letter),00491
+20191010237,Service closure Request with BO responsibility,BOC
+20191010238,Pending Liquidation Request,BOC
+20191010241,Evaluating Request (NO registered letter),00594
 20191010249,Pending Liquidation Request,BOC
-20191010250,Evaluating Request (WITH registered letter),00019
+20191010250,Evaluating Request (WITH registered letter),00835
 20191010254,Pending Liquidation Request,BOC
 20191010256,Pending Liquidation Request,BOC
 20191010263,Pending Liquidation Request,BOC
-20191010271,Authorization Requested,00045
-20191010273,Evaluating Request (NO registered letter),00045
+20191010271,Evaluating Request (WITH registered letter),00852
+20191010273,Evaluating Request (NO registered letter),00594
 20191010274,Pending Liquidation Request,BOC
 20191010275,Pending Liquidation Request,BOC
-20191010278,Evaluating Request (WITH registered letter),00025
+20191010278,Evaluating Request (WITH registered letter),00852
 20191010279,Service closure Request with BO responsibility,BOC
-20191010281,Service closure Request with network responsibility,00491
+20191010281,Service closure Request with network responsibility,00594
 20191010282,Pending Liquidation Request,BOC
-20191010286,Evaluating Request (NO registered letter),00491
-20191010289,Service closure Request with network responsibility,00491
+20191010286,Evaluating Request (NO registered letter),00594
+20191010289,Service closure Request with network responsibility,00594
 20191010291,Pending Liquidation Request,BOC
-20191010292,Service closure Request with network responsibility,00491
+20191010292,Service closure Request with network responsibility,00594
 20191010294,Pending Liquidation Request,BOC
 20191010296,Service closure Request with BO responsibility,BOC
 20191010299,Service closure Request with BO responsibility,NotDef
@@ -789,18 +789,18 @@ case:concept:name,Next_activity,Next_resource
 20191010313,Pending Liquidation Request,BOC
 20191010315,Pending Liquidation Request,BOC
 20191010319,Pending Liquidation Request,BOC
-20191010322,Service closure Request with network responsibility,00491
+20191010322,Service closure Request with network responsibility,00594
 20191010327,Pending Liquidation Request,BOC
-20191010328,Service closure Request with network responsibility,00491
+20191010328,Service closure Request with network responsibility,00594
 20191010329,Service closure Request with BO responsibility,BOC
 20191010335,Service closure Request with BO responsibility,BOC
 20191010336,Pending Liquidation Request,BOC
 20191010338,Pending Liquidation Request,BOC
 20191010341,Pending Liquidation Request,BOC
 20191010342,Pending Liquidation Request,BOC
-20191010347,Service closure Request with BO responsibility,00831
+20191010347,Service closure Request with BO responsibility,BOC
 20191010348,Pending Liquidation Request,BOC
-20191010350,Evaluating Request (NO registered letter),00491
+20191010350,Evaluating Request (NO registered letter),00594
 20191010357,Pending Liquidation Request,BOC
 20191010358,Pending Liquidation Request,BOC
 20191010364,Pending Liquidation Request,BOC
@@ -812,13 +812,13 @@ case:concept:name,Next_activity,Next_resource
 20191010392,Pending Liquidation Request,BOC
 20191010394,Service closure Request with BO responsibility,BOC
 20191010404,Pending Liquidation Request,BOC
-20191010408,Service closure Request with BO responsibility,00835
-20191010411,Authorization Requested,00045
-20191010414,Service closure Request with network responsibility,00491
+20191010408,Service closure Request with BO responsibility,BOC
+20191010411,Evaluating Request (WITH registered letter),00852
+20191010414,Service closure Request with network responsibility,00594
 20191010418,Service closure Request with BO responsibility,BOC
-20191010421,Evaluating Request (NO registered letter),00491
+20191010421,Evaluating Request (NO registered letter),00594
 20191010423,Pending Liquidation Request,BOC
-20191010430,Authorization Requested,00045
+20191010430,Evaluating Request (WITH registered letter),00852
 20191010433,Service closure Request with BO responsibility,BOC
 20191010437,Pending Liquidation Request,BOC
 20191010445,Pending Liquidation Request,BOC
@@ -827,7 +827,7 @@ case:concept:name,Next_activity,Next_resource
 20191010458,Pending Liquidation Request,BOC
 20191010475,Pending Liquidation Request,BOC
 20191010483,Service closure Request with BO responsibility,BOC
-20191010484,Service closure Request with network responsibility,00491
+20191010484,Service closure Request with network responsibility,00594
 20191010485,Pending Liquidation Request,BOC
 20191010486,Pending Liquidation Request,BOC
 20191010487,Pending Liquidation Request,BOC
@@ -839,26 +839,26 @@ case:concept:name,Next_activity,Next_resource
 20191010510,Service closure Request with BO responsibility,BOC
 20191010512,Pending Request for Reservation Closure,BOC
 20191010513,Pending Liquidation Request,BOC
-20191010514,Authorization Requested,00491
+20191010514,Evaluating Request (WITH registered letter),00852
 20191010515,Pending Liquidation Request,BOC
-20191010516,Service closure Request with BO responsibility,00828
+20191010516,Service closure Request with BO responsibility,BOC
 20191010524,Pending Liquidation Request,BOC
 20191010525,Pending Liquidation Request,BOC
-20191010529,Service closure Request with BO responsibility,00828
+20191010529,Service closure Request with BO responsibility,BOC
 20191010530,Pending Liquidation Request,BOC
-20191010532,Authorization Requested,00491
+20191010532,Evaluating Request (WITH registered letter),00852
 20191010536,Pending Liquidation Request,BOC
 20191010541,Pending Liquidation Request,BOC
 20191010543,Service closure Request with BO responsibility,BOC
 20191010546,Pending Liquidation Request,BOC
 20191010547,Pending Liquidation Request,BOC
 20191010554,Pending Liquidation Request,BOC
-20191010555,Authorization Requested,00491
+20191010555,Evaluating Request (WITH registered letter),00852
 20191010559,Pending Liquidation Request,BOC
 20191010560,Pending Liquidation Request,BOC
-20191010563,Service closure Request with network responsibility,00491
-20191010564,Authorization Requested,00491
-20191010565,Authorization Requested,00045
+20191010563,Service closure Request with network responsibility,00594
+20191010564,Evaluating Request (WITH registered letter),00852
+20191010565,Evaluating Request (WITH registered letter),00852
 20191010566,Pending Liquidation Request,BOC
 20191010567,Service closure Request with BO responsibility,BOC
 20191010577,Pending Liquidation Request,BOC
@@ -868,10 +868,10 @@ case:concept:name,Next_activity,Next_resource
 20191010582,Service closure Request with BO responsibility,BOC
 20191010585,Service closure Request with BO responsibility,BOC
 20191010590,Pending Liquidation Request,BOC
-20191010593,Evaluating Request (WITH registered letter),00019
-20191010600,Evaluating Request (NO registered letter),00045
+20191010593,Evaluating Request (WITH registered letter),00835
+20191010600,Evaluating Request (NO registered letter),00594
 20191010601,Pending Liquidation Request,BOC
-20191010603,Evaluating Request (WITH registered letter),00025
+20191010603,Evaluating Request (WITH registered letter),00852
 20191010606,Pending Request for Reservation Closure,BOC
 20191010609,Service closure Request with BO responsibility,BOC
 20191010610,Service closure Request with BO responsibility,BOC
@@ -881,10 +881,10 @@ case:concept:name,Next_activity,Next_resource
 20191010617,Pending Liquidation Request,BOC
 20191010618,Pending Liquidation Request,BOC
 20191010619,Service closure Request with BO responsibility,BOC
-20191010620,Authorization Requested,00045
+20191010620,Evaluating Request (WITH registered letter),00852
 20191010625,Pending Liquidation Request,BOC
 20191010628,Service closure Request with BO responsibility,BOC
-20191010631,Service closure Request with network responsibility,00491
+20191010631,Service closure Request with network responsibility,00594
 20191010633,Pending Liquidation Request,BOC
 20191010639,Pending Liquidation Request,BOC
 20191010640,Service closure Request with BO responsibility,BOC
@@ -896,61 +896,61 @@ case:concept:name,Next_activity,Next_resource
 20191010699,Pending Liquidation Request,BOC
 20191010712,Pending Liquidation Request,BOC
 20191010722,Pending Liquidation Request,BOC
-20191010724,Service closure Request with network responsibility,00491
+20191010724,Service closure Request with network responsibility,00594
 20191010725,Service closure Request with BO responsibility,BOC
 20191010727,Pending Liquidation Request,BOC
-20191010733,Service closure Request with BO responsibility,00835
-20191010745,Service closure Request with BO responsibility,00835
+20191010733,Service closure Request with BO responsibility,BOC
+20191010745,Service closure Request with BO responsibility,BOC
 20191010748,Pending Liquidation Request,BOC
 20191010749,Service closure Request with BO responsibility,BOC
-20191010755,Service closure Request with BO responsibility,00835
+20191010755,Service closure Request with BO responsibility,BOC
 20191010758,Pending Liquidation Request,BOC
-20191010764,Evaluating Request (NO registered letter),00491
+20191010764,Evaluating Request (NO registered letter),00594
 20191010766,Pending Liquidation Request,BOC
 20191010767,Pending Liquidation Request,BOC
-20191010782,Authorization Requested,00045
+20191010782,Evaluating Request (WITH registered letter),00852
 20191010787,Pending Liquidation Request,BOC
 20191010788,Pending Liquidation Request,BOC
 20191010793,Pending Liquidation Request,BOC
 20191010794,Pending Liquidation Request,BOC
-20191010795,Service closure Request with network responsibility,00491
+20191010795,Service closure Request with network responsibility,00594
 20191010800,Pending Liquidation Request,BOC
-20191010801,Service closure Request with network responsibility,00491
+20191010801,Service closure Request with network responsibility,00594
 20191010805,Pending Liquidation Request,BOC
 20191010807,Pending Liquidation Request,BOC
-20191010808,Service closure Request with network responsibility,00491
-20191010812,Pending Liquidation Request,SDCRAP
+20191010808,Service closure Request with network responsibility,00594
+20191010812,Pending Liquidation Request,BOC
 20191010817,Pending Liquidation Request,BOC
-20191010818,Service closure Request with BO responsibility,00850
+20191010818,Service closure Request with BO responsibility,BOC
 20191010820,Service closure Request with BO responsibility,BOC
-20191010821,Service closure Request with network responsibility,00491
+20191010821,Service closure Request with network responsibility,00594
 20191010830,Pending Liquidation Request,BOC
 20191010832,Pending Liquidation Request,BOC
 20191010834,Pending Liquidation Request,BOC
 20191010840,Pending Liquidation Request,BOC
-20191010841,Evaluating Request (NO registered letter),00491
-20191010843,Authorization Requested,00491
+20191010841,Evaluating Request (WITH registered letter),00835
+20191010843,Evaluating Request (WITH registered letter),00835
 20191010846,Service closure Request with BO responsibility,BOC
 20191010850,Pending Liquidation Request,BOC
 20191010854,Pending Liquidation Request,BOC
 20191010855,Pending Liquidation Request,BOC
-20191010862,Service closure Request with BO responsibility,00828
+20191010862,Service closure Request with BO responsibility,BOC
 20191010863,Pending Liquidation Request,BOC
 20191010864,Pending Liquidation Request,BOC
-20191010875,Service closure Request with network responsibility,00491
-20191010878,Evaluating Request (NO registered letter),00491
-20191010879,Evaluating Request (NO registered letter),00491
-20191010881,Service closure Request with network responsibility,00491
-20191010888,Service closure Request with network responsibility,00491
+20191010875,Service closure Request with network responsibility,00594
+20191010878,Evaluating Request (NO registered letter),00594
+20191010879,Evaluating Request (WITH registered letter),00835
+20191010881,Service closure Request with network responsibility,00594
+20191010888,Service closure Request with network responsibility,00594
 20191010894,Pending Liquidation Request,BOC
-20191010896,Service closure Request with BO responsibility,00828
+20191010896,Service closure Request with BO responsibility,BOC
 20191010897,Pending Liquidation Request,BOC
-20191010902,Service closure Request with network responsibility,00491
+20191010902,Service closure Request with BO responsibility,BOC
 20191010904,Service closure Request with BO responsibility,BOC
 20191010906,Pending Liquidation Request,BOC
 20191010908,Pending Liquidation Request,BOC
 20191010909,Pending Liquidation Request,BOC
-20191010911,Evaluating Request (WITH registered letter),00025
+20191010911,Evaluating Request (WITH registered letter),00835
 20191010912,Pending Liquidation Request,BOC
 20191010920,Service closure Request with BO responsibility,BOC
 20191010922,Pending Liquidation Request,BOC
@@ -959,47 +959,47 @@ case:concept:name,Next_activity,Next_resource
 20191010932,Service closure Request with BO responsibility,BOC
 20191010934,Pending Liquidation Request,BOC
 20191010935,Pending Liquidation Request,BOC
-20191010936,Evaluating Request (NO registered letter),00491
-20191010937,Service closure Request with network responsibility,00491
+20191010936,Evaluating Request (NO registered letter),00594
+20191010937,Service closure Request with network responsibility,00594
 20191010944,Pending Liquidation Request,BOC
 20191010948,Pending Liquidation Request,BOC
-20191010950,Evaluating Request (NO registered letter),00491
+20191010950,Evaluating Request (NO registered letter),00594
 20191010952,Pending Liquidation Request,BOC
 20191010957,Pending Liquidation Request,BOC
 20191010958,Pending Liquidation Request,BOC
 20191010962,Pending Liquidation Request,BOC
 20191010972,Pending Liquidation Request,BOC
-20191010976,Evaluating Request (NO registered letter),00491
+20191010976,Evaluating Request (WITH registered letter),00835
 20191010978,Pending Liquidation Request,BOC
 20191010981,Pending Request for Reservation Closure,BOC
-20191010988,Authorization Requested,00045
+20191010988,Evaluating Request (WITH registered letter),00835
 20191010991,Service closure Request with BO responsibility,BOC
-20191010994,Service closure Request with network responsibility,00491
+20191010994,Service closure Request with network responsibility,00594
 20191011000,Pending Liquidation Request,BOC
 20191011002,Pending Liquidation Request,BOC
-20191011006,Evaluating Request (NO registered letter),00045
+20191011006,Evaluating Request (NO registered letter),00594
 20191011011,Pending Liquidation Request,BOC
 20191011012,Service closure Request with BO responsibility,BOC
 20191011016,Pending Liquidation Request,BOC
-20191011018,Service closure Request with BO responsibility,00831
+20191011018,Service closure Request with BO responsibility,BOC
 20191011019,Service closure Request with BO responsibility,BOC
 20191011020,Pending Liquidation Request,BOC
-20191011026,Service closure Request with BO responsibility,00835
-20191011033,Service closure Request with network responsibility,00491
+20191011026,Service closure Request with BO responsibility,BOC
+20191011033,Service closure Request with network responsibility,00594
 20191011034,Pending Liquidation Request,BOC
 20191011036,Pending Liquidation Request,BOC
-20191011038,Service closure Request with BO responsibility,00852
-20191011044,Evaluating Request (NO registered letter),00491
+20191011038,Service closure Request with BO responsibility,BOC
+20191011044,Evaluating Request (NO registered letter),00594
 20191011048,Pending Liquidation Request,BOC
-20191011051,Service closure Request with BO responsibility,00835
+20191011051,Service closure Request with BO responsibility,BOC
 20191011054,Service closure Request with BO responsibility,BOC
 20191011056,Pending Liquidation Request,BOC
-20191011057,Authorization Requested,00045
-20191011062,Service closure Request with BO responsibility,00835
+20191011057,Authorization Requested,00870
+20191011062,Service closure Request with BO responsibility,BOC
 20191011067,Service closure Request with BO responsibility,BOC
 20191011069,Service closure Request with BO responsibility,BOC
 20191011070,Service closure Request with BO responsibility,BOC
-20191011071,Authorization Requested,00045
+20191011071,Evaluating Request (WITH registered letter),00835
 20191011081,Pending Liquidation Request,BOC
 20191011083,Pending Liquidation Request,BOC
 20191011086,Pending Liquidation Request,BOC
@@ -1012,79 +1012,79 @@ case:concept:name,Next_activity,Next_resource
 20191011103,Pending Liquidation Request,BOC
 20191011109,Pending Liquidation Request,BOC
 20191011112,Pending Liquidation Request,BOC
-20191011113,Evaluating Request (NO registered letter),00491
+20191011113,Evaluating Request (WITH registered letter),00835
 20191011118,Pending Liquidation Request,BOC
 20191011120,Pending Liquidation Request,BOC
 20191011121,Pending Liquidation Request,BOC
 20191011125,Pending Request for Reservation Closure,BOC
 20191011126,Service closure Request with BO responsibility,BOC
-20191011127,Service closure Request with BO responsibility,00835
-20191011128,Service closure Request with BO responsibility,00852
+20191011127,Service closure Request with BO responsibility,BOC
+20191011128,Service closure Request with BO responsibility,BOC
 20191011131,Pending Liquidation Request,BOC
-20191011143,Authorization Requested,00491
-20191011155,Service closure Request with BO responsibility,00828
-20191011157,Evaluating Request (NO registered letter),00491
-20191011158,Service closure Request with BO responsibility,00835
-20191011161,Service closure Request with BO responsibility,00835
+20191011143,Authorization Requested,00870
+20191011155,Service closure Request with BO responsibility,BOC
+20191011157,Evaluating Request (WITH registered letter),00835
+20191011158,Service closure Request with BO responsibility,BOC
+20191011161,Service closure Request with BO responsibility,BOC
 20191011162,Pending Liquidation Request,BOC
 20191011163,Pending Liquidation Request,BOC
 20191011164,Pending Liquidation Request,BOC
 20191011166,Pending Liquidation Request,BOC
 20191011171,Pending Liquidation Request,BOC
-20191011173,Service closure Request with network responsibility,00491
+20191011173,Service closure Request with network responsibility,00594
 20191011176,Service closure Request with BO responsibility,BOC
-20191011177,Service closure Request with network responsibility,00491
+20191011177,Service closure Request with network responsibility,00594
 20191011178,Service closure Request with BO responsibility,BOC
 20191011185,Pending Liquidation Request,BOC
 20191011187,Pending Liquidation Request,BOC
 20191011190,Pending Liquidation Request,BOC
-20191011196,Service closure Request with BO responsibility,00852
+20191011196,Service closure Request with BO responsibility,BOC
 20191011198,Pending Liquidation Request,BOC
 20191011204,Pending Liquidation Request,BOC
 20191011207,Service closure Request with BO responsibility,BOC
 20191011208,Pending Liquidation Request,BOC
-20191011209,Evaluating Request (WITH registered letter),00019
-20191011211,Evaluating Request (NO registered letter),00491
+20191011209,Evaluating Request (WITH registered letter),00835
+20191011211,Evaluating Request (WITH registered letter),00835
 20191011216,Pending Liquidation Request,BOC
 20191011217,Pending Liquidation Request,BOC
-20191011221,Evaluating Request (NO registered letter),00491
+20191011221,Evaluating Request (WITH registered letter),00835
 20191011222,Pending Liquidation Request,BOC
 20191011225,Service closure Request with BO responsibility,BOC
 20191011227,Pending Liquidation Request,BOC
 20191011230,Pending Liquidation Request,BOC
-20191011232,Authorization Requested,00045
+20191011232,Evaluating Request (WITH registered letter),00835
 20191011234,Pending Liquidation Request,BOC
 20191011236,Pending Liquidation Request,BOC
 20191011247,Pending Liquidation Request,BOC
 20191011253,Pending Liquidation Request,BOC
 20191011255,Pending Liquidation Request,BOC
-20191011258,Authorization Requested,00045
+20191011258,Evaluating Request (WITH registered letter),00835
 20191011260,Pending Liquidation Request,BOC
 20191011263,Pending Liquidation Request,BOC
-20191011264,Service closure Request with network responsibility,00491
-20191011267,Service closure Request with BO responsibility,00835
+20191011264,Service closure Request with network responsibility,00594
+20191011267,Service closure Request with BO responsibility,BOC
 20191011270,Pending Liquidation Request,BOC
-20191011272,Service closure Request with BO responsibility,00835
-20191011273,Service closure Request with BO responsibility,NotDef
+20191011272,Service closure Request with BO responsibility,BOC
+20191011273,,
 20191011276,Pending Liquidation Request,BOC
 20191011277,Service closure Request with BO responsibility,BOC
-20191011291,Evaluating Request (NO registered letter),00045
-20191011292,Evaluating Request (NO registered letter),00491
+20191011291,Evaluating Request (NO registered letter),00594
+20191011292,Evaluating Request (WITH registered letter),00835
 20191011296,Pending Liquidation Request,BOC
 20191011305,Pending Liquidation Request,BOC
 20191011306,Service closure Request with BO responsibility,BOC
 20191011315,Service closure Request with BO responsibility,BOC
 20191011316,Pending Liquidation Request,BOC
-20191011319,Authorization Requested,00045
-20191011321,Authorization Requested,00045
+20191011319,Evaluating Request (WITH registered letter),00852
+20191011321,Evaluating Request (WITH registered letter),00835
 20191011322,Service closure Request with BO responsibility,BOC
-20191011325,Service closure Request with network responsibility,00491
+20191011325,Service closure Request with network responsibility,00594
 20191011329,Pending Liquidation Request,BOC
 20191011333,Pending Liquidation Request,BOC
 20191011339,Pending Liquidation Request,BOC
 20191011353,Pending Liquidation Request,BOC
 20191011354,Pending Liquidation Request,BOC
-20191011355,Service closure Request with BO responsibility,00831
+20191011355,Service closure Request with BO responsibility,BOC
 20191011356,Pending Liquidation Request,BOC
 20191011357,Pending Liquidation Request,BOC
 20191011358,Pending Liquidation Request,BOC
@@ -1099,9 +1099,9 @@ case:concept:name,Next_activity,Next_resource
 20191011367,Pending Liquidation Request,BOC
 20191011368,Pending Liquidation Request,BOC
 20191011369,Pending Liquidation Request,BOC
-20191011370,Service closure Request with BO responsibility,00831
+20191011370,Service closure Request with BO responsibility,BOC
 20191011371,Pending Liquidation Request,BOC
-20191011372,Service closure Request with BO responsibility,00831
+20191011372,Service closure Request with BO responsibility,BOC
 20191011373,Pending Liquidation Request,BOC
 20191011374,Pending Liquidation Request,BOC
 20191011375,Pending Liquidation Request,BOC
@@ -1123,48 +1123,48 @@ case:concept:name,Next_activity,Next_resource
 20191011391,Pending Liquidation Request,BOC
 20191011392,Pending Liquidation Request,BOC
 20191011393,Pending Liquidation Request,BOC
-20191011399,Authorization Requested,00045
-20191011404,Authorization Requested,00045
+20191011399,Evaluating Request (WITH registered letter),00852
+20191011404,Evaluating Request (WITH registered letter),00852
 20191011405,Pending Liquidation Request,BOC
-20191011406,Evaluating Request (NO registered letter),00491
-20191011408,Service closure Request with network responsibility,00491
+20191011406,Evaluating Request (NO registered letter),00594
+20191011408,Service closure Request with network responsibility,00594
 20191011411,Pending Liquidation Request,BOC
-20191011412,Authorization Requested,00491
-20191011413,Authorization Requested,00045
+20191011412,Evaluating Request (WITH registered letter),00852
+20191011413,Evaluating Request (WITH registered letter),00852
 20191011414,Service closure Request with BO responsibility,BOC
 20191011416,Pending Request for Reservation Closure,BOC
 20191011417,Service closure Request with BO responsibility,BOC
-20191011419,Authorization Requested,00045
+20191011419,Evaluating Request (WITH registered letter),00852
 20191011421,Pending Liquidation Request,BOC
-20191011424,Authorization Requested,00045
+20191011424,Evaluating Request (WITH registered letter),00852
 20191011426,Pending Liquidation Request,BOC
-20191011429,Authorization Requested,00045
+20191011429,Evaluating Request (WITH registered letter),00852
 20191011432,Pending Liquidation Request,BOC
 20191011433,Pending Liquidation Request,BOC
 20191011434,Service closure Request with BO responsibility,BOC
-20191011438,Authorization Requested,00045
+20191011438,Evaluating Request (WITH registered letter),00852
 20191011442,Pending Liquidation Request,BOC
 20191011443,Pending Liquidation Request,BOC
 20191011449,Pending Liquidation Request,BOC
-20191011450,Evaluating Request (WITH registered letter),00025
-20191011452,Authorization Requested,00045
-20191011457,Authorization Requested,00491
+20191011450,Evaluating Request (WITH registered letter),00828
+20191011452,Evaluating Request (WITH registered letter),00852
+20191011457,Evaluating Request (WITH registered letter),00852
 20191011459,Pending Liquidation Request,BOC
 20191011463,Pending Request for Reservation Closure,BOC
-20191011466,Pending Liquidation Request,SDCRAP
+20191011466,Pending Liquidation Request,BOCSER
 20191011468,Pending Liquidation Request,BOC
 20191011470,Service closure Request with BO responsibility,BOC
 20191011477,Pending Liquidation Request,BOC
 20191011479,Pending Liquidation Request,BOC
 20191011480,Pending Liquidation Request,BOC
 20191011481,Pending Liquidation Request,BOC
-20191011489,Pending Liquidation Request,SDCRAP
+20191011489,Pending Liquidation Request,BOCSER
 20191011492,Service closure Request with BO responsibility,BOC
 20191011493,Service closure Request with BO responsibility,BOC
 20191011494,Service closure Request with BO responsibility,BOC
 20191011495,Pending Liquidation Request,BOC
 20191011496,Service closure Request with BO responsibility,BOC
-20191011498,Service closure Request with BO responsibility,00828
+20191011498,Service closure Request with BO responsibility,BOC
 20191011499,Pending Liquidation Request,BOC
 20191011500,Pending Liquidation Request,BOC
 20191011501,Pending Liquidation Request,BOC
@@ -1180,37 +1180,37 @@ case:concept:name,Next_activity,Next_resource
 20191011535,Pending Liquidation Request,BOC
 20191011536,Pending Liquidation Request,BOC
 20191011537,Pending Liquidation Request,BOC
-20191011539,Service closure Request with network responsibility,00491
+20191011539,Service closure Request with network responsibility,00594
 20191011544,Pending Liquidation Request,BOC
-20191011549,Service closure Request with BO responsibility,00831
+20191011549,Service closure Request with BO responsibility,BOC
 20191011550,Pending Liquidation Request,BOC
 20191011553,Service closure Request with BO responsibility,BOC
-20191011556,Service closure Request with network responsibility,00491
+20191011556,Service closure Request with network responsibility,00594
 20191011558,Pending Liquidation Request,BOC
 20191011559,Pending Request for Reservation Closure,BOC
 20191011560,Service closure Request with BO responsibility,BOC
 20191011564,Pending Liquidation Request,BOC
 20191011565,Service closure Request with BO responsibility,BOC
-20191011566,Service closure Request with network responsibility,00491
+20191011566,Service closure Request with network responsibility,00594
 20191011568,Pending Liquidation Request,BOC
-20191011570,Evaluating Request (NO registered letter),00491
+20191011570,Evaluating Request (NO registered letter),00594
 20191011571,Pending Liquidation Request,BOC
 20191011582,Pending Liquidation Request,BOC
-20191011592,Evaluating Request (WITH registered letter),00025
+20191011592,Evaluating Request (WITH registered letter),00852
 20191011593,Service closure Request with BO responsibility,BOC
 20191011595,Service closure Request with BO responsibility,BOC
 20191011597,Pending Liquidation Request,BOC
-20191011600,Evaluating Request (NO registered letter),00491
-20191011601,Service closure Request with BO responsibility,00828
+20191011600,Evaluating Request (NO registered letter),00594
+20191011601,Service closure Request with BO responsibility,BOC
 20191011602,Pending Liquidation Request,BOC
-20191011604,Service closure Request with network responsibility,00491
+20191011604,Service closure Request with network responsibility,00594
 20191011605,Pending Liquidation Request,BOC
-20191011607,Authorization Requested,00045
+20191011607,Evaluating Request (WITH registered letter),00852
 20191011610,Pending Liquidation Request,BOC
 20191011613,Pending Liquidation Request,BOC
 20191011616,Service closure Request with BO responsibility,BOC
 20191011617,Service closure Request with BO responsibility,BOC
-20191011622,Service closure Request with BO responsibility,00828
+20191011622,Service closure Request with BO responsibility,BOC
 20191011623,Service closure Request with BO responsibility,BOC
 20191011624,Service closure Request with BO responsibility,BOC
 20191011627,Pending Liquidation Request,BOC
@@ -1218,55 +1218,55 @@ case:concept:name,Next_activity,Next_resource
 20191011630,Pending Liquidation Request,BOC
 20191011635,Pending Liquidation Request,BOC
 20191011636,Pending Liquidation Request,BOC
-20191011638,Service closure Request with network responsibility,00491
-20191011640,Service closure Request with BO responsibility,00831
+20191011638,Service closure Request with network responsibility,00594
+20191011640,Service closure Request with BO responsibility,BOC
 20191011644,Pending Liquidation Request,BOC
-20191011645,Evaluating Request (NO registered letter),00491
+20191011645,Evaluating Request (NO registered letter),00594
 20191011651,Pending Liquidation Request,BOC
 20191011652,Service closure Request with BO responsibility,BOC
-20191011653,Evaluating Request (NO registered letter),00491
+20191011653,Evaluating Request (NO registered letter),00594
 20191011655,Pending Liquidation Request,BOC
-20191011656,Evaluating Request (WITH registered letter),00019
+20191011656,Evaluating Request (WITH registered letter),00835
 20191011660,Pending Liquidation Request,BOC
 20191011661,Pending Liquidation Request,BOC
-20191011665,Service closure Request with network responsibility,00491
+20191011665,Service closure Request with network responsibility,00594
 20191011673,Pending Liquidation Request,BOC
 20191011674,Pending Liquidation Request,BOC
 20191011675,Pending Liquidation Request,BOC
-20191011677,Authorization Requested,00491
+20191011677,Evaluating Request (WITH registered letter),00852
 20191011678,Pending Liquidation Request,BOC
-20191011680,Evaluating Request (NO registered letter),00491
-20191011684,Authorization Requested,00491
-20191011688,Authorization Requested,00491
+20191011680,Evaluating Request (NO registered letter),00594
+20191011684,Evaluating Request (WITH registered letter),00852
+20191011688,Evaluating Request (WITH registered letter),00852
 20191011691,Pending Liquidation Request,BOC
 20191011692,Pending Liquidation Request,BOC
-20191011695,Evaluating Request (NO registered letter),00491
+20191011695,Evaluating Request (NO registered letter),00594
 20191011696,Pending Liquidation Request,BOC
 20191011702,Service closure Request with BO responsibility,BOC
 20191011704,Pending Liquidation Request,BOC
 20191011710,Pending Liquidation Request,BOC
-20191011711,Evaluating Request (NO registered letter),00491
+20191011711,Evaluating Request (NO registered letter),00594
 20191011713,Pending Liquidation Request,BOC
 20191011714,Pending Liquidation Request,BOC
-20191011715,Evaluating Request (WITH registered letter),00025
+20191011715,Evaluating Request (WITH registered letter),00828
 20191011717,Pending Request for Reservation Closure,BOC
-20191011718,Service closure Request with network responsibility,00491
+20191011718,Service closure Request with network responsibility,00594
 20191011719,Pending Liquidation Request,BOC
 20191011721,Pending Liquidation Request,BOC
 20191011725,Service closure Request with BO responsibility,BOC
 20191011728,Pending Liquidation Request,BOC
 20191011732,Pending Liquidation Request,BOC
 20191011733,Pending Liquidation Request,BOC
-20191011735,Evaluating Request (NO registered letter),00491
+20191011735,Evaluating Request (NO registered letter),00594
 20191011738,Pending Liquidation Request,BOC
-20191011739,Service closure Request with network responsibility,00491
+20191011739,Service closure Request with network responsibility,00594
 20191011740,Pending Liquidation Request,BOC
-20191011741,Evaluating Request (NO registered letter),00491
-20191011743,Evaluating Request (NO registered letter),00491
+20191011741,Evaluating Request (NO registered letter),00594
+20191011743,Evaluating Request (NO registered letter),00594
 20191011744,Pending Liquidation Request,BOC
-20191011745,Evaluating Request (NO registered letter),00045
+20191011745,Evaluating Request (NO registered letter),00594
 20191011746,Pending Liquidation Request,BOC
-20191011749,Service closure Request with network responsibility,00491
+20191011749,Service closure Request with network responsibility,00594
 20191011758,Pending Liquidation Request,BOC
 20191011760,Pending Liquidation Request,BOC
 20191011762,Pending Liquidation Request,BOC
@@ -1276,103 +1276,103 @@ case:concept:name,Next_activity,Next_resource
 20191011770,Pending Liquidation Request,BOC
 20191011774,Pending Liquidation Request,BOC
 20191011775,Service closure Request with BO responsibility,BOC
-20191011778,Evaluating Request (NO registered letter),00491
+20191011778,Evaluating Request (NO registered letter),00594
 20191011779,Service closure Request with BO responsibility,BOC
 20191011783,Pending Liquidation Request,BOC
 20191011785,Pending Liquidation Request,BOC
 20191011786,Pending Liquidation Request,BOC
 20191011788,Pending Liquidation Request,BOC
-20191011789,Service closure Request with network responsibility,00491
-20191011790,Authorization Requested,00045
+20191011789,Service closure Request with network responsibility,00594
+20191011790,Evaluating Request (WITH registered letter),00852
 20191011791,Pending Liquidation Request,BOC
 20191011797,Pending Liquidation Request,BOC
-20191011798,Evaluating Request (WITH registered letter),00025
+20191011798,Evaluating Request (WITH registered letter),00828
 20191011800,Service closure Request with BO responsibility,BOC
-20191011802,Authorization Requested,00491
+20191011802,Evaluating Request (WITH registered letter),00852
 20191011804,Pending Liquidation Request,BOC
 20191011806,Pending Liquidation Request,BOC
 20191011809,Service closure Request with BO responsibility,BOC
-20191011828,Authorization Requested,00045
+20191011828,Evaluating Request (WITH registered letter),00852
 20191011830,Service closure Request with BO responsibility,BOC
-20191011835,Service closure Request with BO responsibility,00852
+20191011835,Service closure Request with BO responsibility,BOC
 20191011837,Pending Liquidation Request,BOC
-20191011838,Service closure Request with network responsibility,00491
+20191011838,Service closure Request with network responsibility,00594
 20191011839,Pending Liquidation Request,BOC
 20191011840,Service closure Request with BO responsibility,BOC
-20191011843,Evaluating Request (NO registered letter),00491
+20191011843,Evaluating Request (NO registered letter),00594
 20191011844,Pending Liquidation Request,BOC
 20191011845,Pending Liquidation Request,BOC
 20191011846,Service closure Request with BO responsibility,BOC
 20191011847,Pending Liquidation Request,BOC
-20191011851,Evaluating Request (NO registered letter),00491
+20191011851,Evaluating Request (NO registered letter),00594
 20191011853,Pending Liquidation Request,BOC
-20191011855,Evaluating Request (NO registered letter),00491
-20191011856,Authorization Requested,00045
+20191011855,Evaluating Request (NO registered letter),00594
+20191011856,Evaluating Request (WITH registered letter),00852
 20191011858,Service closure Request with BO responsibility,BOC
 20191011861,Pending Liquidation Request,BOC
-20191011862,Evaluating Request (NO registered letter),00491
-20191011863,Service closure Request with BO responsibility,00828
-20191011864,Authorization Requested,00045
-20191011866,Evaluating Request (NO registered letter),00491
+20191011862,Service closure Request with BO responsibility,NotDef
+20191011863,Service closure Request with BO responsibility,BOC
+20191011864,Evaluating Request (WITH registered letter),00852
+20191011866,Evaluating Request (NO registered letter),00594
 20191011867,Pending Liquidation Request,BOC
-20191011868,Service closure Request with BO responsibility,00828
-20191011869,Authorization Requested,00491
-20191011870,Authorization Requested,00491
-20191011872,Pending Liquidation Request,SDCRAP
+20191011868,Service closure Request with BO responsibility,BOC
+20191011869,Evaluating Request (WITH registered letter),00852
+20191011870,Evaluating Request (WITH registered letter),00852
+20191011872,Pending Liquidation Request,BOC
 20191011873,Pending Request for Reservation Closure,BOC
-20191011875,Pending Liquidation Request,SDCRAP
+20191011875,Pending Liquidation Request,BOCSER
 20191011878,Service closure Request with BO responsibility,BOC
-20191011881,Service closure Request with network responsibility,00491
+20191011881,Service closure Request with network responsibility,00594
 20191011883,Pending Liquidation Request,BOC
 20191011885,Service closure Request with BO responsibility,BOC
 20191011888,Pending Liquidation Request,BOC
 20191011889,Service closure Request with BO responsibility,BOC
-20191011890,Authorization Requested,00491
+20191011890,Evaluating Request (WITH registered letter),00852
 20191011892,Service closure Request with BO responsibility,BOC
 20191011896,Pending Liquidation Request,BOC
-20191011898,Pending Liquidation Request,SDCRAP
-20191011901,Service closure Request with BO responsibility,00852
+20191011898,Pending Liquidation Request,BOCSER
+20191011901,Service closure Request with BO responsibility,BOC
 20191011902,Pending Liquidation Request,BOC
 20191011906,Pending Liquidation Request,BOC
 20191011909,Service closure Request with BO responsibility,BOC
 20191011910,Pending Liquidation Request,BOC
 20191011912,Pending Liquidation Request,BOC
 20191011917,Pending Liquidation Request,BOC
-20191011918,Evaluating Request (NO registered letter),00491
+20191011918,Evaluating Request (NO registered letter),00594
 20191011922,Service closure Request with BO responsibility,BOC
 20191011925,Pending Liquidation Request,BOC
-20191011926,Evaluating Request (WITH registered letter),00019
+20191011926,Evaluating Request (WITH registered letter),00835
 20191011929,Pending Liquidation Request,BOC
 20191011930,Pending Liquidation Request,BOC
 20191011931,Service closure Request with BO responsibility,NotDef
 20191011932,Pending Liquidation Request,BOC
-20191011939,Service closure Request with network responsibility,00491
+20191011939,Service closure Request with network responsibility,00594
 20191011941,Pending Liquidation Request,BOC
-20191011943,Evaluating Request (NO registered letter),00491
+20191011943,Evaluating Request (NO registered letter),00594
 20191011944,Service closure Request with BO responsibility,BOC
 20191011946,Pending Liquidation Request,BOC
 20191011947,Pending Liquidation Request,BOC
-20191011948,Authorization Requested,00045
-20191011951,Service closure Request with BO responsibility,00850
+20191011948,Evaluating Request (WITH registered letter),00852
+20191011951,Service closure Request with BO responsibility,BOC
 20191011952,Pending Liquidation Request,BOC
 20191011958,Pending Liquidation Request,BOC
 20191011962,Pending Liquidation Request,BOC
 20191011963,Service closure Request with BO responsibility,BOC
-20191011964,Evaluating Request (NO registered letter),00491
+20191011964,Evaluating Request (NO registered letter),00594
 20191011967,Pending Liquidation Request,BOC
-20191011968,Evaluating Request (NO registered letter),00491
+20191011968,Evaluating Request (NO registered letter),00594
 20191011974,Pending Liquidation Request,BOC
-20191011976,Authorization Requested,00491
+20191011976,Authorization Requested,00870
 20191011977,Service closure Request with BO responsibility,BOC
 20191011980,Pending Liquidation Request,BOC
 20191011981,Pending Liquidation Request,BOC
 20191011982,Service closure Request with BO responsibility,BOC
 20191011983,Service closure Request with BO responsibility,BOC
-20191011984,Authorization Requested,00045
+20191011984,Evaluating Request (WITH registered letter),00852
 20191011985,Pending Liquidation Request,BOC
-20191011987,Authorization Requested,00045
+20191011987,Evaluating Request (WITH registered letter),00852
 20191011989,Service closure Request with BO responsibility,BOC
-20191011993,Pending Liquidation Request,SDCRAP
+20191011993,Pending Liquidation Request,BOCSER
 20191011995,Pending Liquidation Request,BOC
 20191011996,Pending Liquidation Request,BOC
 20191011997,Pending Liquidation Request,BOC
@@ -1382,32 +1382,32 @@ case:concept:name,Next_activity,Next_resource
 20191012001,Pending Liquidation Request,BOC
 20191012002,Pending Liquidation Request,BOC
 20191012003,Pending Liquidation Request,BOC
-20191012006,Evaluating Request (NO registered letter),00491
+20191012006,Evaluating Request (WITH registered letter),00835
 20191012011,Pending Liquidation Request,BOC
 20191012013,Service closure Request with BO responsibility,BOC
 20191012015,Pending Liquidation Request,BOC
-20191012017,Evaluating Request (NO registered letter),00491
-20191012018,Service closure Request with BO responsibility,00828
+20191012017,Evaluating Request (NO registered letter),00594
+20191012018,Service closure Request with BO responsibility,BOC
 20191012019,Pending Liquidation Request,BOC
 20191012025,Service closure Request with BO responsibility,BOC
-20191012027,Service closure Request with network responsibility,00491
-20191012030,Service closure Request with network responsibility,00491
+20191012027,Service closure Request with network responsibility,00594
+20191012030,Service closure Request with network responsibility,00594
 20191012033,Service closure Request with BO responsibility,BOC
-20191012037,Evaluating Request (WITH registered letter),00025
-20191012040,Authorization Requested,00045
+20191012037,Evaluating Request (WITH registered letter),00852
+20191012040,Evaluating Request (WITH registered letter),00828
 20191012043,Pending Liquidation Request,BOC
 20191012049,Service closure Request with BO responsibility,BOC
-20191012055,Authorization Requested,00491
-20191012056,Service closure Request with network responsibility,00491
+20191012055,Evaluating Request (WITH registered letter),00852
+20191012056,Service closure Request with network responsibility,00594
 20191012057,Pending Liquidation Request,BOC
-20191012063,Service closure Request with BO responsibility,00850
-20191012066,Evaluating Request (NO registered letter),00491
+20191012063,Service closure Request with BO responsibility,BOC
+20191012066,Evaluating Request (NO registered letter),00594
 20191012067,Pending Liquidation Request,BOC
-20191012071,Service closure Request with BO responsibility,00828
+20191012071,Service closure Request with BO responsibility,BOC
 20191012072,Service closure Request with BO responsibility,BOC
-20191012073,Authorization Requested,00491
+20191012073,Evaluating Request (WITH registered letter),00852
 20191012077,Service closure Request with BO responsibility,BOC
-20191012084,Service closure Request with network responsibility,00491
+20191012084,Service closure Request with network responsibility,00594
 20191012089,Pending Liquidation Request,BOC
 20191012092,Pending Liquidation Request,BOC
 20191012093,Service closure Request with BO responsibility,BOC
@@ -1422,167 +1422,167 @@ case:concept:name,Next_activity,Next_resource
 20191012111,Pending Liquidation Request,BOC
 20191012113,Service closure Request with BO responsibility,BOC
 20191012116,Service closure Request with BO responsibility,BOC
-20191012117,Service closure Request with BO responsibility,NotDef
+20191012117,Service closure Request with BO responsibility,BOC
 20191012119,Service closure Request with BO responsibility,BOC
-20191012121,Service closure Request with network responsibility,00491
+20191012121,Service closure Request with network responsibility,00594
 20191012122,Pending Liquidation Request,BOC
-20191012125,Authorization Requested,00491
+20191012125,Evaluating Request (WITH registered letter),00852
 20191012126,Service closure Request with BO responsibility,BOC
-20191012128,Evaluating Request (NO registered letter),00491
+20191012128,Evaluating Request (NO registered letter),00594
 20191012130,Pending Liquidation Request,BOC
-20191012131,Authorization Requested,00491
-20191012132,Service closure Request with network responsibility,00491
+20191012131,Evaluating Request (WITH registered letter),00852
+20191012132,Service closure Request with network responsibility,00594
 20191012133,Pending Liquidation Request,BOC
 20191012134,Pending Liquidation Request,BOC
-20191012135,Service closure Request with BO responsibility,NotDef
+20191012135,Service closure Request with BO responsibility,BOC
 20191012136,Service closure Request with BO responsibility,BOC
 20191012137,Pending Liquidation Request,BOC
 20191012141,Service closure Request with BO responsibility,BOC
-20191012142,Service closure Request with network responsibility,00491
-20191012148,Service closure Request with network responsibility,00491
+20191012142,Service closure Request with network responsibility,00594
+20191012148,Service closure Request with BO responsibility,BOC
 20191012149,Pending Liquidation Request,BOC
 20191012152,Service closure Request with BO responsibility,BOC
-20191012154,Service closure Request with BO responsibility,00828
+20191012154,Service closure Request with BO responsibility,BOC
 20191012156,Pending Liquidation Request,BOC
-20191012157,Service closure Request with network responsibility,00491
+20191012157,Service closure Request with network responsibility,00594
 20191012165,Pending Liquidation Request,BOC
-20191012166,Service closure Request with network responsibility,00491
-20191012168,Authorization Requested,00491
+20191012166,Service closure Request with BO responsibility,00828
+20191012168,Evaluating Request (WITH registered letter),00852
 20191012170,Pending Liquidation Request,BOC
 20191012173,Pending Liquidation Request,BOC
 20191012174,Pending Liquidation Request,BOC
-20191012175,Service closure Request with network responsibility,00491
+20191012175,Service closure Request with network responsibility,00594
 20191012176,Pending Liquidation Request,BOC
 20191012177,Pending Liquidation Request,BOC
 20191012180,Service closure Request with BO responsibility,BOC
-20191012182,Service closure Request with BO responsibility,00850
-20191012184,Authorization Requested,00491
-20191012185,Service closure Request with network responsibility,00491
+20191012182,Service closure Request with BO responsibility,BOC
+20191012184,Authorization Requested,00870
+20191012185,Service closure Request with network responsibility,00594
 20191012186,Pending Liquidation Request,BOC
 20191012189,Pending Liquidation Request,BOC
 20191012190,Pending Liquidation Request,BOC
-20191012193,Service closure Request with BO responsibility,00828
+20191012193,Service closure Request with BO responsibility,BOC
 20191012194,Pending Liquidation Request,BOC
-20191012195,Evaluating Request (WITH registered letter),00025
+20191012195,Evaluating Request (WITH registered letter),00852
 20191012196,Pending Liquidation Request,BOC
 20191012201,Pending Liquidation Request,BOC
-20191012203,Evaluating Request (WITH registered letter),00025
+20191012203,Evaluating Request (WITH registered letter),00852
 20191012206,Pending Liquidation Request,BOC
 20191012208,Pending Liquidation Request,BOC
-20191012210,Service closure Request with BO responsibility,00828
+20191012210,Service closure Request with BO responsibility,BOC
 20191012214,Pending Liquidation Request,BOC
 20191012216,Service closure Request with BO responsibility,BOC
 20191012218,Service closure Request with BO responsibility,BOC
 20191012221,Service closure Request with BO responsibility,BOC
-20191012225,Service closure Request with network responsibility,00491
+20191012225,Service closure Request with network responsibility,00594
 20191012226,Service closure Request with BO responsibility,BOC
-20191012235,Evaluating Request (NO registered letter),00491
+20191012235,Evaluating Request (NO registered letter),00594
 20191012236,Pending Liquidation Request,BOC
 20191012241,Pending Liquidation Request,BOC
 20191012242,Pending Liquidation Request,BOC
 20191012248,Pending Liquidation Request,BOC
 20191012250,Pending Liquidation Request,BOC
-20191012251,Evaluating Request (NO registered letter),00491
-20191012255,Authorization Requested,00491
+20191012251,Evaluating Request (WITH registered letter),00835
+20191012255,Evaluating Request (WITH registered letter),00852
 20191012256,Pending Liquidation Request,BOC
 20191012257,Pending Liquidation Request,BOC
 20191012259,Pending Liquidation Request,BOC
-20191012261,Evaluating Request (NO registered letter),00491
-20191012263,Authorization Requested,00491
+20191012261,Evaluating Request (NO registered letter),00594
+20191012263,Authorization Requested,00870
 20191012268,Pending Liquidation Request,BOC
 20191012271,Pending Liquidation Request,BOC
 20191012272,Pending Liquidation Request,BOC
-20191012273,Evaluating Request (WITH registered letter),00025
-20191012276,Evaluating Request (NO registered letter),00491
+20191012273,Evaluating Request (WITH registered letter),00852
+20191012276,Evaluating Request (WITH registered letter),00835
 20191012281,Pending Liquidation Request,BOC
-20191012283,Evaluating Request (NO registered letter),00491
-20191012285,Service closure Request with network responsibility,00491
+20191012283,Evaluating Request (NO registered letter),00594
+20191012285,Service closure Request with network responsibility,00594
 20191012290,Pending Liquidation Request,BOC
 20191012291,Pending Liquidation Request,BOC
-20191012293,Service closure Request with BO responsibility,00828
-20191012294,Service closure Request with BO responsibility,00828
+20191012293,Service closure Request with BO responsibility,BOC
+20191012294,Service closure Request with BO responsibility,BOC
 20191012295,Pending Liquidation Request,BOC
 20191012296,Pending Liquidation Request,BOC
 20191012297,Pending Liquidation Request,BOC
-20191012298,Pending Liquidation Request,SDCRAP
+20191012298,Pending Liquidation Request,BOCSER
 20191012301,Pending Liquidation Request,BOC
 20191012302,Service closure Request with BO responsibility,BOC
-20191012303,Evaluating Request (NO registered letter),00491
+20191012303,Evaluating Request (NO registered letter),00594
 20191012304,Pending Liquidation Request,BOC
 20191012305,Service closure Request with BO responsibility,BOC
-20191012307,Service closure Request with network responsibility,00491
-20191012313,Service closure Request with network responsibility,00491
+20191012307,Service closure Request with network responsibility,00594
+20191012313,Service closure Request with BO responsibility,BOC
 20191012315,Service closure Request with BO responsibility,BOC
-20191012317,Evaluating Request (WITH registered letter),00019
+20191012317,Evaluating Request (WITH registered letter),00835
 20191012318,Service closure Request with BO responsibility,NotDef
 20191012319,Pending Liquidation Request,BOC
-20191012326,Evaluating Request (NO registered letter),00491
+20191012326,Evaluating Request (NO registered letter),00594
 20191012332,Pending Liquidation Request,BOC
 20191012335,Pending Liquidation Request,BOC
 20191012336,Service closure Request with BO responsibility,BOC
 20191012337,Pending Liquidation Request,BOC
 20191012338,Service closure Request with BO responsibility,BOC
 20191012340,Pending Liquidation Request,BOC
-20191012341,Service closure Request with network responsibility,00491
+20191012341,Service closure Request with network responsibility,00594
 20191012348,Pending Liquidation Request,BOC
 20191012349,Service closure Request with BO responsibility,BOC
-20191012354,Evaluating Request (NO registered letter),00491
+20191012354,Evaluating Request (NO registered letter),00594
 20191012357,Service closure Request with BO responsibility,BOC
 20191012359,Service closure Request with BO responsibility,BOC
 20191012360,Pending Liquidation Request,BOC
-20191012361,Service closure Request with network responsibility,00491
+20191012361,Service closure Request with network responsibility,00594
 20191012362,Pending Liquidation Request,BOC
 20191012363,Pending Liquidation Request,BOC
 20191012364,Pending Liquidation Request,BOC
 20191012366,Pending Liquidation Request,BOC
-20191012370,Evaluating Request (NO registered letter),00491
+20191012370,Evaluating Request (NO registered letter),00594
 20191012372,Service closure Request with BO responsibility,BOC
 20191012376,Pending Liquidation Request,BOC
 20191012378,Service closure Request with BO responsibility,BOC
 20191012379,Service closure Request with BO responsibility,BOC
-20191012381,Authorization Requested,00491
-20191012385,Service closure Request with network responsibility,00491
-20191012386,Evaluating Request (NO registered letter),00491
+20191012381,Evaluating Request (WITH registered letter),00852
+20191012385,Service closure Request with network responsibility,00594
+20191012386,Evaluating Request (NO registered letter),00594
 20191012389,Pending Liquidation Request,BOC
-20191012396,Service closure Request with network responsibility,00491
+20191012396,Service closure Request with network responsibility,00594
 20191012397,Pending Liquidation Request,BOC
-20191012400,Service closure Request with network responsibility,00491
+20191012400,Service closure Request with network responsibility,00594
 20191012404,Pending Liquidation Request,BOC
-20191012406,Evaluating Request (NO registered letter),00491
-20191012408,Service closure Request with BO responsibility,00850
+20191012406,Evaluating Request (NO registered letter),00594
+20191012408,Service closure Request with BO responsibility,BOC
 20191012409,Pending Liquidation Request,BOC
 20191012414,Pending Liquidation Request,BOC
 20191012415,Pending Liquidation Request,BOC
 20191012417,Pending Liquidation Request,BOC
-20191012419,Service closure Request with network responsibility,00491
-20191012427,Service closure Request with network responsibility,00491
+20191012419,Service closure Request with network responsibility,00594
+20191012427,Service closure Request with network responsibility,00594
 20191012428,Service closure Request with BO responsibility,BOC
 20191012431,Pending Liquidation Request,BOC
 20191012434,Service closure Request with BO responsibility,BOC
 20191012436,Pending Liquidation Request,BOC
 20191012443,Pending Liquidation Request,BOC
 20191012444,Pending Liquidation Request,BOC
-20191012453,Service closure Request with network responsibility,00491
+20191012453,Service closure Request with network responsibility,00594
 20191012456,Service closure Request with BO responsibility,BOC
 20191012461,Pending Liquidation Request,BOC
 20191012463,Pending Liquidation Request,BOC
 20191012464,Service closure Request with BO responsibility,BOC
-20191012468,Service closure Request with network responsibility,00491
+20191012468,Service closure Request with BO responsibility,BOC
 20191012469,Pending Liquidation Request,BOC
-20191012473,Evaluating Request (WITH registered letter),00019
-20191012474,Service closure Request with BO responsibility,00828
+20191012473,Evaluating Request (WITH registered letter),00835
+20191012474,Service closure Request with BO responsibility,BOC
 20191012475,Service closure Request with BO responsibility,BOC
-20191012476,Evaluating Request (NO registered letter),00491
+20191012476,Evaluating Request (NO registered letter),00594
 20191012477,Service closure Request with BO responsibility,BOC
-20191012479,Evaluating Request (WITH registered letter),00019
-20191012482,Service closure Request with BO responsibility,00828
+20191012479,Evaluating Request (WITH registered letter),00835
+20191012482,Service closure Request with BO responsibility,BOC
 20191012483,Pending Liquidation Request,BOC
-20191012485,Evaluating Request (NO registered letter),00491
+20191012485,Evaluating Request (NO registered letter),00594
 20191012486,Service closure Request with BO responsibility,BOC
-20191012487,Authorization Requested,00491
+20191012487,Evaluating Request (WITH registered letter),00852
 20191012488,Pending Liquidation Request,BOC
 20191012489,Pending Liquidation Request,BOC
-20191012490,Service closure Request with network responsibility,00491
+20191012490,Service closure Request with network responsibility,00594
 20191012493,Pending Liquidation Request,BOC
 20191012496,Pending Liquidation Request,BOC
 20191012498,Service closure Request with BO responsibility,BOC
@@ -1592,7 +1592,7 @@ case:concept:name,Next_activity,Next_resource
 20191012513,Pending Liquidation Request,BOC
 20191012518,Pending Liquidation Request,BOC
 20191012519,Pending Liquidation Request,BOC
-20191012521,Service closure Request with BO responsibility,00828
+20191012521,Service closure Request with BO responsibility,BOC
 20191012525,Pending Liquidation Request,BOC
 20191012526,Pending Liquidation Request,BOC
 20191012527,Pending Liquidation Request,BOC
@@ -1609,269 +1609,269 @@ case:concept:name,Next_activity,Next_resource
 20191012538,Pending Liquidation Request,BOC
 20191012539,Pending Liquidation Request,BOC
 20191012540,Service closure Request with BO responsibility,BOC
-20191012542,Service closure Request with network responsibility,00491
+20191012542,Service closure Request with network responsibility,00594
 20191012547,Service closure Request with BO responsibility,BOC
-20191012548,Evaluating Request (NO registered letter),00491
-20191012555,Evaluating Request (WITH registered letter),00025
+20191012548,Evaluating Request (NO registered letter),00594
+20191012555,Evaluating Request (WITH registered letter),00852
 20191012560,Service closure Request with BO responsibility,BOC
-20191012569,Evaluating Request (NO registered letter),00491
-20191012571,Service closure Request with BO responsibility,00828
+20191012569,Evaluating Request (NO registered letter),00594
+20191012571,Service closure Request with BO responsibility,BOC
 20191012573,Service closure Request with BO responsibility,BOC
 20191012574,Service closure Request with BO responsibility,BOC
 20191012580,Service closure Request with BO responsibility,BOC
-20191012581,Evaluating Request (NO registered letter),00491
+20191012581,Evaluating Request (NO registered letter),00594
 20191012585,Service closure Request with BO responsibility,BOC
-20191012587,Service closure Request with BO responsibility,00828
+20191012587,Service closure Request with BO responsibility,BOC
 20191012589,Pending Liquidation Request,BOC
 20191012590,Service closure Request with BO responsibility,BOC
-20191012591,Evaluating Request (WITH registered letter),00019
-20191012595,Evaluating Request (NO registered letter),00491
+20191012591,Evaluating Request (WITH registered letter),00852
+20191012595,Evaluating Request (NO registered letter),00594
 20191012599,Service closure Request with BO responsibility,BOC
-20191012600,Service closure Request with network responsibility,00491
-20191012602,Service closure Request with network responsibility,00491
-20191012604,Service closure Request with BO responsibility,00828
-20191012606,Evaluating Request (NO registered letter),00491
-20191012607,Authorization Requested,00491
-20191012608,Evaluating Request (NO registered letter),00491
+20191012600,Service closure Request with BO responsibility,00828
+20191012602,Service closure Request with network responsibility,00594
+20191012604,Service closure Request with BO responsibility,BOC
+20191012606,Evaluating Request (NO registered letter),00594
+20191012607,Evaluating Request (WITH registered letter),00828
+20191012608,Evaluating Request (NO registered letter),00594
 20191012610,Service closure Request with BO responsibility,BOC
 20191012611,Service closure Request with BO responsibility,BOC
 20191012612,Pending Liquidation Request,BOC
-20191012613,Service closure Request with network responsibility,00491
+20191012613,Service closure Request with BO responsibility,00828
 20191012614,Pending Liquidation Request,BOC
 20191012618,Service closure Request with BO responsibility,BOC
-20191012622,Service closure Request with network responsibility,00491
-20191012623,Evaluating Request (NO registered letter),00491
-20191012629,Evaluating Request (NO registered letter),00491
-20191012631,Evaluating Request (NO registered letter),00491
+20191012622,Service closure Request with BO responsibility,BOC
+20191012623,Evaluating Request (NO registered letter),00594
+20191012629,Evaluating Request (NO registered letter),00594
+20191012631,Evaluating Request (NO registered letter),00594
 20191012632,Pending Liquidation Request,BOC
 20191012636,Service closure Request with BO responsibility,BOC
-20191012638,Pending Request for Reservation Closure,SDCRAP
-20191012640,Service closure Request with BO responsibility,00828
+20191012638,Pending Request for Reservation Closure,BOC
+20191012640,Service closure Request with BO responsibility,BOC
 20191012642,Pending Liquidation Request,BOC
-20191012647,Evaluating Request (NO registered letter),00491
-20191012648,Service closure Request with BO responsibility,00828
-20191012651,Evaluating Request (NO registered letter),00491
-20191012656,Service closure Request with network responsibility,00491
-20191012657,Service closure Request with BO responsibility,00828
+20191012647,Evaluating Request (NO registered letter),00594
+20191012648,Service closure Request with BO responsibility,BOC
+20191012651,Evaluating Request (NO registered letter),00594
+20191012656,Service closure Request with network responsibility,00594
+20191012657,Service closure Request with BO responsibility,BOC
 20191012661,Service closure Request with BO responsibility,BOC
-20191012663,Evaluating Request (NO registered letter),00491
-20191012664,Service closure Request with BO responsibility,00828
+20191012663,Evaluating Request (NO registered letter),00594
+20191012664,Service closure Request with BO responsibility,BOC
 20191012665,Pending Liquidation Request,BOC
-20191012668,Service closure Request with BO responsibility,00828
+20191012668,Service closure Request with BO responsibility,BOC
 20191012669,Service closure Request with BO responsibility,BOC
 20191012671,Service closure Request with BO responsibility,BOC
 20191012672,Pending Liquidation Request,BOC
 20191012673,Service closure Request with BO responsibility,00828
 20191012675,Service closure Request with BO responsibility,BOC
-20191012677,Authorization Requested,00491
-20191012683,Service closure Request with BO responsibility,00828
-20191012685,Service closure Request with BO responsibility,00828
+20191012677,Evaluating Request (WITH registered letter),00852
+20191012683,Service closure Request with BO responsibility,BOC
+20191012685,Service closure Request with BO responsibility,BOC
 20191012686,Pending Liquidation Request,BOC
-20191012687,Service closure Request with network responsibility,00491
-20191012692,Service closure Request with BO responsibility,00828
+20191012687,Service closure Request with network responsibility,00594
+20191012692,Service closure Request with BO responsibility,BOC
 20191012698,Service closure Request with BO responsibility,BOC
-20191012700,Service closure Request with BO responsibility,00828
+20191012700,Service closure Request with BO responsibility,BOC
 20191012708,Service closure Request with BO responsibility,BOC
-20191012711,Authorization Requested,00045
-20191012714,Service closure Request with BO responsibility,00828
-20191012720,Evaluating Request (NO registered letter),00491
+20191012711,Evaluating Request (WITH registered letter),00852
+20191012714,Service closure Request with BO responsibility,BOC
+20191012720,Evaluating Request (NO registered letter),00594
 20191012723,Service closure Request with BO responsibility,BOC
-20191012726,Service closure Request with BO responsibility,00828
+20191012726,Service closure Request with BO responsibility,BOC
 20191012729,Pending Liquidation Request,BOC
-20191012730,Service closure Request with network responsibility,00491
+20191012730,Service closure Request with network responsibility,00594
 20191012732,Service closure Request with BO responsibility,BOC
-20191012733,Service closure Request with BO responsibility,00828
-20191012737,Service closure Request with BO responsibility,00828
-20191012739,Authorization Requested,00491
-20191012746,Service closure Request with BO responsibility,00828
-20191012747,Service closure Request with network responsibility,00491
-20191012748,Service closure Request with BO responsibility,00828
-20191012749,Service closure Request with BO responsibility,00828
-20191012751,Service closure Request with network responsibility,00491
-20191012752,Service closure Request with network responsibility,00491
+20191012733,Service closure Request with BO responsibility,BOC
+20191012737,Service closure Request with BO responsibility,BOC
+20191012739,Evaluating Request (WITH registered letter),00852
+20191012746,Service closure Request with BO responsibility,BOC
+20191012747,Service closure Request with network responsibility,00594
+20191012748,Service closure Request with BO responsibility,BOC
+20191012749,Service closure Request with BO responsibility,BOC
+20191012751,Service closure Request with network responsibility,00594
+20191012752,Service closure Request with network responsibility,00594
 20191012754,Service closure Request with BO responsibility,BOC
-20191012755,Evaluating Request (NO registered letter),00491
+20191012755,Evaluating Request (NO registered letter),00594
 20191012758,Service closure Request with BO responsibility,BOC
-20191012759,Evaluating Request (WITH registered letter),00045
-20191012761,Service closure Request with BO responsibility,00828
+20191012759,Evaluating Request (WITH registered letter),00852
+20191012761,Service closure Request with BO responsibility,BOC
 20191012762,Pending Liquidation Request,BOC
 20191012766,Service closure Request with BO responsibility,BOC
-20191012767,Service closure Request with BO responsibility,00828
-20191012771,Authorization Requested,00045
-20191012772,Evaluating Request (NO registered letter),00045
-20191012776,Evaluating Request (NO registered letter),00491
-20191012779,Evaluating Request (NO registered letter),00491
-20191012780,Service closure Request with BO responsibility,00828
-20191012781,Service closure Request with BO responsibility,00828
+20191012767,Service closure Request with BO responsibility,BOC
+20191012771,Evaluating Request (WITH registered letter),00852
+20191012772,Evaluating Request (NO registered letter),00594
+20191012776,Evaluating Request (NO registered letter),00594
+20191012779,Evaluating Request (NO registered letter),00594
+20191012780,Service closure Request with BO responsibility,BOC
+20191012781,Service closure Request with BO responsibility,BOC
 20191012782,Service closure Request with BO responsibility,BOC
-20191012786,Service closure Request with BO responsibility,00828
-20191012787,Service closure Request with network responsibility,00491
-20191012788,Service closure Request with network responsibility,00491
-20191012790,Authorization Requested,00045
-20191012793,Service closure Request with network responsibility,00491
-20191012795,Service closure Request with network responsibility,00491
-20191012796,Authorization Requested,00045
-20191012798,Evaluating Request (NO registered letter),00491
-20191012799,Service closure Request with BO responsibility,00828
-20191012800,Evaluating Request (NO registered letter),00491
-20191012801,Authorization Requested,00045
-20191012802,Service closure Request with BO responsibility,00828
+20191012786,Service closure Request with BO responsibility,BOC
+20191012787,Service closure Request with network responsibility,00594
+20191012788,Service closure Request with BO responsibility,00828
+20191012790,Evaluating Request (WITH registered letter),00852
+20191012793,Service closure Request with BO responsibility,00828
+20191012795,Service closure Request with network responsibility,00594
+20191012796,Evaluating Request (WITH registered letter),00852
+20191012798,Evaluating Request (NO registered letter),00594
+20191012799,Service closure Request with BO responsibility,BOC
+20191012800,Evaluating Request (NO registered letter),00594
+20191012801,Evaluating Request (WITH registered letter),00852
+20191012802,Service closure Request with BO responsibility,BOC
 20191012807,Service closure Request with BO responsibility,BOC
-20191012810,Evaluating Request (NO registered letter),00045
+20191012810,Evaluating Request (NO registered letter),00594
 20191012811,Pending Liquidation Request,BOC
 20191012812,Service closure Request with BO responsibility,BOC
 20191012814,Pending Liquidation Request,BOC
-20191012816,Evaluating Request (NO registered letter),00491
+20191012816,Evaluating Request (NO registered letter),00594
 20191012817,Service closure Request with BO responsibility,BOC
-20191012819,Service closure Request with BO responsibility,00828
-20191012821,Service closure Request with network responsibility,00491
-20191012822,Service closure Request with network responsibility,00491
-20191012834,Service closure Request with network responsibility,00491
-20191012839,Evaluating Request (NO registered letter),00491
-20191012845,Evaluating Request (NO registered letter),00491
+20191012819,Service closure Request with BO responsibility,BOC
+20191012821,Service closure Request with network responsibility,00594
+20191012822,Service closure Request with BO responsibility,00828
+20191012834,Service closure Request with network responsibility,00594
+20191012839,Evaluating Request (NO registered letter),00594
+20191012845,Evaluating Request (NO registered letter),00594
 20191012847,Pending Liquidation Request,BOC
-20191012849,Service closure Request with BO responsibility,00828
-20191012851,Service closure Request with BO responsibility,00828
+20191012849,Service closure Request with BO responsibility,BOC
+20191012851,Service closure Request with BO responsibility,BOC
 20191012852,Pending Liquidation Request,BOC
-20191012853,Service closure Request with network responsibility,00491
+20191012853,Service closure Request with network responsibility,00594
 20191012856,Pending Liquidation Request,BOC
-20191012857,Service closure Request with BO responsibility,00828
-20191012864,Authorization Requested,00045
+20191012857,Service closure Request with BO responsibility,BOC
+20191012864,Evaluating Request (WITH registered letter),00828
 20191012865,Pending Liquidation Request,BOC
-20191012866,Service closure Request with network responsibility,00491
+20191012866,Service closure Request with network responsibility,00594
 20191012869,Pending Liquidation Request,BOC
-20191012871,Evaluating Request (NO registered letter),00491
-20191012873,Evaluating Request (NO registered letter),00491
+20191012871,Evaluating Request (NO registered letter),00594
+20191012873,Evaluating Request (NO registered letter),00594
 20191012876,Pending Liquidation Request,BOC
-20191012877,Authorization Requested,00045
+20191012877,Evaluating Request (WITH registered letter),00852
 20191012878,Pending Liquidation Request,BOC
 20191012880,Pending Liquidation Request,BOC
-20191012881,Service closure Request with BO responsibility,00828
-20191012882,Evaluating Request (NO registered letter),00491
-20191012883,Evaluating Request (WITH registered letter),00025
+20191012881,Service closure Request with BO responsibility,BOC
+20191012882,Evaluating Request (NO registered letter),00594
+20191012883,Evaluating Request (WITH registered letter),00852
 20191012893,Service closure Request with BO responsibility,BOC
-20191012894,Service closure Request with network responsibility,00491
+20191012894,Service closure Request with network responsibility,00594
 20191012896,Service closure Request with BO responsibility,BOC
 20191012903,Pending Liquidation Request,BOC
-20191012906,Service closure Request with BO responsibility,00828
-20191012907,Evaluating Request (NO registered letter),00491
-20191012910,Service closure Request with BO responsibility,00828
-20191012915,Service closure Request with BO responsibility,00828
+20191012906,Service closure Request with BO responsibility,BOC
+20191012907,Evaluating Request (NO registered letter),00594
+20191012910,Service closure Request with BO responsibility,BOC
+20191012915,Service closure Request with BO responsibility,BOC
 20191012918,Service closure Request with BO responsibility,BOC
-20191012923,Service closure Request with BO responsibility,00828
+20191012923,Service closure Request with BO responsibility,BOC
 20191012927,Service closure Request with BO responsibility,BOC
 20191012929,Pending Liquidation Request,BOC
 20191012932,Pending Liquidation Request,BOC
-20191012935,Service closure Request with BO responsibility,00828
+20191012935,Service closure Request with BO responsibility,BOC
 20191012938,Pending Liquidation Request,BOC
 20191012940,Pending Liquidation Request,BOC
-20191012941,Service closure Request with network responsibility,00491
+20191012941,Service closure Request with network responsibility,00594
 20191012942,Service closure Request with BO responsibility,BOC
-20191012945,Service closure Request with network responsibility,00491
-20191012946,Service closure Request with BO responsibility,00828
+20191012945,Service closure Request with BO responsibility,00828
+20191012946,Service closure Request with BO responsibility,BOC
 20191012947,Pending Liquidation Request,BOC
-20191012957,Service closure Request with network responsibility,00491
-20191012959,Evaluating Request (NO registered letter),00491
-20191012960,Service closure Request with network responsibility,00491
-20191012964,Service closure Request with BO responsibility,00828
+20191012957,Service closure Request with BO responsibility,00828
+20191012959,Evaluating Request (NO registered letter),00594
+20191012960,Service closure Request with network responsibility,00594
+20191012964,Service closure Request with BO responsibility,BOC
 20191012965,Pending Liquidation Request,BOC
-20191012966,Service closure Request with network responsibility,00491
+20191012966,Service closure Request with network responsibility,00594
 20191012967,Service closure Request with BO responsibility,BOC
 20191012970,Service closure Request with BO responsibility,BOC
-20191012971,Service closure Request with BO responsibility,00828
-20191012972,Evaluating Request (NO registered letter),00491
-20191012973,Evaluating Request (NO registered letter),00045
-20191012975,Service closure Request with network responsibility,00491
+20191012971,Service closure Request with BO responsibility,BOC
+20191012972,Evaluating Request (NO registered letter),00594
+20191012973,Evaluating Request (NO registered letter),00594
+20191012975,Service closure Request with network responsibility,00594
 20191012976,Pending Liquidation Request,BOC
 20191012977,Pending Liquidation Request,BOC
-20191012979,Service closure Request with BO responsibility,00828
+20191012979,Service closure Request with BO responsibility,BOC
 20191012980,Service closure Request with BO responsibility,BOC
 20191012981,Service closure Request with BO responsibility,BOC
 20191012986,Service closure Request with BO responsibility,BOC
 20191012987,Service closure Request with BO responsibility,BOC
 20191012988,Service closure Request with BO responsibility,BOC
 20191012991,Service closure Request with BO responsibility,BOC
-20191012993,Service closure Request with BO responsibility,00828
+20191012993,Service closure Request with BO responsibility,BOC
 20191012996,Service closure Request with BO responsibility,BOC
-20191012998,Service closure Request with network responsibility,00491
+20191012998,Service closure Request with network responsibility,00594
 20191013000,Pending Liquidation Request,BOC
-20191013003,Evaluating Request (NO registered letter),00491
-20191013005,Service closure Request with BO responsibility,00828
+20191013003,Evaluating Request (NO registered letter),00594
+20191013005,Service closure Request with BO responsibility,BOC
 20191013007,Pending Liquidation Request,BOC
 20191013009,Pending Liquidation Request,BOC
 20191013011,Pending Liquidation Request,BOC
-20191013012,Service closure Request with BO responsibility,00828
+20191013012,Service closure Request with BO responsibility,BOC
 20191013016,Service closure Request with BO responsibility,BOC
-20191013018,Evaluating Request (NO registered letter),00491
+20191013018,Evaluating Request (NO registered letter),00594
 20191013019,Pending Liquidation Request,BOC
 20191013020,Service closure Request with BO responsibility,BOC
-20191013023,Service closure Request with BO responsibility,00828
-20191013025,Service closure Request with BO responsibility,00828
-20191013027,Service closure Request with BO responsibility,00828
-20191013029,Evaluating Request (NO registered letter),00491
+20191013023,Service closure Request with BO responsibility,BOC
+20191013025,Service closure Request with BO responsibility,BOC
+20191013027,Service closure Request with BO responsibility,BOC
+20191013029,Evaluating Request (NO registered letter),00594
 20191013030,Service closure Request with BO responsibility,BOC
 20191013033,Pending Liquidation Request,BOC
-20191013038,Service closure Request with BO responsibility,00828
-20191013040,Authorization Requested,00045
+20191013038,Service closure Request with BO responsibility,BOC
+20191013040,Evaluating Request (WITH registered letter),00852
 20191013041,Pending Liquidation Request,BOC
 20191013043,Service closure Request with BO responsibility,BOC
 20191013047,Service closure Request with BO responsibility,BOC
-20191013048,Service closure Request with BO responsibility,00828
-20191013049,Evaluating Request (NO registered letter),00491
-20191013053,Service closure Request with BO responsibility,00828
-20191013055,Authorization Requested,00045
+20191013048,Service closure Request with BO responsibility,BOC
+20191013049,Evaluating Request (NO registered letter),00594
+20191013053,Service closure Request with BO responsibility,BOC
+20191013055,Evaluating Request (WITH registered letter),00852
 20191013056,Service closure Request with BO responsibility,BOC
-20191013057,Evaluating Request (NO registered letter),00491
-20191013061,Service closure Request with BO responsibility,00828
+20191013057,Evaluating Request (NO registered letter),00594
+20191013061,Service closure Request with BO responsibility,BOC
 20191013063,Service closure Request with BO responsibility,BOC
-20191013065,Evaluating Request (NO registered letter),00491
-20191013067,Evaluating Request (NO registered letter),00491
-20191013071,Evaluating Request (NO registered letter),00491
+20191013065,Evaluating Request (NO registered letter),00594
+20191013067,Evaluating Request (NO registered letter),00594
+20191013071,Evaluating Request (NO registered letter),00594
 20191013073,Service closure Request with BO responsibility,BOC
 20191013074,Service closure Request with BO responsibility,BOC
-20191013075,Service closure Request with BO responsibility,00828
-20191013076,Authorization Requested,00045
-20191013077,Authorization Requested,00491
+20191013075,Service closure Request with BO responsibility,BOC
+20191013076,Evaluating Request (WITH registered letter),00852
+20191013077,Evaluating Request (WITH registered letter),00828
 20191013079,Service closure Request with BO responsibility,BOC
-20191013087,Service closure Request with BO responsibility,00828
-20191013088,Service closure Request with BO responsibility,00828
+20191013087,Service closure Request with BO responsibility,BOC
+20191013088,Service closure Request with BO responsibility,BOC
 20191013089,Service closure Request with BO responsibility,BOC
-20191013091,Evaluating Request (NO registered letter),00491
+20191013091,Evaluating Request (NO registered letter),00594
 20191013096,Service closure Request with BO responsibility,BOC
 20191013101,Pending Liquidation Request,BOC
-20191013102,Evaluating Request (NO registered letter),00491
+20191013102,Evaluating Request (NO registered letter),00594
 20191013103,Pending Liquidation Request,BOC
 20191013105,Pending Liquidation Request,BOC
 20191013106,Service closure Request with BO responsibility,BOC
-20191013108,Evaluating Request (NO registered letter),00491
-20191013109,Evaluating Request (NO registered letter),00491
-20191013111,Service closure Request with network responsibility,00491
+20191013108,Evaluating Request (NO registered letter),00594
+20191013109,Evaluating Request (NO registered letter),00594
+20191013111,Service closure Request with network responsibility,00594
 20191013112,Service closure Request with BO responsibility,BOC
 20191013115,Service closure Request with BO responsibility,BOC
-20191013117,Evaluating Request (NO registered letter),00491
-20191013118,Evaluating Request (NO registered letter),00045
-20191013119,Service closure Request with network responsibility,00491
-20191013122,Evaluating Request (NO registered letter),00491
-20191013124,Service closure Request with BO responsibility,00828
-20191013125,Service closure Request with network responsibility,00491
+20191013117,Evaluating Request (NO registered letter),00594
+20191013118,Evaluating Request (NO registered letter),00594
+20191013119,Service closure Request with network responsibility,00594
+20191013122,Evaluating Request (NO registered letter),00594
+20191013124,Service closure Request with BO responsibility,BOC
+20191013125,Service closure Request with BO responsibility,00828
 20191013127,Service closure Request with BO responsibility,NotDef
 20191013129,Service closure Request with BO responsibility,00828
-20191013130,Service closure Request with BO responsibility,00828
+20191013130,Service closure Request with BO responsibility,BOC
 20191013132,Service closure Request with BO responsibility,BOC
-20191013133,Evaluating Request (NO registered letter),00491
-20191013137,Service closure Request with BO responsibility,00828
-20191013146,Service closure Request with network responsibility,00491
+20191013133,Evaluating Request (NO registered letter),00594
+20191013137,Service closure Request with BO responsibility,BOC
+20191013146,Service closure Request with BO responsibility,00828
 20191013148,Service closure Request with BO responsibility,BOC
 20191013150,Service closure Request with BO responsibility,BOC
 20191013153,Service closure Request with BO responsibility,BOC
-20191013165,Service closure Request with BO responsibility,00828
-20191013169,Evaluating Request (NO registered letter),00491
-20191013172,Authorization Requested,00491
+20191013165,Service closure Request with BO responsibility,BOC
+20191013169,Evaluating Request (NO registered letter),00594
+20191013172,Evaluating Request (WITH registered letter),00852
 20191013174,Service closure Request with BO responsibility,BOC
-20191013176,Evaluating Request (NO registered letter),00491
-20191013178,Authorization Requested,00491
-20191013179,Evaluating Request (NO registered letter),00491
-20191013180,Service closure Request with network responsibility,00491
-20191013183,Service closure Request with BO responsibility,00828
-20191013185,Authorization Requested,00491
-20191013186,Evaluating Request (NO registered letter),00491
+20191013176,Evaluating Request (NO registered letter),00594
+20191013178,Evaluating Request (WITH registered letter),00828
+20191013179,Evaluating Request (NO registered letter),00594
+20191013180,Service closure Request with network responsibility,00594
+20191013183,Service closure Request with BO responsibility,BOC
+20191013185,Evaluating Request (WITH registered letter),00828
+20191013186,Evaluating Request (NO registered letter),00594

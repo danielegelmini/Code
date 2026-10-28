@@ -18,6 +18,7 @@ import pulp
 from spopt.locate import PDispersion
 
 from utils.pre_processing_functions import convert_dtypes_bpi12, NO_NEXT_TOKEN
+from utils.transition_system import filter_rare_resources, list_to_str
 
 case_id_name = "case:concept:name"
 activity_column_name = "concept:name"
@@ -426,15 +427,11 @@ def next_possible_activities(trace_history, transition_graph, WINDOW_SIZE):
 
     Compares the trace history (or its last WINDOW_SIZE activities, whichever
     is shorter) against the transition graph to find valid subsequent
-    activities. If that exact-length prefix was never observed in training,
-    falls back to progressively shorter suffixes of it (window-1, window-2,
-    ..., down to just the single last activity), returning the first
-    non-empty match. The empty prefix (transition_graph[""], i.e. "what
-    typically starts a trace") is deliberately never used as a fallback --
-    it answers a different question (how traces begin) than "what can follow
-    this case's history", so it wouldn't be a meaningful recommendation here.
-    A case only ends up with no possible next activity if not even its last
-    activity alone was ever seen as a training prefix.
+    activities. If that state was never observed in training (or only as the
+    end of a trace), the case has no possible next activity: there is no
+    fallback to shorter windows since 2026-10-22 (the old one only matched
+    keys made by the start of training traces; it never found a state in
+    BAC, BPI12, bpi17_before, bpi17_after with window 5, so no output changed).
 
     Args:
         trace_history (list of str): The history of activities for a given case.
@@ -444,21 +441,42 @@ def next_possible_activities(trace_history, transition_graph, WINDOW_SIZE):
     Returns:
         list of str: A list of activities that can logically follow the current trace history.
     """
+    window = matched_window(trace_history, transition_graph, WINDOW_SIZE)
+    return list(transition_graph[window]) if window is not None else []
+
+
+def matched_window(trace_history, transition_graph, WINDOW_SIZE):
+    """The key of the transition graph next_possible_activities takes the candidate activities from (the last
+    WINDOW_SIZE activities, if that state has a non-empty entry), None otherwise."""
     window = trace_history if len(trace_history) <= WINDOW_SIZE else trace_history[-WINDOW_SIZE:]
     if not window:
-        return []
+        return None
 
-    parsed_keys = [(ts, ts.split(", ")) for ts in transition_graph.keys()]
+    key = list_to_str(window)
+    return key if transition_graph.get(key) else None
 
-    for length in range(len(window), 0, -1):
-        suffix = window[-length:]
-        for ts, ts_to_list in parsed_keys:
-            if ts_to_list == suffix:
-                pos_acts = transition_graph[ts]
-                if pos_acts:
-                    return list(pos_acts)
 
-    return []
+def candidate_resources_for_case(trace_history, possible_actions, transition_graph, WINDOW_SIZE, act_with_res,
+                                 resource_counts=None, min_res_share=0.0):
+    """act_with_res restricted, for this case, to the resources with at least min_res_share of the executions of
+    each possible next activity after the case's window (filter_rare_resources, same window as the candidate
+    activities). act_with_res itself when resource_counts is None or min_res_share <= 0.
+
+    Args:
+        trace_history (list of str): the activities of the case.
+        possible_actions (list of str): its candidate next activities.
+        transition_graph (dict), WINDOW_SIZE (int): as for next_possible_activities.
+        act_with_res (dict): {activity: resources that ever did it} (act_with_res_func).
+        resource_counts (dict, optional): resource_counts_by_window() of the training log.
+        min_res_share (float, optional): the threshold. Defaults to 0.0 (no filter).
+
+    Returns:
+        dict: {activity: candidate resources}.
+    """
+    if resource_counts is None or not min_res_share or min_res_share <= 0:
+        return act_with_res
+    window = matched_window(trace_history, transition_graph, WINDOW_SIZE)
+    return filter_rare_resources(possible_actions, act_with_res, resource_counts.get(window), min_res_share)
 
 def _to_row_df(x):
     """
@@ -1020,6 +1038,8 @@ def compute_recommendations_top_k(
     baseline_instances_by_case: Optional[Dict[Any, Any]] = None,
     gamma_cls: float = 0.5,
     gamma_reg: float = 0.5,
+    resource_counts: Optional[Dict[str, Any]] = None,
+    min_res_share: float = 0.0,
 ) -> Tuple[
     List[Dict[Any, Tuple[Optional[str], Optional[str]]]],
     List[Dict[Any, Tuple[Optional[float], Optional[float], Optional[float], Optional[float], Optional[float]]]],
@@ -1062,6 +1082,10 @@ def compute_recommendations_top_k(
             filter for that case (every valid pair is kept, as before this change).
         gamma_cls (float, optional): minimum required P(candidate outcome beats baseline). Defaults to 0.5.
         gamma_reg (float, optional): minimum required P(candidate time beats baseline). Defaults to 0.5.
+        resource_counts (dict, optional): resource_counts_by_window() of the training log, for min_res_share.
+        min_res_share (float, optional): candidate resources of a next activity must have done it after the case's
+            window in at least this share of its training occurrences (the most frequent one is always kept, see
+            utils/transition_system.filter_rare_resources). Defaults to 0.0: every resource that ever did it.
 
     Returns:
         tuple (rec_list, obj_list, status_by_case):
@@ -1107,12 +1131,14 @@ def compute_recommendations_top_k(
         if not poss:
             _fill_empty(cid, "no_possible_actions")
             continue
+        case_act_with_res = candidate_resources_for_case(trace_history, poss, transition_graph, window_size,
+                                                         act_with_res, resource_counts, min_res_share)
 
         if method == "nsga2":
             pareto_front = nsga2_pareto_search(
                 query_instance=query_instance,
                 possible_actions=poss,
-                act_with_res=act_with_res,
+                act_with_res=case_act_with_res,
                 predictive_outcome_model=predictive_outcome_model,
                 predictive_time_model=predictive_time_model,
                 pop_size=pop_size,
@@ -1125,7 +1151,7 @@ def compute_recommendations_top_k(
                 _fill_empty(cid, "no_possible_actions")
                 continue
         elif method == "exhaustive":
-            if not _build_valid_pairs(poss, act_with_res):
+            if not _build_valid_pairs(poss, case_act_with_res):
                 _fill_empty(cid, "no_possible_actions")
                 continue
 
@@ -1137,7 +1163,7 @@ def compute_recommendations_top_k(
                 poss,
                 predictive_outcome_model,
                 predictive_time_model,
-                act_with_res,
+                case_act_with_res,
                 baseline_row=baseline_row,
                 gamma_cls=gamma_cls,
                 gamma_reg=gamma_reg,

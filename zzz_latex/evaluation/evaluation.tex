@@ -1,0 +1,459 @@
+\chapter{Evaluation}
+\label{chap:evaluation}
+The method of Chapter~\ref{chap:methodology} is evaluated on four real-life
+event logs. The effect of a recommendation on a running case cannot be read
+from the historical data, since each case followed only one continuation, so
+it is estimated by simulating every case both with and without the
+recommendation.
+
+
+\section{Research Questions}
+\label{sec:ev:rq}
+% TODO: research questions to be decided with the supervisors.
+
+
+\section{Case Studies}
+\label{sec:ev:cases}
+The evaluation uses four event logs, the same as in~\cite{le2025balancing}.
+The \emph{Bank Account Closure} (BAC) log records a process of a banking
+institution that closes the accounts of its customers, at the request of
+either the customer or the bank, and is not publicly available. The
+BPIC2012~\cite{bpic2012} and BPIC2017~\cite{bpic2017} logs were published for
+the Business Process Intelligence Challenge and record the loan applications
+handled by a Dutch financial institution. BPIC2017 contains a concept drift,
+so it is split into two logs, \emph{bpi17-before} with the cases before week
+22 and \emph{bpi17-after} with the cases after week 28.
+
+Two KPIs are used. The first is the \emph{outcome} of the case, a binary KPI
+to be maximized. In BPIC2012, bpi17-before and bpi17-after a case is positive
+when the customer accepts an offer, that is, when the activity
+\texttt{O\_ACCEPTED} (\texttt{O\_Accepted} in BPIC2017) occurs. In BAC a case
+is negative when one of the activities \texttt{Network Adjustment Requested}
+and \texttt{Back-Office Adjustment Requested} occurs, since both are
+corrective actions that the bank wants to avoid. The second KPI is the
+\emph{remaining time} of the case, from the end of the last event of the
+prefix to the end of the case, to be minimized. The activities that define
+the outcome form the set $\mathcal{A}_F$ of each log and are never
+recommended (Section~\ref{subsec:met:offline:feasible}).
+
+The cases with fewer than four events are removed from every log, since they
+leave too few prefixes on which to recommend. Only BAC contains such cases,
+3\,400 out of 32\,429, and two of its activities, \texttt{Request deleted}
+and \texttt{Request completed with customer recovery}, occur only in them,
+so the log keeps 13 of its 15 activities.
+
+The events of BPIC2012 and BPIC2017 are of three kinds, distinguished by the
+prefix of the activity name: \texttt{A\_} for the states of the application,
+\texttt{O\_} for the states of the offers and \texttt{W\_} for the work items
+handled by the employees of the bank. All the \texttt{W\_} events are
+removed, six activities per log, and only the \texttt{A\_} and \texttt{O\_}
+activities are kept. This removes 46\% of the events of BPIC2012 and about
+9\% of those of the two BPIC2017 logs. Only rows are dropped: the remaining
+events keep their order and attributes, and no case is lost, since none
+consists of \texttt{W\_} events alone.
+% TODO (user): add the reason why the W_ activities are removed.
+
+In the versions of BPIC2012 and BPIC2017 used here, the start of an event is
+not recorded: its start timestamp is a copy of the completion of the previous
+event of the case, so every activity seems to begin as soon as the previous
+one ends, and no waiting time is visible. The start times are therefore
+estimated with the method of Vinci et al.~\cite{vinci2026healthcare}, which
+uses only the completion times. The start of an event $e$ of activity $a$ is
+placed between its earliest possible start and its completion,
+\begin{equation}
+  \mathit{start}(e) = \mathit{end}(e) - \alpha(a)\,
+  \bigl( \mathit{end}(e) - \mathit{mintime}(e) \bigr),
+  \label{eq:ev:start}
+\end{equation}
+where $\mathit{mintime}(e)$ is the later of the completion of the previous
+event of the same case and the completion of the latest earlier event of the
+same resource, and $\alpha(a) \in [0, 1]$ is a parameter of the activity:
+with $\alpha(a) = 1$ the activity starts as soon as possible, with
+$\alpha(a) = 0$ it takes no time (Figure~\ref{fig:ev:start}). The parameters
+are searched by bisection over 20 iterations. At every iteration the log is
+repaired with the current values, a probability distribution is fitted to the
+duration of each activity, and the process is simulated with a model built on
+the Petri net with fitness one of Section~\ref{subsec:ev:sim:net}, together
+with the resource calendars, the arrival rate and the branching
+probabilities discovered from the log. The simulated and the real log are
+compared activity by activity on the times between consecutive completions
+of a case, through the Wasserstein distance, and each activity keeps the
+value of $\alpha(a)$ with the smallest distance. The BAC log records the
+start of its events and is left unchanged.
+
+\begin{figure}[h]
+  \centering
+  \providecolor{Darkcandyapplered}{rgb}{0.64, 0.0, 0.0}
+  \begin{tikzpicture}[x=0.9cm,y=0.68cm,font=\small]
+    \node[anchor=east] at (0,2) {case of $e$};
+    \node[anchor=east] at (0,1) {resource of $e$};
+    \draw[->] (0,0.35) -- (12.5,0.35) node[anchor=west] {$t$};
+    \draw[fill=gray!25] (0.4,1.75) rectangle (3.4,2.25);
+    \node at (1.9,2) {previous event};
+    \draw[fill=gray!25] (2.2,0.75) rectangle (5.0,1.25);
+    \node at (3.6,1) {previous event};
+    \draw[pattern=north east lines, pattern color=Darkcandyapplered!60]
+      (5.0,1.75) rectangle (7.8,2.25);
+    \draw[fill=Darkcandyapplered!75] (7.8,1.75) rectangle (11.4,2.25);
+    \node[white] at (9.6,2) {\textbf{$e$ (estimated)}};
+    \draw[dashed] (5.0,0.35) -- (5.0,2.5);
+    \draw[dashed] (7.8,0.35) -- (7.8,2.5);
+    \draw[dashed] (11.4,0.35) -- (11.4,2.5);
+    \node[below] at (5.0,0.35) {$\mathit{mintime}(e)$};
+    \node[below] at (7.8,0.35) {$\mathit{start}(e)$};
+    \node[below] at (11.4,0.35) {$\mathit{end}(e)$};
+    \draw[decorate,decoration={brace,amplitude=4pt}] (5.0,2.6) -- (7.8,2.6)
+      node[midway,above=3pt] {waiting};
+    \draw[decorate,decoration={brace,amplitude=4pt}] (7.8,2.6) -- (11.4,2.6)
+      node[midway,above=3pt,font=\footnotesize]
+      {$\alpha(a)\,\bigl(\mathit{end}(e) - \mathit{mintime}(e)\bigr)$};
+  \end{tikzpicture}
+  \caption{Estimated start of an event $e$ of activity $a$
+    (Equation~\eqref{eq:ev:start}). The event cannot start before
+    $\mathit{mintime}(e)$, when both the previous event of its case and the
+    previous event of its resource have ended. The parameter $\alpha(a)$
+    splits the interval up to $\mathit{end}(e)$ into a waiting time and the
+    duration of the event.}
+  \label{fig:ev:start}
+\end{figure}
+
+Table~\ref{tab:ev:logs} summarizes the four logs after these steps.
+
+\begin{table}[h]
+  \centering
+  \small
+  \begin{tabular}{lrrrrrr}
+    \toprule
+    Log & Cases & Events & Activities & Resources & Mean duration & Positive \\
+        &       &        &            &           & (days)        & cases (\%) \\
+    \midrule
+    BAC          & 29\,029 & 205\,756 & 13 & 654 & 16.2 & 82.4 \\
+    BPIC2012     &  4\,685 &  62\,114 & 17 &  60 & 18.6 & 47.9 \\
+    bpi17-before & 12\,121 & 166\,547 & 18 & 103 & 20.2 & 56.4 \\
+    bpi17-after  & 14\,066 & 192\,723 & 18 & 119 & 21.9 & 54.7 \\
+    \bottomrule
+  \end{tabular}
+  \caption{The four event logs after preprocessing. The duration of a case
+    runs from the start of its first event to the end of its last one, with
+    the estimated start times for BPIC2012 and the two BPIC2017 logs.}
+  \label{tab:ev:logs}
+\end{table}
+
+\section{Experimental Setting}
+\label{sec:ev:setting}
+Each log is split in time. The split time $t_{\mathrm{split}}$ is the
+earliest instant at which 80\% of the cases are completed. The cases
+completed by $t_{\mathrm{split}}$ form the training log $\mathcal{L}$, from
+which the feasibility prescription module and the predictive models are
+built. The cases still running at $t_{\mathrm{split}}$ form the test log
+$\mathcal{L}^{\mathrm{test}}$, and the cases that start after it are
+discarded.
+
+The setting reproduces a user who asks for recommendations at
+$t_{\mathrm{split}}$ and knows only what has happened up to then. Every case
+of $\mathcal{L}^{\mathrm{test}}$ is therefore cut at $t_{\mathrm{split}}$:
+its prefix is made of the events completed by that instant, and the prefixes
+form the log $\mathcal{L}^{\mathrm{run}}$ of running cases, on which the
+method is applied. The next step of each case is recommended after the last
+event of its prefix. The complete cases of $\mathcal{L}^{\mathrm{test}}$,
+whose continuation after $t_{\mathrm{split}}$ the method never sees, are used
+only to check the simulator (Section~\ref{sec:ev:sim}). A case whose first
+event is still running at $t_{\mathrm{split}}$ has no completed event and
+therefore no prefix; this happens to 27 cases of BAC, which are left out of
+$\mathcal{L}^{\mathrm{run}}$. Table~\ref{tab:ev:split} reports the result of
+the split.
+
+\begin{table}[h]
+  \centering
+  \small
+  \begin{tabular}{lcrrr}
+    \toprule
+    Log & $t_{\mathrm{split}}$ & $\lvert \mathcal{L} \rvert$ &
+      $\lvert \mathcal{L}^{\mathrm{run}} \rvert$ & Discarded \\
+    \midrule
+    BAC          & 2019-01-29 & 23\,224 & 1\,876 & 3\,902 \\
+    BPIC2012     & 2012-02-16 &  3\,748 &    623 &    314 \\
+    bpi17-before & 2016-05-27 &  9\,697 & 1\,218 & 1\,206 \\
+    bpi17-after  & 2016-12-16 & 11\,253 & 1\,840 &    973 \\
+    \bottomrule
+  \end{tabular}
+  \caption{Temporal split of the four logs: number of training cases, of
+    running cases with at least one completed event, and of discarded cases,
+    which start after $t_{\mathrm{split}}$.}
+  \label{tab:ev:split}
+\end{table}
+
+
+\section{Offline Phase}
+\label{sec:ev:offline}
+
+\subsection{Feasibility Prescription Module}
+\label{subsec:ev:off:feasible}
+The transition system is built on $\mathcal{L}$ with a window of $w = 5$
+activities. The module is then restricted further than in
+Section~\ref{subsec:met:offline:feasible}, because a step that occurs only a
+handful of times in $\mathcal{L}$ is scored by the predictive models with
+almost no data behind it, and its predictions are unreliable. A next
+activity is kept only if it follows the window of the prefix in at least 1\%
+of the occurrences of that window in $\mathcal{L}$. A resource is kept for a
+next activity only if it performs that activity after the same window in at
+least 5\% of its occurrences there, and the most frequent resource is always
+kept, so that this second threshold never removes an activity. As a
+consequence, the eligible resources of an activity depend on the window of
+the prefix, and not only on the activity as in
+Equation~\eqref{eq:met:off:resources}. In BAC, 7\% of the training events
+carry the resource value \texttt{NotDef}, which marks an event without a
+defined resource; it is treated like any other resource.
+
+\subsection{Predictive Models}
+\label{subsec:ev:off:models}
+Both predictive models are gradient-boosted trees built with
+CatBoost~\cite{prokhorenkova2018}, which runs in its Plain mode. The outcome
+is learned by a classifier trained with the logarithmic loss, the remaining
+time by a regressor trained with \texttt{RMSEWithUncertainty}, which predicts
+a mean and a variance (Section~\ref{subsec:bg:gbm:catboost}). Both are
+trained with stochastic gradient Langevin boosting and used as virtual
+ensembles (Section~\ref{subsec:bg:uncertainty:gbm}). Each requests $M = 50$
+members, and fewer when the model has fewer than 100 trees, since a member
+needs at least two of them. The input is the vector of
+Section~\ref{subsec:met:offline:training}: the categorical features, among
+them the activity and resource of the last event, the next activity and
+resource and the case attributes of each log, are one-hot encoded, and the
+continuous ones are standardized. The case attributes are the requested
+amount in BPIC2012; the requested amount, the loan goal and the application
+type in the two BPIC2017 logs, together with the event attributes
+\texttt{Action} and \texttt{EventOrigin}; the closure type and reason and the
+role of the resource in BAC.
+
+The regressor does not model the remaining time in seconds. Remaining times
+are skewed, with a long tail of slow cases, so the Normal distribution of
+\texttt{RMSEWithUncertainty} is fitted to
+\begin{equation}
+  y = \log\bigl( 1 + \text{remaining time in days} \bigr).
+  \label{eq:ev:timespace}
+\end{equation}
+The predictive distribution of the remaining time is then log-normal. It is
+truncated at the longest remaining time in $\mathcal{L}$, because a large
+predicted variance would otherwise inflate its mean $e^{\mu + \sigma^2/2}$
+without bound, and the point prediction is the mean of the truncated
+distribution, converted back to seconds (Appendix~\ref{app:lognormal}). The confidence filter compares the
+members directly in the space of~\eqref{eq:ev:timespace}: the transformation
+is monotone, so a candidate that is faster than the baseline there is faster
+in seconds too.
+
+The hyperparameters of each model are chosen with Optuna~\cite{akiba2019}
+over 80 trials, in the search space of Table~\ref{tab:ev:search}. A trial
+trains a model on the training part of
+$\mathcal{D} \cup \mathcal{D}^{\varnothing}$ and measures its loss on the
+validation set, which holds the last 20\% of the cases of $\mathcal{L}$ by
+completion time, with all their prefixes and their copies in
+$\mathcal{D}^{\varnothing}$. A trial grows at most 3\,000 trees and stops
+early when the validation loss has not improved for 50 of them, and a trial
+whose loss after 100 trees is worse than the median of the earlier trials
+at the same point is abandoned. The trial with the lowest validation loss
+wins. The final model is then refitted on all of
+$\mathcal{D} \cup \mathcal{D}^{\varnothing}$ with the winning
+hyperparameters and with the number of trees at which the winning trial
+stopped.
+
+\begin{table}[h]
+  \centering
+  \small
+  \begin{tabular}{lll}
+    \toprule
+    Hyperparameter & Range & Notes \\
+    \midrule
+    learning rate $\epsilon$ & $[0.02, 0.3]$, log scale & \\
+    tree depth & $\{3, \dots, 12\}$ & \\
+    L2 coefficient $\zeta$ & $[1, 50]$, log scale & \\
+    share of features per split & $[0.6, 1]$ (classifier), $[0.5, 1]$ (regressor) & \\
+    sampling of the examples & Bayesian, Bernoulli, MVS & \\
+    \quad bagging temperature $\omega$ & $[0, 10]$ & Bayesian only \\
+    \quad sampling rate $q$ & $[0.5, 1]$ & Bernoulli and MVS \\
+    growing policy & oblivious, depthwise & \\
+    \quad minimum examples per leaf & $\{1, \dots, 200\}$, log scale & depthwise only \\
+    \bottomrule
+  \end{tabular}
+  \caption{Search space of the hyperparameters, the same for the four logs.
+    The symbols are those of Section~\ref{subsec:bg:gbm:catboost}.}
+  \label{tab:ev:search}
+\end{table}
+
+The temperature $T$ of the classifier and the factor $s$ of the regressor
+(Section~\ref{subsec:met:offline:models}) are fitted on the validation set
+with the model of the winning trial and then applied to the final model.
+This assumes that refitting on slightly more data does not change how
+miscalibrated the model is.
+
+The models are assessed on the prefixes of the cases in
+$\mathcal{L}^{\mathrm{test}}$, which none of them has seen. For the
+classifier the measures are the logarithmic loss and the expected
+calibration error over ten equal-width bins
+(Equation~\eqref{eq:bg:unc:ece}), before and after temperature scaling,
+together with the average data and knowledge uncertainty of its virtual
+ensemble. For the regressor they are the mean absolute error and the root
+mean squared error of the point prediction, in days; the ENCE over fifteen
+bins of equal size (Equation~\eqref{eq:bg:unc:ence}), the coefficient of
+variation of the predicted standard deviations and the coverage of the
+$\pm\sigma$ and $\pm 2\sigma$ intervals, before and after the scaling by
+$s$; and the average data and knowledge uncertainty of its ensemble. The
+calibration measures of the regressor are computed in the space
+of~\eqref{eq:ev:timespace}, where the predictive distribution is Normal.
+
+
+\section{Online Phase}
+\label{sec:ev:online}
+For every prefix of $\mathcal{L}^{\mathrm{run}}$, all the candidates given
+by the feasibility prescription module are evaluated, together with the
+baseline. The outcome is to be maximized and the remaining time to be
+minimized. The confidence filter uses $\gamma_j = 0.5$ for both KPIs, so a
+candidate passes when, for at least one of them, an improvement over the
+baseline is more likely than not. The selection rule then returns up to
+$k = 5$ candidates of the Pareto front, or the whole front when it has fewer
+points. The candidates of a case are a set: the order in which they are
+listed carries no preference, and each of them is evaluated on its own.
+
+
+\section{Simulation}
+\label{sec:ev:sim}
+Whether a recommendation helps could be measured directly only by an A/B
+test, in which some running cases follow it and others do not, and this is
+not possible on historical data. Every prefix of $\mathcal{L}^{\mathrm{run}}$
+is instead continued by a simulator, once without a recommendation and once
+for each of its recommended steps, and the continuations are compared. The
+simulator plays no part in producing the recommendations: it is used only
+here.
+
+\subsection{Petri Net}
+\label{subsec:ev:sim:net}
+The simulator needs a Petri net that can replay every prefix and on which
+every recommended step can be taken. A net with fitness one on the whole log
+meets both requirements. It is built from the directly-follows graph of the
+log, the graph with one node per activity and an arc from $a$ to $b$
+whenever $b$ immediately follows $a$ in some case. Each activity becomes a
+place, meaning that $a$ was the last activity executed, and each arc
+becomes a transition labeled $b$ that moves the token from the place of $a$
+to the place of $b$. A transition labeled with each first activity of the
+cases leaves the initial place, and a silent transition leads from the place
+of each last activity to the final place. Every case of the log is then a firing sequence of the net, so its
+fitness is one. Every recommended step can be taken as well: the next
+activities of a prefix ending with $a$ are those observed after a window
+ending with $a$ (Section~\ref{subsec:met:offline:feasible}), so the
+corresponding transitions are enabled in the place of $a$. The price is a
+lower precision, since the net remembers only the last activity of a case:
+it cannot represent concurrency, and it allows sequences that respect every
+observed pair of consecutive activities but never occurred as a whole.
+
+The net is built from the whole log, with the preprocessing of
+Section~\ref{sec:ev:cases} except the removal of the short cases, and so are
+the parameters of the simulator. The simulator therefore sees the test cases
+too, but only through aggregate statistics, and in the same way for the
+runs without and with a recommendation.
+
+\subsection{Simulation Model}
+\label{subsec:ev:sim:model}
+The simulation model is discovered with an adapted version of
+ProSiT~\cite{vinci2025prosit}. Waiting and routing are modeled place by
+place, time first. For every place a regression tree predicts, on the scale
+$\log(1 + \text{days})$, how long a case waits after its last event before
+its next one starts, from the attributes of the case, the activities it has
+executed so far and its age. For every place with more than one outgoing
+transition, a classification tree then chooses the transition from the same
+information and from the wait just drawn, so that what happens next can
+depend on how long the case has waited. The execution time of each activity
+is predicted by a regression tree of depth up to three, chosen by
+cross-validation. In every tree, a new value is drawn among the values
+observed in the training examples of the leaf the case falls into, rather
+than from a distribution fitted to them. The resource of an activity is
+drawn with the frequencies observed in the log, and every resource follows
+the working calendar discovered for it.
+
+\subsection{Baseline and Recommendation Runs}
+\label{subsec:ev:sim:runs}
+For every case of $\mathcal{L}^{\mathrm{run}}$ the simulator replays the
+prefix on the net and continues the case from the marking it reaches. The
+continuation starts right after the last event of the prefix, with no
+constraint tied to $t_{\mathrm{split}}$, so the simulator starts from exactly
+the information available to the method. No new case arrives during the
+simulation: only the cases of $\mathcal{L}^{\mathrm{run}}$ are continued.
+
+In the \emph{baseline} runs the case continues freely until it completes. In
+a \emph{recommendation} run its next event is the recommended step: the
+recommended activity, performed by the recommended resource. The wait before
+it is drawn from the waits observed in the current place, weighted by how
+likely the recommended transition is after each of them, and the rest of the
+case continues freely. A recommendation is applied only if its activity is
+the next visible step of the case, enabled in the current marking or
+reachable through silent transitions alone; a run in which it is not
+applicable is left out of the evaluation. Each prefix is simulated ten times
+without a recommendation and ten times for each of its recommended steps.
+From every run the two KPIs are read as in Section~\ref{sec:ev:cases}: the
+outcome of the simulated case and its remaining time, measured from the end
+of the last event of the prefix, the same reference as the predictions.
+
+\subsection{Measures}
+\label{subsec:ev:sim:measures}
+A recommended step of a case is a \emph{point}. For each point the effect of
+the recommendation is measured twice, by the predictive models and by the
+simulation, and in both cases against the baseline. For the outcome the
+effect is the change of the probability of a positive outcome, in
+percentage points: on the predicted side the difference between the
+probabilities predicted for $x_C$ and for $x_B$, on the simulated side the
+difference between the shares of positive runs with the recommendation and
+without it. For the remaining time it is the relative change, in percent of
+the baseline: on the predicted side between the predictions for $x_C$ and
+$x_B$, on the simulated side between the mean remaining times of the two
+groups of runs.
+
+A point \emph{improves} a KPI when its change is strictly favorable, a
+higher outcome or a shorter remaining time. On the simulated side, a case
+whose runs are all positive both with and without the recommendation counts
+as improved on the outcome, since it cannot do better. Comparing the two
+sides gives, for each KPI and for the two KPIs together, a two-by-two table:
+among the points that the models predict to improve, the share that also
+improves in the simulation, and the same share among the points that the
+models predict not to improve. If the prediction carried no information the
+two shares would be equal, so their difference measures how informative the
+prediction is.
+
+A point is \emph{good} when it improves one KPI by at least $x$ and worsens
+the other by at most $y$, with $x = 5$ and $y = 10$, in percentage points
+for the outcome and in percent for the remaining time; the same rule is
+applied to the predicted and to the simulated changes. Finally, the expected
+value of each KPI with the recommendation is computed on both sides,
+averaging first over the points of a prefix and then over the prefixes. It
+is computed on all the points and on the good points alone, as if only those
+were recommended, together with the share of prefixes left with at least one
+good point.
+
+\subsection{Checking the Simulator}
+\label{subsec:ev:sim:check}
+The comparison above is meaningful only if the simulator reproduces the
+process. The baseline runs are therefore compared with what actually
+happened to the same cases, the complete cases of
+$\mathcal{L}^{\mathrm{test}}$: the share of positive cases and the mean,
+median and standard deviation of their duration, also broken down by the age
+of the case at $t_{\mathrm{split}}$.
+
+\subsection{A Fully Simulated Training Log}
+\label{subsec:ev:sim:full}
+When the predicted and the simulated effects of a recommendation disagree,
+the cause may lie in the predictive models or in the simulator, which may
+not reproduce the real process. To tell the two apart, the evaluation is
+repeated on BPIC2012 with a training log produced by the simulator itself.
+The simulation model discovered from BPIC2012 generates as many cases as its
+training log contains, 3\,748, each from the initial marking of the net to
+its end, with arrival times drawn from the discovered arrival process and
+case attributes drawn from their distribution in the log; no real prefix is
+replayed. The resulting log, \emph{BPI12-sim}, takes the place of the
+training log, while $\mathcal{L}^{\mathrm{test}}$ and
+$\mathcal{L}^{\mathrm{run}}$ stay those of the real log, so the method is
+asked for recommendations on the same running cases. The whole method is run
+again on BPI12-sim: the feasibility prescription module and the predictive
+models are built on the simulated training log, and the recommendations are
+simulated with a Petri net and simulator parameters discovered from the
+simulated log. In this setting the predictive models and the simulator learn
+the same process, the one encoded in the simulation model, so a disagreement
+between them can no longer come from a simulator that departs from the real
+process. The simulated log is also compared with the real BPIC2012 log, with
+the measures of Section~\ref{subsec:ev:sim:check}.

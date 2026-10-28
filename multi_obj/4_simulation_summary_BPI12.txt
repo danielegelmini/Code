@@ -1,6 +1,6 @@
 ==============================================================================================================
 SIMULATION SUMMARY - BPI12 (exhaustive)
-Written by 4_run_recommendation_simulation.py - 2026-10-20 19:38:12
+Written by 4_run_recommendation_simulation.py - 2026-10-21 10:49:24
 Test cases (prefixes in test_log.csv): 623
 ==============================================================================================================
 simulated          : test cases with a recommendation at this rank (step 3): only these are continued
@@ -16,9 +16,9 @@ non-fitting / inserted act. / ambiguous: prefix replay diagnostics of run 1 (pro
 (a) Cases simulated and recommendations not applicable
 scenario  runs  simulated % of test unreach./run (mean) min-max  unreach. >=1 run  unreach. all runs % case-runs usable  cases usable (step 5) runaway/run  non-fitting prefixes  inserted act.  ambiguous
 baseline    10        623     100.0                 0.0     0-0                 0                  0              100.0                    623         0.0                     0              0          0
-rank 1/5    10        623     100.0                 0.0     0-0                 0                  0              100.0                    623         0.0                     0              0          0
-rank 2/5    10        299      48.0                 0.0     0-0                 0                  0              100.0                    299         0.0                     0              0          0
-rank 3/5    10        214      34.3                 0.0     0-0                 0                  0              100.0                    214         0.0                     0              0          0
-rank 4/5    10        200      32.1                 0.0     0-0                 0                  0              100.0                    200         0.0                     0              0          0
-rank 5/5    10         93      14.9                 0.0     0-0                 0                  0              100.0                     93         0.0                     0              0          0
+rank 1/5    10        601      96.5                 0.0     0-0                 0                  0              100.0                    601         0.0                     0              0          0
+rank 2/5    10        215      34.5                 0.0     0-0                 0                  0              100.0                    215         0.0                     0              0          0
+rank 3/5    10        149      23.9                 0.0     0-0                 0                  0              100.0                    149         0.0                     0              0          0
+rank 4/5    10         13       2.1                 0.0     0-0                 0                  0              100.0                     13         0.0                     0              0          0
+rank 5/5    10          0       0.0                 0.0     0-0                 0                  0                n/a                      0         0.0                     0              0          0
 

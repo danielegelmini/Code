@@ -1,342 +1,532 @@
 ==============================================================================================================
 PREDICTED vs SIMULATED EFFECT OF THE RECOMMENDED ACTIONS
-Written by 9_prediction_vs_simulation_agreement.py - 2026-10-20 20:53:34 | method exhaustive | good points x = 5, y = 10
+Written by 9_prediction_vs_simulation_agreement.py - 2026-10-27 16:01:04 | method exhaustive | good points x = 5, y = 10
 ==============================================================================================================
 Changes against the no-recommendation baseline, each on its own side. Outcome: percentage points of the
 probability of a positive outcome; time: % of the baseline remaining time. Simulation: means over the runs;
 an outcome positive in every run both with and without the recommendation counts as improved.
 
-BAC  (2881 recommended points, 1872 prefixes)
+BAC  (2293 recommended points, 1871 prefixes)
 
 1. Per KPI
   outcome (probability of a positive outcome)
-    predicted improves :  2667 of 2881 points (92.6%)
-    of these, simulated improves too:  1356 (50.8%)  -- 47.1% of all points
-    reference -- predicted NOT improves (214 points), simulated improves anyway:   103 (48.1%)  => yes - no = +2.7 pp (0 = the model's yes/no says nothing)
+    predicted improves :  1878 of 2293 points (81.9%)
+    of these, simulated improves too:  1013 (53.9%)  -- 44.2% of all points
+    reference -- predicted NOT improves (415 points), simulated improves anyway:   212 (51.1%)  => yes - no = +2.9 pp (0 = the model's yes/no says nothing)
                               simulated yes   simulated no
-    predicted yes                     1356           1311
-    predicted no                       103            111
+    predicted yes                     1013            865
+    predicted no                       212            203
 
   remaining time
-    predicted improves :  2251 of 2881 points (78.1%)
-    of these, simulated improves too:  1265 (56.2%)  -- 43.9% of all points
-    reference -- predicted NOT improves (630 points), simulated improves anyway:   299 (47.5%)  => yes - no = +8.7 pp (0 = the model's yes/no says nothing)
+    predicted improves :  1708 of 2293 points (74.5%)
+    of these, simulated improves too:   985 (57.7%)  -- 43.0% of all points
+    reference -- predicted NOT improves (585 points), simulated improves anyway:   267 (45.6%)  => yes - no = +12.0 pp (0 = the model's yes/no says nothing)
                               simulated yes   simulated no
-    predicted yes                     1265            986
-    predicted no                       299            331
+    predicted yes                      985            723
+    predicted no                       267            318
 
-2. Both KPIs
+2. Both KPIs, at least one KPI
   improves outcome AND remaining time
-    predicted improves :  2038 of 2881 points (70.7%)
-    of these, simulated improves too:   711 (34.9%)  -- 24.7% of all points
-    reference -- predicted NOT improves (843 points), simulated improves anyway:   222 (26.3%)  => yes - no = +8.6 pp (0 = the model's yes/no says nothing)
+    predicted improves :  1302 of 2293 points (56.8%)
+    of these, simulated improves too:   457 (35.1%)  -- 19.9% of all points
+    reference -- predicted NOT improves (991 points), simulated improves anyway:   299 (30.2%)  => yes - no = +4.9 pp (0 = the model's yes/no says nothing)
                               simulated yes   simulated no
-    predicted yes                      711           1327
-    predicted no                       222            621
+    predicted yes                      457            845
+    predicted no                       299            692
+
+  improves outcome OR remaining time (at least one)
+    predicted improves :  2284 of 2293 points (99.6%)
+    of these, simulated improves too:  1718 (75.2%)  -- 74.9% of all points
+    reference -- predicted NOT improves (9 points), simulated improves anyway:     3 (33.3%)  => yes - no = +41.9 pp (0 = the model's yes/no says nothing)
+                              simulated yes   simulated no
+    predicted yes                     1718            566
+    predicted no                         3              6
 
 3. Good points (one KPI improved by >= 5 -- pp / % -- the other worsened by <= 10)
   good
-    predicted good :   750 of 2881 points (26.0%)
-    of these, simulated good too:   450 (60.0%)  -- 15.6% of all points
-    reference -- predicted NOT good (2131 points), simulated good anyway:  1081 (50.7%)  => yes - no = +9.3 pp (0 = the model's yes/no says nothing)
+    predicted good :   508 of 2293 points (22.2%)
+    of these, simulated good too:   355 (69.9%)  -- 15.5% of all points
+    reference -- predicted NOT good (1785 points), simulated good anyway:   870 (48.7%)  => yes - no = +21.1 pp (0 = the model's yes/no says nothing)
                               simulated yes   simulated no
-    predicted yes                      450            300
-    predicted no                      1081           1050
+    predicted yes                      355            153
+    predicted no                       870            915
 
-4. E_p{ E_r[ (sum_i S_i) / n_sim ] } with the recommendation -- simulation vs prediction
-  all points (1872 of 1872 prefixes)
-    outcome: share of positive runs / predicted probability    simulated    0.811   predicted    0.809   difference +0.002
-    remaining time, days: mean over the runs / predicted       simulated    8.603   predicted    8.143   difference +0.461
-  good points only (520 of 1872 prefixes)
-    outcome: share of positive runs / predicted probability    simulated    0.799   predicted    0.817   difference -0.018
-    remaining time, days: mean over the runs / predicted       simulated    9.118   predicted    9.143   difference -0.025
+4. E_p{ E_r[ (sum_i S_i) / n_sim ] } with the recommendation -- simulation vs prediction,
+   on the points that the prediction judges as improving / good (the ones of the tables of sections 1-3)
+  improves the outcome (1745 of 1871 prefixes)
+    outcome: share of positive runs / predicted probability    simulated    0.833   predicted    0.833   difference +0.000
+    remaining time, days: mean over the runs / predicted       simulated    9.022   predicted    8.202   difference +0.820
+    time reduction, days: baseline - with recommendation       simulated   -0.075   predicted    0.243   difference -0.318
+    time won: share of run pairs shorter / P(shorter)          simulated    0.506   predicted    0.512   difference -0.005
+  improves the time (1532 of 1871 prefixes)
+    outcome: share of positive runs / predicted probability    simulated    0.820   predicted    0.801   difference +0.020
+    remaining time, days: mean over the runs / predicted       simulated    6.687   predicted    6.752   difference -0.065
+    time reduction, days: baseline - with recommendation       simulated    1.147   predicted    0.737   difference +0.411
+    time won: share of run pairs shorter / P(shorter)          simulated    0.526   predicted    0.521   difference +0.005
+  improves both KPIs (1273 of 1871 prefixes)
+    outcome: share of positive runs / predicted probability    simulated    0.837   predicted    0.829   difference +0.009
+    remaining time, days: mean over the runs / predicted       simulated    6.626   predicted    6.230   difference +0.396
+    time reduction, days: baseline - with recommendation       simulated    0.532   predicted    0.513   difference +0.019
+    time won: share of run pairs shorter / P(shorter)          simulated    0.519   predicted    0.519   difference -0.000
+  improves at least one KPI (1870 of 1871 prefixes)
+    outcome: share of positive runs / predicted probability    simulated    0.813   predicted    0.803   difference +0.010
+    remaining time, days: mean over the runs / predicted       simulated    8.628   predicted    8.151   difference +0.477
+    time reduction, days: baseline - with recommendation       simulated    0.350   predicted    0.379   difference -0.029
+    time won: share of run pairs shorter / P(shorter)          simulated    0.513   predicted    0.514   difference -0.000
+  good points (460 of 1871 prefixes)
+    outcome: share of positive runs / predicted probability    simulated    0.797   predicted    0.801   difference -0.004
+    remaining time, days: mean over the runs / predicted       simulated    7.557   predicted    8.741   difference -1.184
+    time reduction, days: baseline - with recommendation       simulated    4.629   predicted    2.495   difference +2.133
+    time won: share of run pairs shorter / P(shorter)          simulated    0.582   predicted    0.567   difference +0.015
 
 SUMMARY
 1-2. Is the predicted improvement seen in the simulation too? (all points)
                  predicted        confirmed   if predicted NO,      discrimination
                  improves         by sim      sim improves anyway   (yes - no)
-   outcome        2667 ( 93%)      51%         48%                    +3
-   time           2251 ( 78%)      56%         47%                    +9
-   both           2038 ( 71%)      35%         26%                    +9
+   outcome        1878 ( 82%)      54%         51%                    +3
+   time           1708 ( 74%)      58%         46%                   +12
+   both           1302 ( 57%)      35%         30%                    +5
+   any            2284 (100%)      75%         33%                   +42
 
 3. Good points (x = 5, y = 10)
-   750 good points (26%), in 520 of 1872 prefixes (28%); good in the simulation too: 60%
+   508 good points (22%), in 460 of 1871 prefixes (25%); good in the simulation too: 70%
 
 4. Expected value with the recommendation (formula E_p{E_r[...]})
-   outcome: share of positive runs / predicted probability; time: remaining time in days
-                                  all points   good points only
-   outcome      simulated           0.811          0.799
-                predicted           0.809          0.817
-   time, days   simulated            8.60           9.12
-                predicted            8.14           9.14
-   prefixes covered                  100%            28%
+   outcome: share of positive runs / predicted probability; time: remaining time in days;
+   time reduction: baseline - with recommendation, days (positive = shorter);
+   time won: share of the (recommendation, baseline) run pairs with the recommendation shorter /
+   predicted P(time with < without) -- 0.5 = no effect
+   columns: the points that the prediction judges as improving the outcome / the time / both /
+   at least one KPI, and the good points
+                               outcome      time      both       any      good
+   outcome      simulated        0.833     0.820     0.837     0.813     0.797
+                predicted        0.833     0.801     0.829     0.803     0.801
+   time, days   simulated         9.02      6.69      6.63      8.63      7.56
+                predicted         8.20      6.75      6.23      8.15      8.74
+   reduction    simulated        -0.08      1.15      0.53      0.35      4.63
+                predicted         0.24      0.74      0.51      0.38      2.50
+   time won     simulated        0.506     0.526     0.519     0.513     0.582
+                predicted        0.512     0.521     0.519     0.514     0.567
+   prefixes covered                93%       82%       68%      100%       25%
 
 --------------------------------------------------------------------------------------------------------------
 
-BPI12  (1429 recommended points, 623 prefixes)
+BPI12  (978 recommended points, 601 prefixes)
 
 1. Per KPI
   outcome (probability of a positive outcome)
-    predicted improves :   912 of 1429 points (63.8%)
-    of these, simulated improves too:   675 (74.0%)  -- 47.2% of all points
-    reference -- predicted NOT improves (517 points), simulated improves anyway:    25 (4.8%)  => yes - no = +69.2 pp (0 = the model's yes/no says nothing)
+    predicted improves :   605 of 978 points (61.9%)
+    of these, simulated improves too:   490 (81.0%)  -- 50.1% of all points
+    reference -- predicted NOT improves (373 points), simulated improves anyway:     1 (0.3%)  => yes - no = +80.7 pp (0 = the model's yes/no says nothing)
                               simulated yes   simulated no
-    predicted yes                      675            237
-    predicted no                        25            492
+    predicted yes                      490            115
+    predicted no                         1            372
 
   remaining time
-    predicted improves :  1115 of 1429 points (78.0%)
-    of these, simulated improves too:   841 (75.4%)  -- 58.9% of all points
-    reference -- predicted NOT improves (314 points), simulated improves anyway:    38 (12.1%)  => yes - no = +63.3 pp (0 = the model's yes/no says nothing)
+    predicted improves :   833 of 978 points (85.2%)
+    of these, simulated improves too:   635 (76.2%)  -- 64.9% of all points
+    reference -- predicted NOT improves (145 points), simulated improves anyway:    27 (18.6%)  => yes - no = +57.6 pp (0 = the model's yes/no says nothing)
                               simulated yes   simulated no
-    predicted yes                      841            274
-    predicted no                        38            276
+    predicted yes                      635            198
+    predicted no                        27            118
 
-2. Both KPIs
+2. Both KPIs, at least one KPI
   improves outcome AND remaining time
-    predicted improves :   689 of 1429 points (48.2%)
-    of these, simulated improves too:   401 (58.2%)  -- 28.1% of all points
-    reference -- predicted NOT improves (740 points), simulated improves anyway:    13 (1.8%)  => yes - no = +56.4 pp (0 = the model's yes/no says nothing)
+    predicted improves :   491 of 978 points (50.2%)
+    of these, simulated improves too:   296 (60.3%)  -- 30.3% of all points
+    reference -- predicted NOT improves (487 points), simulated improves anyway:    13 (2.7%)  => yes - no = +57.6 pp (0 = the model's yes/no says nothing)
                               simulated yes   simulated no
-    predicted yes                      401            288
-    predicted no                        13            727
+    predicted yes                      296            195
+    predicted no                        13            474
+
+  improves outcome OR remaining time (at least one)
+    predicted improves :   947 of 978 points (96.8%)
+    of these, simulated improves too:   831 (87.8%)  -- 85.0% of all points
+    reference -- predicted NOT improves (31 points), simulated improves anyway:    13 (41.9%)  => yes - no = +45.8 pp (0 = the model's yes/no says nothing)
+                              simulated yes   simulated no
+    predicted yes                      831            116
+    predicted no                        13             18
 
 3. Good points (one KPI improved by >= 5 -- pp / % -- the other worsened by <= 10)
   good
-    predicted good :   716 of 1429 points (50.1%)
-    of these, simulated good too:   535 (74.7%)  -- 37.4% of all points
-    reference -- predicted NOT good (713 points), simulated good anyway:    11 (1.5%)  => yes - no = +73.2 pp (0 = the model's yes/no says nothing)
+    predicted good :   501 of 978 points (51.2%)
+    of these, simulated good too:   377 (75.2%)  -- 38.5% of all points
+    reference -- predicted NOT good (477 points), simulated good anyway:    20 (4.2%)  => yes - no = +71.1 pp (0 = the model's yes/no says nothing)
                               simulated yes   simulated no
-    predicted yes                      535            181
-    predicted no                        11            702
+    predicted yes                      377            124
+    predicted no                        20            457
 
-4. E_p{ E_r[ (sum_i S_i) / n_sim ] } with the recommendation -- simulation vs prediction
-  all points (623 of 623 prefixes)
-    outcome: share of positive runs / predicted probability    simulated    0.584   predicted    0.628   difference -0.043
-    remaining time, days: mean over the runs / predicted       simulated   14.041   predicted   11.862   difference +2.179
-  good points only (531 of 623 prefixes)
-    outcome: share of positive runs / predicted probability    simulated    0.700   predicted    0.741   difference -0.041
-    remaining time, days: mean over the runs / predicted       simulated   15.819   predicted   12.964   difference +2.855
+4. E_p{ E_r[ (sum_i S_i) / n_sim ] } with the recommendation -- simulation vs prediction,
+   on the points that the prediction judges as improving / good (the ones of the tables of sections 1-3)
+  improves the outcome (600 of 601 prefixes)
+    outcome: share of positive runs / predicted probability    simulated    0.749   predicted    0.721   difference +0.028
+    remaining time, days: mean over the runs / predicted       simulated   14.272   predicted   14.455   difference -0.183
+    time reduction, days: baseline - with recommendation       simulated    1.427   predicted    0.823   difference +0.604
+    time won: share of run pairs shorter / P(shorter)          simulated    0.503   predicted    0.505   difference -0.002
+  improves the time (590 of 601 prefixes)
+    outcome: share of positive runs / predicted probability    simulated    0.509   predicted    0.514   difference -0.005
+    remaining time, days: mean over the runs / predicted       simulated   12.533   predicted   14.130   difference -1.597
+    time reduction, days: baseline - with recommendation       simulated    3.353   predicted    1.358   difference +1.995
+    time won: share of run pairs shorter / P(shorter)          simulated    0.577   predicted    0.528   difference +0.048
+  improves both KPIs (488 of 601 prefixes)
+    outcome: share of positive runs / predicted probability    simulated    0.720   predicted    0.697   difference +0.022
+    remaining time, days: mean over the runs / predicted       simulated   15.270   predicted   16.196   difference -0.927
+    time reduction, days: baseline - with recommendation       simulated    2.821   predicted    1.381   difference +1.440
+    time won: share of run pairs shorter / P(shorter)          simulated    0.559   predicted    0.522   difference +0.037
+  improves at least one KPI (601 of 601 prefixes)
+    outcome: share of positive runs / predicted probability    simulated    0.582   predicted    0.577   difference +0.005
+    remaining time, days: mean over the runs / predicted       simulated   12.835   predicted   14.110   difference -1.276
+    time reduction, days: baseline - with recommendation       simulated    2.875   predicted    1.171   difference +1.704
+    time won: share of run pairs shorter / P(shorter)          simulated    0.556   predicted    0.521   difference +0.036
+  good points (498 of 601 prefixes)
+    outcome: share of positive runs / predicted probability    simulated    0.724   predicted    0.701   difference +0.023
+    remaining time, days: mean over the runs / predicted       simulated   15.124   predicted   15.967   difference -0.843
+    time reduction, days: baseline - with recommendation       simulated    2.744   predicted    1.354   difference +1.390
+    time won: share of run pairs shorter / P(shorter)          simulated    0.556   predicted    0.522   difference +0.035
 
 SUMMARY
 1-2. Is the predicted improvement seen in the simulation too? (all points)
                  predicted        confirmed   if predicted NO,      discrimination
                  improves         by sim      sim improves anyway   (yes - no)
-   outcome         912 ( 64%)      74%          5%                   +69
-   time           1115 ( 78%)      75%         12%                   +63
-   both            689 ( 48%)      58%          2%                   +56
+   outcome         605 ( 62%)      81%          0%                   +81
+   time            833 ( 85%)      76%         19%                   +58
+   both            491 ( 50%)      60%          3%                   +58
+   any             947 ( 97%)      88%         42%                   +46
 
 3. Good points (x = 5, y = 10)
-   716 good points (50%), in 531 of 623 prefixes (85%); good in the simulation too: 75%
+   501 good points (51%), in 498 of 601 prefixes (83%); good in the simulation too: 75%
 
 4. Expected value with the recommendation (formula E_p{E_r[...]})
-   outcome: share of positive runs / predicted probability; time: remaining time in days
-                                  all points   good points only
-   outcome      simulated           0.584          0.700
-                predicted           0.628          0.741
-   time, days   simulated           14.04          15.82
-                predicted           11.86          12.96
-   prefixes covered                  100%            85%
+   outcome: share of positive runs / predicted probability; time: remaining time in days;
+   time reduction: baseline - with recommendation, days (positive = shorter);
+   time won: share of the (recommendation, baseline) run pairs with the recommendation shorter /
+   predicted P(time with < without) -- 0.5 = no effect
+   columns: the points that the prediction judges as improving the outcome / the time / both /
+   at least one KPI, and the good points
+                               outcome      time      both       any      good
+   outcome      simulated        0.749     0.509     0.720     0.582     0.724
+                predicted        0.721     0.514     0.697     0.577     0.701
+   time, days   simulated        14.27     12.53     15.27     12.83     15.12
+                predicted        14.45     14.13     16.20     14.11     15.97
+   reduction    simulated         1.43      3.35      2.82      2.87      2.74
+                predicted         0.82      1.36      1.38      1.17      1.35
+   time won     simulated        0.503     0.577     0.559     0.556     0.556
+                predicted        0.505     0.528     0.522     0.521     0.522
+   prefixes covered               100%       98%       81%      100%       83%
 
 --------------------------------------------------------------------------------------------------------------
 
-bpi17_before  (5435 recommended points, 1218 prefixes)
+bpi17_before  (1436 recommended points, 1168 prefixes)
 
 1. Per KPI
   outcome (probability of a positive outcome)
-    predicted improves :  3370 of 5435 points (62.0%)
-    of these, simulated improves too:  2486 (73.8%)  -- 45.7% of all points
-    reference -- predicted NOT improves (2065 points), simulated improves anyway:    29 (1.4%)  => yes - no = +72.4 pp (0 = the model's yes/no says nothing)
+    predicted improves :  1297 of 1436 points (90.3%)
+    of these, simulated improves too:  1007 (77.6%)  -- 70.1% of all points
+    reference -- predicted NOT improves (139 points), simulated improves anyway:    17 (12.2%)  => yes - no = +65.4 pp (0 = the model's yes/no says nothing)
                               simulated yes   simulated no
-    predicted yes                     2486            884
-    predicted no                        29           2036
+    predicted yes                     1007            290
+    predicted no                        17            122
 
   remaining time
-    predicted improves :  5287 of 5435 points (97.3%)
-    of these, simulated improves too:  2853 (54.0%)  -- 52.5% of all points
-    reference -- predicted NOT improves (148 points), simulated improves anyway:    62 (41.9%)  => yes - no = +12.1 pp (0 = the model's yes/no says nothing)
+    predicted improves :  1370 of 1436 points (95.4%)
+    of these, simulated improves too:  1055 (77.0%)  -- 73.5% of all points
+    reference -- predicted NOT improves (66 points), simulated improves anyway:    28 (42.4%)  => yes - no = +34.6 pp (0 = the model's yes/no says nothing)
                               simulated yes   simulated no
-    predicted yes                     2853           2434
-    predicted no                        62             86
+    predicted yes                     1055            315
+    predicted no                        28             38
 
-2. Both KPIs
+2. Both KPIs, at least one KPI
   improves outcome AND remaining time
-    predicted improves :  3222 of 5435 points (59.3%)
-    of these, simulated improves too:  1958 (60.8%)  -- 36.0% of all points
-    reference -- predicted NOT improves (2213 points), simulated improves anyway:    54 (2.4%)  => yes - no = +58.3 pp (0 = the model's yes/no says nothing)
+    predicted improves :  1231 of 1436 points (85.7%)
+    of these, simulated improves too:   783 (63.6%)  -- 54.5% of all points
+    reference -- predicted NOT improves (205 points), simulated improves anyway:    33 (16.1%)  => yes - no = +47.5 pp (0 = the model's yes/no says nothing)
                               simulated yes   simulated no
-    predicted yes                     1958           1264
-    predicted no                        54           2159
+    predicted yes                      783            448
+    predicted no                        33            172
+
+  improves outcome OR remaining time (at least one)
+    predicted improves :  1436 of 1436 points (100.0%)
+    of these, simulated improves too:  1291 (89.9%)  -- 89.9% of all points
+    reference -- predicted NOT improves (0 points), simulated improves anyway:     0 (nan%)  => yes - no = +nan pp (0 = the model's yes/no says nothing)
+                              simulated yes   simulated no
+    predicted yes                     1291            145
+    predicted no                         0              0
 
 3. Good points (one KPI improved by >= 5 -- pp / % -- the other worsened by <= 10)
   good
-    predicted good :  3288 of 5435 points (60.5%)
-    of these, simulated good too:  2531 (77.0%)  -- 46.6% of all points
-    reference -- predicted NOT good (2147 points), simulated good anyway:    62 (2.9%)  => yes - no = +74.1 pp (0 = the model's yes/no says nothing)
+    predicted good :  1171 of 1436 points (81.5%)
+    of these, simulated good too:   933 (79.7%)  -- 65.0% of all points
+    reference -- predicted NOT good (265 points), simulated good anyway:    81 (30.6%)  => yes - no = +49.1 pp (0 = the model's yes/no says nothing)
                               simulated yes   simulated no
-    predicted yes                     2531            757
-    predicted no                        62           2085
+    predicted yes                      933            238
+    predicted no                        81            184
 
-4. E_p{ E_r[ (sum_i S_i) / n_sim ] } with the recommendation -- simulation vs prediction
-  all points (1218 of 1218 prefixes)
-    outcome: share of positive runs / predicted probability    simulated    0.516   predicted    0.533   difference -0.017
-    remaining time, days: mean over the runs / predicted       simulated   18.815   predicted   11.322   difference +7.493
-  good points only (1168 of 1218 prefixes)
-    outcome: share of positive runs / predicted probability    simulated    0.775   predicted    0.789   difference -0.014
-    remaining time, days: mean over the runs / predicted       simulated   15.721   predicted   14.336   difference +1.385
+4. E_p{ E_r[ (sum_i S_i) / n_sim ] } with the recommendation -- simulation vs prediction,
+   on the points that the prediction judges as improving / good (the ones of the tables of sections 1-3)
+  improves the outcome (1136 of 1168 prefixes)
+    outcome: share of positive runs / predicted probability    simulated    0.800   predicted    0.789   difference +0.011
+    remaining time, days: mean over the runs / predicted       simulated   13.253   predicted   14.431   difference -1.178
+    time reduction, days: baseline - with recommendation       simulated    3.918   predicted    2.787   difference +1.130
+    time won: share of run pairs shorter / P(shorter)          simulated    0.582   predicted    0.546   difference +0.036
+  improves the time (1163 of 1168 prefixes)
+    outcome: share of positive runs / predicted probability    simulated    0.746   predicted    0.738   difference +0.008
+    remaining time, days: mean over the runs / predicted       simulated   13.395   predicted   14.355   difference -0.961
+    time reduction, days: baseline - with recommendation       simulated    3.902   predicted    3.017   difference +0.885
+    time won: share of run pairs shorter / P(shorter)          simulated    0.589   predicted    0.557   difference +0.032
+  improves both KPIs (1096 of 1168 prefixes)
+    outcome: share of positive runs / predicted probability    simulated    0.795   predicted    0.785   difference +0.010
+    remaining time, days: mean over the runs / predicted       simulated   13.475   predicted   14.731   difference -1.257
+    time reduction, days: baseline - with recommendation       simulated    4.123   predicted    2.938   difference +1.185
+    time won: share of run pairs shorter / P(shorter)          simulated    0.590   predicted    0.551   difference +0.039
+  improves at least one KPI (1168 of 1168 prefixes)
+    outcome: share of positive runs / predicted probability    simulated    0.761   predicted    0.751   difference +0.010
+    remaining time, days: mean over the runs / predicted       simulated   13.427   predicted   14.371   difference -0.943
+    time reduction, days: baseline - with recommendation       simulated    3.835   predicted    2.949   difference +0.886
+    time won: share of run pairs shorter / P(shorter)          simulated    0.584   predicted    0.554   difference +0.030
+  good points (1058 of 1168 prefixes)
+    outcome: share of positive runs / predicted probability    simulated    0.795   predicted    0.782   difference +0.013
+    remaining time, days: mean over the runs / predicted       simulated   13.700   predicted   14.996   difference -1.296
+    time reduction, days: baseline - with recommendation       simulated    4.213   predicted    3.039   difference +1.173
+    time won: share of run pairs shorter / P(shorter)          simulated    0.593   predicted    0.553   difference +0.040
 
 SUMMARY
 1-2. Is the predicted improvement seen in the simulation too? (all points)
                  predicted        confirmed   if predicted NO,      discrimination
                  improves         by sim      sim improves anyway   (yes - no)
-   outcome        3370 ( 62%)      74%          1%                   +72
-   time           5287 ( 97%)      54%         42%                   +12
-   both           3222 ( 59%)      61%          2%                   +58
+   outcome        1297 ( 90%)      78%         12%                   +65
+   time           1370 ( 95%)      77%         42%                   +35
+   both           1231 ( 86%)      64%         16%                   +48
+   any            1436 (100%)      90%        nan%                  +nan
 
 3. Good points (x = 5, y = 10)
-   3288 good points (60%), in 1168 of 1218 prefixes (96%); good in the simulation too: 77%
+   1171 good points (82%), in 1058 of 1168 prefixes (91%); good in the simulation too: 80%
 
 4. Expected value with the recommendation (formula E_p{E_r[...]})
-   outcome: share of positive runs / predicted probability; time: remaining time in days
-                                  all points   good points only
-   outcome      simulated           0.516          0.775
-                predicted           0.533          0.789
-   time, days   simulated           18.81          15.72
-                predicted           11.32          14.34
-   prefixes covered                  100%            96%
+   outcome: share of positive runs / predicted probability; time: remaining time in days;
+   time reduction: baseline - with recommendation, days (positive = shorter);
+   time won: share of the (recommendation, baseline) run pairs with the recommendation shorter /
+   predicted P(time with < without) -- 0.5 = no effect
+   columns: the points that the prediction judges as improving the outcome / the time / both /
+   at least one KPI, and the good points
+                               outcome      time      both       any      good
+   outcome      simulated        0.800     0.746     0.795     0.761     0.795
+                predicted        0.789     0.738     0.785     0.751     0.782
+   time, days   simulated        13.25     13.39     13.47     13.43     13.70
+                predicted        14.43     14.36     14.73     14.37     15.00
+   reduction    simulated         3.92      3.90      4.12      3.84      4.21
+                predicted         2.79      3.02      2.94      2.95      3.04
+   time won     simulated        0.582     0.589     0.590     0.584     0.593
+                predicted        0.546     0.557     0.551     0.554     0.553
+   prefixes covered                97%      100%       94%      100%       91%
 
 --------------------------------------------------------------------------------------------------------------
 
-bpi17_after  (4611 recommended points, 1837 prefixes)
+bpi17_after  (2345 recommended points, 1799 prefixes)
 
 1. Per KPI
   outcome (probability of a positive outcome)
-    predicted improves :  2493 of 4611 points (54.1%)
-    of these, simulated improves too:  1764 (70.8%)  -- 38.3% of all points
-    reference -- predicted NOT improves (2118 points), simulated improves anyway:    58 (2.7%)  => yes - no = +68.0 pp (0 = the model's yes/no says nothing)
+    predicted improves :  1798 of 2345 points (76.7%)
+    of these, simulated improves too:  1240 (69.0%)  -- 52.9% of all points
+    reference -- predicted NOT improves (547 points), simulated improves anyway:     5 (0.9%)  => yes - no = +68.1 pp (0 = the model's yes/no says nothing)
                               simulated yes   simulated no
-    predicted yes                     1764            729
-    predicted no                        58           2060
+    predicted yes                     1240            558
+    predicted no                         5            542
 
   remaining time
-    predicted improves :  4390 of 4611 points (95.2%)
-    of these, simulated improves too:  2162 (49.2%)  -- 46.9% of all points
-    reference -- predicted NOT improves (221 points), simulated improves anyway:    92 (41.6%)  => yes - no = +7.6 pp (0 = the model's yes/no says nothing)
+    predicted improves :  2199 of 2345 points (93.8%)
+    of these, simulated improves too:  1533 (69.7%)  -- 65.4% of all points
+    reference -- predicted NOT improves (146 points), simulated improves anyway:    60 (41.1%)  => yes - no = +28.6 pp (0 = the model's yes/no says nothing)
                               simulated yes   simulated no
-    predicted yes                     2162           2228
-    predicted no                        92            129
+    predicted yes                     1533            666
+    predicted no                        60             86
 
-2. Both KPIs
+2. Both KPIs, at least one KPI
   improves outcome AND remaining time
-    predicted improves :  2275 of 4611 points (49.3%)
-    of these, simulated improves too:  1227 (53.9%)  -- 26.6% of all points
-    reference -- predicted NOT improves (2336 points), simulated improves anyway:    70 (3.0%)  => yes - no = +50.9 pp (0 = the model's yes/no says nothing)
+    predicted improves :  1656 of 2345 points (70.6%)
+    of these, simulated improves too:   934 (56.4%)  -- 39.8% of all points
+    reference -- predicted NOT improves (689 points), simulated improves anyway:    26 (3.8%)  => yes - no = +52.6 pp (0 = the model's yes/no says nothing)
                               simulated yes   simulated no
-    predicted yes                     1227           1048
-    predicted no                        70           2266
+    predicted yes                      934            722
+    predicted no                        26            663
+
+  improves outcome OR remaining time (at least one)
+    predicted improves :  2341 of 2345 points (99.8%)
+    of these, simulated improves too:  1876 (80.1%)  -- 80.0% of all points
+    reference -- predicted NOT improves (4 points), simulated improves anyway:     2 (50.0%)  => yes - no = +30.1 pp (0 = the model's yes/no says nothing)
+                              simulated yes   simulated no
+    predicted yes                     1876            465
+    predicted no                         2              2
 
 3. Good points (one KPI improved by >= 5 -- pp / % -- the other worsened by <= 10)
   good
-    predicted good :  2307 of 4611 points (50.0%)
-    of these, simulated good too:  1603 (69.5%)  -- 34.8% of all points
-    reference -- predicted NOT good (2304 points), simulated good anyway:   123 (5.3%)  => yes - no = +64.1 pp (0 = the model's yes/no says nothing)
+    predicted good :  1374 of 2345 points (58.6%)
+    of these, simulated good too:  1095 (79.7%)  -- 46.7% of all points
+    reference -- predicted NOT good (971 points), simulated good anyway:   148 (15.2%)  => yes - no = +64.5 pp (0 = the model's yes/no says nothing)
                               simulated yes   simulated no
-    predicted yes                     1603            704
-    predicted no                       123           2181
+    predicted yes                     1095            279
+    predicted no                       148            823
 
-4. E_p{ E_r[ (sum_i S_i) / n_sim ] } with the recommendation -- simulation vs prediction
-  all points (1837 of 1837 prefixes)
-    outcome: share of positive runs / predicted probability    simulated    0.451   predicted    0.468   difference -0.017
-    remaining time, days: mean over the runs / predicted       simulated   19.146   predicted   13.808   difference +5.338
-  good points only (1682 of 1837 prefixes)
-    outcome: share of positive runs / predicted probability    simulated    0.786   predicted    0.777   difference +0.009
-    remaining time, days: mean over the runs / predicted       simulated   16.673   predicted   15.953   difference +0.720
+4. E_p{ E_r[ (sum_i S_i) / n_sim ] } with the recommendation -- simulation vs prediction,
+   on the points that the prediction judges as improving / good (the ones of the tables of sections 1-3)
+  improves the outcome (1784 of 1799 prefixes)
+    outcome: share of positive runs / predicted probability    simulated    0.788   predicted    0.767   difference +0.021
+    remaining time, days: mean over the runs / predicted       simulated   14.371   predicted   15.314   difference -0.942
+    time reduction, days: baseline - with recommendation       simulated    3.026   predicted    0.689   difference +2.337
+    time won: share of run pairs shorter / P(shorter)          simulated    0.573   predicted    0.505   difference +0.068
+  improves the time (1751 of 1799 prefixes)
+    outcome: share of positive runs / predicted probability    simulated    0.652   predicted    0.638   difference +0.014
+    remaining time, days: mean over the runs / predicted       simulated   14.331   predicted   15.314   difference -0.982
+    time reduction, days: baseline - with recommendation       simulated    3.242   predicted    0.943   difference +2.299
+    time won: share of run pairs shorter / P(shorter)          simulated    0.586   predicted    0.516   difference +0.070
+  improves both KPIs (1656 of 1799 prefixes)
+    outcome: share of positive runs / predicted probability    simulated    0.786   predicted    0.760   difference +0.027
+    remaining time, days: mean over the runs / predicted       simulated   14.762   predicted   15.948   difference -1.186
+    time reduction, days: baseline - with recommendation       simulated    3.322   predicted    0.771   difference +2.551
+    time won: share of run pairs shorter / P(shorter)          simulated    0.583   predicted    0.507   difference +0.077
+  improves at least one KPI (1796 of 1799 prefixes)
+    outcome: share of positive runs / predicted probability    simulated    0.676   predicted    0.663   difference +0.012
+    remaining time, days: mean over the runs / predicted       simulated   14.344   predicted   15.140   difference -0.796
+    time reduction, days: baseline - with recommendation       simulated    3.058   predicted    0.882   difference +2.177
+    time won: share of run pairs shorter / P(shorter)          simulated    0.579   predicted    0.514   difference +0.065
+  good points (1374 of 1799 prefixes)
+    outcome: share of positive runs / predicted probability    simulated    0.780   predicted    0.739   difference +0.041
+    remaining time, days: mean over the runs / predicted       simulated   16.161   predicted   18.045   difference -1.885
+    time reduction, days: baseline - with recommendation       simulated    4.076   predicted    0.915   difference +3.162
+    time won: share of run pairs shorter / P(shorter)          simulated    0.606   predicted    0.508   difference +0.098
 
 SUMMARY
 1-2. Is the predicted improvement seen in the simulation too? (all points)
                  predicted        confirmed   if predicted NO,      discrimination
                  improves         by sim      sim improves anyway   (yes - no)
-   outcome        2493 ( 54%)      71%          3%                   +68
-   time           4390 ( 95%)      49%         42%                    +8
-   both           2275 ( 49%)      54%          3%                   +51
+   outcome        1798 ( 77%)      69%          1%                   +68
+   time           2199 ( 94%)      70%         41%                   +29
+   both           1656 ( 71%)      56%          4%                   +53
+   any            2341 (100%)      80%         50%                   +30
 
 3. Good points (x = 5, y = 10)
-   2307 good points (50%), in 1682 of 1837 prefixes (92%); good in the simulation too: 69%
+   1374 good points (59%), in 1374 of 1799 prefixes (76%); good in the simulation too: 80%
 
 4. Expected value with the recommendation (formula E_p{E_r[...]})
-   outcome: share of positive runs / predicted probability; time: remaining time in days
-                                  all points   good points only
-   outcome      simulated           0.451          0.786
-                predicted           0.468          0.777
-   time, days   simulated           19.15          16.67
-                predicted           13.81          15.95
-   prefixes covered                  100%            92%
+   outcome: share of positive runs / predicted probability; time: remaining time in days;
+   time reduction: baseline - with recommendation, days (positive = shorter);
+   time won: share of the (recommendation, baseline) run pairs with the recommendation shorter /
+   predicted P(time with < without) -- 0.5 = no effect
+   columns: the points that the prediction judges as improving the outcome / the time / both /
+   at least one KPI, and the good points
+                               outcome      time      both       any      good
+   outcome      simulated        0.788     0.652     0.786     0.676     0.780
+                predicted        0.767     0.638     0.760     0.663     0.739
+   time, days   simulated        14.37     14.33     14.76     14.34     16.16
+                predicted        15.31     15.31     15.95     15.14     18.05
+   reduction    simulated         3.03      3.24      3.32      3.06      4.08
+                predicted         0.69      0.94      0.77      0.88      0.91
+   time won     simulated        0.573     0.586     0.583     0.579     0.606
+                predicted        0.505     0.516     0.507     0.514     0.508
+   prefixes covered                99%       97%       92%      100%       76%
 
 --------------------------------------------------------------------------------------------------------------
 
-BPI12_sim  (1458 recommended points, 623 prefixes)
+BPI12_sim  (924 recommended points, 623 prefixes)
 
 1. Per KPI
   outcome (probability of a positive outcome)
-    predicted improves :  1181 of 1458 points (81.0%)
-    of these, simulated improves too:   931 (78.8%)  -- 63.9% of all points
-    reference -- predicted NOT improves (277 points), simulated improves anyway:     7 (2.5%)  => yes - no = +76.3 pp (0 = the model's yes/no says nothing)
+    predicted improves :   781 of 924 points (84.5%)
+    of these, simulated improves too:   619 (79.3%)  -- 67.0% of all points
+    reference -- predicted NOT improves (143 points), simulated improves anyway:    11 (7.7%)  => yes - no = +71.6 pp (0 = the model's yes/no says nothing)
                               simulated yes   simulated no
-    predicted yes                      931            250
-    predicted no                         7            270
+    predicted yes                      619            162
+    predicted no                        11            132
 
   remaining time
-    predicted improves :  1221 of 1458 points (83.7%)
-    of these, simulated improves too:   817 (66.9%)  -- 56.0% of all points
-    reference -- predicted NOT improves (237 points), simulated improves anyway:    28 (11.8%)  => yes - no = +55.1 pp (0 = the model's yes/no says nothing)
+    predicted improves :   726 of 924 points (78.6%)
+    of these, simulated improves too:   557 (76.7%)  -- 60.3% of all points
+    reference -- predicted NOT improves (198 points), simulated improves anyway:    15 (7.6%)  => yes - no = +69.1 pp (0 = the model's yes/no says nothing)
                               simulated yes   simulated no
-    predicted yes                      817            404
-    predicted no                        28            209
+    predicted yes                      557            169
+    predicted no                        15            183
 
-2. Both KPIs
+2. Both KPIs, at least one KPI
   improves outcome AND remaining time
-    predicted improves :   946 of 1458 points (64.9%)
-    of these, simulated improves too:   580 (61.3%)  -- 39.8% of all points
-    reference -- predicted NOT improves (512 points), simulated improves anyway:    26 (5.1%)  => yes - no = +56.2 pp (0 = the model's yes/no says nothing)
+    predicted improves :   597 of 924 points (64.6%)
+    of these, simulated improves too:   376 (63.0%)  -- 40.7% of all points
+    reference -- predicted NOT improves (327 points), simulated improves anyway:    19 (5.8%)  => yes - no = +57.2 pp (0 = the model's yes/no says nothing)
                               simulated yes   simulated no
-    predicted yes                      580            366
-    predicted no                        26            486
+    predicted yes                      376            221
+    predicted no                        19            308
+
+  improves outcome OR remaining time (at least one)
+    predicted improves :   910 of 924 points (98.5%)
+    of these, simulated improves too:   802 (88.1%)  -- 86.8% of all points
+    reference -- predicted NOT improves (14 points), simulated improves anyway:     5 (35.7%)  => yes - no = +52.4 pp (0 = the model's yes/no says nothing)
+                              simulated yes   simulated no
+    predicted yes                      802            108
+    predicted no                         5              9
 
 3. Good points (one KPI improved by >= 5 -- pp / % -- the other worsened by <= 10)
   good
-    predicted good :   958 of 1458 points (65.7%)
-    of these, simulated good too:   732 (76.4%)  -- 50.2% of all points
-    reference -- predicted NOT good (500 points), simulated good anyway:    36 (7.2%)  => yes - no = +69.2 pp (0 = the model's yes/no says nothing)
+    predicted good :   601 of 924 points (65.0%)
+    of these, simulated good too:   481 (80.0%)  -- 52.1% of all points
+    reference -- predicted NOT good (323 points), simulated good anyway:    30 (9.3%)  => yes - no = +70.7 pp (0 = the model's yes/no says nothing)
                               simulated yes   simulated no
-    predicted yes                      732            226
-    predicted no                        36            464
+    predicted yes                      481            120
+    predicted no                        30            293
 
-4. E_p{ E_r[ (sum_i S_i) / n_sim ] } with the recommendation -- simulation vs prediction
-  all points (623 of 623 prefixes)
-    outcome: share of positive runs / predicted probability    simulated    0.652   predicted    0.659   difference -0.007
-    remaining time, days: mean over the runs / predicted       simulated   15.185   predicted   16.480   difference -1.295
-  good points only (498 of 623 prefixes)
-    outcome: share of positive runs / predicted probability    simulated    0.729   predicted    0.734   difference -0.005
-    remaining time, days: mean over the runs / predicted       simulated   16.051   predicted   18.169   difference -2.118
+4. E_p{ E_r[ (sum_i S_i) / n_sim ] } with the recommendation -- simulation vs prediction,
+   on the points that the prediction judges as improving / good (the ones of the tables of sections 1-3)
+  improves the outcome (600 of 623 prefixes)
+    outcome: share of positive runs / predicted probability    simulated    0.736   predicted    0.741   difference -0.005
+    remaining time, days: mean over the runs / predicted       simulated   14.316   predicted   14.724   difference -0.408
+    time reduction, days: baseline - with recommendation       simulated    1.539   predicted    1.119   difference +0.419
+    time won: share of run pairs shorter / P(shorter)          simulated    0.512   predicted    0.509   difference +0.003
+  improves the time (609 of 623 prefixes)
+    outcome: share of positive runs / predicted probability    simulated    0.585   predicted    0.599   difference -0.014
+    remaining time, days: mean over the runs / predicted       simulated   13.553   predicted   14.722   difference -1.169
+    time reduction, days: baseline - with recommendation       simulated    2.683   predicted    1.506   difference +1.177
+    time won: share of run pairs shorter / P(shorter)          simulated    0.566   predicted    0.528   difference +0.038
+  improves both KPIs (491 of 623 prefixes)
+    outcome: share of positive runs / predicted probability    simulated    0.706   predicted    0.721   difference -0.015
+    remaining time, days: mean over the runs / predicted       simulated   15.102   predicted   16.366   difference -1.264
+    time reduction, days: baseline - with recommendation       simulated    3.071   predicted    1.800   difference +1.271
+    time won: share of run pairs shorter / P(shorter)          simulated    0.569   predicted    0.531   difference +0.039
+  improves at least one KPI (623 of 623 prefixes)
+    outcome: share of positive runs / predicted probability    simulated    0.674   predicted    0.682   difference -0.008
+    remaining time, days: mean over the runs / predicted       simulated   14.084   predicted   14.731   difference -0.647
+    time reduction, days: baseline - with recommendation       simulated    1.907   predicted    1.226   difference +0.681
+    time won: share of run pairs shorter / P(shorter)          simulated    0.530   predicted    0.516   difference +0.014
+  good points (493 of 623 prefixes)
+    outcome: share of positive runs / predicted probability    simulated    0.706   predicted    0.722   difference -0.015
+    remaining time, days: mean over the runs / predicted       simulated   15.049   predicted   16.308   difference -1.259
+    time reduction, days: baseline - with recommendation       simulated    3.055   predicted    1.791   difference +1.264
+    time won: share of run pairs shorter / P(shorter)          simulated    0.568   predicted    0.530   difference +0.038
 
 SUMMARY
 1-2. Is the predicted improvement seen in the simulation too? (all points)
                  predicted        confirmed   if predicted NO,      discrimination
                  improves         by sim      sim improves anyway   (yes - no)
-   outcome        1181 ( 81%)      79%          3%                   +76
-   time           1221 ( 84%)      67%         12%                   +55
-   both            946 ( 65%)      61%          5%                   +56
+   outcome         781 ( 85%)      79%          8%                   +72
+   time            726 ( 79%)      77%          8%                   +69
+   both            597 ( 65%)      63%          6%                   +57
+   any             910 ( 98%)      88%         36%                   +52
 
 3. Good points (x = 5, y = 10)
-   958 good points (66%), in 498 of 623 prefixes (80%); good in the simulation too: 76%
+   601 good points (65%), in 493 of 623 prefixes (79%); good in the simulation too: 80%
 
 4. Expected value with the recommendation (formula E_p{E_r[...]})
-   outcome: share of positive runs / predicted probability; time: remaining time in days
-                                  all points   good points only
-   outcome      simulated           0.652          0.729
-                predicted           0.659          0.734
-   time, days   simulated           15.18          16.05
-                predicted           16.48          18.17
-   prefixes covered                  100%            80%
+   outcome: share of positive runs / predicted probability; time: remaining time in days;
+   time reduction: baseline - with recommendation, days (positive = shorter);
+   time won: share of the (recommendation, baseline) run pairs with the recommendation shorter /
+   predicted P(time with < without) -- 0.5 = no effect
+   columns: the points that the prediction judges as improving the outcome / the time / both /
+   at least one KPI, and the good points
+                               outcome      time      both       any      good
+   outcome      simulated        0.736     0.585     0.706     0.674     0.706
+                predicted        0.741     0.599     0.721     0.682     0.722
+   time, days   simulated        14.32     13.55     15.10     14.08     15.05
+                predicted        14.72     14.72     16.37     14.73     16.31
+   reduction    simulated         1.54      2.68      3.07      1.91      3.06
+                predicted         1.12      1.51      1.80      1.23      1.79
+   time won     simulated        0.512     0.566     0.569     0.530     0.568
+                predicted        0.509     0.528     0.531     0.516     0.530
+   prefixes covered                96%       98%       79%      100%       79%
 
 --------------------------------------------------------------------------------------------------------------

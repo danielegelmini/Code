@@ -1,0 +1,93 @@
+==============================================================================================================
+TEST: THE PIPELINE WITHOUT THE CONFIDENCE FILTER (step 3)
+Run on 2026-10-27 with TEMP_files/test_no_confidence_filter/3_test_no_confidence_filter.py (2.8 h); multi_obj/
+untouched, everything in TEMP_files/test_no_confidence_filter/ (results/ has the full step-9 reports
+9_with_filter.txt and 9_without_filter.txt, recommendation_counts.csv, filtered_points_analysis.csv).
+==============================================================================================================
+
+Current filter: a candidate (activity, resource) enters the Pareto front only if
+    P(outcome with > outcome without) > 0.5  OR  P(remaining time with < without) > 0.5.
+Without the filter: thresholds -1, every candidate passes. Everything else unchanged: window 5, k = 5,
+min_next_share 0.01, min_res_share 0.05, prosit with the cached parameters, setting B, 10 runs, step 9 with
+x = 5, y = 10. The baseline does not depend on the filter: the current baseline runs were reused.
+
+Control: step 3 rerun WITH the filter gives the same recommended points as the files on disk (same set of points
+for every prefix; 3 prefixes of bpi17_after differ, ties in the top-k selection). The order of the k points over
+the ranks is not stable between runs (p-dispersion): it does not matter here, step 9 pools the ranks.
+
+--------------------------------------------------------------------------------------------------------------
+1. WHAT THE FILTER REMOVES
+--------------------------------------------------------------------------------------------------------------
+Points = recommended (prefix, activity, resource) over the 5 ranks. Removed = points of the run without the
+filter that the filter would discard (both probabilities <= 0.5).
+
+                  test       prefixes with a            recommended points        removed points
+case study        prefixes   recommendation             with    without           n     share   prefixes
+                             with      without          filter  filter
+BAC               1876       1871      1876 (+5)        2293    2298               5    0.2%       5
+BPI12              623        601       623 (+22)        978    1071              94    8.8%      82
+bpi17_before      1218       1168      1218 (+50)       1436    1491              55    3.7%      55
+bpi17_after       1840       1799      1837 (+38)       2345    2389              47    2.0%      47
+
+- Removing the filter only ADDS points: the points kept by the filter are exactly the ones recommended with it
+  (1 point of BPI12 and 3 of bpi17_after change, ties of the top-k selection).
+- The new prefixes (+5 / +22 / +50 / +38) are all prefixes where NO candidate is likely to beat "no
+  recommendation": with the filter they get no recommendation, without it they get only removed points.
+- So in practice the filter decides WHEN NOT TO RECOMMEND, plus a few extra points in prefixes that already have
+  a recommendation (BPI12: 60 prefixes). Most candidates it would discard are already dominated on the front.
+
+--------------------------------------------------------------------------------------------------------------
+2. ARE THE REMOVED POINTS REALLY WORSE? (run without the filter; simulation = mean of 10 runs vs the baseline)
+--------------------------------------------------------------------------------------------------------------
+                               points  sim. improves   sim. improves  sim. both   good in  outcome change (pp)  time change (%, median)
+case study    points                    outcome         time           worse      sim.     est.     sim.         est.     sim.
+BAC           kept by the filter  2293   53.0%           55.2%          25.1%      54.0%    +0.2     +1.2          -0.1     -6.2
+              removed                5   60.0%           20.0%          20.0%      40.0%    -0.5    +10.0          +0.1    +20.9
+BPI12         kept by the filter   977   48.5%           68.3%          15.8%      41.7%    -9.7     -9.7          -8.0    -19.0
+              removed               94   11.7%           27.7%          64.9%       9.6%   -41.2    -51.0          +5.1    +32.5
+bpi17_before  kept by the filter  1436   69.9%           75.2%          10.9%      70.3%   +10.2    +12.7         -17.6    -21.9
+              removed               55   36.4%           43.6%          41.8%      32.7%    -2.0     -3.3          +0.2     +7.9
+bpi17_after   kept by the filter  2342   54.6%           67.4%          19.5%      54.5%    -6.1     -4.7          -5.7    -16.5
+              removed               47   38.3%           53.2%          34.0%      36.2%    -1.8     -4.5          +0.2     -5.6
+(est. = estimated by the predictive models; outcome change = mean, time change = median of the points)
+
+- BPI12: the filter is clearly right. The removed points lose 51 pp of outcome and make the case 33% longer in
+  the simulation (estimated -41 pp, +5%); 65% of them are worse on both KPIs (16% of the kept ones).
+- bpi17_before / bpi17_after: the removed points are mildly worse (outcome -3 / -5 pp); on bpi17_after the
+  simulated time is even shorter (-5.6%), so the filter also drops some useful time trade-offs.
+- BAC: 5 points, too few to say anything.
+- None of the removed points is a good point by the estimates (they are estimated not to improve either KPI).
+
+--------------------------------------------------------------------------------------------------------------
+3. STEP-9 METRICS, WITH vs WITHOUT THE FILTER (all points)
+--------------------------------------------------------------------------------------------------------------
+confirmed = share of the points estimated to improve that improve in the simulation too;
+discrimination = confirmed - share improving in the simulation among the points estimated NOT to improve (pp).
+
+                outcome                     time                        both KPIs                   good points
+                confirmed   discr.          confirmed   discr.          confirmed   discr.          confirmed in sim.
+case study      with  w/o   with  w/o       with  w/o   with  w/o       with  w/o   with  w/o       with  w/o
+BAC              54    54    +3    +6        58    58   +12   +10        35    35    +5    +3        70    69
+BPI12            81    78   +81   +76        76    77   +58   +58        60    63   +58   +60        75    78
+bpi17_before     78    77   +65   +61        77    76   +35   +30        64    63   +48   +47        80    80
+bpi17_after      69    71   +68   +67        70    69   +29   +26        56    57   +53   +52        80    82
+
+- All differences are within 5 pp, and most are within the noise: the good points are THE SAME in the two
+  variants (same points, only simulated in different runs) and their confirmation moves by up to 3 pp
+  (70/69, 75/78, 80/80, 80/82), the run-to-run noise of 10 simulation runs.
+- The "confirmed" columns hardly move by construction: the removed points are estimated not to improve, so they
+  only enter the reference group (estimated NO), where they slightly lower the discrimination of time on bpi17
+  (-5 / -3 pp) and of outcome on BPI12 and bpi17_before (-5 / -4 pp).
+- Expected values with the recommendation (step 9, table 4) change by at most 0.022 of outcome probability and
+  0.35 days, in both directions.
+
+--------------------------------------------------------------------------------------------------------------
+4. CONCLUSION
+--------------------------------------------------------------------------------------------------------------
+With the thresholds at 0.5 the confidence filter has little influence on the step-9 metrics: it removes 0.2-8.8%
+of the points, all estimated not to improve either KPI, so the agreement figures move within the noise. What it
+does is decide when not to recommend anything (5 / 22 / 50 / 38 prefixes left without recommendation, 0.3-4.1%
+of the test prefixes) and drop the clearly harmful candidates: on BPI12 the removed points are confirmed as harmful
+by the simulation (-51 pp of outcome, +33% of time), on bpi17 they are only mildly worse. A stricter threshold
+(see 3_confidence_filter_sweep.txt) would have a larger effect; this test only measures the current one against no
+filter.

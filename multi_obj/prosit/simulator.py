@@ -19,7 +19,9 @@ from prosit.discovery.cf_discovery import discover_weight_transitions
 from prosit.discovery.time_first_discovery import (
     discover_time_first_models, feature_vector, sample_wait_days, sample_wait_days_given_transition, route_probabilities,
 )
-from prosit.discovery.time_discovery import discover_execution_time_distributions, discover_arrival_time, discover_waiting_time
+from prosit.discovery.time_discovery import (
+    discover_execution_time_distributions, discover_arrival_time, discover_waiting_time, EXECUTION_TIME_UNIT,
+)
 from prosit.discovery.calendar_discovery import discover_res_calendars, discover_arrival_calendar
 from prosit.discovery.resource_discovery import discover_resources_list, return_multitasking_resources, discover_resource_acts_prob, discover_resources_per_act, discover_weight_resources
 from prosit.discovery.data_discovery import discover_attributes_distribution, return_label_data_attributes
@@ -440,7 +442,8 @@ class SimulatorParameters:
                 },
 
             "execution_time_params": {
-                "execution_time_distributions": {a: decision_rules_to_dict(dr) for a, dr in self.execution_time_distributions.items()} 
+                "execution_time_unit": EXECUTION_TIME_UNIT,
+                "execution_time_distributions": {a: decision_rules_to_dict(dr) for a, dr in self.execution_time_distributions.items()}
                 },
 
             "waiting_time_params": {
@@ -520,10 +523,19 @@ class SimulatorParameters:
 
         Raises:
             ValueError: the transition weights are keyed by label (a cache written before they
-                were keyed by transition name, see transition_to_name).
+                were keyed by transition name, see transition_to_name), or the execution times are
+                not in EXECUTION_TIME_UNIT (a cache written before 2026-10-21, in working minutes of
+                the resource calendars, see time_discovery.execution_minutes).
         """
 
         dict_params = self._restore_from_json(dict_params)
+
+        unit = dict_params["execution_time_params"].get("execution_time_unit", "working minutes of the resource calendar")
+        if unit != EXECUTION_TIME_UNIT:
+            raise ValueError(
+                f"the execution times of the cached parameters are in {unit}, not {EXECUTION_TIME_UNIT}: "
+                f"discover the parameters again"
+            )
 
         self.rules_mode = "mean_value" not in dict_params["arrival_params"]["arrival_time_distributions"].keys()
         self.label_data_attributes, self.label_data_attributes_categorical = dict_params["data_attribute_params"]["label_data_attributes"], dict_params["data_attribute_params"]["label_data_attributes_categorical"]
@@ -1888,28 +1900,19 @@ class SimulatorEngine:
                 must_end_after = case.pop("must_end_after", None)
                 if must_end_after is not None:
                     # activity already running at the split: redraw its duration until it ends after the split
-                    calendar_r = self.simulation_parameters.calendars[resource]
                     x_exec = {"resource = " + res: (res == resource) * 1 for res in self.simulation_parameters.resources} | case["history"] | case["attributes"]
                     for _ in range(200):
-                        if add_minutes_with_calendar(t_start_exec, int(ex_time), calendar_r) > must_end_after:
+                        if t_start_exec + timedelta(minutes=max(0.0, float(ex_time))) > must_end_after:
                             break
                         ex_time = self.simulation_parameters.execution_time_distributions[activity].apply_distribution(x_exec)
                     else:
-                        # no drawn duration reaches the split (activity running for longer than usual): shortest
-                        # duration, in working minutes of the resource calendar, that ends after it (bisection)
-                        lo, hi = 0, max(1, int((must_end_after - t_start_exec).total_seconds() / 60) + 1)
-                        while add_minutes_with_calendar(t_start_exec, hi, calendar_r) <= must_end_after:
-                            hi *= 2
-                        while lo < hi:
-                            mid = (lo + hi) // 2
-                            if add_minutes_with_calendar(t_start_exec, mid, calendar_r) > must_end_after:
-                                hi = mid
-                            else:
-                                lo = mid + 1
-                        ex_time = lo
+                        # no drawn duration reaches the split (activity running for longer than usual): the
+                        # shortest whole number of minutes that ends after it
+                        ex_time = int((must_end_after - t_start_exec).total_seconds() // 60) + 1
 
-                # end time for the execution of the activity considering the resource calendar
-                t_end = add_minutes_with_calendar(t_start_exec, int(ex_time), self.simulation_parameters.calendars[resource])
+                # end of the execution: start + its wall-clock duration (the execution times are wall-clock minutes,
+                # no resource calendar: see time_discovery.execution_minutes)
+                t_end = t_start_exec + timedelta(minutes=max(0.0, float(ex_time)))
 
                 # event added to the log 
                 event_log.append((case_id, activity, resource, t_enabled, t_start_exec, t_end) + tuple(case['attributes'].values()))

@@ -191,7 +191,12 @@ def load_simulator(source_dir: Path, source_case_study: str, force_rediscover: b
     params = SimulatorParameters(net, im, fm)
     if params_cache_path.exists() and not force_rediscover:
         print(f"Loading cached simulation parameters: {params_cache_path}")
-        params.from_json(str(params_cache_path))
+        try:
+            params.from_json(str(params_cache_path))
+        except ValueError as exc:
+            # stale cache (e.g. execution times in working minutes, transition weights keyed by label): rediscovered
+            print(f"WARNING: cached simulation parameters are invalid ({exc}); rediscovering them.")
+            params = SimulatorParameters(net, im, fm)
     if params.time_first_models is None:
         if params_cache_path.exists() and not force_rediscover:
             # cache written before the time-first models existed: rediscover, so the generated

@@ -1,0 +1,325 @@
+\chapter{Remaining-Time Predictions in Days}
+\label{app:lognormal}
+The regressor of Section~\ref{subsec:ev:off:models} works on a logarithmic
+scale, while the remaining time that reaches the Pareto front is in days.
+This appendix goes through the conversion from one to the other step by step.
+Throughout, $T$ is the remaining time of a case in days; the values in
+seconds used by the implementation are $86\,400\,T$.
+
+\section{What the Regressor Predicts}
+The regressor is trained on
+\begin{equation}
+  X = \log(1 + T)
+  \label{eq:app:x}
+\end{equation}
+instead of on $T$. Remaining times are skewed: most cases end within a few
+days, a few take months. On the scale of $X$ the long tail is compressed:
+an error of one day on a case that ends in ten days weighs about as much as
+an error of ten days on a case that ends in a hundred, and the
+distribution is close enough to a Normal for \texttt{RMSEWithUncertainty} to
+fit it. The added one keeps $X$ defined at $T = 0$ and makes the scale almost
+linear below one day.
+
+For a given input the regressor returns the mean $\mu$ and the variance
+$\sigma^2$ of a Normal distribution over $X$. Here $\mu$ is the mean of the
+predictions of the members of the virtual ensemble and $\sigma^2$ their total
+variance (Equation~\eqref{eq:bg:unc:gaussvar}), multiplied by $s^2$
+(Equation~\eqref{eq:bg:unc:sigmafit}).
+
+\section{Going Back to Days}
+Inverting~\eqref{eq:app:x} gives $T = e^X - 1$, an increasing function of
+$X$. An increasing function maps the median of $X$ onto the median of $T$,
+so the median of the remaining time is simply $e^{\mu} - 1$. The mean does
+not carry over in the same way. When $X$ is Normal, $e^X$ follows a
+log-normal distribution, whose mean is $e^{\mu + \sigma^2/2}$, so
+\begin{equation}
+  \mathbb{E}[T] = e^{\mu + \sigma^2 / 2} - 1 .
+  \label{eq:app:plainmean}
+\end{equation}
+The point prediction of the method is the mean, since the front compares
+the remaining times that the cases are expected to take. The extra term
+$\sigma^2/2$ is what makes the mean larger than the median: the long tail of
+the log-normal pulls it upwards, and the more uncertain the prediction, the
+longer the tail.
+
+This term is also the problem. Table~\ref{tab:app:example} takes a
+prediction with $\mu = 2$, whose median is $6.4$ days, and three values of
+$\sigma^2$. With $\sigma^2 = 0.25$ the mean is $7.4$ days, close to the
+median. With $\sigma^2 = 4$ it is already $53.6$ days, and with $\sigma^2 = 9$
+it is $664$ days, almost two years, for a case that most likely ends within
+a week. A handful of inputs with a very large predicted variance is enough to
+produce such values, and they would end up on the front.
+
+\begin{table}[h]
+  \centering
+  \small
+  \begin{tabular}{rrrr}
+    \toprule
+    $\sigma^2$ & Median & Mean, Eq.~\eqref{eq:app:plainmean}
+      & Mean, truncated at $U = 200$ days \\
+    \midrule
+    0.25 & 6.4 &   7.4 &  7.4 \\
+    4    & 6.4 &  53.6 & 19.9 \\
+    9    & 6.4 & 664.1 & 21.2 \\
+    \bottomrule
+  \end{tabular}
+  \caption{Remaining time in days for a prediction with $\mu = 2$ and three
+    values of the predicted variance $\sigma^2$.}
+  \label{tab:app:example}
+\end{table}
+
+\section{Truncating at the Longest Remaining Time}
+No case of the training log $\mathcal{L}$ has a remaining time longer than
+its maximum $U$, so the predictive distribution is restricted to
+$T \le U$, that is, to $X \le b$ with $b = \log(1 + U)$. Truncating the
+Normal at $b$ means discarding its values above $b$ and rescaling the
+probability left below $b$ so that it sums to one again. Writing $\Phi$ for
+the cumulative distribution function of the standard Normal, the
+probability of the part that is kept is
+\begin{equation}
+  P(X \le b) = \Phi(z_b), \qquad z_b = \frac{b - \mu}{\sigma},
+  \label{eq:app:zb}
+\end{equation}
+where $z_b$ is the distance of the bound from the mean, in standard
+deviations. The truncated distribution has the density of the Normal, cut at
+$b$ and divided by $\Phi(z_b)$:
+\begin{equation}
+  f_b(x) =
+  \begin{cases}
+    \dfrac{1}{\Phi(z_b)}\, \dfrac{1}{\sigma\sqrt{2\pi}}\,
+    e^{-(x - \mu)^2 / (2\sigma^2)} & \text{if } x \le b,\\[2ex]
+    0 & \text{if } x > b.
+  \end{cases}
+  \label{eq:app:density}
+\end{equation}
+When the bound lies far above the mean, $z_b$ is large, $\Phi(z_b)$ is
+close to one and the truncation changes almost nothing.
+
+\section{Mean of the Truncated Distribution}
+The point prediction is $\mathbb{E}[T \mid X \le b] = \mathbb{E}[e^X \mid X
+\le b] - 1$, so what is needed is the mean of $e^X$ under the truncated
+distribution. The derivation below is done for $e^{nX}$, since the case
+$n = 2$ gives the standard deviation as well, and it takes four steps.
+
+\paragraph{Step 1: definition.}
+A conditional expectation is an average over the part of the distribution
+that satisfies the condition:
+\begin{equation}
+  \mathbb{E}\bigl[ e^{nX} \mid X \le b \bigr]
+  = \frac{\mathbb{E}\bigl[ e^{nX} \cdot \mathbb{I}\{X \le b\} \bigr]}{P(X \le b)} .
+  \label{eq:app:step1}
+\end{equation}
+The indicator $\mathbb{I}\{X \le b\}$ is one when $X \le b$ and zero
+otherwise, so it removes the values above $b$ from the expectation in the
+numerator, and the division by $P(X \le b)$ turns what is left into an
+average over the part that is kept.
+
+\paragraph{Step 2: the integral.}
+The expectation in the numerator is the integral of $e^{nx}$ weighted by the
+Normal density, and the indicator only moves the upper limit of the integral
+from $+\infty$ to $b$. With $P(X \le b) = \Phi(z_b)$,
+\begin{equation}
+  \mathbb{E}\bigl[ e^{nX} \mid X \le b \bigr]
+  = \frac{1}{\Phi(z_b)} \int_{-\infty}^{b} e^{nx}\,
+    \frac{1}{\sigma\sqrt{2\pi}}\, e^{-(x - \mu)^2 / (2\sigma^2)}\, dx ,
+  \label{eq:app:step2}
+\end{equation}
+which is the integral of $e^{nx}$ against the truncated density $f_b$ of
+Equation~\eqref{eq:app:density}.
+
+\paragraph{Step 3: completing the square.}
+The two exponentials in the integral combine into one, whose exponent can be
+rewritten as
+\begin{equation}
+  n x - \frac{(x - \mu)^2}{2\sigma^2}
+  = \Bigl( n\mu + \frac{n^2\sigma^2}{2} \Bigr)
+    - \frac{\bigl( x - (\mu + n\sigma^2) \bigr)^2}{2\sigma^2} .
+  \label{eq:app:square}
+\end{equation}
+Expanding both sides shows that they are equal.
+
+\paragraph{Step 4: the integral that remains.}
+The term in parentheses does not depend on $x$, so it leaves the integral as
+the factor $e^{n\mu + n^2\sigma^2/2}$. The rest of the integrand is again the
+density of a Normal, with the same variance $\sigma^2$ but with its mean
+shifted from $\mu$ to $\mu + n\sigma^2$. Integrated from $-\infty$ to $b$,
+it is the probability that this shifted Normal falls below $b$,
+\begin{equation}
+  \int_{-\infty}^{b} \frac{1}{\sigma\sqrt{2\pi}}\,
+  e^{-(x - \mu - n\sigma^2)^2 / (2\sigma^2)}\, dx
+  = \Phi\Bigl( \frac{b - \mu - n\sigma^2}{\sigma} \Bigr)
+  = \Phi(z_b - n\sigma) .
+  \label{eq:app:shifted}
+\end{equation}
+Putting the factor, the remaining integral and the division by
+$\Phi(z_b)$ together,
+\begin{equation}
+  \mathbb{E}\bigl[ e^{nX} \mid X \le b \bigr]
+  = e^{\,n\mu + n^2\sigma^2/2}\; \frac{\Phi(z_b - n\sigma)}{\Phi(z_b)} .
+  \label{eq:app:moments}
+\end{equation}
+
+\paragraph{The point prediction.}
+For $n = 1$,
+\begin{equation}
+  \mathbb{E}[T \mid T \le U]
+  = e^{\mu + \sigma^2/2}\; \frac{\Phi(z_b - \sigma)}{\Phi(z_b)} - 1 .
+  \label{eq:app:mean}
+\end{equation}
+Without the truncation the bound $b$ goes to infinity, both values of $\Phi$
+go to one, and Equation~\eqref{eq:app:mean} becomes the log-normal mean of
+Equation~\eqref{eq:app:plainmean}. The truncation multiplies that mean by
+the correction factor $\Phi(z_b - \sigma) / \Phi(z_b)$. When $\sigma$ is
+small the factor is close to one. When $\sigma$ is large, $z_b - \sigma$ is
+far in the left tail of the Normal, $\Phi(z_b - \sigma)$ is tiny, and the
+factor cancels the growth of $e^{\mu + \sigma^2/2}$. In the example of
+Table~\ref{tab:app:example} with $\mu = 2$, $\sigma = 3$ and $U = 200$ days,
+$b = \log 201 \approx 5.30$ and $z_b \approx 1.10$, so
+$\Phi(z_b) \approx 0.86$ and $\Phi(z_b - \sigma) = \Phi(-1.90) \approx
+0.029$. The mean of $e^X$ is then $e^{6.5} \cdot 0.029 / 0.86 \approx 22.2$
+instead of $e^{6.5} \approx 665$, and the remaining time $21.2$ days instead
+of $664$.
+
+The result is finally clipped to $[0, U]$. For a large $\sigma$ the factor
+$e^{\mu + \sigma^2/2}$ can overflow while $\Phi(z_b - \sigma)$ underflows,
+so the implementation computes the logarithm of~\eqref{eq:app:mean} and
+exponentiates only at the end.
+
+\section{Standard Deviation}
+The variance of $T$ equals the variance of $e^X$, since the two differ only
+by a constant. With~\eqref{eq:app:moments} for $n = 1$ and $n = 2$,
+\begin{equation}
+  \mathrm{sd}(T \mid T \le U)
+  = \sqrt{ \mathbb{E}\bigl[ e^{2X} \mid X \le b \bigr]
+         - \mathbb{E}\bigl[ e^{X} \mid X \le b \bigr]^2 } .
+  \label{eq:app:sd}
+\end{equation}
+
+\section{Quantiles and Intervals}
+Integrating the truncated density~\eqref{eq:app:density} from $-\infty$ up to
+a value $x \le b$ gives its cumulative distribution function,
+\begin{equation}
+  P(X \le x \mid X \le b) = \frac{\Phi\bigl( (x - \mu)/\sigma \bigr)}{\Phi(z_b)},
+  \qquad x \le b .
+  \label{eq:app:cdf}
+\end{equation}
+Setting it equal to $q$ and solving for $x$ gives the $q$-quantile of $X$,
+\begin{equation}
+  x_q = \mu + \sigma\, \Phi^{-1}\bigl( q\, \Phi(z_b) \bigr) .
+  \label{eq:app:quantile}
+\end{equation}
+Since $T$ increases with $X$, the $q$-quantile of the remaining time is
+$e^{x_q} - 1$. The median of the truncated distribution is the case
+$q = 0.5$, and an interval that leaves a probability $\alpha/2$ on each side
+goes from the quantile $q = \alpha/2$ to the quantile $q = 1 - \alpha/2$.
+
+\section{Comparisons in the Log Space}
+The confidence filter (Section~\ref{subsec:met:online:prob}) needs the
+probability that a candidate $C$ shortens the remaining time with respect to
+the baseline $B$. Since $T$ is an increasing function of $X$, $T_C < T_B$
+holds exactly when $X_C < X_B$, so the probability is the same on the two
+scales. The filter therefore compares the members directly on the scale of
+$X$, where their predictions are Normal, and needs none of the conversions
+above.
+
+\section{Why This Scale and the Truncation}
+\label{sec:app:choice}
+The scale of~\eqref{eq:app:x} was chosen by training the regressor of
+Section~\ref{subsec:ev:off:models} three times on each log, with the same
+search space and number of trials, on three scales: the remaining time in
+seconds as it is, $\log(1 + \text{seconds})$, and $\log(1 + T)$ with $T$ in
+days. The predictions are always converted to days, and the models are
+compared on the prefixes of the cases in $\mathcal{L}^{\mathrm{test}}$.
+Table~\ref{tab:app:scales} reports the errors of the point prediction and
+the calibration of the recalibrated models, computed on each model's own
+scale.
+
+\begin{table}[h]
+  \centering
+  \small
+  \begin{tabular}{llrrrrr}
+    \toprule
+    Log & Scale & MAE & RMSE & $\pm\sigma$ & $\pm 2\sigma$ & ENCE \\
+        &       & (days) & (days) & (\%) & (\%) & (\%) \\
+    \midrule
+    BAC          & seconds            &  5.65 &   18.23 & 96.2 & 98.5 & 36.0 \\
+                 & $\log(1 + \text{seconds})$ &  5.61 &   44.94 & 84.0 & 97.9 & 21.9 \\
+                 & $\log(1 + \text{days})$    &  5.10 &   18.05 & 87.8 & 97.8 & 28.4 \\
+    \midrule
+    BPIC2012     & seconds            &  7.82 &   11.96 & 74.8 & 93.8 & 28.4 \\
+                 & $\log(1 + \text{seconds})$ &  8.47 &   15.47 & 67.4 & 97.1 & 14.9 \\
+                 & $\log(1 + \text{days})$    &  7.86 &   11.94 & 63.7 & 95.8 & 14.1 \\
+    \midrule
+    bpi17-before & seconds            &  9.32 &   13.80 & 76.4 & 91.9 & 32.1 \\
+                 & $\log(1 + \text{seconds})$ &  9.11 &   13.20 & 80.2 & 98.8 & 19.1 \\
+                 & $\log(1 + \text{days})$    & 15.91 &  684.32 & 58.7 & 95.7 & 13.7 \\
+    \midrule
+    bpi17-after  & seconds            &  8.77 &   13.38 & 72.4 & 90.4 & 43.3 \\
+                 & $\log(1 + \text{seconds})$ & 22.86 & 1650.86 & 84.1 & 98.5 & 25.0 \\
+                 & $\log(1 + \text{days})$    &  8.31 &   12.79 & 74.1 & 97.6 & 17.3 \\
+    \bottomrule
+  \end{tabular}
+  \caption{The regressor trained on three scales. MAE and RMSE of the point
+    prediction, in days, with the mean of the log-normal of
+    Equation~\eqref{eq:app:plainmean} for the two logarithmic scales; coverage
+    of the $\pm\sigma$ and $\pm 2\sigma$ intervals, whose targets are 68.3\%
+    and 95.4\%; ENCE. Calibration measures after the scaling by $s$.}
+  \label{tab:app:scales}
+\end{table}
+
+On the scale of seconds the point errors are acceptable, but the
+uncertainty is not: the ENCE is the highest on every log, between 28\% and
+43\%, and in BAC the $\pm\sigma$ interval holds 96\% of the cases instead of
+68\%, so the predicted standard deviations are far too wide. A Normal over
+seconds also gives a positive probability to negative remaining times. The
+two logarithmic scales calibrate better, with an ENCE between 14\% and 28\%,
+but their point errors show a few enormous values: an RMSE of 684 days on
+bpi17-before for $\log(1 + \text{days})$ and of 1\,651 days on bpi17-after
+for $\log(1 + \text{seconds})$, against MAEs of 16 and 23 days. The cases
+behind these values are very few, 19 of the 18\,085 test prefixes of
+bpi17-before and 31 of the 26\,095 of bpi17-after, about one in a thousand,
+but their predictions are absurd: the largest reaches 89\,029 days on
+bpi17-before, more than two centuries. They are the predictions with a very
+large variance of Table~\ref{tab:app:example}, and a handful of them is
+enough to raise the mean error, and above all the RMSE, by orders of
+magnitude, while the median of the same predictions stays reasonable.
+
+Between the two logarithmic scales, the one in days was chosen. Both suffer
+from a few extreme predictions, on different logs, so the errors of the point
+prediction do not separate them, while the scale in days has the lower ENCE
+on three logs out of four. Moreover, on the scale in seconds a difference of
+a few minutes between two very short remaining times weighs as much as a
+difference of days between long ones, while the scale in days is almost
+linear below one day.
+
+The truncation at $U$ then removes the extreme predictions of the chosen
+scale. Table~\ref{tab:app:trunc} shows its effect on the same models,
+without retraining them. It brings the 19 predictions of bpi17-before above
+$U$ back below it, the largest falling from 89\,029 to 40 days and the RMSE
+from 684 to 14 days, and it leaves the other three logs almost unchanged,
+since none of their predictions exceeded $U$.
+
+\begin{table}[h]
+  \centering
+  \small
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{lrrrrrrrr}
+    \toprule
+    Log & $U$ & \multicolumn{2}{c}{MAE (days)} & \multicolumn{2}{c}{RMSE (days)}
+        & Above & \multicolumn{2}{c}{Largest (days)} \\
+    \cmidrule(lr){3-4} \cmidrule(lr){5-6} \cmidrule(lr){8-9}
+        & (days) & plain & trunc. & plain & trunc. & $U$ & plain & trunc. \\
+    \midrule
+    BAC          & 503.6 &  5.10 & 5.09 &  18.05 & 18.05 &  0 &      38.7 & 33.0 \\
+    BPIC2012     &  91.4 &  7.86 & 7.91 &  11.94 & 12.03 &  0 &      30.6 & 26.5 \\
+    bpi17-before & 135.5 & 15.91 & 9.15 & 684.32 & 13.67 & 19 & 89\,029.2 & 40.2 \\
+    bpi17-after  & 101.0 &  8.31 & 8.42 &  12.79 & 12.96 &  0 &      33.5 & 33.5 \\
+    \bottomrule
+  \end{tabular}
+  \caption{Effect of the truncation at the longest training remaining time
+    $U$ on the models trained on $\log(1 + \text{days})$ of
+    Table~\ref{tab:app:scales}. MAE and RMSE without (plain) and with
+    (trunc.) the truncation, number of test predictions above $U$ without
+    it, and largest test prediction without and with it.}
+  \label{tab:app:trunc}
+\end{table}

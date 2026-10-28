@@ -46,9 +46,11 @@ from paretoset import paretoset
 from utils.pre_processing_functions import convert_dtypes_bpi12
 from utils.get_features import load_case_study, get_case_study_features
 from utils.setup_cache import get_transition_graph
+from utils.transition_system import resource_counts_by_window
 from utils.recommendation_functions import (
     act_with_res_func,
     next_possible_activities,
+    candidate_resources_for_case,
     build_query_instances,
     build_no_recommendation_baseline_instances,
     _to_row_df,
@@ -91,7 +93,7 @@ def front_size(objs: np.ndarray) -> int:
 
 
 def sweep_case_study(case_study: str, gammas: list, k: int, window_size: int, max_cases,
-                     min_next_share: float = 0.01) -> pd.DataFrame:
+                     min_next_share: float = 0.01, min_res_share: float = 0.05) -> pd.DataFrame:
     """One row per test case and gamma: candidates, survivors (filter of step 3 / outcome only / time
     only), Pareto front size and number of recommendations."""
     train_data, test_data, test_log = load_case_study(case_study)
@@ -106,6 +108,8 @@ def sweep_case_study(case_study: str, gammas: list, k: int, window_size: int, ma
                                             activity_column_name=activity_column_name,
                                             window_size=window_size, rebuild=False, min_next_share=min_next_share)
     act_with_res = act_with_res_func(train_data, activity_column_name, resource_column_name)
+    resource_counts = (resource_counts_by_window(train_data, case_id_name, activity_column_name, resource_column_name,
+                                                 window_size) if min_res_share > 0 else None)
     forbidden = set(FORBIDDEN.get(case_study, []))
     query_instances = build_query_instances(test_data, case_id_name)
     baselines = build_no_recommendation_baseline_instances(query_instances)
@@ -119,7 +123,9 @@ def sweep_case_study(case_study: str, gammas: list, k: int, window_size: int, ma
         trace_history = test_log.loc[test_log[case_id_name] == cid, activity_column_name].tolist()
         poss_all = next_possible_activities(trace_history, transition_graph, window_size)
         poss = [a for a in poss_all if a not in forbidden]
-        pairs = _build_valid_pairs(poss, act_with_res) if poss else []
+        case_act_with_res = candidate_resources_for_case(trace_history, poss, transition_graph, window_size,
+                                                         act_with_res, resource_counts, min_res_share)
+        pairs = _build_valid_pairs(poss, case_act_with_res) if poss else []
         if not pairs:
             # why the case has no candidate at all (the same for every gamma)
             reason = ("no_next_activity" if not poss_all else "only_forbidden" if not poss else "no_resource")
@@ -258,6 +264,8 @@ def main():
     parser.add_argument("--window_size", type=int, default=5)
     parser.add_argument("--min_next_share", type=float, default=0.01,
                         help="Same as 3_run_experiment.py: rarer next activities of a window are not candidates.")
+    parser.add_argument("--min_res_share", type=float, default=0.05,
+                        help="Same as 3_run_experiment.py: rarer resources of a (window -> activity) are not candidates.")
     parser.add_argument("--check_gamma", type=float, default=0.5,
                         help="gamma the step-3 recommendation files were produced with, for the consistency check.")
     parser.add_argument("--max_cases", type=int, default=None, help="Only the first N test cases (quick test).")
@@ -270,6 +278,7 @@ def main():
     lines = ["=" * 100, "CONFIDENCE FILTER SWEEP (exhaustive method, gamma_cls = gamma_reg = gamma)",
              f"Written by 3_confidence_filter_sweep.py - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
              f"k = {args.k} | window size = {args.window_size} | min next-activity share = {args.min_next_share:g} | "
+             f"min resource share = {args.min_res_share:g} | "
              f"gammas = {', '.join(f'{g:g}' for g in gammas)}"
              + (f" | ONLY THE FIRST {args.max_cases} TEST CASES" if args.max_cases else ""),
              "=" * 100,
@@ -285,7 +294,8 @@ def main():
     summaries = []
     for cs in case_studies:
         t0 = time.time()
-        per_case = sweep_case_study(cs, gammas, args.k, args.window_size, args.max_cases, args.min_next_share)
+        per_case = sweep_case_study(cs, gammas, args.k, args.window_size, args.max_cases, args.min_next_share,
+                                    args.min_res_share)
         summary = summarize(per_case, cs, args.k)
         check = check_against_step3(per_case, cs, args.k, args.check_gamma)
         print(check)

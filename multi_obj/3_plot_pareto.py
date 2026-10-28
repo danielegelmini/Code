@@ -55,12 +55,14 @@ from utils.pre_processing_functions import convert_dtypes_bpi12, NO_NEXT_TOKEN
 from utils.predictive_models_functions import SECONDS_PER_DAY
 from utils.get_features import load_case_study, get_case_study_features
 from utils.setup_cache import get_transition_graph
+from utils.transition_system import resource_counts_by_window
 from utils.pareto_fronts_paths import DATASET_PREDICTED_DIR, clear_old_figures
 from utils.recommendation_functions import (
     act_with_res_func,
     build_query_instances,
     build_no_recommendation_baseline_instances,
     next_possible_activities,
+    candidate_resources_for_case,
     _to_row_df,
     nsga2_pareto_search,
     _build_valid_pairs,
@@ -461,6 +463,7 @@ def run_and_plot_comparison(
     rebuild_cache: bool = False,
     save_dir: str = None,
     min_next_share: float = 0.01,
+    min_res_share: float = 0.05,
 ):
     """Run ONE Pareto search for one case and plot its result.
 
@@ -495,6 +498,8 @@ def run_and_plot_comparison(
         save_dir: directory where the output .jpg figure is written (created
             if missing). Defaults to
             pareto_fronts/pareto_fronts_dataset_predicted/<case_study>/.
+        min_next_share, min_res_share: as in 3_run_experiment.py (rare next
+            activities / rare resources of a next activity are not candidates).
     Output:
         None. The figure is written to disk and progress is printed to stdout.
         The function returns early (printing a message) if the case has no
@@ -540,6 +545,8 @@ def run_and_plot_comparison(
     )
 
     act_with_res = act_with_res_func(train_data, activity_column_name, resource_column_name)
+    resource_counts = (resource_counts_by_window(train_data, case_id_name, activity_column_name, resource_column_name,
+                                                 window_size) if min_res_share > 0 else None)
     forbidden_map = _default_forbidden_map()
     forbidden = set(forbidden_map.get(case_study, []))
 
@@ -569,7 +576,9 @@ def run_and_plot_comparison(
             if not poss:
                 continue
 
-            valid_pairs = _build_valid_pairs(poss, act_with_res)
+            case_act_with_res = candidate_resources_for_case(trace_history, poss, transition_graph, window_size,
+                                                             act_with_res, resource_counts, min_res_share)
+            valid_pairs = _build_valid_pairs(poss, case_act_with_res)
             n_solutions = len(valid_pairs)
             if n_solutions < 10:
                 continue
@@ -622,6 +631,8 @@ def run_and_plot_comparison(
         print("No possible next activity for this case.")
         return
 
+    act_with_res = candidate_resources_for_case(trace_history, poss, transition_graph, window_size,
+                                                act_with_res, resource_counts, min_res_share)
     valid_pairs = _build_valid_pairs(poss, act_with_res)
     if not valid_pairs:
         print("No valid action-resource pair.")
@@ -679,6 +690,8 @@ if __name__ == '__main__':
                         help="Force recomputing the (cached) transition system instead of loading it")
     parser.add_argument('--min_next_share', type=float, default=0.01,
                         help="Same as 3_run_experiment.py: rarer next activities of a window are not candidates")
+    parser.add_argument('--min_res_share', type=float, default=0.05,
+                        help="Same as 3_run_experiment.py: rarer resources of a (window -> activity) are not candidates")
 
     args = parser.parse_args()
     case_studies = [cs.strip() for cs in args.case_studies.split(",") if cs.strip()]
@@ -693,7 +706,7 @@ if __name__ == '__main__':
             run_and_plot_comparison(case_study=case_study, target_case_id=args.case_id, k=args.k,
                                     method=args.method, gamma_cls=args.gamma_cls, gamma_reg=args.gamma_reg,
                                     elev=args.elev, azim=args.azim, rebuild_cache=args.rebuild_cache,
-                                    min_next_share=args.min_next_share)
+                                    min_next_share=args.min_next_share, min_res_share=args.min_res_share)
         except Exception as e:  # one dataset failing does not stop the others
             print(f"Error during execution ({case_study}): {e}")
 

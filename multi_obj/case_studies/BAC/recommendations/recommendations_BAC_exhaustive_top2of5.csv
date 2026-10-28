@@ -1,442 +1,442 @@
 case:concept:name,Next_activity,Next_resource
-201810001660,Evaluating Request (WITH registered letter),00491
+201810001660,Service closure Request with BO responsibility,BOC
 201810002650,,
 201810006512,Service closure Request with BO responsibility,BOC
-201810008108,Authorization Requested,00475
+201810008108,Authorization Requested,00870
 201810008268,,
-201810008485,Pending Request for Reservation Closure,SDCRAP
+201810008485,,
 201810008899,,
 20181000902,,
-201810010740,Service closure Request with network responsibility,00891
+201810010740,Service closure Request with BO responsibility,00828
 201810010965,,
 201810011081,,
 201810011583,,
 201810011588,,
-20181012611,Authorization Requested,00507
-20181013679,Evaluating Request (WITH registered letter),00019
-201811000205,Evaluating Request (WITH registered letter),00491
-201811001580,Service closure Request with network responsibility,00475
-201811001889,Service closure Request with network responsibility,00475
-201811002881,Evaluating Request (WITH registered letter),00491
-201811003327,Service closure Request with BO responsibility,00828
-201811004163,Service closure Request with network responsibility,00475
-201811004205,Evaluating Request (WITH registered letter),00491
+20181012611,Authorization Requested,00870
+20181013679,,
+201811000205,Service closure Request with BO responsibility,BOC
+201811001580,,
+201811001889,,
+201811002881,Service closure Request with BO responsibility,BOC
+201811003327,,
+201811004163,,
+201811004205,Service closure Request with BO responsibility,BOC
 201811004338,Service closure Request with BO responsibility,BOC
 201811005226,,
-201811005422,Evaluating Request (WITH registered letter),00491
+201811005422,Evaluating Request (NO registered letter),00594
 201811005747,,
-201811005954,Evaluating Request (WITH registered letter),00491
+201811005954,Service closure Request with BO responsibility,BOC
 201811006467,,
-201811006674,Evaluating Request (WITH registered letter),00491
-201811006982,Service closure Request with BO responsibility,NotDef
-201811007401,Evaluating Request (WITH registered letter),00045
-201811008100,Service closure Request with network responsibility,00891
-201811008330,Evaluating Request (WITH registered letter),00019
-201811008338,Evaluating Request (WITH registered letter),00491
+201811006674,Evaluating Request (NO registered letter),00594
+201811006982,,
+201811007401,Evaluating Request (NO registered letter),00594
+201811008100,Service closure Request with network responsibility,00118
+201811008330,,
+201811008338,,
 201811008394,,
-201811008598,Evaluating Request (WITH registered letter),00491
-201811008621,Request completed with account closure,SDCRAP
-201811008631,Authorization Requested,00507
-201811008634,Evaluating Request (WITH registered letter),00491
-201811009132,Evaluating Request (WITH registered letter),00491
-201811009434,Evaluating Request (WITH registered letter),00491
+201811008598,Service closure Request with BO responsibility,BOC
+201811008621,,
+201811008631,Authorization Requested,00870
+201811008634,Service closure Request with BO responsibility,BOC
+201811009132,Service closure Request with BO responsibility,BOC
+201811009434,Service closure Request with BO responsibility,BOC
 201811009800,,
 201811010119,,
 201811010142,,
 201811010681,,
-201811010732,Evaluating Request (WITH registered letter),00491
-201811011699,Service closure Request with network responsibility,00475
-201811011715,Service closure Request with network responsibility,00475
-201811011742,Evaluating Request (WITH registered letter),00491
-201811011907,Authorization Requested,00475
+201811010732,Service closure Request with BO responsibility,BOC
+201811011699,,
+201811011715,,
+201811011742,Evaluating Request (NO registered letter),00594
+201811011907,Authorization Requested,00870
 201811011916,Service closure Request with BO responsibility,BOC
-201812000179,Evaluating Request (WITH registered letter),00491
-201812000181,Evaluating Request (WITH registered letter),00045
-201812000186,Evaluating Request (WITH registered letter),00491
+201812000179,Evaluating Request (NO registered letter),00594
+201812000181,Evaluating Request (NO registered letter),00594
+201812000186,Service closure Request with BO responsibility,BOC
 201812000605,,
 201812000606,,
 201812000900,,
 201812001964,,
 201812001995,,
-201812002344,Evaluating Request (WITH registered letter),00019
-201812002552,Service closure Request with network responsibility,00891
-201812002630,Evaluating Request (WITH registered letter),00491
-201812002677,Service closure Request with network responsibility,00475
-201812002837,Service closure Request with network responsibility,00594
-201812002893,Evaluating Request (WITH registered letter),00491
+201812002344,,
+201812002552,,
+201812002630,Evaluating Request (NO registered letter),00594
+201812002677,,
+201812002837,,
+201812002893,Service closure Request with BO responsibility,BOC
 201812003039,Service closure Request with BO responsibility,BOC
 201812003088,,
 201812003246,,
 201812003287,,
 201812004065,,
 201812004155,,
-201812004198,Service closure Request with BO responsibility,NotDef
-201812004271,Authorization Requested,00475
-201812004422,Pending Request for Reservation Closure,SDCRAP
-201812004433,Service closure Request with network responsibility,00891
-201812004478,Service closure Request with network responsibility,00475
+201812004198,,
+201812004271,Authorization Requested,00870
+201812004422,,
+201812004433,,
+201812004478,,
 201812004552,,
 201812004625,,
 201812004772,,
-201812004817,Evaluating Request (WITH registered letter),00045
-201812004871,Authorization Requested,00475
+201812004817,,
+201812004871,Authorization Requested,00870
 201812004921,,
 201812005259,,
 201812005350,,
-201812005402,Evaluating Request (WITH registered letter),00491
-201812005434,Service closure Request with network responsibility,00891
-201812005461,Evaluating Request (WITH registered letter),00491
-201812005659,Pending Request for Reservation Closure,SDCRAP
-201812005779,Service closure Request with network responsibility,00891
+201812005402,Service closure Request with BO responsibility,BOC
+201812005434,,
+201812005461,Service closure Request with BO responsibility,BOC
+201812005659,,
+201812005779,,
 201812005853,,
-201812005862,Pending Request for Reservation Closure,SDCRAP
-201812005898,Evaluating Request (WITH registered letter),00491
+201812005862,,
+201812005898,Authorization Requested,00870
 201812006094,,
-201812006124,Evaluating Request (WITH registered letter),00491
+201812006124,Service closure Request with BO responsibility,BOC
 201812006380,,
-201812006485,Service closure Request with network responsibility,00891
+201812006485,,
 201812006628,,
 201812006707,,
-201812006755,Authorization Requested,BOC
-201812006820,Service closure Request with network responsibility,00891
+201812006755,,
+201812006820,,
 201812006824,,
 201812006850,,
 201812006908,,
 201812007243,,
-201812007245,Evaluating Request (WITH registered letter),00491
+201812007245,Service closure Request with BO responsibility,BOC
 201812007280,,
 201812007319,Service closure Request with BO responsibility,BOC
 201812007397,,
-201812007439,Evaluating Request (WITH registered letter),00491
+201812007439,Service closure Request with BO responsibility,NotDef
 201812007445,,
 201812007596,,
-201812007654,Evaluating Request (WITH registered letter),00491
-201812007664,Evaluating Request (WITH registered letter),00491
-201812007718,Service closure Request with BO responsibility,00828
-201812007723,Service closure Request with network responsibility,00475
+201812007654,Service closure Request with BO responsibility,BOC
+201812007664,,
+201812007718,,
+201812007723,,
 201812007727,,
-201812007780,Service closure Request with BO responsibility,NotDef
-201812007788,Pending Request for Reservation Closure,SDCRAP
-201812007839,Service closure Request with network responsibility,00475
+201812007780,,
+201812007788,,
+201812007839,,
 201812007853,,
-201812008090,Service closure Request with BO responsibility,00828
+201812008090,,
 201812008149,,
 201812008197,,
 201812008346,,
 201812008603,,
-201812008642,Evaluating Request (WITH registered letter),00491
-201812008657,Service closure Request with network responsibility,00891
+201812008642,Authorization Requested,00870
+201812008657,,
 201812008694,,
-201812008702,Evaluating Request (WITH registered letter),00491
-201812008708,Evaluating Request (WITH registered letter),00491
-201812008800,Service closure Request with network responsibility,00891
-201812008953,Service closure Request with network responsibility,00891
+201812008702,,
+201812008708,Service closure Request with BO responsibility,NotDef
+201812008800,,
+201812008953,,
 201812009238,,
-201812009363,Authorization Requested,00475
+201812009363,Authorization Requested,00870
 201812009396,,
 201812009485,,
-201812009515,Evaluating Request (WITH registered letter),00491
+201812009515,Service closure Request with BO responsibility,BOC
 201812009556,,
 201812009573,,
-201812009645,Evaluating Request (WITH registered letter),00491
-201812009682,Authorization Requested,00475
+201812009645,Evaluating Request (NO registered letter),00594
+201812009682,Authorization Requested,00870
 201812009703,,
-201812009725,Service closure Request with BO responsibility,00828
-201812009750,Authorization Requested,00475
-201812009753,Service closure Request with network responsibility,00891
-20182005961,Service closure Request with network responsibility,00891
+201812009725,,
+201812009750,,
+201812009753,,
+20182005961,,
 20182009106,,
 20183007131,,
-20184001796,Service closure Request with network responsibility,00475
+20184001796,,
 20184005836,,
 20185003342,,
 20186002647,,
-20186005840,Evaluating Request (WITH registered letter),00491
-20186007767,Service closure Request with network responsibility,00891
+20186005840,Service closure Request with BO responsibility,BOC
+20186007767,,
 20187001196,,
 20187001795,Service closure Request with BO responsibility,BOC
-20187002397,Service closure Request with BO responsibility,00828
-20187003190,Authorization Requested,00475
-20187003641,Evaluating Request (WITH registered letter),00491
+20187002397,,
+20187003190,Authorization Requested,00870
+20187003641,Service closure Request with BO responsibility,BOC
 20187006392,,
-20187006846,Evaluating Request (WITH registered letter),00491
+20187006846,Service closure Request with BO responsibility,BOC
 20187007250,,
 20187010782,,
-20188002087,Evaluating Request (WITH registered letter),00491
-20188002441,Service closure Request with network responsibility,00475
-20188002645,Evaluating Request (WITH registered letter),00045
-20188005486,Evaluating Request (WITH registered letter),00491
+20188002087,Service closure Request with BO responsibility,BOC
+20188002441,,
+20188002645,Evaluating Request (NO registered letter),00594
+20188005486,Service closure Request with BO responsibility,BOC
 20189001829,,
-20189003084,Authorization Requested,00475
-20189003486,Service closure Request with network responsibility,00475
-20189004803,Service closure Request with network responsibility,00891
+20189003084,Authorization Requested,00870
+20189003486,,
+20189004803,Service closure Request with BO responsibility,00828
 20189006540,,
-20189007102,Service closure Request with network responsibility,00891
-20189007821,Evaluating Request (WITH registered letter),00491
+20189007102,,
+20189007821,Service closure Request with BO responsibility,BOC
 20189007982,,
-20189008206,Service closure Request with network responsibility,00891
-20189009645,Service closure Request with BO responsibility,00828
-20191000127,Service closure Request with network responsibility,00891
-20191000242,Authorization Requested,00507
-20191000255,Evaluating Request (WITH registered letter),00491
-20191000260,Authorization Requested,BOC
-20191000269,Evaluating Request (WITH registered letter),00491
-20191000366,Evaluating Request (WITH registered letter),00491
+20189008206,,
+20189009645,,
+20191000127,,
+20191000242,Authorization Requested,00870
+20191000255,Evaluating Request (NO registered letter),00594
+20191000260,,
+20191000269,Evaluating Request (NO registered letter),00594
+20191000366,Service closure Request with BO responsibility,BOC
 20191000380,,
-20191000382,Evaluating Request (WITH registered letter),00491
-20191000433,Pending Request for Reservation Closure,SDCRAP
-20191000448,Request completed with account closure,SDCRAP
+20191000382,Service closure Request with BO responsibility,BOC
+20191000433,,
+20191000448,,
 20191000490,,
 20191000535,,
-20191000546,Service closure Request with BO responsibility,BOC
-20191000553,Service closure Request with network responsibility,00891
-20191000568,Service closure Request with network responsibility,00475
+20191000546,Service closure Request with BO responsibility,00828
+20191000553,Service closure Request with network responsibility,00118
+20191000568,,
 20191000676,,
-20191000751,Evaluating Request (WITH registered letter),00491
-20191000782,Evaluating Request (WITH registered letter),00491
-20191000845,Evaluating Request (WITH registered letter),00019
-20191000920,Pending Request for Reservation Closure,SDCRAP
-20191000928,Service closure Request with BO responsibility,00835
+20191000751,Service closure Request with BO responsibility,BOC
+20191000782,Evaluating Request (NO registered letter),00594
+20191000845,,
+20191000920,,
+20191000928,,
 20191000957,,
-20191001061,Evaluating Request (WITH registered letter),00491
+20191001061,Service closure Request with BO responsibility,BOC
 20191001073,,
 20191001081,,
-20191001178,Service closure Request with network responsibility,00475
-20191001209,Authorization Requested,BOC
+20191001178,,
+20191001209,,
 20191001270,,
-20191001457,Service closure Request with network responsibility,00891
-20191001560,Evaluating Request (WITH registered letter),00491
+20191001457,,
+20191001560,Service closure Request with BO responsibility,BOC
 20191001584,,
 20191001595,,
-20191001604,Service closure Request with BO responsibility,00831
+20191001604,,
 20191001610,,
 20191001611,,
 20191001634,,
-20191001699,Service closure Request with network responsibility,00891
-20191001826,Evaluating Request (WITH registered letter),00491
+20191001699,,
+20191001826,Evaluating Request (NO registered letter),00594
 20191001846,,
 20191001877,,
-20191001909,Pending Request for Reservation Closure,SDCRAP
+20191001909,,
 20191001991,,
-20191001992,Evaluating Request (WITH registered letter),00019
-20191002027,Evaluating Request (WITH registered letter),00491
+20191001992,Evaluating Request (NO registered letter),00594
+20191002027,Evaluating Request (NO registered letter),00594
 20191002029,,
-20191002074,Service closure Request with network responsibility,00475
-20191002078,Service closure Request with network responsibility,00475
+20191002074,,
+20191002078,,
 20191002091,,
 20191002111,,
 20191002163,,
 20191002210,,
-20191002211,Service closure Request with BO responsibility,00828
-20191002216,Service closure Request with network responsibility,00891
-20191002277,Service closure Request with network responsibility,00475
-20191002297,Evaluating Request (WITH registered letter),00491
+20191002211,Service closure Request with network responsibility,00118
+20191002216,Service closure Request with network responsibility,00118
+20191002277,,
+20191002297,Service closure Request with BO responsibility,BOC
 20191002326,,
 20191002394,,
 20191002430,,
-20191002483,Authorization Requested,BOC
-20191002511,Evaluating Request (WITH registered letter),00491
+20191002483,,
+20191002511,Service closure Request with BO responsibility,NotDef
 20191002519,,
-20191002521,Evaluating Request (WITH registered letter),00491
+20191002521,Service closure Request with BO responsibility,NotDef
 20191002534,,
-20191002537,Evaluating Request (WITH registered letter),00491
+20191002537,Service closure Request with BO responsibility,NotDef
 20191002552,,
 20191002594,,
-20191002706,Evaluating Request (WITH registered letter),00491
-20191002742,Service closure Request with network responsibility,00891
-20191002745,Service closure Request with network responsibility,00891
+20191002706,Service closure Request with BO responsibility,NotDef
+20191002742,Service closure Request with BO responsibility,00828
+20191002745,,
 20191002751,,
-20191002759,Service closure Request with network responsibility,00891
+20191002759,,
 20191002825,,
 20191002864,,
-20191002920,Service closure Request with BO responsibility,00828
+20191002920,,
 20191002939,,
-20191002953,Pending Request for Reservation Closure,SDCRAP
-20191002956,Evaluating Request (WITH registered letter),00491
-20191002981,Service closure Request with BO responsibility,00831
+20191002953,,
+20191002956,Service closure Request with BO responsibility,BOC
+20191002981,,
 20191002998,,
-20191003000,Service closure Request with network responsibility,00891
-20191003019,Service closure Request with network responsibility,00475
-20191003077,Service closure Request with BO responsibility,00828
+20191003000,Service closure Request with network responsibility,00118
+20191003019,,
+20191003077,,
 20191003145,,
 20191003155,,
-20191003263,Evaluating Request (WITH registered letter),00491
-20191003312,Evaluating Request (WITH registered letter),00491
-20191003315,Service closure Request with BO responsibility,00828
-20191003440,Service closure Request with network responsibility,00891
+20191003263,Evaluating Request (NO registered letter),00594
+20191003312,Service closure Request with BO responsibility,BOC
+20191003315,,
+20191003440,,
 20191003460,,
-20191003465,Evaluating Request (WITH registered letter),00491
-20191003502,Service closure Request with network responsibility,00475
-20191003540,Evaluating Request (WITH registered letter),00491
+20191003465,Evaluating Request (NO registered letter),00594
+20191003502,,
+20191003540,Service closure Request with BO responsibility,BOC
 20191003568,,
 20191003594,,
-20191003598,Request completed with account closure,SDCRAP
+20191003598,,
 20191003680,,
 20191003699,,
-20191003724,Service closure Request with BO responsibility,NotDef
-20191003726,Request completed with account closure,SDCRAP
-20191003754,Request completed with account closure,SDCRAP
+20191003724,,
+20191003726,,
+20191003754,,
 20191003755,,
-20191003756,Evaluating Request (WITH registered letter),00491
+20191003756,,
 20191003759,,
 20191003785,,
 20191003819,,
-20191003861,Service closure Request with BO responsibility,NotDef
+20191003861,,
 20191003872,,
-20191003909,Service closure Request with BO responsibility,NotDef
-20191003938,Evaluating Request (WITH registered letter),00045
-20191004011,Evaluating Request (WITH registered letter),00491
+20191003909,Pending Request for Reservation Closure,BOC
+20191003938,Evaluating Request (NO registered letter),00594
+20191004011,Service closure Request with BO responsibility,BOC
 20191004025,,
 20191004038,,
 20191004043,,
-20191004048,Authorization Requested,BOC
+20191004048,,
 20191004077,,
 20191004109,,
-20191004146,Authorization Requested,00507
-20191004208,Authorization Requested,00507
-20191004220,Service closure Request with network responsibility,00891
-20191004224,Evaluating Request (WITH registered letter),00491
-20191004227,Evaluating Request (WITH registered letter),00491
-20191004251,Evaluating Request (WITH registered letter),00019
-20191004267,Authorization Requested,00507
-20191004286,Authorization Requested,00507
+20191004146,Authorization Requested,00870
+20191004208,,
+20191004220,,
+20191004224,Service closure Request with BO responsibility,BOC
+20191004227,Evaluating Request (NO registered letter),00594
+20191004251,,
+20191004267,Authorization Requested,00870
+20191004286,,
 20191004316,,
-20191004326,Request completed with account closure,SDCRAP
-20191004364,Authorization Requested,00507
-20191004374,Authorization Requested,00507
-20191004402,Evaluating Request (WITH registered letter),00045
+20191004326,,
+20191004364,Authorization Requested,00870
+20191004374,Authorization Requested,00870
+20191004402,Service closure Request with BO responsibility,BOC
 20191004432,,
-20191004440,Evaluating Request (WITH registered letter),00491
+20191004440,Service closure Request with BO responsibility,BOC
 20191004444,,
 20191004488,,
-20191004500,Evaluating Request (WITH registered letter),00491
+20191004500,Evaluating Request (NO registered letter),00594
 20191004521,,
 20191004550,Service closure Request with BO responsibility,BOC
 20191004556,,
 20191004566,,
 20191004680,,
-20191004710,Service closure Request with network responsibility,00475
+20191004710,,
 20191004729,,
 20191004805,,
 20191004812,,
 20191004843,,
 20191004845,,
-20191004854,Evaluating Request (WITH registered letter),00491
-20191004869,Evaluating Request (WITH registered letter),00491
-20191004891,Pending Request for Reservation Closure,SDCRAP
+20191004854,Authorization Requested,00870
+20191004869,,
+20191004891,,
 20191004898,,
-20191004909,Service closure Request with network responsibility,00891
+20191004909,,
 20191004953,,
 20191004957,,
-20191004983,Evaluating Request (WITH registered letter),00491
+20191004983,,
 20191005057,,
-20191005058,Request completed with account closure,SDCRAP
-20191005120,Service closure Request with BO responsibility,NotDef
-20191005134,Service closure Request with BO responsibility,NotDef
+20191005058,,
+20191005120,,
+20191005134,,
 20191005186,,
 20191005248,,
-20191005294,Evaluating Request (WITH registered letter),00491
-20191005303,Authorization Requested,00475
+20191005294,Authorization Requested,00870
+20191005303,Authorization Requested,00870
 20191005314,,
-20191005347,Service closure Request with network responsibility,00891
-20191005360,Evaluating Request (WITH registered letter),00491
+20191005347,,
+20191005360,Service closure Request with BO responsibility,BOC
 20191005375,,
-20191005395,Evaluating Request (WITH registered letter),00491
+20191005395,Evaluating Request (NO registered letter),00594
 20191005409,,
 20191005416,,
 20191005427,,
-20191005428,Service closure Request with network responsibility,00475
-20191005462,Service closure Request with BO responsibility,NotDef
+20191005428,,
+20191005462,,
 20191005480,,
-20191005537,Authorization Requested,00475
-20191005557,Evaluating Request (WITH registered letter),00491
-20191005567,Service closure Request with BO responsibility,NotDef
+20191005537,Authorization Requested,00870
+20191005557,Service closure Request with BO responsibility,BOC
+20191005567,,
 20191005580,,
 20191005632,,
-20191005637,Evaluating Request (WITH registered letter),00491
+20191005637,Authorization Requested,00870
 20191005681,,
 20191005684,,
 20191005691,,
-20191005698,Service closure Request with network responsibility,00891
-20191005733,Service closure Request with BO responsibility,NotDef
+20191005698,Service closure Request with network responsibility,00118
+20191005733,,
 20191005747,,
 20191005769,,
 20191005791,,
 20191005816,,
-20191005838,Authorization Requested,00475
+20191005838,Authorization Requested,00870
 20191005893,,
 20191005903,,
 20191005916,,
-20191005922,Service closure Request with network responsibility,00491
-20191005924,Service closure Request with network responsibility,00491
-20191005966,Service closure Request with network responsibility,00475
+20191005922,Service closure Request with BO responsibility,NotDef
+20191005924,Service closure Request with BO responsibility,NotDef
+20191005966,,
 20191005984,,
 20191006023,,
-20191006058,Evaluating Request (WITH registered letter),00491
+20191006058,Service closure Request with BO responsibility,BOC
 20191006064,,
-20191006077,Service closure Request with BO responsibility,00828
-20191006078,Evaluating Request (WITH registered letter),00491
-20191006098,Evaluating Request (WITH registered letter),00491
+20191006077,,
+20191006078,Service closure Request with BO responsibility,BOC
+20191006098,Service closure Request with BO responsibility,BOC
 20191006110,,
 20191006112,,
-20191006142,Evaluating Request (WITH registered letter),00019
+20191006142,,
 20191006145,,
 20191006157,,
 20191006186,,
-20191006188,Evaluating Request (WITH registered letter),00491
-20191006203,Service closure Request with network responsibility,00475
+20191006188,Service closure Request with BO responsibility,BOC
+20191006203,,
 20191006207,,
-20191006210,Service closure Request with network responsibility,00891
+20191006210,Service closure Request with network responsibility,00118
 20191006217,,
 20191006220,,
 20191006225,,
-20191006233,Evaluating Request (WITH registered letter),00491
-20191006273,Evaluating Request (WITH registered letter),00491
+20191006233,Evaluating Request (NO registered letter),00594
+20191006273,Service closure Request with BO responsibility,BOC
 20191006292,,
-20191006301,Service closure Request with BO responsibility,NotDef
-20191006309,Service closure Request with BO responsibility,00835
-20191006333,Service closure Request with network responsibility,00475
+20191006301,,
+20191006309,,
+20191006333,,
 20191006358,Service closure Request with BO responsibility,BOC
-20191006382,Service closure Request with network responsibility,00891
-20191006394,Evaluating Request (WITH registered letter),00045
-20191006436,Service closure Request with BO responsibility,00835
+20191006382,,
+20191006394,Authorization Requested,00870
+20191006436,,
 20191006444,,
 20191006449,,
 20191006478,,
-20191006502,Evaluating Request (WITH registered letter),00491
-20191006520,Evaluating Request (WITH registered letter),00491
+20191006502,Authorization Requested,00870
+20191006520,Service closure Request with BO responsibility,BOC
 20191006539,,
-20191006550,Request completed with account closure,SDCRAP
-20191006585,Service closure Request with network responsibility,00475
+20191006550,,
+20191006585,,
 20191006608,,
 20191006612,,
 20191006655,,
 20191006661,,
 20191006675,,
-20191006747,Evaluating Request (WITH registered letter),00491
-20191006756,Evaluating Request (WITH registered letter),00491
-20191006771,Evaluating Request (WITH registered letter),00491
-20191006784,Service closure Request with network responsibility,00891
+20191006747,,
+20191006756,Service closure Request with BO responsibility,BOC
+20191006771,Service closure Request with BO responsibility,BOC
+20191006784,,
 20191006788,,
-20191006789,Service closure Request with network responsibility,00891
+20191006789,,
 20191006799,,
 20191006840,,
 20191006870,,
-20191006871,Evaluating Request (WITH registered letter),00491
+20191006871,Evaluating Request (NO registered letter),00594
 20191006878,,
 20191006880,,
 20191006886,,
-20191006920,Authorization Requested,BOC
+20191006920,,
 20191006922,,
-20191006987,Service closure Request with network responsibility,00475
-20191007056,Evaluating Request (WITH registered letter),00491
+20191006987,,
+20191007056,,
 20191007068,,
-20191007079,Service closure Request with network responsibility,00475
-20191007144,Request completed with account closure,SDCRAP
+20191007079,,
+20191007144,,
 20191007149,,
 20191007166,,
 20191007241,,
-20191007291,Evaluating Request (WITH registered letter),00491
+20191007291,Authorization Requested,00870
 20191007305,,
 20191007344,,
 20191007395,,
@@ -444,253 +444,253 @@ case:concept:name,Next_activity,Next_resource
 20191007430,,
 20191007453,,
 20191007463,Service closure Request with BO responsibility,BOC
-20191007469,Evaluating Request (WITH registered letter),00045
+20191007469,Evaluating Request (NO registered letter),00594
 20191007472,,
-20191007481,Authorization Requested,00507
+20191007481,,
 20191007501,,
-20191007510,Service closure Request with network responsibility,00891
+20191007510,Service closure Request with network responsibility,00118
 20191007536,,
 20191007558,,
-20191007560,Service closure Request with network responsibility,00891
-20191007564,Service closure Request with BO responsibility,NotDef
-20191007570,Service closure Request with network responsibility,00475
-20191007587,Service closure Request with BO responsibility,NotDef
-20191007597,Evaluating Request (WITH registered letter),00491
-20191007623,Service closure Request with BO responsibility,NotDef
-20191007649,Request completed with account closure,SDCRAP
+20191007560,,
+20191007564,,
+20191007570,,
+20191007587,,
+20191007597,Evaluating Request (NO registered letter),00594
+20191007623,,
+20191007649,,
 20191007651,,
 20191007656,,
-20191007666,Service closure Request with BO responsibility,00828
-20191007668,Service closure Request with network responsibility,00475
+20191007666,,
+20191007668,,
 20191007670,,
 20191007674,,
 20191007719,,
 20191007799,,
-20191007802,Request completed with account closure,SDCRAP
-20191007810,Service closure Request with network responsibility,00891
+20191007802,,
+20191007810,,
 20191007847,,
-20191007859,Service closure Request with network responsibility,00475
+20191007859,,
 20191007866,,
-20191007873,Service closure Request with BO responsibility,NotDef
+20191007873,,
 20191007889,,
-20191007894,Service closure Request with BO responsibility,00835
-20191007895,Service closure Request with BO responsibility,00835
-20191007901,Evaluating Request (WITH registered letter),00491
+20191007894,Evaluating Request (NO registered letter),00594
+20191007895,,
+20191007901,Evaluating Request (NO registered letter),00594
 20191007903,,
 20191007906,,
-20191007908,Evaluating Request (WITH registered letter),00491
-20191007911,Service closure Request with BO responsibility,NotDef
-20191007912,Service closure Request with BO responsibility,00835
+20191007908,Evaluating Request (NO registered letter),00594
+20191007911,,
+20191007912,,
 20191007914,,
 20191007948,,
-20191007954,Request completed with account closure,SDCRAP
+20191007954,,
 20191007964,,
 20191007970,,
-20191007975,Service closure Request with BO responsibility,NotDef
+20191007975,,
 20191007978,,
 20191007979,,
-20191007993,Service closure Request with network responsibility,00475
-20191008000,Service closure Request with network responsibility,00475
-20191008019,Authorization Requested,00507
-20191008035,Request completed with account closure,SDCRAP
+20191007993,,
+20191008000,,
+20191008019,Authorization Requested,00870
+20191008035,,
 20191008041,,
-20191008066,Evaluating Request (WITH registered letter),00491
-20191008071,Service closure Request with network responsibility,00475
-20191008074,Service closure Request with network responsibility,00891
-20191008076,Authorization Requested,BOC
-20191008079,Service closure Request with network responsibility,00475
-20191008080,Evaluating Request (WITH registered letter),00491
-20191008096,Service closure Request with network responsibility,00475
-20191008111,Service closure Request with BO responsibility,NotDef
-20191008116,Evaluating Request (WITH registered letter),00491
+20191008066,Service closure Request with BO responsibility,BOC
+20191008071,,
+20191008074,,
+20191008076,,
+20191008079,,
+20191008080,Service closure Request with BO responsibility,BOC
+20191008096,,
+20191008111,,
+20191008116,Service closure Request with BO responsibility,BOC
 20191008138,,
-20191008155,Service closure Request with BO responsibility,00828
+20191008155,,
 20191008158,,
 20191008160,,
 20191008169,,
-20191008252,Request completed with account closure,SDCRAP
+20191008252,,
 20191008273,,
-20191008283,Authorization Requested,00475
-20191008295,Service closure Request with BO responsibility,NotDef
+20191008283,Authorization Requested,00870
+20191008295,,
 20191008319,,
 20191008323,,
-20191008334,Evaluating Request (WITH registered letter),00491
+20191008334,Service closure Request with BO responsibility,BOC
 20191008335,,
 20191008349,,
-20191008358,Evaluating Request (WITH registered letter),00491
+20191008358,Service closure Request with BO responsibility,BOC
 20191008359,,
-20191008362,Service closure Request with network responsibility,00475
-20191008363,Evaluating Request (WITH registered letter),00045
-20191008378,Evaluating Request (WITH registered letter),00491
-20191008380,Evaluating Request (WITH registered letter),00491
-20191008388,Service closure Request with BO responsibility,00831
-20191008393,Service closure Request with BO responsibility,00850
-20191008397,Request completed with account closure,SDCRAP
+20191008362,,
+20191008363,Service closure Request with BO responsibility,BOC
+20191008378,Authorization Requested,00870
+20191008380,Service closure Request with BO responsibility,BOC
+20191008388,,
+20191008393,,
+20191008397,,
 20191008402,,
 20191008415,,
-20191008420,Evaluating Request (WITH registered letter),00491
+20191008420,Service closure Request with BO responsibility,BOC
 20191008442,,
 20191008443,,
-20191008445,Service closure Request with BO responsibility,00828
-20191008446,Evaluating Request (WITH registered letter),00491
+20191008445,,
+20191008446,,
 20191008454,,
-20191008456,Service closure Request with BO responsibility,NotDef
-20191008469,Service closure Request with BO responsibility,NotDef
-20191008473,Evaluating Request (WITH registered letter),00019
+20191008456,,
+20191008469,,
+20191008473,,
 20191008481,,
-20191008500,Service closure Request with network responsibility,00891
-20191008537,Evaluating Request (WITH registered letter),00491
+20191008500,Service closure Request with network responsibility,00118
+20191008537,,
 20191008538,,
 20191008554,,
-20191008564,Authorization Requested,00475
-20191008566,Evaluating Request (WITH registered letter),00491
+20191008564,Authorization Requested,00870
+20191008566,Service closure Request with BO responsibility,BOC
 20191008580,,
-20191008612,Evaluating Request (WITH registered letter),00491
+20191008612,Service closure Request with BO responsibility,BOC
 20191008625,,
 20191008640,,
 20191008645,Service closure Request with BO responsibility,BOC
-20191008646,Evaluating Request (WITH registered letter),00491
-20191008650,Request completed with account closure,SDCRAP
-20191008651,Request completed with account closure,SDCRAP
-20191008668,Evaluating Request (WITH registered letter),00019
+20191008646,Service closure Request with BO responsibility,BOC
+20191008650,,
+20191008651,,
+20191008668,,
 20191008691,,
 20191008693,,
 20191008696,,
 20191008720,,
 20191008732,,
-20191008742,Evaluating Request (WITH registered letter),00491
-20191008751,Service closure Request with BO responsibility,00828
-20191008755,Evaluating Request (WITH registered letter),00491
-20191008759,Request completed with account closure,SDCRAP
+20191008742,Service closure Request with BO responsibility,BOC
+20191008751,,
+20191008755,Service closure Request with BO responsibility,BOC
+20191008759,,
 20191008774,Service closure Request with BO responsibility,BOC
 20191008797,,
 20191008805,,
-20191008808,Service closure Request with BO responsibility,00828
-20191008812,Evaluating Request (NO registered letter),00491
+20191008808,,
+20191008812,Service closure Request with BO responsibility,BOC
 20191008816,,
-20191008827,Authorization Requested,BOC
-20191008833,Evaluating Request (WITH registered letter),00491
+20191008827,,
+20191008833,Service closure Request with BO responsibility,BOC
 20191008838,,
 20191008840,,
 20191008841,,
 20191008844,,
 20191008846,,
 20191008861,,
-20191008862,Service closure Request with network responsibility,00891
+20191008862,Service closure Request with network responsibility,00118
 20191008891,,
-20191008913,Service closure Request with network responsibility,00475
+20191008913,,
 20191008920,,
-20191008924,Service closure Request with network responsibility,00891
+20191008924,,
 20191008932,,
-20191008940,Evaluating Request (WITH registered letter),00491
+20191008940,Evaluating Request (NO registered letter),00594
 20191008953,,
-20191008960,Service closure Request with network responsibility,00891
-20191008965,Pending Request for Reservation Closure,SDCRAP
+20191008960,Service closure Request with BO responsibility,00837
+20191008965,,
 20191008973,,
 20191008981,Service closure Request with BO responsibility,BOC
 20191008983,,
-20191008985,Authorization Requested,BOC
+20191008985,,
 20191008986,,
 20191008989,Service closure Request with BO responsibility,BOC
-20191008994,Evaluating Request (WITH registered letter),00019
-20191008995,Evaluating Request (WITH registered letter),00491
-20191009000,Request completed with account closure,SDCRAP
+20191008994,,
+20191008995,Service closure Request with BO responsibility,BOC
+20191009000,,
 20191009007,Service closure Request with BO responsibility,BOC
-20191009058,Evaluating Request (WITH registered letter),00491
+20191009058,Service closure Request with BO responsibility,BOC
 20191009071,,
-20191009078,Service closure Request with network responsibility,00475
-20191009080,Evaluating Request (WITH registered letter),00491
+20191009078,,
+20191009080,Evaluating Request (NO registered letter),00594
 20191009081,,
-20191009087,Service closure Request with network responsibility,00475
+20191009087,,
 20191009089,,
 20191009097,,
-20191009105,Service closure Request with BO responsibility,00828
-20191009106,Authorization Requested,00475
-20191009108,Request completed with account closure,SDCRAP
-20191009120,Authorization Requested,00475
+20191009105,,
+20191009106,Authorization Requested,00870
+20191009108,,
+20191009120,Authorization Requested,00870
 20191009129,,
 20191009132,,
 20191009139,,
-20191009140,Evaluating Request (WITH registered letter),00491
-20191009168,Evaluating Request (WITH registered letter),00019
-20191009183,Service closure Request with network responsibility,00891
+20191009140,Authorization Requested,00870
+20191009168,,
+20191009183,Service closure Request with network responsibility,00118
 20191009199,,
 20191009223,,
-20191009229,Request completed with account closure,SDCRAP
+20191009229,,
 20191009239,,
 20191009243,,
 20191009269,,
-20191009273,Service closure Request with network responsibility,00891
+20191009273,,
 20191009274,,
 20191009284,,
 20191009285,,
-20191009303,Service closure Request with network responsibility,00491
+20191009303,Service closure Request with BO responsibility,NotDef
 20191009316,,
 20191009322,,
 20191009324,,
 20191009331,,
 20191009351,,
-20191009378,Evaluating Request (WITH registered letter),00491
+20191009378,Service closure Request with BO responsibility,BOC
 20191009379,Service closure Request with BO responsibility,BOC
-20191009382,Evaluating Request (WITH registered letter),00491
+20191009382,Service closure Request with BO responsibility,BOC
 20191009383,,
 20191009391,,
 20191009401,,
 20191009423,,
-20191009426,Evaluating Request (WITH registered letter),00491
-20191009436,Evaluating Request (WITH registered letter),00491
+20191009426,Authorization Requested,00870
+20191009436,Service closure Request with BO responsibility,BOC
 20191009437,,
-20191009442,Service closure Request with network responsibility,00891
-20191009443,Service closure Request with BO responsibility,00828
-20191009445,Service closure Request with network responsibility,00475
-20191009460,Request completed with account closure,SDCRAP
+20191009442,,
+20191009443,,
+20191009445,,
+20191009460,,
 20191009465,,
 20191009491,,
 20191009496,,
 20191009504,,
-20191009505,Evaluating Request (WITH registered letter),00491
+20191009505,Service closure Request with BO responsibility,BOC
 20191009511,,
 20191009519,,
 20191009523,,
 20191009524,,
-20191009525,Authorization Requested,00475
+20191009525,Authorization Requested,00870
 20191009527,,
 20191009533,,
-20191009535,Service closure Request with network responsibility,00891
-20191009542,Service closure Request with BO responsibility,00828
+20191009535,,
+20191009542,,
 20191009559,,
 20191009570,,
-20191009581,Service closure Request with network responsibility,00891
-20191009585,Service closure Request with BO responsibility,NotDef
+20191009581,,
+20191009585,,
 20191009592,,
 20191009599,,
-20191009616,Service closure Request with network responsibility,00891
+20191009616,,
 20191009624,,
-20191009626,Service closure Request with network responsibility,00891
-20191009630,Service closure Request with BO responsibility,NotDef
-20191009637,Request completed with account closure,SDCRAP
+20191009626,,
+20191009630,,
+20191009637,,
 20191009638,,
 20191009648,,
-20191009677,Evaluating Request (WITH registered letter),00491
+20191009677,Service closure Request with BO responsibility,BOC
 20191009680,,
-20191009681,Evaluating Request (WITH registered letter),00491
-20191009686,Authorization Requested,BOC
+20191009681,Service closure Request with BO responsibility,BOC
+20191009686,,
 20191009699,,
 20191009711,,
-20191009713,Evaluating Request (WITH registered letter),00045
+20191009713,Authorization Requested,00870
 20191009721,,
 20191009722,,
 20191009727,,
 20191009734,,
-20191009739,Service closure Request with network responsibility,00475
+20191009739,,
 20191009759,,
-20191009788,Evaluating Request (WITH registered letter),00045
-20191009789,Service closure Request with BO responsibility,00831
+20191009788,,
+20191009789,,
 20191009797,,
 20191009806,,
 20191009815,,
-20191009817,Evaluating Request (WITH registered letter),00019
-20191009819,Service closure Request with network responsibility,00891
+20191009817,,
+20191009819,,
 20191009822,,
 20191009825,,
 20191009830,,
@@ -698,56 +698,56 @@ case:concept:name,Next_activity,Next_resource
 20191009834,,
 20191009836,,
 20191009841,,
-20191009850,Service closure Request with network responsibility,00475
+20191009850,,
 20191009868,,
 20191009890,,
 20191009907,,
-20191009910,Request completed with account closure,SDCRAP
+20191009910,,
 20191009912,,
 20191009919,,
-20191009924,Request completed with account closure,SDCRAP
+20191009924,,
 20191009939,,
 20191009945,Service closure Request with BO responsibility,BOC
 20191009948,,
 20191009969,,
 20191009973,,
-20191009979,Service closure Request with network responsibility,00891
+20191009979,,
 20191009982,,
-20191009984,Service closure Request with BO responsibility,NotDef
+20191009984,,
 20191009995,,
 20191009998,,
 20191010020,,
-20191010024,Evaluating Request (WITH registered letter),00491
-20191010030,Evaluating Request (WITH registered letter),00045
+20191010024,Service closure Request with BO responsibility,BOC
+20191010030,Authorization Requested,00870
 20191010036,,
 20191010039,,
 20191010040,,
-20191010046,Authorization Requested,00475
+20191010046,,
 20191010047,,
 20191010048,,
-20191010053,Authorization Requested,00475
-20191010054,Authorization Requested,00475
-20191010056,Evaluating Request (WITH registered letter),00491
-20191010059,Authorization Requested,00475
+20191010053,,
+20191010054,Authorization Requested,00870
+20191010056,Evaluating Request (NO registered letter),00594
+20191010059,,
 20191010079,,
 20191010088,,
 20191010107,,
 20191010115,,
 20191010116,,
 20191010118,,
-20191010121,Evaluating Request (WITH registered letter),00491
+20191010121,Evaluating Request (NO registered letter),00594
 20191010124,,
 20191010126,Service closure Request with BO responsibility,BOC
 20191010144,,
 20191010151,,
 20191010155,,
-20191010159,Service closure Request with network responsibility,00475
+20191010159,,
 20191010161,,
 20191010174,,
 20191010176,,
 20191010179,,
 20191010181,,
-20191010185,Service closure Request with network responsibility,00475
+20191010185,,
 20191010194,,
 20191010195,,
 20191010197,,
@@ -755,31 +755,31 @@ case:concept:name,Next_activity,Next_resource
 20191010200,,
 20191010206,,
 20191010208,,
-20191010213,Evaluating Request (WITH registered letter),00491
+20191010213,Service closure Request with BO responsibility,BOC
 20191010218,,
 20191010222,,
 20191010233,,
 20191010234,,
-20191010237,Service closure Request with BO responsibility,NotDef
+20191010237,,
 20191010238,,
-20191010241,Evaluating Request (WITH registered letter),00491
+20191010241,Service closure Request with BO responsibility,BOC
 20191010249,,
-20191010250,Evaluating Request (WITH registered letter),00045
+20191010250,Evaluating Request (NO registered letter),00594
 20191010254,,
 20191010256,,
 20191010263,,
-20191010271,Authorization Requested,00475
+20191010271,Authorization Requested,00870
 20191010273,Service closure Request with BO responsibility,BOC
 20191010274,,
 20191010275,,
-20191010278,Evaluating Request (WITH registered letter),00019
+20191010278,,
 20191010279,,
-20191010281,Service closure Request with network responsibility,00475
+20191010281,,
 20191010282,,
-20191010286,Evaluating Request (WITH registered letter),00491
-20191010289,Service closure Request with network responsibility,00475
+20191010286,Service closure Request with BO responsibility,BOC
+20191010289,,
 20191010291,,
-20191010292,Service closure Request with network responsibility,00891
+20191010292,,
 20191010294,,
 20191010296,,
 20191010299,,
@@ -791,16 +791,16 @@ case:concept:name,Next_activity,Next_resource
 20191010319,,
 20191010322,,
 20191010327,,
-20191010328,Service closure Request with network responsibility,00475
+20191010328,,
 20191010329,,
 20191010335,,
 20191010336,,
 20191010338,,
 20191010341,,
 20191010342,,
-20191010347,Service closure Request with BO responsibility,NotDef
+20191010347,,
 20191010348,,
-20191010350,Evaluating Request (WITH registered letter),00491
+20191010350,Service closure Request with BO responsibility,BOC
 20191010357,,
 20191010358,,
 20191010364,,
@@ -813,21 +813,21 @@ case:concept:name,Next_activity,Next_resource
 20191010394,,
 20191010404,,
 20191010408,,
-20191010411,Evaluating Request (WITH registered letter),00045
-20191010414,Service closure Request with network responsibility,00891
-20191010418,Service closure Request with BO responsibility,00835
-20191010421,Evaluating Request (WITH registered letter),00491
+20191010411,Authorization Requested,00870
+20191010414,,
+20191010418,,
+20191010421,Service closure Request with BO responsibility,BOC
 20191010423,,
-20191010430,Evaluating Request (WITH registered letter),00045
+20191010430,Authorization Requested,00870
 20191010433,,
 20191010437,,
 20191010445,,
-20191010448,Service closure Request with BO responsibility,NotDef
+20191010448,,
 20191010449,,
 20191010458,,
 20191010475,,
 20191010483,,
-20191010484,Service closure Request with network responsibility,00891
+20191010484,,
 20191010485,,
 20191010486,,
 20191010487,,
@@ -839,26 +839,26 @@ case:concept:name,Next_activity,Next_resource
 20191010510,,
 20191010512,,
 20191010513,,
-20191010514,Evaluating Request (WITH registered letter),00491
+20191010514,Authorization Requested,00870
 20191010515,,
 20191010516,,
 20191010524,,
 20191010525,,
 20191010529,,
 20191010530,,
-20191010532,Evaluating Request (WITH registered letter),00491
+20191010532,Authorization Requested,00870
 20191010536,,
 20191010541,,
 20191010543,,
 20191010546,,
 20191010547,,
 20191010554,,
-20191010555,Authorization Requested,00475
+20191010555,Authorization Requested,00870
 20191010559,,
 20191010560,,
-20191010563,Service closure Request with network responsibility,00475
-20191010564,Evaluating Request (WITH registered letter),00491
-20191010565,Evaluating Request (WITH registered letter),00045
+20191010563,,
+20191010564,Authorization Requested,00870
+20191010565,Authorization Requested,00870
 20191010566,,
 20191010567,,
 20191010577,,
@@ -868,10 +868,10 @@ case:concept:name,Next_activity,Next_resource
 20191010582,,
 20191010585,,
 20191010590,,
-20191010593,Evaluating Request (WITH registered letter),00045
+20191010593,Evaluating Request (NO registered letter),00594
 20191010600,Service closure Request with BO responsibility,BOC
 20191010601,,
-20191010603,Evaluating Request (WITH registered letter),00019
+20191010603,,
 20191010606,,
 20191010609,,
 20191010610,,
@@ -881,7 +881,7 @@ case:concept:name,Next_activity,Next_resource
 20191010617,,
 20191010618,,
 20191010619,,
-20191010620,Evaluating Request (WITH registered letter),00045
+20191010620,Authorization Requested,00870
 20191010625,,
 20191010628,,
 20191010631,,
@@ -896,41 +896,41 @@ case:concept:name,Next_activity,Next_resource
 20191010699,,
 20191010712,,
 20191010722,,
-20191010724,Service closure Request with network responsibility,00475
+20191010724,,
 20191010725,,
 20191010727,,
 20191010733,,
 20191010745,,
 20191010748,,
-20191010749,Service closure Request with BO responsibility,00835
+20191010749,,
 20191010755,,
 20191010758,,
-20191010764,Service closure Request with BO responsibility,00835
+20191010764,Service closure Request with BO responsibility,BOC
 20191010766,,
 20191010767,,
-20191010782,Evaluating Request (WITH registered letter),00045
+20191010782,Authorization Requested,00870
 20191010787,,
 20191010788,,
 20191010793,,
 20191010794,,
-20191010795,Service closure Request with network responsibility,00475
+20191010795,,
 20191010800,,
-20191010801,Service closure Request with network responsibility,00891
+20191010801,,
 20191010805,,
 20191010807,,
-20191010808,Service closure Request with network responsibility,00891
+20191010808,,
 20191010812,,
 20191010817,,
 20191010818,,
 20191010820,,
-20191010821,Service closure Request with network responsibility,00891
+20191010821,,
 20191010830,,
 20191010832,,
 20191010834,,
 20191010840,,
-20191010841,Evaluating Request (WITH registered letter),00491
-20191010843,Authorization Requested,00475
-20191010846,Service closure Request with BO responsibility,00835
+20191010841,Evaluating Request (NO registered letter),00594
+20191010843,,
+20191010846,,
 20191010850,,
 20191010854,,
 20191010855,,
@@ -938,19 +938,19 @@ case:concept:name,Next_activity,Next_resource
 20191010863,,
 20191010864,,
 20191010875,,
-20191010878,Evaluating Request (WITH registered letter),00491
-20191010879,Evaluating Request (WITH registered letter),00491
-20191010881,Service closure Request with network responsibility,00891
-20191010888,Service closure Request with network responsibility,00475
+20191010878,Service closure Request with BO responsibility,BOC
+20191010879,Evaluating Request (NO registered letter),00594
+20191010881,,
+20191010888,,
 20191010894,,
 20191010896,,
 20191010897,,
-20191010902,Service closure Request with network responsibility,00475
+20191010902,Service closure Request with BO responsibility,00835
 20191010904,,
 20191010906,,
 20191010908,,
 20191010909,,
-20191010911,Evaluating Request (WITH registered letter),00019
+20191010911,,
 20191010912,,
 20191010920,,
 20191010922,,
@@ -959,22 +959,22 @@ case:concept:name,Next_activity,Next_resource
 20191010932,,
 20191010934,,
 20191010935,,
-20191010936,Service closure Request with BO responsibility,00835
-20191010937,Service closure Request with network responsibility,00475
+20191010936,Service closure Request with BO responsibility,BOC
+20191010937,,
 20191010944,,
 20191010948,,
-20191010950,Evaluating Request (WITH registered letter),00491
+20191010950,Service closure Request with BO responsibility,BOC
 20191010952,,
 20191010957,,
 20191010958,,
 20191010962,,
 20191010972,,
-20191010976,Evaluating Request (WITH registered letter),00491
+20191010976,Evaluating Request (NO registered letter),00594
 20191010978,,
 20191010981,,
-20191010988,Authorization Requested,00507
+20191010988,Authorization Requested,00870
 20191010991,,
-20191010994,Service closure Request with network responsibility,00475
+20191010994,,
 20191011000,,
 20191011002,,
 20191011006,Service closure Request with BO responsibility,BOC
@@ -985,21 +985,21 @@ case:concept:name,Next_activity,Next_resource
 20191011019,,
 20191011020,,
 20191011026,,
-20191011033,Service closure Request with network responsibility,00891
+20191011033,,
 20191011034,,
 20191011036,,
 20191011038,,
-20191011044,Evaluating Request (WITH registered letter),00491
+20191011044,Service closure Request with BO responsibility,BOC
 20191011048,,
 20191011051,,
 20191011054,,
 20191011056,,
-20191011057,Authorization Requested,00507
+20191011057,,
 20191011062,,
 20191011067,,
 20191011069,,
 20191011070,,
-20191011071,Authorization Requested,00507
+20191011071,Authorization Requested,00870
 20191011081,,
 20191011083,,
 20191011086,,
@@ -1012,18 +1012,18 @@ case:concept:name,Next_activity,Next_resource
 20191011103,,
 20191011109,,
 20191011112,,
-20191011113,Evaluating Request (WITH registered letter),00491
+20191011113,Evaluating Request (NO registered letter),00594
 20191011118,,
 20191011120,,
 20191011121,,
-20191011125,Pending Request for Reservation Closure,SDCRAP
+20191011125,,
 20191011126,,
 20191011127,,
 20191011128,,
 20191011131,,
-20191011143,Authorization Requested,00507
+20191011143,,
 20191011155,,
-20191011157,Evaluating Request (WITH registered letter),00491
+20191011157,Evaluating Request (NO registered letter),00594
 20191011158,,
 20191011161,,
 20191011162,,
@@ -1031,9 +1031,9 @@ case:concept:name,Next_activity,Next_resource
 20191011164,,
 20191011166,,
 20191011171,,
-20191011173,Service closure Request with network responsibility,00891
-20191011176,Service closure Request with BO responsibility,00835
-20191011177,Service closure Request with network responsibility,00475
+20191011173,,
+20191011176,,
+20191011177,,
 20191011178,,
 20191011185,,
 20191011187,,
@@ -1041,44 +1041,44 @@ case:concept:name,Next_activity,Next_resource
 20191011196,,
 20191011198,,
 20191011204,,
-20191011207,Service closure Request with BO responsibility,00835
+20191011207,,
 20191011208,,
-20191011209,Evaluating Request (WITH registered letter),00045
-20191011211,Evaluating Request (WITH registered letter),00491
+20191011209,,
+20191011211,Evaluating Request (NO registered letter),00594
 20191011216,,
 20191011217,,
-20191011221,Evaluating Request (WITH registered letter),00491
+20191011221,Evaluating Request (NO registered letter),00594
 20191011222,,
 20191011225,,
 20191011227,,
 20191011230,,
-20191011232,Authorization Requested,00507
+20191011232,Authorization Requested,00870
 20191011234,,
 20191011236,,
 20191011247,,
 20191011253,,
 20191011255,,
-20191011258,Authorization Requested,00507
+20191011258,,
 20191011260,,
 20191011263,,
-20191011264,Service closure Request with network responsibility,00891
+20191011264,,
 20191011267,,
 20191011270,,
 20191011272,,
 20191011273,,
 20191011276,,
 20191011277,,
-20191011291,Service closure Request with BO responsibility,00831
-20191011292,Evaluating Request (WITH registered letter),00491
+20191011291,Service closure Request with BO responsibility,NotDef
+20191011292,Evaluating Request (NO registered letter),00594
 20191011296,,
 20191011305,,
 20191011306,,
 20191011315,,
 20191011316,,
-20191011319,Authorization Requested,00475
-20191011321,Authorization Requested,00507
+20191011319,Authorization Requested,00870
+20191011321,Authorization Requested,00870
 20191011322,,
-20191011325,Service closure Request with network responsibility,00475
+20191011325,,
 20191011329,,
 20191011333,,
 20191011339,,
@@ -1123,32 +1123,32 @@ case:concept:name,Next_activity,Next_resource
 20191011391,,
 20191011392,,
 20191011393,,
-20191011399,Evaluating Request (WITH registered letter),00045
-20191011404,Authorization Requested,00475
+20191011399,Authorization Requested,00870
+20191011404,Authorization Requested,00870
 20191011405,,
-20191011406,Evaluating Request (WITH registered letter),00491
-20191011408,Service closure Request with network responsibility,00891
+20191011406,Service closure Request with BO responsibility,BOC
+20191011408,,
 20191011411,,
-20191011412,Evaluating Request (WITH registered letter),00491
-20191011413,Authorization Requested,00475
+20191011412,Authorization Requested,00870
+20191011413,Authorization Requested,00870
 20191011414,,
 20191011416,,
 20191011417,,
-20191011419,Evaluating Request (WITH registered letter),00045
+20191011419,Authorization Requested,00870
 20191011421,,
-20191011424,Authorization Requested,00475
+20191011424,Authorization Requested,00870
 20191011426,,
-20191011429,Authorization Requested,00475
+20191011429,Authorization Requested,00870
 20191011432,,
 20191011433,,
 20191011434,,
-20191011438,Authorization Requested,00475
+20191011438,Authorization Requested,00870
 20191011442,,
 20191011443,,
 20191011449,,
-20191011450,Evaluating Request (WITH registered letter),00019
-20191011452,Authorization Requested,00475
-20191011457,Evaluating Request (WITH registered letter),00491
+20191011450,,
+20191011452,Authorization Requested,00870
+20191011457,Authorization Requested,00870
 20191011459,,
 20191011463,,
 20191011466,,
@@ -1161,7 +1161,7 @@ case:concept:name,Next_activity,Next_resource
 20191011489,,
 20191011492,,
 20191011493,,
-20191011494,Service closure Request with BO responsibility,00850
+20191011494,,
 20191011495,,
 20191011496,,
 20191011498,,
@@ -1170,7 +1170,7 @@ case:concept:name,Next_activity,Next_resource
 20191011501,,
 20191011502,,
 20191011503,,
-20191011504,Service closure Request with BO responsibility,00850
+20191011504,,
 20191011509,,
 20191011512,,
 20191011514,,
@@ -1185,27 +1185,27 @@ case:concept:name,Next_activity,Next_resource
 20191011549,,
 20191011550,,
 20191011553,,
-20191011556,Service closure Request with network responsibility,00891
+20191011556,,
 20191011558,,
 20191011559,,
 20191011560,,
 20191011564,,
 20191011565,,
-20191011566,Service closure Request with network responsibility,00891
+20191011566,,
 20191011568,,
 20191011570,Service closure Request with BO responsibility,BOC
 20191011571,,
 20191011582,,
-20191011592,Evaluating Request (WITH registered letter),00019
+20191011592,,
 20191011593,,
 20191011595,,
 20191011597,,
-20191011600,Evaluating Request (WITH registered letter),00491
+20191011600,Service closure Request with BO responsibility,BOC
 20191011601,,
 20191011602,,
-20191011604,Service closure Request with network responsibility,00891
+20191011604,,
 20191011605,,
-20191011607,Authorization Requested,00475
+20191011607,Authorization Requested,00870
 20191011610,,
 20191011613,,
 20191011616,,
@@ -1218,55 +1218,55 @@ case:concept:name,Next_activity,Next_resource
 20191011630,,
 20191011635,,
 20191011636,,
-20191011638,Service closure Request with network responsibility,00891
-20191011640,Service closure Request with BO responsibility,NotDef
+20191011638,,
+20191011640,,
 20191011644,,
-20191011645,Evaluating Request (WITH registered letter),00491
+20191011645,Service closure Request with BO responsibility,BOC
 20191011651,,
 20191011652,,
-20191011653,Evaluating Request (WITH registered letter),00491
+20191011653,Service closure Request with BO responsibility,BOC
 20191011655,,
-20191011656,Evaluating Request (WITH registered letter),00491
+20191011656,,
 20191011660,,
 20191011661,,
 20191011665,,
 20191011673,,
 20191011674,,
 20191011675,,
-20191011677,Authorization Requested,00475
+20191011677,Authorization Requested,00870
 20191011678,,
-20191011680,Evaluating Request (WITH registered letter),00491
-20191011684,Authorization Requested,00475
-20191011688,Authorization Requested,00475
+20191011680,Service closure Request with BO responsibility,BOC
+20191011684,Authorization Requested,00870
+20191011688,Authorization Requested,00870
 20191011691,,
 20191011692,,
-20191011695,Evaluating Request (WITH registered letter),00491
+20191011695,Service closure Request with BO responsibility,BOC
 20191011696,,
 20191011702,,
 20191011704,,
 20191011710,,
-20191011711,Evaluating Request (WITH registered letter),00491
+20191011711,Service closure Request with BO responsibility,BOC
 20191011713,,
 20191011714,,
-20191011715,Evaluating Request (WITH registered letter),00019
+20191011715,,
 20191011717,,
-20191011718,Service closure Request with network responsibility,00475
+20191011718,,
 20191011719,,
 20191011721,,
 20191011725,,
 20191011728,,
 20191011732,,
 20191011733,,
-20191011735,Evaluating Request (WITH registered letter),00491
+20191011735,Service closure Request with BO responsibility,BOC
 20191011738,,
-20191011739,Service closure Request with network responsibility,00475
+20191011739,,
 20191011740,,
-20191011741,Evaluating Request (WITH registered letter),00491
-20191011743,Evaluating Request (WITH registered letter),00491
+20191011741,Service closure Request with BO responsibility,BOC
+20191011743,Service closure Request with BO responsibility,BOC
 20191011744,,
 20191011745,Service closure Request with BO responsibility,BOC
 20191011746,,
-20191011749,Service closure Request with network responsibility,00475
+20191011749,,
 20191011758,,
 20191011760,,
 20191011762,,
@@ -1276,58 +1276,58 @@ case:concept:name,Next_activity,Next_resource
 20191011770,,
 20191011774,,
 20191011775,,
-20191011778,Evaluating Request (WITH registered letter),00491
+20191011778,Service closure Request with BO responsibility,BOC
 20191011779,,
 20191011783,,
 20191011785,,
 20191011786,,
 20191011788,,
-20191011789,Service closure Request with network responsibility,00891
-20191011790,Evaluating Request (WITH registered letter),00045
+20191011789,,
+20191011790,Authorization Requested,00870
 20191011791,,
 20191011797,,
-20191011798,Evaluating Request (WITH registered letter),00019
+20191011798,,
 20191011800,,
-20191011802,Evaluating Request (WITH registered letter),00491
+20191011802,Authorization Requested,00870
 20191011804,,
 20191011806,,
 20191011809,,
-20191011828,Evaluating Request (WITH registered letter),00045
+20191011828,Authorization Requested,00870
 20191011830,,
 20191011835,,
 20191011837,,
 20191011838,,
 20191011839,,
 20191011840,,
-20191011843,Evaluating Request (WITH registered letter),00491
+20191011843,Service closure Request with BO responsibility,BOC
 20191011844,,
 20191011845,,
 20191011846,,
 20191011847,,
-20191011851,Evaluating Request (WITH registered letter),00491
+20191011851,Service closure Request with BO responsibility,BOC
 20191011853,,
-20191011855,Evaluating Request (WITH registered letter),00491
-20191011856,Evaluating Request (WITH registered letter),00045
+20191011855,Service closure Request with BO responsibility,BOC
+20191011856,Authorization Requested,00870
 20191011858,,
 20191011861,,
-20191011862,Service closure Request with BO responsibility,NotDef
+20191011862,,
 20191011863,,
-20191011864,Evaluating Request (WITH registered letter),00045
-20191011866,Evaluating Request (WITH registered letter),00491
+20191011864,Authorization Requested,00870
+20191011866,Service closure Request with BO responsibility,BOC
 20191011867,,
 20191011868,,
-20191011869,Evaluating Request (WITH registered letter),00491
-20191011870,Evaluating Request (WITH registered letter),00491
+20191011869,Authorization Requested,00870
+20191011870,Authorization Requested,00870
 20191011872,,
 20191011873,,
 20191011875,,
 20191011878,,
-20191011881,Service closure Request with network responsibility,00475
+20191011881,,
 20191011883,,
 20191011885,,
 20191011888,,
 20191011889,,
-20191011890,Evaluating Request (WITH registered letter),00491
+20191011890,Authorization Requested,00870
 20191011892,,
 20191011896,,
 20191011898,,
@@ -1338,39 +1338,39 @@ case:concept:name,Next_activity,Next_resource
 20191011910,,
 20191011912,,
 20191011917,,
-20191011918,Evaluating Request (WITH registered letter),00491
+20191011918,Service closure Request with BO responsibility,BOC
 20191011922,,
 20191011925,,
-20191011926,Evaluating Request (WITH registered letter),00045
+20191011926,,
 20191011929,,
 20191011930,,
 20191011931,,
 20191011932,,
-20191011939,Service closure Request with network responsibility,00475
+20191011939,,
 20191011941,,
-20191011943,Evaluating Request (WITH registered letter),00491
+20191011943,Service closure Request with BO responsibility,BOC
 20191011944,,
 20191011946,,
 20191011947,,
-20191011948,Authorization Requested,00475
+20191011948,Authorization Requested,00870
 20191011951,,
 20191011952,,
 20191011958,,
 20191011962,,
 20191011963,,
-20191011964,Evaluating Request (WITH registered letter),00491
+20191011964,Service closure Request with BO responsibility,BOC
 20191011967,,
-20191011968,Evaluating Request (WITH registered letter),00491
+20191011968,Service closure Request with BO responsibility,BOC
 20191011974,,
 20191011976,,
 20191011977,,
 20191011980,,
 20191011981,,
-20191011982,Service closure Request with BO responsibility,NotDef
+20191011982,,
 20191011983,,
-20191011984,Authorization Requested,00475
+20191011984,Authorization Requested,00870
 20191011985,,
-20191011987,Evaluating Request (WITH registered letter),00045
+20191011987,Authorization Requested,00870
 20191011989,,
 20191011993,,
 20191011995,,
@@ -1382,32 +1382,32 @@ case:concept:name,Next_activity,Next_resource
 20191012001,,
 20191012002,,
 20191012003,,
-20191012006,Evaluating Request (WITH registered letter),00491
+20191012006,Evaluating Request (NO registered letter),00594
 20191012011,,
 20191012013,,
 20191012015,,
-20191012017,Evaluating Request (WITH registered letter),00491
+20191012017,Service closure Request with BO responsibility,NotDef
 20191012018,,
 20191012019,,
 20191012025,,
-20191012027,Service closure Request with network responsibility,00891
-20191012030,Service closure Request with network responsibility,00475
-20191012033,Service closure Request with BO responsibility,00850
-20191012037,Evaluating Request (WITH registered letter),00019
-20191012040,Evaluating Request (WITH registered letter),00491
+20191012027,,
+20191012030,,
+20191012033,,
+20191012037,,
+20191012040,,
 20191012043,,
 20191012049,,
-20191012055,Evaluating Request (WITH registered letter),00491
-20191012056,Service closure Request with network responsibility,00891
+20191012055,Authorization Requested,00870
+20191012056,,
 20191012057,,
 20191012063,,
-20191012066,Evaluating Request (WITH registered letter),00491
+20191012066,Service closure Request with BO responsibility,BOC
 20191012067,,
 20191012071,,
 20191012072,,
-20191012073,Evaluating Request (WITH registered letter),00491
+20191012073,Authorization Requested,00870
 20191012077,,
-20191012084,Service closure Request with network responsibility,00475
+20191012084,,
 20191012089,,
 20191012092,,
 20191012093,,
@@ -1426,47 +1426,47 @@ case:concept:name,Next_activity,Next_resource
 20191012119,,
 20191012121,,
 20191012122,,
-20191012125,Evaluating Request (WITH registered letter),00045
+20191012125,Authorization Requested,00870
 20191012126,,
-20191012128,Evaluating Request (WITH registered letter),00491
+20191012128,Service closure Request with BO responsibility,BOC
 20191012130,,
-20191012131,Evaluating Request (WITH registered letter),00491
-20191012132,Service closure Request with network responsibility,00891
+20191012131,Authorization Requested,00870
+20191012132,,
 20191012133,,
 20191012134,,
-20191012135,Service closure Request with BO responsibility,00828
+20191012135,,
 20191012136,,
 20191012137,,
 20191012141,,
-20191012142,Service closure Request with network responsibility,00475
-20191012148,Service closure Request with network responsibility,00891
+20191012142,,
+20191012148,Service closure Request with BO responsibility,00828
 20191012149,,
 20191012152,,
 20191012154,,
 20191012156,,
-20191012157,Service closure Request with network responsibility,00891
+20191012157,,
 20191012165,,
-20191012166,Service closure Request with network responsibility,00891
-20191012168,Evaluating Request (WITH registered letter),00045
+20191012166,Service closure Request with network responsibility,00118
+20191012168,Authorization Requested,00870
 20191012170,,
 20191012173,,
 20191012174,,
-20191012175,Service closure Request with network responsibility,00475
+20191012175,,
 20191012176,,
 20191012177,,
 20191012180,,
 20191012182,,
 20191012184,,
-20191012185,Service closure Request with network responsibility,00891
+20191012185,,
 20191012186,,
 20191012189,,
 20191012190,,
 20191012193,,
 20191012194,,
-20191012195,Evaluating Request (WITH registered letter),00019
+20191012195,,
 20191012196,,
 20191012201,,
-20191012203,Evaluating Request (WITH registered letter),00019
+20191012203,,
 20191012206,,
 20191012208,,
 20191012210,,
@@ -1474,16 +1474,16 @@ case:concept:name,Next_activity,Next_resource
 20191012216,,
 20191012218,,
 20191012221,,
-20191012225,Service closure Request with network responsibility,00891
+20191012225,,
 20191012226,,
-20191012235,Evaluating Request (WITH registered letter),00491
+20191012235,Service closure Request with BO responsibility,BOC
 20191012236,,
 20191012241,,
 20191012242,,
 20191012248,,
 20191012250,,
-20191012251,Evaluating Request (WITH registered letter),00491
-20191012255,Evaluating Request (WITH registered letter),00045
+20191012251,Evaluating Request (NO registered letter),00594
+20191012255,Authorization Requested,00870
 20191012256,,
 20191012257,,
 20191012259,,
@@ -1492,11 +1492,11 @@ case:concept:name,Next_activity,Next_resource
 20191012268,,
 20191012271,,
 20191012272,,
-20191012273,Evaluating Request (WITH registered letter),00019
-20191012276,Evaluating Request (WITH registered letter),00491
+20191012273,,
+20191012276,Evaluating Request (NO registered letter),00594
 20191012281,,
-20191012283,Evaluating Request (WITH registered letter),00491
-20191012285,Service closure Request with network responsibility,00475
+20191012283,Service closure Request with BO responsibility,BOC
+20191012285,,
 20191012290,,
 20191012291,,
 20191012293,,
@@ -1507,54 +1507,54 @@ case:concept:name,Next_activity,Next_resource
 20191012298,,
 20191012301,,
 20191012302,,
-20191012303,Evaluating Request (WITH registered letter),00491
+20191012303,Service closure Request with BO responsibility,BOC
 20191012304,,
 20191012305,,
 20191012307,,
-20191012313,Service closure Request with network responsibility,00891
+20191012313,Service closure Request with BO responsibility,00828
 20191012315,,
-20191012317,Evaluating Request (WITH registered letter),00491
+20191012317,Evaluating Request (NO registered letter),00594
 20191012318,,
 20191012319,,
-20191012326,Evaluating Request (WITH registered letter),00491
+20191012326,Service closure Request with BO responsibility,BOC
 20191012332,,
 20191012335,,
 20191012336,,
 20191012337,,
 20191012338,,
 20191012340,,
-20191012341,Service closure Request with network responsibility,00475
+20191012341,,
 20191012348,,
 20191012349,,
-20191012354,Evaluating Request (WITH registered letter),00491
-20191012357,Service closure Request with BO responsibility,00850
+20191012354,Service closure Request with BO responsibility,BOC
+20191012357,,
 20191012359,,
 20191012360,,
-20191012361,Service closure Request with network responsibility,00475
+20191012361,,
 20191012362,,
 20191012363,,
 20191012364,,
 20191012366,,
-20191012370,Evaluating Request (WITH registered letter),00491
+20191012370,Service closure Request with BO responsibility,BOC
 20191012372,,
 20191012376,,
 20191012378,,
 20191012379,,
-20191012381,Evaluating Request (WITH registered letter),00491
+20191012381,Authorization Requested,00870
 20191012385,,
 20191012386,Service closure Request with BO responsibility,BOC
 20191012389,,
-20191012396,Service closure Request with network responsibility,00475
+20191012396,,
 20191012397,,
-20191012400,Service closure Request with network responsibility,00475
+20191012400,,
 20191012404,,
-20191012406,Evaluating Request (WITH registered letter),00491
+20191012406,Service closure Request with BO responsibility,BOC
 20191012408,,
 20191012409,,
 20191012414,,
 20191012415,,
 20191012417,,
-20191012419,Service closure Request with network responsibility,00475
+20191012419,,
 20191012427,,
 20191012428,,
 20191012431,,
@@ -1562,24 +1562,24 @@ case:concept:name,Next_activity,Next_resource
 20191012436,,
 20191012443,,
 20191012444,,
-20191012453,Service closure Request with network responsibility,00475
-20191012456,Service closure Request with BO responsibility,00850
+20191012453,,
+20191012456,,
 20191012461,,
 20191012463,,
 20191012464,,
-20191012468,Service closure Request with network responsibility,00891
+20191012468,Service closure Request with BO responsibility,00828
 20191012469,,
-20191012473,Evaluating Request (WITH registered letter),00491
+20191012473,Evaluating Request (NO registered letter),00594
 20191012474,,
 20191012475,,
-20191012476,Evaluating Request (WITH registered letter),00491
+20191012476,Service closure Request with BO responsibility,BOC
 20191012477,,
-20191012479,Evaluating Request (WITH registered letter),00491
+20191012479,Evaluating Request (NO registered letter),00594
 20191012482,,
 20191012483,,
-20191012485,Evaluating Request (WITH registered letter),00491
+20191012485,Service closure Request with BO responsibility,BOC
 20191012486,,
-20191012487,Authorization Requested,00475
+20191012487,Authorization Requested,00870
 20191012488,,
 20191012489,,
 20191012490,,
@@ -1587,7 +1587,7 @@ case:concept:name,Next_activity,Next_resource
 20191012496,,
 20191012498,,
 20191012510,,
-20191012511,Service closure Request with BO responsibility,00850
+20191012511,,
 20191012512,,
 20191012513,,
 20191012518,,
@@ -1611,50 +1611,50 @@ case:concept:name,Next_activity,Next_resource
 20191012540,,
 20191012542,,
 20191012547,,
-20191012548,Evaluating Request (WITH registered letter),00491
-20191012555,Evaluating Request (WITH registered letter),00019
+20191012548,Service closure Request with BO responsibility,BOC
+20191012555,,
 20191012560,,
-20191012569,Evaluating Request (WITH registered letter),00491
+20191012569,Service closure Request with BO responsibility,BOC
 20191012571,,
 20191012573,,
 20191012574,,
 20191012580,,
-20191012581,Evaluating Request (WITH registered letter),00491
+20191012581,Service closure Request with BO responsibility,BOC
 20191012585,,
 20191012587,,
 20191012589,,
 20191012590,,
-20191012591,Evaluating Request (WITH registered letter),00491
-20191012595,Evaluating Request (WITH registered letter),00491
+20191012591,,
+20191012595,Service closure Request with BO responsibility,BOC
 20191012599,,
-20191012600,Service closure Request with network responsibility,00891
-20191012602,Service closure Request with network responsibility,00891
+20191012600,Service closure Request with network responsibility,00118
+20191012602,,
 20191012604,,
-20191012606,Evaluating Request (WITH registered letter),00491
-20191012607,Evaluating Request (WITH registered letter),00491
-20191012608,Evaluating Request (WITH registered letter),00491
+20191012606,Service closure Request with BO responsibility,BOC
+20191012607,Authorization Requested,00870
+20191012608,Service closure Request with BO responsibility,BOC
 20191012610,,
 20191012611,,
 20191012612,,
-20191012613,Service closure Request with network responsibility,00891
+20191012613,Service closure Request with network responsibility,00118
 20191012614,,
 20191012618,,
-20191012622,Service closure Request with network responsibility,00891
-20191012623,Evaluating Request (WITH registered letter),00491
-20191012629,Evaluating Request (WITH registered letter),00491
-20191012631,Evaluating Request (WITH registered letter),00491
+20191012622,Service closure Request with network responsibility,00118
+20191012623,Service closure Request with BO responsibility,BOC
+20191012629,Service closure Request with BO responsibility,BOC
+20191012631,Service closure Request with BO responsibility,BOC
 20191012632,,
 20191012636,,
 20191012638,,
 20191012640,,
 20191012642,,
-20191012647,Evaluating Request (WITH registered letter),00491
+20191012647,Service closure Request with BO responsibility,BOC
 20191012648,,
-20191012651,Evaluating Request (WITH registered letter),00491
-20191012656,Service closure Request with network responsibility,00475
+20191012651,Service closure Request with BO responsibility,BOC
+20191012656,,
 20191012657,,
 20191012661,,
-20191012663,Evaluating Request (WITH registered letter),00491
+20191012663,Service closure Request with BO responsibility,BOC
 20191012664,,
 20191012665,,
 20191012668,,
@@ -1663,98 +1663,98 @@ case:concept:name,Next_activity,Next_resource
 20191012672,,
 20191012673,,
 20191012675,,
-20191012677,Evaluating Request (WITH registered letter),00491
+20191012677,Authorization Requested,00870
 20191012683,,
 20191012685,,
 20191012686,,
-20191012687,Service closure Request with network responsibility,00475
+20191012687,,
 20191012692,,
 20191012698,,
 20191012700,,
 20191012708,,
-20191012711,Evaluating Request (WITH registered letter),00045
+20191012711,Authorization Requested,00870
 20191012714,,
-20191012720,Evaluating Request (WITH registered letter),00491
+20191012720,Service closure Request with BO responsibility,BOC
 20191012723,,
 20191012726,,
 20191012729,,
-20191012730,Service closure Request with network responsibility,00475
+20191012730,,
 20191012732,,
 20191012733,,
 20191012737,,
-20191012739,Evaluating Request (WITH registered letter),00491
+20191012739,Authorization Requested,00870
 20191012746,,
 20191012747,,
 20191012748,,
 20191012749,,
-20191012751,Service closure Request with network responsibility,00475
-20191012752,Service closure Request with network responsibility,00891
+20191012751,,
+20191012752,,
 20191012754,,
-20191012755,Evaluating Request (WITH registered letter),00491
+20191012755,Service closure Request with BO responsibility,BOC
 20191012758,,
 20191012759,,
 20191012761,,
 20191012762,,
 20191012766,,
 20191012767,,
-20191012771,Authorization Requested,00475
+20191012771,Authorization Requested,00870
 20191012772,Service closure Request with BO responsibility,BOC
-20191012776,Evaluating Request (WITH registered letter),00491
-20191012779,Evaluating Request (WITH registered letter),00491
+20191012776,Service closure Request with BO responsibility,BOC
+20191012779,Service closure Request with BO responsibility,BOC
 20191012780,,
 20191012781,,
 20191012782,,
 20191012786,,
-20191012787,Service closure Request with network responsibility,00475
-20191012788,Service closure Request with BO responsibility,00828
-20191012790,Evaluating Request (WITH registered letter),00045
-20191012793,Service closure Request with network responsibility,00891
-20191012795,Service closure Request with network responsibility,00475
-20191012796,Evaluating Request (WITH registered letter),00045
-20191012798,Evaluating Request (WITH registered letter),00491
+20191012787,,
+20191012788,,
+20191012790,Authorization Requested,00870
+20191012793,Service closure Request with network responsibility,00118
+20191012795,,
+20191012796,Authorization Requested,00870
+20191012798,Service closure Request with BO responsibility,BOC
 20191012799,,
-20191012800,Evaluating Request (WITH registered letter),00491
-20191012801,Authorization Requested,00475
+20191012800,Service closure Request with BO responsibility,BOC
+20191012801,Authorization Requested,00870
 20191012802,,
 20191012807,,
 20191012810,Service closure Request with BO responsibility,BOC
 20191012811,,
 20191012812,,
 20191012814,,
-20191012816,Evaluating Request (WITH registered letter),00491
+20191012816,Service closure Request with BO responsibility,BOC
 20191012817,,
 20191012819,,
 20191012821,,
-20191012822,Service closure Request with network responsibility,00891
-20191012834,Service closure Request with network responsibility,00891
-20191012839,Evaluating Request (WITH registered letter),00491
-20191012845,Evaluating Request (WITH registered letter),00491
+20191012822,Service closure Request with network responsibility,00118
+20191012834,,
+20191012839,Service closure Request with BO responsibility,BOC
+20191012845,Service closure Request with BO responsibility,BOC
 20191012847,,
 20191012849,,
 20191012851,,
 20191012852,,
-20191012853,Service closure Request with network responsibility,00891
+20191012853,,
 20191012856,,
 20191012857,,
-20191012864,Evaluating Request (WITH registered letter),00045
+20191012864,Authorization Requested,00870
 20191012865,,
-20191012866,Service closure Request with network responsibility,00475
+20191012866,,
 20191012869,,
-20191012871,Evaluating Request (WITH registered letter),00491
-20191012873,Evaluating Request (WITH registered letter),00491
+20191012871,Service closure Request with BO responsibility,BOC
+20191012873,Service closure Request with BO responsibility,BOC
 20191012876,,
-20191012877,Authorization Requested,00475
+20191012877,Authorization Requested,00870
 20191012878,,
 20191012880,,
 20191012881,,
-20191012882,Evaluating Request (WITH registered letter),00491
-20191012883,Evaluating Request (WITH registered letter),00019
+20191012882,Service closure Request with BO responsibility,BOC
+20191012883,,
 20191012893,,
-20191012894,Service closure Request with network responsibility,00475
+20191012894,,
 20191012896,,
 20191012903,,
 20191012906,,
-20191012907,Evaluating Request (WITH registered letter),00491
+20191012907,Service closure Request with BO responsibility,BOC
 20191012910,,
 20191012915,,
 20191012918,,
@@ -1765,23 +1765,23 @@ case:concept:name,Next_activity,Next_resource
 20191012935,,
 20191012938,,
 20191012940,,
-20191012941,Service closure Request with network responsibility,00475
+20191012941,,
 20191012942,,
-20191012945,Service closure Request with network responsibility,00891
+20191012945,Service closure Request with network responsibility,00118
 20191012946,,
 20191012947,,
-20191012957,Service closure Request with network responsibility,00891
-20191012959,Evaluating Request (WITH registered letter),00491
-20191012960,Service closure Request with network responsibility,00475
+20191012957,Service closure Request with network responsibility,00118
+20191012959,Service closure Request with BO responsibility,BOC
+20191012960,,
 20191012964,,
 20191012965,,
-20191012966,Service closure Request with network responsibility,00891
+20191012966,,
 20191012967,,
 20191012970,,
 20191012971,,
-20191012972,Evaluating Request (WITH registered letter),00491
+20191012972,Service closure Request with BO responsibility,BOC
 20191012973,Service closure Request with BO responsibility,BOC
-20191012975,Service closure Request with network responsibility,00891
+20191012975,,
 20191012976,,
 20191012977,,
 20191012979,,
@@ -1793,9 +1793,9 @@ case:concept:name,Next_activity,Next_resource
 20191012991,,
 20191012993,,
 20191012996,,
-20191012998,Service closure Request with network responsibility,00891
+20191012998,,
 20191013000,,
-20191013003,Evaluating Request (WITH registered letter),00491
+20191013003,Service closure Request with BO responsibility,BOC
 20191013005,,
 20191013007,,
 20191013009,,
@@ -1808,70 +1808,70 @@ case:concept:name,Next_activity,Next_resource
 20191013023,,
 20191013025,,
 20191013027,,
-20191013029,Evaluating Request (WITH registered letter),00491
+20191013029,Service closure Request with BO responsibility,BOC
 20191013030,,
 20191013033,,
 20191013038,,
-20191013040,Evaluating Request (WITH registered letter),00045
+20191013040,Authorization Requested,00870
 20191013041,,
 20191013043,,
 20191013047,,
 20191013048,,
-20191013049,Evaluating Request (WITH registered letter),00491
+20191013049,Service closure Request with BO responsibility,BOC
 20191013053,,
-20191013055,Evaluating Request (WITH registered letter),00045
+20191013055,Authorization Requested,00870
 20191013056,,
-20191013057,Evaluating Request (WITH registered letter),00491
+20191013057,Service closure Request with BO responsibility,BOC
 20191013061,,
 20191013063,,
-20191013065,Evaluating Request (WITH registered letter),00491
-20191013067,Evaluating Request (WITH registered letter),00491
-20191013071,Evaluating Request (WITH registered letter),00491
+20191013065,Service closure Request with BO responsibility,BOC
+20191013067,Service closure Request with BO responsibility,BOC
+20191013071,Service closure Request with BO responsibility,BOC
 20191013073,,
 20191013074,,
 20191013075,,
-20191013076,Evaluating Request (WITH registered letter),00045
-20191013077,Evaluating Request (WITH registered letter),00491
+20191013076,Authorization Requested,00870
+20191013077,Authorization Requested,00870
 20191013079,,
 20191013087,,
 20191013088,,
 20191013089,,
-20191013091,Evaluating Request (WITH registered letter),00491
+20191013091,Service closure Request with BO responsibility,BOC
 20191013096,,
 20191013101,,
-20191013102,Evaluating Request (WITH registered letter),00491
+20191013102,Service closure Request with BO responsibility,BOC
 20191013103,,
 20191013105,,
 20191013106,,
 20191013108,Service closure Request with BO responsibility,BOC
-20191013109,Evaluating Request (WITH registered letter),00491
-20191013111,Service closure Request with network responsibility,00475
+20191013109,Service closure Request with BO responsibility,NotDef
+20191013111,,
 20191013112,,
 20191013115,,
-20191013117,Evaluating Request (WITH registered letter),00491
-20191013118,Service closure Request with BO responsibility,00852
-20191013119,Service closure Request with network responsibility,00475
-20191013122,Evaluating Request (WITH registered letter),00491
+20191013117,Service closure Request with BO responsibility,BOC
+20191013118,Service closure Request with BO responsibility,NotDef
+20191013119,,
+20191013122,Service closure Request with BO responsibility,BOC
 20191013124,,
-20191013125,Service closure Request with network responsibility,00891
+20191013125,Service closure Request with network responsibility,00118
 20191013127,,
 20191013129,,
 20191013130,,
 20191013132,,
-20191013133,Evaluating Request (WITH registered letter),00491
+20191013133,Service closure Request with BO responsibility,BOC
 20191013137,,
-20191013146,Service closure Request with network responsibility,00891
+20191013146,Service closure Request with network responsibility,00118
 20191013148,,
 20191013150,,
 20191013153,,
 20191013165,,
-20191013169,Evaluating Request (WITH registered letter),00491
-20191013172,Evaluating Request (WITH registered letter),00491
+20191013169,Service closure Request with BO responsibility,BOC
+20191013172,Authorization Requested,00870
 20191013174,,
-20191013176,Evaluating Request (WITH registered letter),00491
-20191013178,Evaluating Request (WITH registered letter),00491
-20191013179,Evaluating Request (WITH registered letter),00491
+20191013176,Service closure Request with BO responsibility,BOC
+20191013178,Authorization Requested,00870
+20191013179,Service closure Request with BO responsibility,BOC
 20191013180,,
 20191013183,,
-20191013185,Authorization Requested,00475
-20191013186,Evaluating Request (WITH registered letter),00491
+20191013185,Authorization Requested,00870
+20191013186,Service closure Request with BO responsibility,BOC

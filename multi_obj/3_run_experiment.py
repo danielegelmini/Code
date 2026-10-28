@@ -18,6 +18,7 @@ from utils.recommendation_functions import (
 
 from utils.get_features import load_case_study, get_case_study_features
 from utils.setup_cache import get_transition_graph
+from utils.transition_system import resource_counts_by_window
 
 # Suppress all warnings
 import warnings
@@ -61,6 +62,7 @@ def run_experiment_top_k(
     gamma_cls: float = 0.5,
     gamma_reg: float = 0.5,
     min_next_share: float = 0.01,
+    min_res_share: float = 0.05,
 ) -> Dict[str, List[Dict[Any, Any]]]:
     """
     Same as run_experiment, but instead of a single best (activity, resource)
@@ -157,6 +159,14 @@ def run_experiment_top_k(
     # -------------------------
     print("Building activity -> resources map...")
     act_with_res = act_with_res_func(train_data, activity_column_name, resource_column_name)
+    # candidate resources of each next activity restricted per case to the frequent ones after its window
+    # (utils/transition_system.filter_rare_resources)
+    resource_counts = None
+    if min_res_share > 0:
+        resource_counts = resource_counts_by_window(train_data, case_id_name, activity_column_name,
+                                                    resource_column_name, window_size)
+        print(f"Candidate resources: at least {min_res_share:.1%} of a (window -> activity) in training "
+              f"(the most frequent always kept)")
 
     # -------------------------
     # Forbidden activities map
@@ -217,6 +227,8 @@ def run_experiment_top_k(
             random_state=random_state,
             k=k,
             baseline_instances_by_case=baseline_instances_by_case if current_method == "exhaustive" else None,
+            resource_counts=resource_counts,
+            min_res_share=min_res_share,
             gamma_cls=gamma_cls,
             gamma_reg=gamma_reg,
         )
@@ -330,6 +342,14 @@ if __name__ == "__main__":
              "at least this share of its occurrences in the training log; rarer ones are not recommended "
              "(default: 0.01; 0 keeps every observed next activity, the behaviour before 2026-10-08).",
     )
+    parser.add_argument(
+        "--min_res_share",
+        type=float,
+        default=0.05,
+        help="Candidate resources of a next activity must have done it after the current window in at least this "
+             "share of its occurrences in the training log; the most frequent one is always kept (default: 0.05; "
+             "0 keeps every resource that ever did the activity, the behaviour before 2026-10-21).",
+    )
 
     args = parser.parse_args()
 
@@ -347,6 +367,7 @@ if __name__ == "__main__":
         gamma_cls=args.gamma_cls,
         gamma_reg=args.gamma_reg,
         min_next_share=args.min_next_share,
+        min_res_share=args.min_res_share,
     )
 
 # FOR RUNNING EXPERIMENT:

@@ -222,3 +222,58 @@ def filter_rare_next_activities(transition_graph, df, case_id_name, activity_col
         removed += len(next_activities) - len(kept)
         filtered[window] = kept
     return filtered, removed
+
+
+def resource_counts_by_window(df, case_id_name, activity_column_name, resource_column_name, window_size):
+    """{window: {next activity: Counter(resource of that next event)}} over `df` (the training log), with the same
+    windows and traversal as filter_rare_next_activities. Input of filter_rare_resources."""
+    counts = {}
+    for _, group in df.groupby(case_id_name):
+        acts, resources = group[activity_column_name].to_list(), group[resource_column_name].to_list()
+        for idx in range(len(acts) - 1):
+            start_index, end_index = indexs_for_window(idx, window_size=window_size, end_exclusive=True)
+            window_counts = counts.setdefault(list_to_str(acts[start_index:end_index]), {})
+            window_counts.setdefault(acts[idx + 1], Counter())[resources[idx + 1]] += 1
+    return counts
+
+
+def filter_rare_resources(possible_actions, act_with_res, window_resource_counts, min_share):
+    """The candidate resources of each possible next activity, keeping only those that did that activity after the
+    case's window in at least `min_share` of its occurrences there in the training log; the most frequent one is
+    always kept, so the threshold never removes an activity (that is filter_rare_next_activities' job).
+
+    Every resource that ever did an activity used to be a candidate (act_with_res_func), and most recommended
+    resources had almost never done the activity in that context (median share 0.1% in bpi17, 0.6% in BAC, 1.1% in
+    BPI12; 20-39% never seen there). The models score such pairs with no data behind them, or after a different
+    sub-process: in bpi17, A_Cancelled after A_Complete is done by User_1, the system user, in 84% of the cases
+    (the 30-day timeout, 30.7 days), and by a person only when the customer asks for it (16%, about 5 days); the
+    recommender paired A_Cancelled with a person, predicted as fast, while the simulation gave the usual 28 days.
+    Tested on 2026-10-21 (copies of steps 3-9): with 5% the simulation confirms the predicted time improvement in
+    75% / 69% of the points of bpi17_before / bpi17_after (54% / 49% without) and the expected remaining time with
+    the recommendation predicted and simulated agree within a day (5-7 days apart without); 1% does not help
+    (single persons cancel in 1.5% of the cases), 2% is close to 5%.
+
+    Args:
+        possible_actions: the candidate next activities of the case.
+        act_with_res: {activity: resources that ever did it} (act_with_res_func).
+        window_resource_counts: {next activity: Counter(resource)} of the case's window, an entry of
+            resource_counts_by_window(); None or empty = no counts, every resource is kept.
+        min_share: the threshold.
+
+    Returns:
+        {activity: candidate resources} for the possible activities.
+    """
+    filtered = {}
+    for act in possible_actions:
+        resources = list(act_with_res.get(act, []))
+        res_counts = (window_resource_counts or {}).get(act)
+        if not res_counts:
+            filtered[act] = resources
+            continue
+        total = sum(res_counts.values())
+        kept = [r for r in resources if res_counts.get(r, 0) / total >= min_share]
+        top = max((r for r in resources if r in res_counts), key=lambda r: res_counts[r], default=None)
+        if top is not None and top not in kept:
+            kept.append(top)
+        filtered[act] = kept
+    return filtered

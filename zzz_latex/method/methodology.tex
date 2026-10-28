@@ -1,0 +1,788 @@
+\chapter{Methodology}
+\label{chap:methodology}
+Chapter~\ref{chap:background} introduced the general tools this work relies
+on. Here they are combined into a method that takes a case still in
+execution and recommends which activity to perform next and which resource
+should perform it, looking at several KPIs together. The KPIs often pull in
+different directions, and the method does not settle the trade-off on behalf
+of the decision-maker. It returns a small set of alternatives that balance
+the KPIs in different ways.
+
+The method has two parts. The first is built once, offline, from a log of
+completed cases: one predictive model per KPI, each returning an estimate of
+its KPI after a given next step together with a measure of how uncertain
+that estimate is. The second part runs on every running case. It lists the
+next steps that are plausible given the recent history of the case, scores
+them with the models, discards the ones that are unlikely
+to do better than letting the case proceed without a recommendation, and
+picks a few representative steps from the Pareto front of those that remain.
+
+The method uses only the event log and the trained models. The simulator
+that estimates what would have happened had a recommendation been followed
+plays no part in producing it: it serves to evaluate the recommendations and
+is described in Chapter~\ref{chap:evaluation}.
+
+% NOTE: the introduction overlaps with Section~\ref{sec:met:overview}; once
+% that section is final, cut the introduction to two or three linking
+% sentences.
+
+
+\section{Overview of the Method}
+\label{sec:met:overview}
+The problem addressed in this thesis belongs to prescriptive process
+analytics (Section~\ref{sec:bg:prpa}). While a case is running, the user
+wants to know which next step to take, that is, which activity to perform
+and which resource should perform it, so that the case ends as well as
+possible with respect to the KPIs the user cares about. The method is split
+into an offline and an online phase, shown in
+Figure~\ref{fig:met:overview}.
+
+The offline phase runs once, on a log of completed cases. The log is first
+preprocessed; when it records only the completion time of each activity,
+this step also estimates when the activity started. Two things are then
+built from it. One is the feasibility prescription module, which records
+the activities observed to follow a given recent history and the resources
+observed to perform them, and is used later to decide which next steps are
+feasible. The other is a training set of prefixes, encoded
+with a frequency encoder, on which a predictive model is trained for each
+KPI. Each model is used as an ensemble, so every prediction comes with an estimate of its uncertainty,
+and is calibrated so that its predictions and uncertainty estimates agree
+with the errors it makes on data not used for training.
+
+Online, the method works on one running case at a time. Its prefix is
+encoded in the same way as the training prefixes. The feasibility
+prescription module gives the next steps that are feasible from the current
+state of the case,
+and the models estimate the KPIs the case would reach after each of them. A
+confidence filter keeps only the steps that, given the uncertainty of the
+predictions, are likely enough to improve at least one KPI over letting the
+case continue without a recommendation. The steps that pass are compared
+through their Pareto front, and a selection rule picks a few of them spread
+across the front, which are returned to the user as recommendations.
+
+Consider, for instance, a loan application in which the bank has just sent
+an offer to the customer, with two KPIs: the probability that the customer
+accepts, to be maximized, and the remaining time of the case, to be
+minimized. The feasible next steps may include calling the customer or
+preparing a new offer, and each can be assigned to several employees. A call
+made by one employee may raise the chance of acceptance but keep the case
+open longer, while another step may close the case sooner with a lower
+chance of acceptance. Neither is better on both KPIs, so both can lie on the
+Pareto front and the user receives both. A step whose predicted improvement
+is small compared with the uncertainty of the models is removed by the
+confidence filter before the front is built.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=\linewidth]{chapters/3_Methodology/3_images/method_diagram.drawio.png}
+  \caption{Overview of the method. In the offline phase, the completed cases
+    of the event log are used to build the feasibility prescription module,
+    based on a transition system, and to train a
+    regressor and a classifier on an encoded set of prefixes; both models are
+    calibrated and used as ensembles. In the online phase, a running
+    execution is encoded and passed to the recommendation module, which
+    evaluates its feasible next steps; the confidence filter, the Pareto
+    front and the selection rule reduce them to the final recommendations.}
+  \label{fig:met:overview}
+\end{figure}
+
+% --- Outline (metodologia.txt) ---
+% 3.1 Panoramica del metodo
+% Una figura della pipeline:
+% parte offline: log -> preparazione dati -> due modelli con incertezza;
+% parte online: caso in corso -> candidati -> valutazione -> filtro di
+% confidenza -> fronte di Pareto -> top-k.
+% Poche righe di testo. Il grosso lo fa la figura. Una spiegazione con magari
+% un esempio di quello che si vuole andare a fare senza entrare troppo nel
+% dettaglio.
+
+
+\section{Problem Definition}
+\label{sec:met:problem}
+A KPI is modelled as a function
+$F : \mathcal{E}^{*} \times \mathbb{N} \to \mathbb{R}$ that, given a trace
+$\sigma$ and a position $1 \le i \le |\sigma|$, returns the value
+$F(\sigma, i)$ of the indicator for $\sigma$ as seen after its first $i$
+events~\cite{le2025balancing}. The value may depend on the whole trace,
+events after position $i$ included, while the position fixes the point from
+which it is measured, so a KPI can be referred to a case that is still
+running. The process is judged on $m$ KPIs $F_1, \dots, F_m$, each with a
+direction: it is either to be maximized or to be minimized.
+
+The prescription is a \emph{next step}, a pair
+$(a, r) \in \mathcal{A} \times \mathcal{R}$ made of the activity to perform
+next and the resource assigned to it. Given a running execution
+$\sigma' = \langle e_1, \dots, e_k \rangle$, the problem is to choose the
+step to perform as the event $e_{k+1}$ so that the completed trace attains
+the best values of the KPIs. With a single KPI the best step is the one with
+the best value. With several KPIs, they are not merged into a single value:
+each is predicted and compared on its own, and the trade-off between them is
+left to the user.
+
+
+\section{Offline Phase}
+\label{sec:met:offline}
+The offline phase works on a log $\mathcal{L}$ of completed traces and runs
+once, before any recommendation is requested. What it builds stays fixed
+during the online phase, which only queries it.
+
+\subsection{Feasibility Prescription Module}
+\label{subsec:met:offline:feasible}
+A running case cannot be followed by any activity performed by any resource.
+Some activities only make sense after others, and each activity is carried
+out by a limited group of people. A recommender that ignored these
+constraints could suggest steps that are impossible in practice, and it
+would ask the predictive models to score combinations that never occur in
+the data. Following~\cite{le2025balancing}, the next steps that can be
+recommended for a prefix are restricted to those supported by the
+historical log. The component that does so is the \emph{feasibility
+prescription module}, built offline from $\mathcal{L}$. It combines a
+transition system, which gives the activities that can follow the prefix, a
+resource filter, which gives the resources that can perform each of them,
+and the exclusion of the activities that cannot be prescribed.
+
+The candidate activities come from a transition system mined from
+$\mathcal{L}$ (Section~\ref{subsec:bg:pm:ts}), whose states keep the last
+$w$ activities of a prefix:
+\begin{equation}
+  S^{w}(\sigma_{(k)}) =
+  \begin{cases}
+    \langle act(e_{k-w+1}), \dots, act(e_k) \rangle & \text{if } k \ge w,\\
+    \langle act(e_1), \dots, act(e_k) \rangle & \text{otherwise.}
+  \end{cases}
+  \label{eq:met:off:state}
+\end{equation}
+The feasible next activities of a prefix $\sigma_{(k)}$ are those observed
+in $\mathcal{L}$ right after its state:
+\begin{equation}
+  \mathcal{A}|_{\sigma_{(k)}} = \bigl\{\, a \in \mathcal{A} \bigm| \exists\,
+  \tilde\sigma \in \mathcal{L},\ \exists\, l < |\tilde\sigma| :
+  S^{w}(\tilde\sigma_{(l)}) = S^{w}(\sigma_{(k)}),\ a = act(\tilde e_{l+1})
+  \,\bigr\},
+  \label{eq:met:off:feasible}
+\end{equation}
+where $\tilde e_{l+1}$ is the $(l+1)$-th event of $\tilde\sigma$. An
+activity is feasible if some historical trace reached the same state and
+continued with it. A running case whose prefix never occurs in the log
+still has feasible activities, as long as some other prefix reached the
+same state. If the state itself was never reached in $\mathcal{L}$, the set
+$\mathcal{A}|_{\sigma_{(k)}}$ is empty and no recommendation is produced for
+the case.
+
+The resource filter relies on the log to show who has performed what. An
+activity $a$ can be assigned to any resource that performed it at least
+once in $\mathcal{L}$:
+\begin{equation}
+  \mathcal{R}_a = \{\, r \in \mathcal{R} \mid \exists\, \sigma \in
+  \mathcal{L},\ \exists\, e \in \sigma : act(e) = a,\ res(e) = r \,\}.
+  \label{eq:met:off:resources}
+\end{equation}
+Unlike the activities, the eligible resources do not depend on the state of
+the case.
+% NOTE: the frequency thresholds (min_next_share, min_res_share) are
+% described in the Evaluation chapter; there, note that with min_res_share the
+% eligible resources depend on the window of the case, unlike in the method.
+
+A last restriction concerns activities whose occurrence alone fixes the
+value of a KPI. If a positive outcome is defined as the occurrence of an
+activity, for instance the one recording that a customer accepted a loan
+offer, recommending it would meet the KPI by definition without changing
+anything in the case: accepting the offer is the customer's decision and
+cannot be prescribed. An activity that marks a negative outcome is excluded
+for a similar reason, since its effect on the KPI is known in advance and
+there is nothing left for the models to estimate. These activities form a
+set $\mathcal{A}_{F} \subseteq \mathcal{A}$, fixed for each process together
+with its KPIs. The space of feasible next steps for $\sigma_{(k)}$ is then
+\begin{equation}
+  \mathcal{P}_{\sigma_{(k)}} = \{\, (a, r) \mid a \in
+  \mathcal{A}|_{\sigma_{(k)}} \setminus \mathcal{A}_{F},\ r \in \mathcal{R}_a
+  \,\} \subseteq \mathcal{A} \times \mathcal{R},
+  \label{eq:met:off:steps}
+\end{equation}
+and these are the candidates evaluated in the online phase.
+
+% --- Outline (metodologia.txt) ---
+% 3.2 fase offline
+% parlare del modello in generale e qual e' il suo obiettivo.
+% definizione del transition system o citazione di quest'ultimo, a cosa serve
+% e perche' lo usiamo (non dire che mettiamo una threshold perche' ne parlero'
+% successivamente)
+% [Il transition system con finestra w (le ultime w attivita') e l'insieme
+% delle attivita' ammissibili.
+% I due filtri sulla frequenza:
+% min_next_share: si scartano le attivita' rare dopo quella finestra;
+% min_res_share: si tengono solo le risorse frequenti per quella attivita'
+% dopo quella finestra, e la piu' frequente resta sempre.
+% Le attivita' proibite. Vanno spiegate: raccomandare l'attivita' che
+% definisce l'outcome sarebbe banale.
+% Il risultato e' l'insieme di coppie (a, r) da valutare.]
+
+\subsection{Training Set and Encoding}
+\label{subsec:met:offline:training}
+The predictive models learn from the prefixes of the completed traces in
+$\mathcal{L}$, each paired with the next step that actually followed it. For
+a trace $\sigma = \langle e_1, \dots, e_n \rangle$ and a position
+$1 \le k \le n$, the next step is $(a_{k+1}, r_{k+1}) = (act(e_{k+1}),
+res(e_{k+1}))$. For $k = n$ no event follows, and the pair is replaced by an
+end marker, so the models also see cases that have just finished. Given $m$
+KPIs $F_1, \dots, F_m$ (Section~\ref{sec:met:problem}), the targets of
+the instance are $F_1(\sigma, k), \dots, F_m(\sigma, k)$, the values the KPIs
+take on the whole trace as seen after its first $k$ events.
+% NOTE: the background defines the k-prefix with k < |sigma|; here (as in the
+% code of le2025balancing) training also uses k = |sigma| with the end marker.
+
+Prefixes have different lengths, while the models expect a fixed number of
+features. Each prefix is therefore encoded with \emph{activity frequency
+encoding}, a vector with one entry per activity of $\mathcal{A}$ that counts
+how many times the activity occurred before the last event $e_k$. The
+activity and the resource of $e_k$ are kept as separate features, together
+with a few temporal ones: the time elapsed since the case started, the time
+since the previous event, the duration of $e_k$ and the day of the week on
+which it started. The case and event attributes recorded in the log are
+added as they are. The next activity and the next resource complete the
+vector as two categorical features. Writing $\mathrm{enc}(\sigma_{(k)}, a,
+r)$ for the feature vector of prefix $\sigma_{(k)}$ followed by step
+$(a, r)$, the training set is
+\begin{equation}
+  \mathcal{D} = \bigl\{ \bigl( \mathrm{enc}(\sigma_{(k)}, a_{k+1}, r_{k+1}),\
+  F_1(\sigma, k), \dots, F_m(\sigma, k) \bigr) \bigm| \sigma \in \mathcal{L},\
+  1 \le k \le |\sigma| \bigr\}.
+  \label{eq:met:off:trainset}
+\end{equation}
+Figure~\ref{fig:met:off:instance} shows the structure of one instance. The
+same encoding is applied, in the online phase, to the prefix of a running
+case.
+
+\begin{figure}[h]
+  \centering
+  \providecolor{Darkcandyapplered}{rgb}{0.64, 0.0, 0.0}
+  \begin{tikzpicture}[
+      box/.style={draw, rounded corners=2pt, align=center, minimum height=2cm,
+                  text width=1.95cm, font=\scriptsize, inner sep=2pt},
+      node distance=0.1cm]
+    \node[box, fill=gray!15] (cur) {\textbf{Last event}\\activity and\\resource of $e_k$,\\weekday};
+    \node[box, fill=gray!15, right=of cur] (hist) {\textbf{Prefix history}\\one counter per\\activity of $\mathcal{A}$};
+    \node[box, fill=gray!15, right=of hist] (time) {\textbf{Time}\\since start,\\since previous\\event, duration\\of $e_k$};
+    \node[box, fill=gray!15, right=of time] (attr) {\textbf{Attributes}\\case and event\\attributes\\of the log};
+    \node[box, fill=Darkcandyapplered!15, right=0.3cm of attr, text width=2.1cm] (next) {\textbf{Next step}\\$(a_{k+1}, r_{k+1})$};
+    \node[box, fill=Darkcandyapplered!75, text=white, right=0.5cm of next, text width=1.9cm] (y) {\textbf{Targets}\\$\mathrm{KPI}_1$\\$\vdots$\\$\mathrm{KPI}_m$};
+    \draw[-{Latex}] (next) -- (y);
+    \draw[decorate,decoration={brace,amplitude=5pt,mirror}]
+      ([yshift=-3pt]cur.south west) -- ([yshift=-3pt]attr.south east)
+      node[midway,below=6pt,font=\scriptsize] {state after $e_1, \dots, e_k$};
+    \node[below=0.15cm of next, font=\scriptsize, align=center]
+      {end marker after\\the last event;\\$\varnothing$ in $\mathcal{D}^{\varnothing}$};
+  \end{tikzpicture}
+  \caption{Structure of a training instance. The first four groups of
+    features encode the state of the case after its first $k$ events. The
+    next step is the one that followed $e_k$ in the log, replaced by an end
+    marker after the last event of the trace and by $\varnothing$ in the
+    copies of $\mathcal{D}^{\varnothing}$. The targets are the values of the
+    $m$ KPIs.}
+  \label{fig:met:off:instance}
+\end{figure}
+
+Every instance of $\mathcal{D}$ is then duplicated. The copy keeps the
+prefix and the targets, and replaces the next activity and the next resource
+with a token $\varnothing$ meaning that no next step is given:
+\begin{equation}
+  \mathcal{D}^{\varnothing} = \bigl\{ \bigl( \mathrm{enc}(\sigma_{(k)},
+  \varnothing, \varnothing),\ F_1(\sigma, k), \dots, F_m(\sigma, k) \bigr)
+  \bigm| \sigma \in \mathcal{L},\ 1 \le k \le |\sigma| \bigr\}.
+  \label{eq:met:off:baselineset}
+\end{equation}
+The models are trained on $\mathcal{D} \cup \mathcal{D}^{\varnothing}$. The
+online phase compares every candidate step with what would happen if the
+case continued without a recommendation, and it needs a prediction for that
+situation as well. A model trained only on instances that carry a next step
+has never seen one without it, and its output for such an input would be an
+extrapolation. An instance of $\mathcal{D}^{\varnothing}$ shows the
+model a prefix without saying how the trace went on, together with the KPI
+values that trace actually reached. Traces that pass through similar states
+continue in different ways, so for the same input the model sees targets
+produced by different next steps, and the best it can predict is their
+average, weighted by how often each step was taken in the log. This average
+is the value the case is expected to reach if it continues as similar cases
+usually did, and it is the reference against which the candidate steps are
+compared.
+
+% --- Outline (metodologia.txt) ---
+% encoding usato -> activity frequency encoder
+% dire che addestriamo il modello dandogli sia la prossima attivita' che
+% dandogli niente: spiegare quindi il perche'.
+
+\subsection{Predictive Models}
+\label{subsec:met:offline:models}
+A separate predictive model is trained for each KPI, so no weight between
+the KPIs is needed at training time, and each model can be of the kind its
+KPI needs.
+All the models take the same input, the vector
+$\mathrm{enc}(\sigma_{(k)}, a, r)$, and are trained on
+$\mathcal{D} \cup \mathcal{D}^{\varnothing}$.
+
+The type of model depends on the KPI. A KPI with two possible values is
+learned by a classifier, whose output is a logit $z$ that the logistic
+function turns into a probability. A KPI with continuous values is learned
+by a probabilistic regressor, which predicts a mean $\mu$ and a variance
+$\sigma^{2}$ instead of a single value
+(Section~\ref{subsec:bg:uncertainty:ensembles}). Both are trained by
+maximizing the likelihood of the observed targets.
+% NOTE (Evaluation): the remaining-time regressor is fitted in log(1 + days)
+% space (chosen with 2b_compare_time_target.py), with the predictive
+% log-normal truncated at the training maximum; predictions are mapped back
+% to seconds.
+
+Neither model is used as a single predictor. Each is used as an ensemble of
+$M$ members (Section~\ref{subsec:bg:uncertainty:ensembles}), and every
+member returns its own prediction for the same input: a logit $z_m$ for the
+classifier, a pair $(\mu_m, \sigma_m^{2})$ for the regressor, with
+$m = 1, \dots, M$. The predicted value $\hat{F}_j$ of KPI $F_j$ is the point
+prediction of its model, a probability or a mean, and the members measure
+how uncertain it is; for the regressor this uncertainty is the total
+variance of Equation~\eqref{eq:bg:unc:gaussvar}, which adds the spread of
+the means to the average of the variances. The online phase uses both
+levels: the predicted values to place the candidate steps in objective
+space, the members to judge whether a candidate is likely to do better than
+the baseline.
+
+Part of the training traces is held out as a validation set, split by trace
+so that all the prefixes of a case, together with their copies in
+$\mathcal{D}^{\varnothing}$, stay on the same side. The validation set is
+used to select the hyperparameters of each model and to calibrate it
+(Section~\ref{subsec:bg:uncertainty:calibration}). For the classifier, a
+temperature $T$ is fitted as in Equation~\eqref{eq:bg:unc:tempfit} and every
+logit, including those of the members, is divided by it before use. For the
+regressor, a factor $s$ is fitted as in Equation~\eqref{eq:bg:unc:sigmafit}
+and every predicted standard deviation is multiplied by it. Neither
+correction changes the ranking of candidates by predicted value: they only
+make the probabilities and the uncertainties that reach the online phase
+agree with the errors observed on the held-out traces.
+% NOTE (Evaluation): members are a virtual ensemble of a single SGLB model
+% (truncations, Section bg:uncertainty:gbm); the classifier's point value is
+% the calibrated probability of the full model, the regressor's the mean of
+% the members. Validation = the last 20% of the training traces by completion
+% time; hyperparameters by Optuna (minimizing the validation loss, early
+% stopping); the final model is refitted on all of D u D^empty with the tree
+% count of the best trial; T and s are fitted on that trial's model and reused
+% on the final one (assumption: refitting on slightly more data does not
+% change the miscalibration).
+
+% --- Outline (metodologia.txt) ---
+% modello che predice i kpi: regressore e classificatore (modello quindi piu'
+% generico perche' usiamo kpi diversi e quindi devono essere trattati in modo
+% diverso) scrivere anche il training e obiettivo
+% c'e' anche da dire che di avere il risultato noi andiamo a fare anche la
+% calibrazione del risultato del modello quando facciamo la exaustive search
+
+
+\section{Online Phase}
+\label{sec:met:online}
+The online phase runs whenever a recommendation is requested for a running
+case $\sigma_{(k)}$. It relies on the feasible steps and on the calibrated
+models built offline, and needs nothing from the case beyond its prefix.
+
+\subsection{Evaluating the Candidates}
+\label{subsec:met:online:eval}
+The prefix is encoded as in Section~\ref{subsec:met:offline:training}, and
+the feasibility prescription module gives the space
+$\mathcal{P}_{\sigma_{(k)}}$ of feasible next steps (Equation~\eqref{eq:met:off:steps}). Every pair
+$(a, r)$ in it is a \emph{candidate}, denoted $C$, and its input to the
+models is $x_C = \mathrm{enc}(\sigma_{(k)}, a, r)$. The \emph{baseline},
+denoted $B$, is the same prefix with no next step,
+$x_B = \mathrm{enc}(\sigma_{(k)}, \varnothing, \varnothing)$, which is the
+kind of input the models learned from $\mathcal{D}^{\varnothing}$. A
+candidate and the baseline differ only in the next activity and the next
+resource, so any difference between their predictions is due to the step.
+
+The candidates are evaluated by \emph{exhaustive search}: every pair in
+$\mathcal{P}_{\sigma_{(k)}}$ is passed to every model, and none is skipped.
+The result is collected by the function
+\begin{equation}
+  U_{\mathrm{KPI}} : \mathcal{P}_{\sigma_{(k)}} \to \mathbb{R}^{m}, \qquad
+  U_{\mathrm{KPI}}(C) = \bigl( \hat{F}_1(C), \dots, \hat{F}_m(C) \bigr),
+  \label{eq:met:on:objectives}
+\end{equation}
+which maps each candidate to the predicted values of the $m$ KPIs.
+$\hat{F}_j(C)$ is the calibrated prediction of the model for KPI $F_j$ on
+the input $x_C$ (Section~\ref{subsec:met:offline:models}), an estimate of
+the value $F_j(\sigma, k)$ that the KPI would take on the completed trace
+$\sigma$ if the case continued with the step $C$. Each KPI comes with a
+direction, to be maximized or to be minimized, fixed together with the KPI
+itself. The
+baseline is passed to the models in the same batch. It is not a candidate
+itself, but every candidate is compared with it.
+
+Scoring every pair makes the search exact with respect to the models: the
+best candidates according to the predictions are always found, and none is
+lost because the search did not reach it. It requires
+$\mathcal{P}_{\sigma_{(k)}}$ to be small enough to be scored in full.
+
+% --- Outline (metodologia.txt) ---
+% 3.3 fase online
+% dato il prefisso e i modelli della fase online che valutano tutte le coppie
+% noi applichiamo una exaustive search (spiegare bene cosa e') ovvero
+% analizziamo tutte le possibili coppie e ne scegliamo quella migliore.
+% dobbiamo quindi andare ad introdurre il concetto di metodo e di baseline.
+
+\subsection{Probability of Improving on the Baseline}
+\label{subsec:met:online:prob}
+The predicted values say which candidate looks better than the baseline, but
+not how far that judgment can be trusted. A candidate that beats the
+baseline by less than the uncertainty of the models may owe its advantage to
+noise in the predictions, and recommending it would mean intervening in the
+case for no real gain. For every candidate and every KPI, the method
+therefore estimates the probability that the candidate does better than the
+baseline, using the members of the ensemble.
+
+For KPI $F_j$, let $v_m(x)$ be the value that member $m$ assigns to the
+input $x$, on the scale on which the comparison is made: the calibrated
+logit $z_m / T$ for a classifier, the mean $\mu_m$ for a regressor. The
+candidate and the baseline are not independent. Both are predicted by the
+same members from the same prefix and differ only in the next step, so a
+member that overestimates the KPI for this prefix tends to overestimate it
+for both. Treating the two predictions as independent would count this
+shared error twice and make every comparison look more uncertain than it
+is. The comparison is therefore made on the paired differences
+\begin{equation}
+  d_m = v_m(x_C) - v_m(x_B), \qquad m = 1, \dots, M,
+  \label{eq:met:on:diff}
+\end{equation}
+whose mean and sample variance are
+\begin{equation}
+  \bar{d} = \frac{1}{M} \sum_{m=1}^{M} d_m, \qquad
+  \hat{\sigma}_d^{2} = \frac{1}{M-1} \sum_{m=1}^{M} \bigl( d_m - \bar{d}
+  \bigr)^{2} = \hat{\sigma}_C^{2} + \hat{\sigma}_B^{2} -
+  2\, \widehat{\mathrm{Cov}}(C, B),
+  \label{eq:met:on:diffstats}
+\end{equation}
+where $\hat{\sigma}_C^{2}$ and $\hat{\sigma}_B^{2}$ are the sample variances
+of the member values of the candidate and of the baseline, and
+$\widehat{\mathrm{Cov}}(C, B)$ is their sample covariance. A positive
+covariance, the usual case, removes from the comparison the part of the
+uncertainty that the two predictions share, as in the example of
+Figure~\ref{fig:met:on:paired}.
+
+\begin{figure}[h]
+  \centering
+  \providecolor{Darkcandyapplered}{rgb}{0.64, 0.0, 0.0}
+  \begin{tikzpicture}[font=\small]
+    % (a) paired member values
+    \begin{axis}[
+        name=pairs, width=4.8cm, height=6.2cm,
+        xmin=-0.35, xmax=1.35, ymin=-0.95, ymax=1.3,
+        xtick={0,1}, xticklabels={$x_B$, $x_C$},
+        ylabel={member value $v_m$}, ytick={-0.5,0,0.5,1},
+        title={(a) paired members}, title style={font=\small},
+        axis lines=left, tick style={black}]
+      \foreach \b/\c in {0.08/0.41, -0.08/0.38, 0.38/0.36, 0.06/0.47,
+                         -0.32/-0.12, 0.22/0.52, 0.78/1.12, 0.57/0.96,
+                         -0.42/0.11, -0.76/-0.10} {
+        \edef\temp{\noexpand\addplot[gray!60, mark=*, mark size=1.4pt,
+          mark options={fill=gray!20, draw=gray!70}] coordinates {(0,\b) (1,\c)};}
+        \temp
+        \edef\temp{\noexpand\addplot[only marks, mark=*, mark size=1.4pt,
+          Darkcandyapplered] coordinates {(1,\c)};}
+        \temp
+      }
+    \end{axis}
+    % (b) distribution of the difference
+    \begin{axis}[
+        at={(pairs.east)}, anchor=west, xshift=1.4cm,
+        width=7.4cm, height=6.2cm,
+        xmin=-1.6, xmax=2.8, ymin=0, ymax=2.35,
+        xlabel={difference $d = v(x_C) - v(x_B)$}, ylabel={density},
+        ytick=\empty, xtick={-1,0,0.36,1,2},
+        xticklabels={$-1$,$0$,$\bar{d}$,$1$,$2$},
+        title={(b) distribution of the difference}, title style={font=\small},
+        axis lines=left, tick style={black}, samples=200, clip=false,
+        declare function={
+          tpdf(\x,\m,\s) = 0.38803/\s * (1 + ((\x-\m)/\s)^2/9)^(-5);}]
+      \addplot[fill=Darkcandyapplered!25, draw=none, domain=0:2.8]
+        {tpdf(x,0.36,0.194)} \closedcycle;
+      \addplot[Darkcandyapplered, very thick, domain=-1.6:2.8]
+        {tpdf(x,0.36,0.194)};
+      \addplot[gray, thick, dashed, domain=-1.6:2.8]
+        {tpdf(x,0.36,0.647)};
+      \draw[black, thin] (axis cs:0,0) -- (axis cs:0,2.35);
+      \node[Darkcandyapplered, anchor=north west, font=\footnotesize]
+        at (axis cs:0.6,2.3) {paired: $p_j(C) = 0.95$};
+      \node[gray!80!black, anchor=north west, font=\footnotesize]
+        at (axis cs:0.6,2.05) {as if independent: $0.70$};
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Comparison of a candidate with the baseline on a synthetic
+    example with $M = 10$ members, for a KPI to be maximized. (a) The value
+    each member assigns to the baseline and to the candidate; a line joins
+    the two values of the same member. The members disagree on the level of
+    the KPI, but almost all of them place the candidate above the baseline.
+    (b) The Student's $t$-distribution of the paired difference
+    (Equation~\eqref{eq:met:on:prob}), whose shaded area to the right of zero
+    is $p_j(C)$, and, dashed, the distribution obtained by ignoring the
+    covariance and treating the two predictions as independent.}
+  \label{fig:met:on:paired}
+\end{figure}
+
+For a regressor, the disagreement among the members covers only the
+epistemic part of the uncertainty. The quantity being compared is the value
+the KPI will take, so the aleatoric part is added as well, through the
+average predicted variance of each input, and the result is rescaled by the
+calibration factor $s$:
+\begin{equation}
+  \hat{\sigma}_d^{2} \leftarrow s^{2} \Bigl( \hat{\sigma}_d^{2} +
+  \frac{1}{M} \sum_{m=1}^{M} \sigma_m^{2}(x_C) +
+  \frac{1}{M} \sum_{m=1}^{M} \sigma_m^{2}(x_B) \Bigr).
+  \label{eq:met:on:regvar}
+\end{equation}
+The aleatoric terms do not enter the covariance, since the noise that will
+affect the case if the candidate is followed is not tied to the noise that
+would affect it otherwise. For a classifier, only the disagreement among the
+members is used. The variance of a single member would be the noise of the
+binary outcome itself, while the quantity being compared is the probability,
+and its uncertainty is the spread of the members. The comparison runs on
+logits because a Gaussian fits an unbounded quantity better than one
+confined to $[0, 1]$, and since the logistic function is monotone, comparing
+logits and comparing probabilities give the same answer. Dividing every
+logit by $T$ scales $\bar{d}$ and $\hat{\sigma}_d$ by the same factor, so the
+result does not depend on the temperature.
+
+Mean and variance are estimated from only $M$ members, and plugging them
+into a Normal distribution as if they were exact would understate the
+uncertainty of the comparison, the more so the smaller $M$ is. Given $M$
+observations from a Normal population whose mean and variance are both
+unknown, a new observation follows a Student's $t$-distribution with $M-1$
+degrees of freedom, centered at the sample mean and with scale
+$\hat{\sigma}_d \sqrt{1 + 1/M}$~\cite{gelman2013}. Applied to the paired
+differences, this gives the probability that the candidate improves on the
+baseline for KPI $F_j$:
+\begin{equation}
+  p_j(C) =
+  \begin{cases}
+    \mathcal{T}_{M-1}\!\left( \dfrac{\bar{d}}{\hat{\sigma}_d \sqrt{1 + 1/M}}
+    \right) & \text{if } F_j \text{ is to be maximized},\\[3ex]
+    1 - \mathcal{T}_{M-1}\!\left( \dfrac{\bar{d}}{\hat{\sigma}_d \sqrt{1 + 1/M}}
+    \right) & \text{if } F_j \text{ is to be minimized},
+  \end{cases}
+  \label{eq:met:on:prob}
+\end{equation}
+where $\mathcal{T}_{M-1}$ is the cumulative distribution function of the standard
+Student's $t$-distribution with $M-1$ degrees of freedom. As $M$ grows, the
+$t$-distribution approaches the Normal and $\sqrt{1 + 1/M}$ approaches one.
+
+% --- Outline (metodologia.txt) ---
+% spiegare il filtro di confidenza senza andare a parlare del fatto che sto
+% usando catboost ma comunque dal mio modello ottengo un certo ensemble e da li
+% faccio le gaussiane se il numero e' sufficientemente alto eccetera. spiegare
+% che facciamo la differenza di gaussiana tra baseline e metodo e che siccome
+% sono dipendenti (spiega anche perche') devo fare anche covarianza (non
+% chiamarlo a e b ma B per baseline e M per metodo -> C per candidate)
+% [Per ogni candidato si stima P(il candidato batte la baseline senza
+% raccomandazione) su ciascun KPI.
+% Si usano gli M membri dell'ensemble, appaiati tra candidato e baseline:
+% differenza gaussiana con la covarianza stimata;
+% distribuzione t di Student con M-1 gradi di liberta';
+% per classificazione binaria sulla scala dei logit;
+% per regressione con la varianza totale per il sigma scale.]
+
+\subsection{Confidence Filter}
+\label{subsec:met:online:filter}
+The probabilities of Equation~\eqref{eq:met:on:prob} are used to discard
+the candidates that are not likely enough to improve on the baseline. For
+every KPI a threshold $\gamma_j \in [0, 1]$ is fixed, and a candidate is
+kept if it passes the threshold for at least one KPI:
+\begin{equation}
+  \mathcal{P}^{\gamma}_{\sigma_{(k)}} = \bigl\{\, C \in
+  \mathcal{P}_{\sigma_{(k)}} \bigm| \exists\, j \in \{1, \dots, m\} :
+  p_j(C) > \gamma_j \,\bigr\}.
+  \label{eq:met:on:filter}
+\end{equation}
+A higher $\gamma_j$ makes the filter stricter on KPI $F_j$. Two candidates
+with the same predicted values can therefore be treated differently: one is
+kept because the members agree that it improves on the baseline, the other
+is discarded because its advantage lies within their disagreement.
+
+One KPI is enough to keep a candidate. A step that improves one KPI and
+worsens another is still a valid option for the user, and requiring an
+improvement on every KPI would discard it. The filter does not weigh the
+gain on one KPI against the loss on another; it only checks that the gain is
+credible.
+
+If no candidate passes the filter, no recommendation is produced for the
+case, since none of its feasible steps is likely to do better than letting
+it continue without one.
+
+% --- Outline (metodologia.txt) ---
+% impostando un certo filtro gamma vado a togliere le raccomandazioni che per
+% ogni kpi la probabilita' che il metodo sia migliore della baseline sia
+% maggiore di gamma, rispettivamente 1 - prob nel caso in cui il kpi deve
+% essere minimizzato.
+% Regola: un candidato resta se P_kpi1 > gamma_1 oppure P_kpi2 > gamma_2 (OR)
+% oppure P_kpi3.... Questo e' il punto in cui l'incertezza entra nella
+% decisione, ed e' il contributo piu' originale del lavoro: gli darei spazio.
+
+\subsection{Pareto Front of the Candidates}
+\label{subsec:met:online:front}
+The candidates that pass the filter are compared through their predicted
+values $U_{\mathrm{KPI}}(C)$ (Equation~\eqref{eq:met:on:objectives}). The
+definitions below are written for KPIs to be minimized, so that ``better''
+always means ``lower''. A KPI to be maximized is brought to this form by
+changing its sign, that is, by using $-\hat{F}_j$ in place of $\hat{F}_j$: a
+higher value of the KPI becomes a lower value of $-\hat{F}_j$, and the
+candidate preferred on that KPI stays the same. Following the notion of
+\emph{Pareto optimality}~\cite{pareto1906,miettinen1999}, a candidate $C$
+\emph{dominates} a candidate $C'$, written $C \prec C'$, when it is no worse
+on every KPI and strictly better on at least one:
+\begin{equation}
+  C \prec C'
+  \iff
+  \bigl( \hat{F}_j(C) \le \hat{F}_j(C')\ \ \forall\, j \in
+  \{1, \dots, m\} \bigr)
+  \ \wedge\
+  \bigl( \exists\, l : \hat{F}_l(C) < \hat{F}_l(C') \bigr).
+  \label{eq:met:on:dominance}
+\end{equation}
+A candidate is \emph{Pareto-optimal}, or non-dominated, if no other
+candidate dominates it, and the non-dominated candidates of the case are
+\begin{equation}
+  \mathcal{F}_{\sigma_{(k)}} = \bigl\{\, C \in
+  \mathcal{P}^{\gamma}_{\sigma_{(k)}} \bigm| \nexists\, C' \in
+  \mathcal{P}^{\gamma}_{\sigma_{(k)}} : C' \prec C \,\bigr\}.
+  \label{eq:met:on:front}
+\end{equation}
+Their predicted values form the \emph{Pareto front} of the case, shown for
+two KPIs in Figure~\ref{fig:met:on:pareto}. The point that has the best
+possible value of every KPI is the \emph{ideal point}. It is generally not
+attainable, because the KPIs conflict, and the front shows how close the
+candidates can get to it.
+
+\begin{figure}[h]
+  \centering
+  \providecolor{Darkcandyapplered}{rgb}{0.64, 0.0, 0.0}
+  \begin{tikzpicture}[font=\small]
+    \begin{axis}[
+        width=9cm, height=7cm,
+        xmin=0, xmax=8.4, ymin=0, ymax=7.4,
+        axis lines=left, xtick=\empty, ytick=\empty,
+        xlabel={$\hat{F}_1$}, ylabel={$\hat{F}_2$},
+        xlabel style={at={(axis description cs:1,0)}, anchor=north east},
+        ylabel style={at={(axis description cs:0,1)}, anchor=south east,
+                      rotate=-90},
+        clip=false,
+        legend style={at={(1.03,0.98)}, anchor=north west, font=\footnotesize,
+                      draw=gray!50, fill=white, row sep=1pt},
+        legend cell align=left]
+      % region dominated by p
+      \fill[gray!15] (axis cs:2.4,3.6) rectangle (axis cs:8.4,7.4);
+      \node[gray!70!black, font=\footnotesize\itshape] at (axis cs:5.9,6.55)
+        {candidates dominated by $p$};
+      % front
+      \addplot[Darkcandyapplered, dashed, thick, forget plot]
+        coordinates {(1.0,6.0) (1.6,4.6) (2.4,3.6) (3.4,2.9) (4.6,2.4)
+                     (5.8,2.1) (7.2,1.9)};
+      \addplot[only marks, mark=*, mark size=2.6pt, Darkcandyapplered]
+        coordinates {(1.0,6.0) (1.6,4.6) (2.4,3.6) (3.4,2.9) (4.6,2.4)
+                     (5.8,2.1) (7.2,1.9)};
+      \addlegendentry{non-dominated candidate}
+      % dominated
+      \addplot[only marks, mark=o, mark size=2.6pt, gray, thick]
+        coordinates {(2.8,5.6) (3.6,4.9) (5.0,4.4) (6.2,3.9) (4.3,3.4)
+                     (7.0,3.3) (2.0,6.6) (6.4,2.8)};
+      \addlegendentry{dominated candidate}
+      % ideal point
+      \addplot[only marks, mark=star, mark size=4pt, black, very thick]
+        coordinates {(0.3,0.3)};
+      \addlegendentry{ideal point}
+      % ringed candidate p
+      \draw[black, thick] (axis cs:2.4,3.6) circle[radius=4.2pt];
+      \node[anchor=east] at (axis cs:2.25,3.45) {$p$};
+      \node[Darkcandyapplered, font=\footnotesize, rotate=-17]
+        at (axis cs:5.0,1.75) {Pareto front};
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Pareto front of a case with two KPIs, both to be minimized. Each
+    marker is a candidate placed by its predicted values. An open circle is
+    a dominated candidate (Equation~\eqref{eq:met:on:dominance}); the shaded
+    area shows the candidates dominated by the ringed candidate $p$. The
+    filled points are non-dominated and form the Pareto front, along which
+    any gain on one KPI is paid for by a loss on the other. The ideal point,
+    with the best possible value of both KPIs, lies at the bottom-left.}
+  \label{fig:met:on:pareto}
+\end{figure}
+
+A dominated candidate is discarded because another feasible step is
+predicted to be at least as good on every KPI and better on one, so the user
+would have no reason to prefer it. The steps left on the front are those
+among which a choice actually has to be made: moving from one to another
+improves some KPI only at the cost of another, and none of them is better
+than the others until a preference between the KPIs is stated. Returning the
+front leaves that preference to the user, who chooses a step with the cost
+of each alternative in view.
+
+The front is computed on the predicted values as they are, without
+normalizing them. Dominance compares the candidates one KPI at a time, so
+rescaling a KPI would not change which candidates are dominated. The
+baseline is not a candidate and does not take part in the comparison.
+
+% --- Outline (metodologia.txt) ---
+% una volta filtrati i candidati andiamo a costruire un fronte di pareto
+% (definizione del fronte)
+% Dominanza e fronte riscritti sul vostro problema: f(a, r). Va spostato dal
+% background (par. 2.3.2).
+% Si calcola il fronte sui valori non normalizzati.
+% Ricerca esaustiva
+
+\subsection{Selecting the Recommendations}
+\label{subsec:met:online:selection}
+The front of a case can contain many candidates, some of them very close to
+one another in objective space. A user is better served by a few clearly
+distinct options than by the whole front, so at most $k$ candidates are
+returned. If $|\mathcal{F}_{\sigma_{(k)}}| \le k$, all of them are. Otherwise
+the $k$ candidates are chosen to be as spread out as possible along the
+front.
+
+Choosing the $k$ most spread-out points of a set is the \emph{max-min
+dispersion}, or \emph{$p$-dispersion}, problem: given $n$ points with
+pairwise distances $d_{il}$, select a subset $S$ of size $k$ that maximizes
+the smallest distance between any two selected points,
+\begin{equation}
+  \max_{\substack{S \subseteq \{1, \dots, n\} \\ |S| = k}}\ \
+  \min_{\substack{i, l \in S \\ i \neq l}}\ d_{il}.
+  \label{eq:met:on:dispersion}
+\end{equation}
+The problem was first studied in facility location, where the aim is to
+place $p$ facilities so that the closest pair is as far apart as
+possible~\cite{kuby1987}, and it has since been used more generally to
+extract a spread-out subset from a set of candidates~\cite{maliszewski2012}.
+
+Here the points are the candidates of $\mathcal{F}_{\sigma_{(k)}}$, placed
+by their predicted values. The KPIs are measured on different scales, and a
+distance computed on the raw values would be dominated by the KPI with the
+widest range. Each objective is therefore rescaled to $[0, 1]$ between its
+best and its worst value over $\mathcal{F}_{\sigma_{(k)}}$:
+\begin{equation}
+  \tilde{F}_j(C) = \frac{\hat{F}_j(C) - \min_{C' \in
+  \mathcal{F}_{\sigma_{(k)}}} \hat{F}_j(C')}{\max_{C' \in
+  \mathcal{F}_{\sigma_{(k)}}} \hat{F}_j(C') - \min_{C' \in
+  \mathcal{F}_{\sigma_{(k)}}} \hat{F}_j(C')},
+  \label{eq:met:on:minmax}
+\end{equation}
+with $\tilde{F}_j(C) = 0$ when the KPI takes the same value on the whole
+front. The distance between two candidates is the Euclidean distance between
+their rescaled values,
+$d(C, C') = \lVert \tilde{F}(C) - \tilde{F}(C') \rVert_2$. The
+rescaling serves only to measure distances: the front itself is computed on
+the predicted values as they are.
+
+Problem~\eqref{eq:met:on:dispersion} can be written as an integer linear
+program and solved exactly when the number of points is small, as it is for
+the front of a single case. The $k$ candidates it selects are returned as
+the recommendations for the case.
+
+% --- Outline (metodologia.txt) ---
+% nel caso in cui i punti del fronte dovessero essere tanti si vuole solo
+% andare ad avere un subset di questi e per farlo si usa il problema min-max
+% delle distanze tra punti
+% Normalizzazione min-max degli obiettivi, solo per calcolare le distanze.
+% Problema max-min dispersion sulle distanze euclidee, restiamo generici. Va
+% spostato dal background (par. 2.3.3).
+% Se il fronte ha k punti o meno, si restituiscono tutti.
+% L'output sono k coppie (a, r) per caso.

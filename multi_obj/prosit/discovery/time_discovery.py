@@ -15,6 +15,28 @@ from prosit.utils.rule_utils import DecisionRules
 
 DIST_SEARCH = ['fixed', 'norm', 'expon', 'lognorm', 'uniform']
 
+# Unit of the execution times the execution-time models are trained on, stored in the parameters cache so that a
+# cache in another unit is rediscovered (SimulatorParameters.from_dict). See execution_minutes.
+EXECUTION_TIME_UNIT = "wall_clock_minutes"
+
+
+def execution_minutes(start_t, end_t) -> float:
+    """Execution time of an event: its wall-clock duration end - start, in minutes; the simulator ends an event at
+    start + this duration (SimulatorEngine), with no resource calendar.
+
+    It used to be the working minutes of the resource calendar between start and end (count_working_minutes, as in
+    Vinci's prosit 1.0.4), added back on the calendar in the simulation. With the time-first routing the start of an
+    event is drawn in wall-clock time (the waits observed in the log), so it often falls outside the resource's
+    working hours, and the calendar pushed the end to the next shift: a 5-minute A_Validating lasted hours, an
+    instantaneous A_Cancelled 8 hours. Execution per case in the baseline: 1.51 days vs 0.16 real in bpi17_before,
+    1.54 vs 0.22 in bpi17_after, 1.37 vs 0.42 in BPI12 (BAC unaffected). Tested on 2026-10-21 with the decision at the
+    split (setting A, which removes the selection effect of the test cases): CRPS of the remaining time 6.12 -> 6.06
+    days (bpi17_before), 4.42 -> 4.38 (bpi17_after), 4.26 -> 3.98 (BPI12), with the real value below all 10 runs in
+    11% / 8% / 16% of the cases instead of 19% / 11% / 21%. With the default setting B the cases get shorter and the
+    validation against the real test cases looks worse (CRPS +3-9%): the inflation was hiding part of the selection
+    effect."""
+    return max((end_t - start_t).total_seconds() / 60, 0)
+
 
 # DISCOVERY
 
@@ -331,8 +353,8 @@ def build_training_df_ex(
     
     df_et = df_features[["transition_label", "resource", "start_t", "end_t"] + label_data_attributes + activity_labels]
     df_et = df_et[~df_et["start_t"].isna()]
-    working_sets = {r: calendar_to_working_set(cal) for r, cal in calendars.items()}
-    df_et["execution_time"] = df_et.apply(lambda x: count_working_minutes(x["start_t"], x["end_t"], calendars[x["resource"]], working_sets[x["resource"]]), axis=1)
+    # wall-clock minutes, not the working minutes of the resource calendar (calendars unused): see execution_minutes
+    df_et["execution_time"] = df_et.apply(lambda x: execution_minutes(x["start_t"], x["end_t"]), axis=1)
     df_et.drop(columns=["start_t", "end_t"], inplace=True)
     df_et.rename(columns={"transition_label": "activity_executed"}, inplace=True)
     df_et.reset_index(drop=True, inplace=True)
@@ -406,8 +428,8 @@ def find_best_distribution_ex(df_features: pd.DataFrame,
 
     df_et = df_features[["transition_label", "resource", "start_t", "end_t"]]
     df_et = df_et[~df_et["start_t"].isna()]
-    working_sets = {r: calendar_to_working_set(cal) for r, cal in calendars.items()}
-    df_et["execution_time"] = df_et.apply(lambda x: count_working_minutes(x["start_t"], x["end_t"], calendars[x["resource"]], working_sets[x["resource"]]), axis=1)
+    # wall-clock minutes (calendars unused), as build_training_df_ex: see execution_minutes
+    df_et["execution_time"] = df_et.apply(lambda x: execution_minutes(x["start_t"], x["end_t"]), axis=1)
 
     activity_exec_time_distributions = dict()
 
