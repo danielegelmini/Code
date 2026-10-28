@@ -1336,46 +1336,44 @@
     \item \textbf{Good point} ($x = 5$, $y = 10$): improves one KPI by at least $x$ (pp for the outcome, \% for the
       time) and worsens the other by at most $y$; the same rule is applied to the estimated and to the simulated
       changes.
-    \item \textbf{Expected value with the recommendation}: $\mathbb{E}_p\big\{\,\mathbb{E}_r\big[\tfrac{1}{n}\sum_{i=1}^{n} S_i\big]\big\}$,
-      mean over the ranks of a prefix, then over the prefixes (every prefix weighs the same), $n = 10$ runs,
-      simulated and estimated side by side, all with the recommendation:
-      \begin{itemize}\scriptsize
-        \item \textbf{outcome}: simulated, $S_i = 1$ if run $i$ is positive, i.e.\ the share of positive runs;
-          estimated, the calibrated probability of a positive outcome;
-        \item \textbf{remaining time}: simulated, $S_i$ = remaining time of run $i$, i.e.\ the mean over the runs
-          (days); estimated, the estimated remaining time (truncated log-normal mean);
-        \item \textbf{time reduction}: the same average of baseline $-$ with the recommendation, in days (positive = shorter);
-        \item \textbf{time won}: simulated, share of the $10 \times 10$ (recommendation, baseline) run pairs in which
-          the recommendation is shorter, ties $\tfrac12$; estimated, probability that it is shorter; $0.5$ = no effect.
-      \end{itemize}
-    \item Computed on the points that the models estimate to \textbf{improve the outcome}, \textbf{the time},
-      \textbf{both}, \textbf{at least one KPI}, and on the \textbf{good points} (as if only those were recommended).
+    \item \textbf{Expected value with the recommendation}: $\mathbb{E}_p\big\{\mathbb{E}_r\big[v(p,r)\big]\big\}$,
+      the mean of a per-point quantity $v(p,r)$ over the points of a selection: first over the ranks of each
+      prefix, then over the prefixes.
+    \item Four quantities $v(p,r)$: \textbf{outcome}, \textbf{remaining time}, \textbf{time reduction} and
+      \textbf{time won}, each computed twice: from the simulation runs (\emph{simulated}) and from the predictive
+      models (\emph{estimated}).
+    \item Five selections of points: those that the models estimate to improve \textbf{the outcome}, \textbf{the
+      time}, \textbf{both KPIs}, \textbf{at least one KPI}, and the \textbf{good points}.
+    \item Formula, selections and quantities in detail: next two slides.
   \end{itemize}
   {\scriptsize Script: \texttt{9\_prediction\_vs\_simulation\_agreement.py} (single runs saved by \texttt{5\_result\_computation.py}).}
 \end{frame}
 
-\begin{frame}{Expected Value with the Recommendation: How It Is Computed}
+\begin{frame}{Expected Value with the Recommendation: the Formula}
   \scriptsize\setlength{\abovedisplayskip}{2pt}\setlength{\belowdisplayskip}{2pt}
+  A \textbf{point} $(p, r)$ is the recommendation $C$ at rank $r$ of prefix $p$. For a selection $\mathcal{S}$ of
+  points and a per-point quantity $v(p,r)$:
   \[
-    \mathbb{E}_p\Big\{\,\mathbb{E}_r\Big[\tfrac{1}{n}\textstyle\sum_{i=1}^{n} S_i\Big]\Big\}
+    \mathbb{E}_p\Big\{\mathbb{E}_r\big[v(p,r)\big]\Big\}
+    \;=\; \frac{1}{|P_{\mathcal{S}}|} \sum_{p \in P_{\mathcal{S}}} \;
+    \frac{1}{|R_p|} \sum_{r \in R_p} v(p,r)
   \]
-  \vspace{-0.3cm}
+  \vspace{-0.2cm}
   \begin{enumerate}
-    \item \textbf{Runs} ($i = 1,\dots,n$, $n = 10$): for one point (prefix $p$, rank $r$), mean over the simulation runs
-      with the recommendation applied. Outcome: $S_i = 1$ if run $i$ ends positive, $0$ otherwise $\Rightarrow$ share of
-      positive runs. Time: $S_i$ = remaining time of run $i$ $\Rightarrow$ mean remaining time (days).
-    \item \textbf{Ranks} ($\mathbb{E}_r$): mean over the $k_p \le 5$ recommendations of the same prefix.
-    \item \textbf{Prefixes} ($\mathbb{E}_p$): mean over the prefixes. Every prefix weighs the same, whatever its number of
-      recommendations.
+    \item \textbf{Point}: $v(p,r)$, from the simulation runs or from the predictive models (next slide).
+    \item \textbf{Ranks} ($\mathbb{E}_r$): mean over $R_p$, the points of prefix $p$ that are in $\mathcal{S}$ ($|R_p| \le 5$).
+    \item \textbf{Prefixes} ($\mathbb{E}_p$): mean over $P_{\mathcal{S}}$, the prefixes with at least one point in
+      $\mathcal{S}$. Every prefix weighs the same, whatever its number of points.
   \end{enumerate}
-  \textbf{Estimated side:} the same steps 2--3 on the model's value of each point (calibrated probability of a positive
-  outcome, estimated remaining time); no runs, one value per point. Difference $=$ simulated $-$ estimated.
+  \textbf{Selections} $\mathcal{S}$, made on the estimated changes only (all that is known when recommending), as if
+  only those points were recommended: the points estimated to improve the outcome; to improve the time; to improve
+  both KPIs; to improve at least one KPI; the good points. A prefix with no point in $\mathcal{S}$ drops out.
 
-  \textbf{Example} (outcome, 2 prefixes, 3 points):
+  \textbf{Example} (outcome, simulated, 2 prefixes, 3 points):
   \begin{center}\setlength{\tabcolsep}{5pt}\setlength{\aboverulesep}{0pt}\setlength{\belowrulesep}{1pt}
   \begin{tabular}{ccccc}
     \toprule
-    Prefix & Rank & Positive runs & $\tfrac{1}{n}\sum_i S_i$ & $\mathbb{E}_r$ \\
+    Prefix & Rank & Positive runs & $v(p,r)$ & $\mathbb{E}_r$ \\
     \midrule
     A & 1 & 7 of 10 & 0.7 & $(0.7 + 0.5)/2 = 0.6$ \\
     A & 2 & 5 of 10 & 0.5 & \\
@@ -1385,7 +1383,37 @@
   \end{center}
   \vspace{-0.1cm}
   $\mathbb{E}_p = (0.6 + 0.9)/2 = \mathbf{0.75}$ (the plain mean of the 3 points, $0.70$, would count prefix A twice).
-  \textbf{Good points only:} same formula on the good points; prefixes without one drop out.
+\end{frame}
+
+\begin{frame}{Expected Value with the Recommendation: the Four Quantities}
+  \scriptsize\setlength{\aboverulesep}{0pt}\setlength{\belowrulesep}{1pt}
+  Point $(p, r)$: recommendation $C$; $B$ = no recommendation. \textbf{Simulated}: runs $i = 1, \dots, n_C$ with $C$
+  applied ($n_C \le 10$) and $j = 1, \dots, n_B$ without it ($n_B = 10$); $Y^C_i = 1$ if run $i$ ends positive;
+  $T^C_i$, $T^B_j$ remaining times (days). \textbf{Estimated}: the predictive models on the encoded prefix with $C$
+  ($x_C$) and without it ($x_B$).
+  \begin{center}\setlength{\tabcolsep}{4pt}\renewcommand{\arraystretch}{1.15}
+  \begin{tabular}{p{1.9cm} p{4.6cm} p{4.6cm}}
+    \toprule
+    $v(p,r)$ & Simulated & Estimated \\
+    \midrule
+    Outcome
+      & $\frac{1}{n_C}\sum_i Y^C_i$: share of positive runs with $C$
+      & $\hat{y}(x_C)$: calibrated probability of a positive outcome with $C$ \\
+    Remaining time
+      & $\frac{1}{n_C}\sum_i T^C_i$: mean remaining time of the runs with $C$
+      & $\hat{T}(x_C)$: estimated remaining time with $C$ (truncated log-normal mean) \\
+    Time reduction
+      & $\frac{1}{n_B}\sum_j T^B_j - \frac{1}{n_C}\sum_i T^C_i$: mean without $C$ $-$ mean with $C$
+      & $\hat{T}(x_B) - \hat{T}(x_C)$: estimated without $C$ $-$ estimated with $C$ \\
+    Time won
+      & $\frac{1}{n_C n_B}\sum_i\sum_j w_{ij}$, $w_{ij} = 1$ if $T^C_i < T^B_j$, $\tfrac12$ if equal, else $0$: share of the
+        (run with $C$, run without) pairs won by $C$
+      & $P\big(T(x_C) < T(x_B)\big)$: probability that the time with $C$ is shorter, from the confidence filter \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+  \textbf{Reading}: outcome and remaining time, what to expect following $C$; time reduction, days saved compared with
+  no recommendation (positive = shorter); time won, how often $C$ finishes first ($0.5$ = no effect).
 \end{frame}
 
 % 2x2 table of 9_prediction_vs_simulation_agreement.txt (sections 1-3): #1 title, #2 est. yes & sim. yes,
@@ -1421,8 +1449,7 @@
 
 \begin{frame}{Estimated vs.\ Simulated (BAC): Summary}
   \footnotesize\setlength{\aboverulesep}{0pt}\setlength{\belowrulesep}{1pt}
-  2293 recommended points in 1871 prefixes. Good points: 508 (22.2\%),
-  in 460 of the 1871 prefixes (25\%).
+  2293 recommended points in 1871 prefixes.
   \begin{center}\setlength{\tabcolsep}{6pt}
   \begin{tabular}{lcc}
     \toprule
@@ -1441,7 +1468,7 @@
 
 \begin{frame}{Estimated vs.\ Simulated (BAC): Expected Values}
   \scriptsize\setlength{\aboverulesep}{0pt}\setlength{\belowrulesep}{1pt}
-  \textbf{Expected value with the recommendation}, $\mathbb{E}_p\big\{\mathbb{E}_r\big[\tfrac{1}{n}\sum_i S_i\big]\big\}$,
+  \textbf{Expected value with the recommendation}, $\mathbb{E}_p\big\{\mathbb{E}_r\big[v(p,r)\big]\big\}$,
   on the points of each table that the models estimate to improve (columns 1--4) or to be good (column 5).
   \begin{center}\setlength{\tabcolsep}{3pt}
   \begin{tabular}{ll ccccc}
@@ -1468,7 +1495,7 @@
   \end{tabular}
   \end{center}
   {\tiny Time reduction: baseline $-$ with the recommendation (positive = shorter). Time won: $0.5$ = no effect.
-  Prefixes covered: prefixes with at least one point of the column, of 1871. Definitions: Metrics (2/2).}
+  Prefixes covered: prefixes with at least one point of the column, of 1871. Definitions: ``the Four Quantities''.}
 \end{frame}
 
 \begin{frame}{Estimated vs.\ Simulated (BPI12): the Five Tables}
@@ -1486,8 +1513,7 @@
 
 \begin{frame}{Estimated vs.\ Simulated (BPI12): Summary}
   \footnotesize\setlength{\aboverulesep}{0pt}\setlength{\belowrulesep}{1pt}
-  978 recommended points in 601 prefixes. Good points: 501 (51.2\%),
-  in 498 of the 601 prefixes (83\%).
+  978 recommended points in 601 prefixes.
   \begin{center}\setlength{\tabcolsep}{6pt}
   \begin{tabular}{lcc}
     \toprule
@@ -1506,7 +1532,7 @@
 
 \begin{frame}{Estimated vs.\ Simulated (BPI12): Expected Values}
   \scriptsize\setlength{\aboverulesep}{0pt}\setlength{\belowrulesep}{1pt}
-  \textbf{Expected value with the recommendation}, $\mathbb{E}_p\big\{\mathbb{E}_r\big[\tfrac{1}{n}\sum_i S_i\big]\big\}$,
+  \textbf{Expected value with the recommendation}, $\mathbb{E}_p\big\{\mathbb{E}_r\big[v(p,r)\big]\big\}$,
   on the points of each table that the models estimate to improve (columns 1--4) or to be good (column 5).
   \begin{center}\setlength{\tabcolsep}{3pt}
   \begin{tabular}{ll ccccc}
@@ -1533,7 +1559,7 @@
   \end{tabular}
   \end{center}
   {\tiny Time reduction: baseline $-$ with the recommendation (positive = shorter). Time won: $0.5$ = no effect.
-  Prefixes covered: prefixes with at least one point of the column, of 601. Definitions: Metrics (2/2).}
+  Prefixes covered: prefixes with at least one point of the column, of 601. Definitions: ``the Four Quantities''.}
 \end{frame}
 
 \begin{frame}{Estimated vs.\ Simulated (bpi17-before): the Five Tables}
@@ -1551,8 +1577,7 @@
 
 \begin{frame}{Estimated vs.\ Simulated (bpi17-before): Summary}
   \footnotesize\setlength{\aboverulesep}{0pt}\setlength{\belowrulesep}{1pt}
-  1436 recommended points in 1168 prefixes. Good points: 1171 (81.5\%),
-  in 1058 of the 1168 prefixes (91\%).
+  1436 recommended points in 1168 prefixes.
   \begin{center}\setlength{\tabcolsep}{6pt}
   \begin{tabular}{lcc}
     \toprule
@@ -1571,7 +1596,7 @@
 
 \begin{frame}{Estimated vs.\ Simulated (bpi17-before): Expected Values}
   \scriptsize\setlength{\aboverulesep}{0pt}\setlength{\belowrulesep}{1pt}
-  \textbf{Expected value with the recommendation}, $\mathbb{E}_p\big\{\mathbb{E}_r\big[\tfrac{1}{n}\sum_i S_i\big]\big\}$,
+  \textbf{Expected value with the recommendation}, $\mathbb{E}_p\big\{\mathbb{E}_r\big[v(p,r)\big]\big\}$,
   on the points of each table that the models estimate to improve (columns 1--4) or to be good (column 5).
   \begin{center}\setlength{\tabcolsep}{3pt}
   \begin{tabular}{ll ccccc}
@@ -1598,7 +1623,7 @@
   \end{tabular}
   \end{center}
   {\tiny Time reduction: baseline $-$ with the recommendation (positive = shorter). Time won: $0.5$ = no effect.
-  Prefixes covered: prefixes with at least one point of the column, of 1168. Definitions: Metrics (2/2).}
+  Prefixes covered: prefixes with at least one point of the column, of 1168. Definitions: ``the Four Quantities''.}
 \end{frame}
 
 \begin{frame}{Estimated vs.\ Simulated (bpi17-after): the Five Tables}
@@ -1616,8 +1641,7 @@
 
 \begin{frame}{Estimated vs.\ Simulated (bpi17-after): Summary}
   \footnotesize\setlength{\aboverulesep}{0pt}\setlength{\belowrulesep}{1pt}
-  2345 recommended points in 1799 prefixes. Good points: 1374 (58.6\%),
-  in 1374 of the 1799 prefixes (76\%).
+  2345 recommended points in 1799 prefixes.
   \begin{center}\setlength{\tabcolsep}{6pt}
   \begin{tabular}{lcc}
     \toprule
@@ -1636,7 +1660,7 @@
 
 \begin{frame}{Estimated vs.\ Simulated (bpi17-after): Expected Values}
   \scriptsize\setlength{\aboverulesep}{0pt}\setlength{\belowrulesep}{1pt}
-  \textbf{Expected value with the recommendation}, $\mathbb{E}_p\big\{\mathbb{E}_r\big[\tfrac{1}{n}\sum_i S_i\big]\big\}$,
+  \textbf{Expected value with the recommendation}, $\mathbb{E}_p\big\{\mathbb{E}_r\big[v(p,r)\big]\big\}$,
   on the points of each table that the models estimate to improve (columns 1--4) or to be good (column 5).
   \begin{center}\setlength{\tabcolsep}{3pt}
   \begin{tabular}{ll ccccc}
@@ -1663,7 +1687,7 @@
   \end{tabular}
   \end{center}
   {\tiny Time reduction: baseline $-$ with the recommendation (positive = shorter). Time won: $0.5$ = no effect.
-  Prefixes covered: prefixes with at least one point of the column, of 1799. Definitions: Metrics (2/2).}
+  Prefixes covered: prefixes with at least one point of the column, of 1799. Definitions: ``the Four Quantities''.}
 \end{frame}
 
 \begin{frame}{Estimated vs.\ Simulated (\texttt{BPI12\_sim}): the Five Tables}
@@ -1681,8 +1705,7 @@
 
 \begin{frame}{Estimated vs.\ Simulated (\texttt{BPI12\_sim}): Summary}
   \footnotesize\setlength{\aboverulesep}{0pt}\setlength{\belowrulesep}{1pt}
-  924 recommended points in 623 prefixes. Good points: 601 (65.0\%),
-  in 493 of the 623 prefixes (79\%).
+  924 recommended points in 623 prefixes.
   \begin{center}\setlength{\tabcolsep}{6pt}
   \begin{tabular}{lcc}
     \toprule
@@ -1701,7 +1724,7 @@
 
 \begin{frame}{Estimated vs.\ Simulated (\texttt{BPI12\_sim}): Expected Values}
   \scriptsize\setlength{\aboverulesep}{0pt}\setlength{\belowrulesep}{1pt}
-  \textbf{Expected value with the recommendation}, $\mathbb{E}_p\big\{\mathbb{E}_r\big[\tfrac{1}{n}\sum_i S_i\big]\big\}$,
+  \textbf{Expected value with the recommendation}, $\mathbb{E}_p\big\{\mathbb{E}_r\big[v(p,r)\big]\big\}$,
   on the points of each table that the models estimate to improve (columns 1--4) or to be good (column 5).
   \begin{center}\setlength{\tabcolsep}{3pt}
   \begin{tabular}{ll ccccc}
@@ -1728,7 +1751,7 @@
   \end{tabular}
   \end{center}
   {\tiny Time reduction: baseline $-$ with the recommendation (positive = shorter). Time won: $0.5$ = no effect.
-  Prefixes covered: prefixes with at least one point of the column, of 623. Definitions: Metrics (2/2).}
+  Prefixes covered: prefixes with at least one point of the column, of 623. Definitions: ``the Four Quantities''.}
 \end{frame}
 % === END 9 agreement slides ===
 
